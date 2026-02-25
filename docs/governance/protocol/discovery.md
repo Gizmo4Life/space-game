@@ -19,4 +19,4 @@ Find undocumented or outdated documentation with respect to current code, charac
 ## 4. Architectural Reconciliation
 - **Action:** Create or update the T3 Module files to explicitly link the discovered code to the characterized Patterns and [Standards].
 - **Action:** Link the T3 Module upwards to its governing T2 Capability.
-- **Verify:** Ensure the local `/src` directory contains a [Signpost Readme](/docs/developer/pattern/signpost-readme.md) pointing to the updated T3 file.
+- **Verify:** Ensure the target functional directory contains a [Signpost Readme](/docs/developer/pattern/signpost-readme.md) pointing to the updated T3 file.
