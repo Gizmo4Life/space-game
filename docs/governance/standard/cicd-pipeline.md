@@ -10,14 +10,12 @@ pillar: governance
 This standard defines the requirements and best practices for Continuous Integration (CI) and Continuous Deployment (CD) pipelines within this repository.
 
 ## 1. Build Isolation & Reproducibility
-- **Requirement:** Adhere to [Isolated Build](/docs/developer/pattern/cicd-isolated-build.md) principles.
-- **Requirement:** Build scripts must be versioned alongside the code.
-- **Best Practice:** Avoid global dependencies; use local package managers (npm, pip, etc.) for all tools.
+- **Requirement:** Adhere to [Isolated Build](/docs/developer/pattern/cicd-isolated-build.md) and [Reproducible Build](/docs/developer/pattern/cicd-reproducible-build.md) patterns.
+
 
 ## 2. Automated Testing Strategy
-- **Prioritization:** Adhere to [Prioritized Testing](/docs/developer/pattern/cicd-prioritized-testing.md).
-- **Coverage:** Minimum threshold for core logic.
-- **Integration:** Complex integration or E2E tests should run after unit tests pass.
+- **Prioritization:** Adhere to [Prioritized Testing](/docs/developer/pattern/cicd-prioritized-testing.md) and [Test Layering](/docs/developer/pattern/cicd-test-layering.md).
+
 
 ## 3. Quality Gates & Promotion
 - **Check:** Every Pull Request must pass the automated CI suite before it can be merged.
@@ -30,4 +28,5 @@ This standard defines the requirements and best practices for Continuous Integra
 
 ## 5. Security & Compliance
 - **Vaulting:** Adhere to [Secret Vaulting](/docs/developer/pattern/cicd-secret-vaulting.md).
-- **Vulnerability Scan:** Automated scanning on every build.
+- **Scanning:** Adhere to [Vulnerability Scan](/docs/developer/pattern/cicd-vulnerability-scan.md).
+

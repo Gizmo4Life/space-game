@@ -18,4 +18,5 @@ Verify that a system component is fully observable, recoverable, and documented 
 
 ## 4. Final Sign-off
 - **Verify:** All operational artifacts are linked from the [Signpost Readme] in the implementation directory.
-- **Verify:** The incident escalation path is documented and verified.
+- **Verify:** The [Escalation Path](/docs/developer/pattern/ops-escalation-path.md) is documented and verified.
+

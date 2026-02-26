@@ -26,15 +26,13 @@ This is the primary entry point for all on-call developers responding to an aler
 - **Error Rates Overview:** [Link to Error Dashboard]
 
 ## 2. Triage Matrix
-Identify the failing span from the dashboard and proceed to the corresponding Span Runbook in priority order.
+- **Strategy:** Adhere to the [OPS Triage Path](/docs/developer/pattern/ops-triage-path.md).
+- **Action:** Identify the failing span from the dashboard and proceed to the corresponding Span Runbook.
 
-| Priority | Telemetry Span | Span Runbook | Status |
-| :--- | :--- | :--- | :--- |
-| 1 | `system.ingestion.*` | [Ingestion Span Runbook](#) | Critical |
-| 2 | `system.process.*` | [Process Span Runbook](#) | High |
-| 3 | `system.api.*` | [API Span Runbook](#) | Medium |
 
 ## 3. Global Escalation
-If the triage matrix does not resolve the issue or if a cascading failure is detected:
-- **Primary On-Call:** [Name/Contact]
-- **Engineering Leadership:** [Name/Contact]
+- **Strategy:** Adhere to the [OPS Escalation Path](/docs/developer/pattern/ops-escalation-path.md).
+- **Action:** If triage fails:
+  - **Primary On-Call:** [Name/Contact]
+  - **Engineering Leadership:** [Name/Contact]
+

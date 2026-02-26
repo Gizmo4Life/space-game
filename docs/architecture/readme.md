@@ -15,6 +15,11 @@ This system governs the relationship between atomic documentation patterns and p
 ## 2. Core Capabilities
 - **Doc Ingestion:** Maps to [T2 Capabilities] for pattern processing.
 - **Graph Orchestration:** Manages cross-linking between pillars.
+- **Governance Enforcement:** Orchestrates protocol compliance and structural integrity.
+- **Repository Consumption:** Governs forking and merging strategies.
+- **Operational Reliability:** Ensures system observability and recovery.
+
+
 
 ## 3. External Boundaries
 - [Gemini API](https://ai.google.dev/): Primary reasoning engine for documentation audits.

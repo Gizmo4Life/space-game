@@ -12,8 +12,10 @@ Find undocumented or outdated documentation with respect to current code, charac
 - **Action:** Execute [Documentation Validation](documentation-validation.md).
 - **Verify:** Identify physical code files that lack a corresponding T3 module or have stale pattern mappings.
 
-## 3. Characterization & Review
-- **Action:** For newly discovered or altered code shapes, execute [Pattern Intake](pattern-intake.md).
+## 3. Characterization & Elicitation
+- **Action:** For newly discovered or altered code shapes, execute [Capability Elicitation](capability-elicitation.md) (Brownfield Mode).
+- **Action:** Execute [Pattern Intake](pattern-intake.md).
+
 - **Action:** Execute [Standard Definition](standard-definition.md) to assign fitness ratings.
 - **Action:** Execute [Architecture Review](architecture-review.md) to reconcile the new mappings.
 - **Action:** Execute [Operational Readiness](operational-readiness.md) to verify existing telemetry/recovery.

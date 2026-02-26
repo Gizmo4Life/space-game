@@ -9,9 +9,11 @@ pillar: governance
 Standardize the definition of "Done" via verifiable acceptance criteria and automated test coverage.
 
 ## 2. Solution Definition
+- **Action:** Build upon the domain context gathered during the **Discovery** phase.
 - **Action:** Identify the specific [T2 Capability] this test validates.
-- **Action:** Define the **Positive Case**: What does success look like?
-- **Action:** Define the **Negative Case**: What does graceful failure look like?
+- **Action:** Define outcomes via [Test Case Duality](/docs/developer/pattern/test-case-duality.md).
+
+
 
 ## 3. Coverage Strategy
 - **Action:** Select the appropriate testing layers (Unit, Integration, E2E).

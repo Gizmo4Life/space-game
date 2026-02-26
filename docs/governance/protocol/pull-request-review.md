@@ -10,7 +10,8 @@ Verify that a contribution adheres to the [Git Workflow](/docs/developer/workflo
 
 ## 2. Architectural Verification
 - **Action:** Execute [Architecture Review](architecture-review.md) on all changed files.
-- **Verify:** The PR includes a [Walkthrough](/docs/developer/pattern/doc-ops-task.md) of the changes made.
+- **Verify:** The PR includes a [Walkthrough](/docs/developer/pattern/doc-walkthrough.md) of the changes made.
+
 
 ## 3. Verification & Compliance
 - **Action:** Execute [Documentation Validation](documentation-validation.md) to find drift or omissions.
