@@ -3,7 +3,7 @@ id: architecture-capability-manifest
 type: manifest
 pillar: architecture
 ---
-[Home](/) > [Architecture](/docs/architecture/readme.md) > Capability
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > Capability
 
 # Sub-pillar: Capability
 

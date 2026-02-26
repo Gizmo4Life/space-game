@@ -3,7 +3,7 @@ id: operational-runbook-manifest
 type: manifest
 pillar: operational
 ---
-[Home](/) > [Operational](/docs/operational/readme.md) > Runbook
+[Home](/) > [Docs](/docs/readme.md) > [Operational](/docs/operational/readme.md) > Runbook
 
 # Sub-pillar: Runbook
 

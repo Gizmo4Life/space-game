@@ -3,7 +3,7 @@ id: protocol-execution
 type: standard
 pillar: governance
 ---
-[Home](/) > [Governance] > [Standard] > Protocol Execution
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](readme.md) > Protocol Execution
 
 ## Context: Repository Modification & Automation
 *Nuance: Protocols act as the agent's "Operating System" scripts. They must be strictly idempotent (safe to run multiple times) and explicitly separate state-analysis from state-mutation.*

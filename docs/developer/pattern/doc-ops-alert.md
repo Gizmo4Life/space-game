@@ -3,7 +3,7 @@ id: doc-ops-alert
 type: pattern
 tags: [meta, operational, observability]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc Ops Alert
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ops Alert
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: alert_rule`.

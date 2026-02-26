@@ -3,7 +3,7 @@ id: pull-request-review
 type: protocol
 pillar: governance
 ---
-[Home](/) > [Governance] > [Protocol] > PR Review
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Protocol](readme.md) > PR Review
 
 ## 1. Objective
 Verify that a contribution adheres to all repository standards and maintains architectural integrity.

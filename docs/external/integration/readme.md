@@ -3,7 +3,7 @@ id: external-integration-manifest
 type: manifest
 pillar: external
 ---
-[Home](/) > [External](/docs/external/readme.md) > Integration
+[Home](/) > [Docs](/docs/readme.md) > [External](/docs/external/readme.md) > Integration
 
 # Sub-pillar: Integration
 

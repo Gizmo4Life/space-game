@@ -3,7 +3,7 @@ id: doc-ops-runbook
 type: pattern
 tags: [meta, operational, incident]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc Ops Runbook
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ops Runbook
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: runbook`.

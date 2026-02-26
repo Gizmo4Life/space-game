@@ -3,7 +3,7 @@ id: doc-t2-capability
 type: pattern
 tags: [meta, architecture, orchestration]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc T2 Capability
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc T2 Capability
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: capability`.

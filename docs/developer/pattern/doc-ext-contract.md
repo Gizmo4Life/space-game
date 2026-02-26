@@ -3,7 +3,7 @@ id: doc-ext-contract
 type: pattern
 tags: [meta, external, api]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc Ext Contract
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ext Contract
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: contract`.

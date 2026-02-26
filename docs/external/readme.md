@@ -3,7 +3,7 @@ id: external-manifest
 type: manifest
 pillar: external
 ---
-[Home](/) > External
+[Home](/) > [Docs](/docs/readme.md) > External
 
 # Pillar: External
 

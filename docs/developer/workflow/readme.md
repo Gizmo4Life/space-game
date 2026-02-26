@@ -3,7 +3,7 @@ id: developer-workflow-manifest
 type: manifest
 pillar: developer
 ---
-[Home](/) > [Developer](/docs/developer/readme.md) > Workflow
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > Workflow
 
 # Sub-pillar: Workflow
 

@@ -3,7 +3,7 @@ id: operational-task-manifest
 type: manifest
 pillar: operational
 ---
-[Home](/) > [Operational](/docs/operational/readme.md) > Task
+[Home](/) > [Docs](/docs/readme.md) > [Operational](/docs/operational/readme.md) > Task
 
 # Sub-pillar: Task
 

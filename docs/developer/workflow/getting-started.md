@@ -3,7 +3,7 @@ id: getting-started
 type: workflow
 tags: [onboarding, setup]
 ---
-[Home](/) > [Developer] > [Workflow] > Getting Started
+[Home](/) > [Developer](/docs/developer/readme.md) > [Workflow](readme.md) > Getting Started
 
 ## 1. Objective
 To initialize a local development environment that passes the [Discovery Protocol](/docs/governance/protocol/discovery.md).

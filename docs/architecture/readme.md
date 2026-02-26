@@ -3,7 +3,7 @@ id: architecture-landscape
 type: landscape
 pillar: architecture
 ---
-[Home](/) > Architecture
+[Home](/) > [Docs](/docs/readme.md) > Architecture
 
 # Pillar: Architecture
 

@@ -3,7 +3,7 @@ id: arch-documentation
 type: standard
 pillar: governance
 ---
-[Home](/) > [Governance] > [Standard] > Architecture Documentation
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](readme.md) > Architecture Documentation
 
 ## Context: System Design & Mapping
 *Nuance: Architecture documentation must cleanly separate business intent from code mechanics. Mixing these creates fragile documentation that breaks on every code refactor.*

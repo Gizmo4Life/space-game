@@ -3,7 +3,7 @@ id: ops-documentation
 type: standard
 pillar: governance
 ---
-[Home](/) > [Governance] > [Standard] > Operational Documentation
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](readme.md) > Operational Documentation
 
 ## Context: Incident Response & System State
 *Nuance: Operational documentation must optimize for speed of mitigation during an active incident. High-density, query-ready files are strictly prioritized over narrative.*

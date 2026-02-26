@@ -3,7 +3,7 @@ id: doc-t3-module
 type: pattern
 tags: [meta, architecture, implementation]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc T3 Module
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc T3 Module
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: module` and `dependencies: []`.

@@ -3,7 +3,7 @@ id: document-topologies
 type: standard
 pillar: governance
 ---
-[Home](/) > [Governance] > [Standard] > Document Topologies
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](readme.md) > Document Topologies
 
 ## Context: Repository Knowledge Graph
 *Nuance: To support RAG and Agent Context Windows, documentation must be strictly typed, atomic, and heavily cross-linked.*

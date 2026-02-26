@@ -3,7 +3,7 @@ id: doc-dichotomy
 type: pattern
 tags: [documentation, meta]
 ---
-[Home](/) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Dichotomy
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Dichotomy
 
 # Pattern: Pattern/Standard Dichotomy
 

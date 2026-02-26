@@ -3,7 +3,7 @@ id: operational-triage
 type: protocol
 pillar: governance
 ---
-[Home](/) > [Governance] > [Protocol] > Operational Triage
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Protocol](readme.md) > Operational Triage
 
 ## 1. Objective
 Identify, isolate, and mitigate system failures using the repository's operational documentation.

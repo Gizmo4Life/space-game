@@ -3,7 +3,7 @@ id: doc-ops-task
 type: pattern
 tags: [meta, operational, execution]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc Ops Task
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ops Task
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: task`.

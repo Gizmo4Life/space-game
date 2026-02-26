@@ -3,7 +3,7 @@ id: pattern-intake
 type: protocol
 pillar: governance
 ---
-[Home](/) > [Governance] > [Protocol] > Pattern Intake
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Protocol](readme.md) > Pattern Intake
 
 ## 1. Objective
 Extract a novel code or document structure, define it as a contextless geometry [Pattern], and assign its contextual fitness in a [Standard].

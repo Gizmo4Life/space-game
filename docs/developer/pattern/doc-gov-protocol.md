@@ -3,7 +3,7 @@ id: doc-gov-protocol
 type: pattern
 tags: [meta, governance, automation]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc Gov Protocol
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Gov Protocol
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: protocol`.

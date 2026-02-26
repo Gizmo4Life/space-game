@@ -3,7 +3,7 @@ id: operational-manifest
 type: manifest
 pillar: operational
 ---
-[Home](/) > Operational
+[Home](/) > [Docs](/docs/readme.md) > Operational
 
 # Pillar: Operational
 

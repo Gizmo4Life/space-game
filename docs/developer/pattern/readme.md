@@ -3,12 +3,13 @@ id: developer-pattern-manifest
 type: manifest
 pillar: developer
 ---
-[Home](/) > [Developer](/docs/developer/readme.md) > Pattern
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > Pattern
 
 # Sub-pillar: Pattern
 
 Atomic structural definitions for code and documents.
 
+- [doc-breadcrumb-navigation](doc-breadcrumb-navigation.md)
 - [doc-dichotomy](doc-dichotomy.md)
 - [doc-ext-contract](doc-ext-contract.md)
 - [doc-ext-integration](doc-ext-integration.md)

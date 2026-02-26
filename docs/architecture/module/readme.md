@@ -3,7 +3,7 @@ id: architecture-module-manifest
 type: manifest
 pillar: architecture
 ---
-[Home](/) > [Architecture](/docs/architecture/readme.md) > Module
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > Module
 
 # Sub-pillar: Module
 

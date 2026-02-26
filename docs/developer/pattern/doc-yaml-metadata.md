@@ -3,7 +3,7 @@ id: doc-yaml-metadata
 type: pattern
 tags: [documentation, RAG, metadata]
 ---
-[Home](/) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > YAML Metadata
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > YAML Metadata
 
 # Pattern: YAML Frontmatter & Index Maps
 

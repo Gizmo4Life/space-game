@@ -3,7 +3,7 @@ id: doc-t1-landscape
 type: pattern
 tags: [meta, architecture, system-boundary]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc T1 Landscape
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc T1 Landscape
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: landscape`.

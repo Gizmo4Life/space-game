@@ -3,7 +3,7 @@ id: developer-standard-manifest
 type: manifest
 pillar: developer
 ---
-[Home](/) > [Developer](/docs/developer/readme.md) > Standard
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > Standard
 
 # Sub-pillar: Standard
 

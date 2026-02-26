@@ -3,7 +3,7 @@ id: test-planning
 type: protocol
 pillar: governance
 ---
-[Home](/) > [Governance] > [Protocol] > [Sub] > Test Planning
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Protocol](readme.md) > Test Planning
 
 ## 1. Objective
 Standardize the definition of "Done" via verifiable acceptance criteria and automated test coverage.

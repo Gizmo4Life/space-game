@@ -3,7 +3,7 @@ id: doc-gov-standard
 type: pattern
 tags: [meta, governance, logic]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc Gov Standard
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Gov Standard
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: standard`.

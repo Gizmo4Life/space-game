@@ -3,7 +3,7 @@ id: logic-idempotency
 type: pattern
 tags: [logic, automation, protocol]
 ---
-[Home](/) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Logic Idempotency
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Logic Idempotency
 
 # Pattern: Idempotent Actions
 

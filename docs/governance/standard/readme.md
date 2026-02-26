@@ -3,7 +3,7 @@ id: governance-standard-manifest
 type: manifest
 pillar: governance
 ---
-[Home](/) > [Governance](/docs/governance/readme.md) > Standard
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > Standard
 
 # Sub-pillar: Standard
 

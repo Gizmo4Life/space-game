@@ -3,7 +3,7 @@ id: greenfield-protocol
 type: protocol
 pillar: governance
 ---
-[Home](/) > [Governance] > [Protocol] > Greenfield
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Protocol](readme.md) > Greenfield
 
 ## 1. Objective
 Add new functionality by deriving a testable solution definition, scaffolding the architecture, and executing the implementation.

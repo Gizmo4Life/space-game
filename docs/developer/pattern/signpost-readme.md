@@ -4,7 +4,7 @@ type: pattern
 tags: [meta, navigation, linkage]
 pillar: developer
 ---
-[Home](/) > [Developer] > [Pattern] > Signpost Readme
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Signpost Readme
 
 ## Structure
 - **Location:** The `readme.md` file embedded inside any non-docs implementation directory (e.g., `/src/billing/readme.md`).

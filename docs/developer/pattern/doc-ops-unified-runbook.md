@@ -3,7 +3,7 @@ id: doc-ops-unified-runbook
 type: pattern
 tags: [meta, operational, triage]
 ---
-[Home](/) > [Developer] > [Pattern] > Doc Ops Unified Runbook
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ops Unified Runbook
 
 ## Structure
 - **YAML Frontmatter:** Must include `type: unified_runbook` and `capability: [T2-ID]`.

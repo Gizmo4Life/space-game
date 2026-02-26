@@ -3,7 +3,7 @@ id: discovery-protocol
 type: protocol
 pillar: governance
 ---
-[Home](/) > [Governance] > [Protocol] > Discovery
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Protocol](readme.md) > Discovery
 
 ## 1. Objective
 Find undocumented or outdated documentation with respect to current code, characterize the patterns, and update architectural files.

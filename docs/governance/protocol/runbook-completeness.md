@@ -3,7 +3,7 @@ id: runbook-completeness
 type: protocol
 pillar: governance
 ---
-[Home](/) > [Governance] > [Protocol] > [Sub] > Runbook Completeness
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Protocol](readme.md) > Runbook Completeness
 
 ## 1. Objective
 Ensure every system component is documented for recovery and triage to minimize Downtime (MTTR).

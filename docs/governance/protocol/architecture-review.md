@@ -3,7 +3,7 @@ id: architecture-review
 type: protocol
 pillar: governance
 ---
-[Home](/) > [Governance] > [Protocol] > [Sub] > Architecture Review
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Protocol](readme.md) > Architecture Review
 
 ## 1. Objective
 Ensure structural alignment with the repository's T1 (Landscape), T2 (Capability), and T3 (Module) hierarchy.

@@ -4,7 +4,7 @@ type: pattern
 tags: [meta, governance, fitness]
 pillar: developer
 ---
-[Home](/) > [Developer] > [Pattern] > PADU Evaluation
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > PADU Evaluation
 
 ## Structure
 - **Preferred (P):** The strategic, primary target shape.
