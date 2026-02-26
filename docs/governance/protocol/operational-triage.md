@@ -13,9 +13,10 @@ Identify, isolate, and mitigate system failures using the repository's operation
 - **Action:** Map the Span to its parent **T3 Module**.
 
 ## 3. Protocol Execution
-- **Action:** Execute [Runbook Completeness](runbook-completeness.md) to locate the relevant triage steps.
-- **Action:** Use the **Unified Runbook** to perform initial diagnosis.
+- **Action:** Access the **Universal System Runbook** as the primary landing page.
+- **Action:** Use the Dashboard to identify the highest priority failing **Span**.
 - **Action:** Deep-dive into specific **Span Runbooks** for mitigation.
+- **Action:** Execute the linked **Restoration Steps** to resolve the issue.
 
 ## 4. Mitigation & Resolution
 - **Action:** Execute atomic [doc-ops-task](/docs/developer/pattern/doc-ops-task.md) files to restore state.

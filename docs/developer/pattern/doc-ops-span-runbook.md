@@ -8,6 +8,6 @@ tags: [meta, operational, restoration]
 ## Structure
 - **YAML Frontmatter:** Must include `type: span_runbook` and `module: [T3-ID]`.
 - **1. Component Scope:** Link to the specific [T3 Module] emitting the span.
-- **2. Diagnostic Queries:** Specific CLI or log queries to verify the exact error state within the span.
-- **3. Mitigation & Restoration:** Numbered steps linking to atomic [Ops Tasks] (e.g., `Execute task/restart-billing-pod.md`).
-- **4. Verification:** The query to run to prove the `outcome=success` span has returned to baseline.
+- **2. Diagnostic Mapping:** Specific CLI queries, log filters, or dashboard panels to isolate the failure mode *within* the span.
+- **3. Mitigation & Restoration:** Numbered steps linking to atomic [Restoration Steps].
+- **4. Recovery Verification:** The exact telemetry signal or probe response that proves the span is healthy.

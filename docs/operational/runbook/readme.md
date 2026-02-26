@@ -3,10 +3,9 @@ id: operational-runbook-manifest
 type: manifest
 pillar: operational
 ---
-[Home](/) > [Docs](/docs/readme.md) > [Operational](/docs/operational/readme.md) > Runbook
+[Home](/) >- [Universal Runbook](universal-runbook.md): Global triage entry point.
+- [Restoration Steps](restoration/readme.md): Atomic corrective actions. (Planned)
 
 # Sub-pillar: Runbook
 
 Incident response flows mapping symptoms to resolutions.
-
-*(No runbooks defined yet)*

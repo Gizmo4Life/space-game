@@ -1,14 +1,18 @@
 ---
 id: doc-ops-unified-runbook
 type: pattern
+type: universal_runbook
 tags: [meta, operational, triage]
 ---
-[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ops Unified Runbook
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Universal System Runbook
 
-## Structure
-- **YAML Frontmatter:** Must include `type: unified_runbook` and `capability: [T2-ID]`.
-- **1. Capability Scope:** Link to the [T2 Capability] this runbook protects.
-- **2. Dashboard Orientation:** Links to the primary observability dashboards (e.g., Grafana, Datadog) used to visualize the flow.
-- **3. Triage Matrix:** A table mapping specific failing telemetry spans to their corresponding detailed [Span Runbooks].
-  - *Example:* If `billing.auth.fail` spikes -> Go to `[Auth Span Runbook]`.
-- **4. Global Escalation:** Who to page if multiple spans are failing simultaneously (cascading failure).
+# Pattern: Universal System Runbook
+
+The primary triage entry point for all system alerts. It provides a global orientation and directs the operator to specific span-level ## Structure
+- **YAML Frontmatter:** Must include `type: universal_runbook`.
+- **1. Severity Matrix:** A table defining SEV-1 (Critical) to SEV-4 (Trivial) thresholds for the system.
+- **2. Impact Scope:** High-level description of who/what is affected at each severity level.
+- **3. System Orientation:** Links to primary observability dashboards for global health visualization.
+- **4. Triage Matrix:** A prioritized table mapping failing telemetry spans to [Span Runbooks].
+  - **Action:** Identify the highest priority failing span from the dashboard.
+- **5. Global Escalation:** Contact chain for unresolved issues or cascading failures.
