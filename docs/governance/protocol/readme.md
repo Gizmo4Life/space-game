@@ -7,8 +7,17 @@ pillar: governance
 
 # Sub-pillar: Protocol
 
-Step-by-step execution scripts for system modification.
+Standardized execution sequences and automation flows.
 
-- [discovery](discovery.md)
-- [greenfield](greenfield.md)
-- [pattern-intake](pattern-intake.md)
+## Main Sequences
+- [Greenfield](greenfield.md): New feature development.
+- [Discovery](discovery.md): Drift analysis and recon.
+- [PR Review](pull-request-review.md): Contribution verification.
+- [Operational Triage](operational-triage.md): Incident response.
+- [Pattern Intake](pattern-intake.md): New geometry extraction.
+
+## Sub-protocols (Building Blocks)
+- [Architecture Review](architecture-review.md)
+- [Observability Compliance](observability-compliance.md)
+- [Runbook Completeness](runbook-completeness.md)
+- [Test Planning](test-planning.md)

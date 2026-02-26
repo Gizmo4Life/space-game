@@ -23,6 +23,6 @@ Extract a novel code or document structure, define it as a contextless geometry 
 - **Action:** Update the YAML `index_map` at the bottom of the README to ensure RAG pipelines can traverse it.
 
 ## 5. Contextual Judgment (PADU)
-- **Action:** Identify the [Standard] (in `docs/developer/standard/` or `docs/governance/standard/`) that governs the context where this pattern was found.
+- **Action:** Execute [Architecture Review](architecture-review.md) to identify the governing [Standard].
 - **Action:** Insert the pattern into the Standard's Markdown table.
 - **Action:** Assign a rating (Preferred, Acceptable, Discouraged, Unacceptable) and write the specific **Nuance** justifying the rating for that context.

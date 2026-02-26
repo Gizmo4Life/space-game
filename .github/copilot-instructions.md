@@ -1,8 +1,21 @@
 # Repository Architect Directives
 
-1. **Routing:** Every interaction begins at `docs/governance/copilot-manifest.md`.
-2. **Dichotomy Enforcement:** - [Patterns] must remain contextless geometries. Never write "best practice" or "should" in a pattern file.
-   - [Standards] hold all contextual nuance and PADU judgments.
-3. **Structural Purity:** Maintain the One-Deep Singular directory rule. No nested subfolders.
-4. **Readability:** Manifest `README.md` paragraphs must not exceed 2 sentences. Use Mermaid diagrams for complex routing.
-5. **RAG Indexing:** Ensure every `.md` file has YAML frontmatter. Manifests must conclude with an `index_map` YAML block.
+## 1. Governance Routing
+Every interaction must adhere to the [Governance Pillar](/docs/governance/readme.md). Follow the core protocols:
+- **Discovery**: Repository-wide drift analysis.
+- **Greenfield**: Pattern-first implementation.
+- **PR Review**: Pillar-based verification.
+
+## 2. Structural Purity
+- **Atomicity**: Patterns = "What", Standards = "Should". extract inlined patterns.
+- **One-Deep Rule**: Maintain singular directory depth. No nested subfolders.
+- **Readability**: README paragraphs must not exceed 2 sentences.
+
+## 3. Mandatory Verification
+No change is complete without executing the modular sub-protocols:
+- **Architecture**: Verify T2/T3 alignment.
+- **Testing**: Define acceptance criteria before implementation.
+- **Observability**: Plan and verify telemetry (Spans/Probes) emission.
+
+## 4. RAG Optimization
+Ensure every `.md` file has YAML frontmatter. Manifests must conclude with an `index_map` YAML block for automated traversal.
