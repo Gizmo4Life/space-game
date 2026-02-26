@@ -29,17 +29,17 @@ graph TD
     Dev --> MS
 ```
 
-## Main Sequences
-The definitive entry points for any repository action.
-- **[Discovery](/docs/governance/protocol/discovery.md):** Map and ingest code shapes.
-- **[Greenfield](/docs/governance/protocol/greenfield.md):** Implement new features.
-- **[PR Review](/docs/governance/protocol/pull-request-review.md):** Mandatory change verification.
-- **[Triage](/docs/governance/protocol/operational-triage.md):** Active incident response.
+## Orchestration Sequences
+*Nuance: The definitive entry points for any repository action, whether building, auditing, or fixing.*
+- **[Discovery](/docs/governance/protocol/discovery.md):** Map and ingest code shapes for RAG optimization.
+- **[Greenfield](/docs/governance/protocol/greenfield.md):** Implement new features with zero scope creep.
+- **[PR Review](/docs/governance/protocol/pull-request-review.md):** Mandatory automated and architectural verification.
+- **[Triage](/docs/governance/protocol/operational-triage.md):** Rapid mapping of production symptoms to restoration steps.
 
-## Pillars
-
+## Knowledge Pillars
+*Nuance: Structured data stores providing the rules, topology, and execution steps for the SDLC.*
 - **[Governance](/docs/governance/readme.md)**: Meta-rules, operational protocols, and architectural constraints.
 - **[Architecture](/docs/architecture/readme.md)**: System topology, capabilities (T2), and module (T3) definitions.
-- **[Developer](/docs/developer/readme.md)**: Code patterns, implementation standards, and SDLC workflows.
-- **[Operational](/docs/operational/readme.md)**: Runbooks, deployment procedures, and observability spans.
-- **[External](/docs/external/readme.md)**: Interaction contracts and API definitions for external consumers.
+- **[Developer](/docs/developer/readme.md)**: Code patterns, implementation standards, and human workflows.
+- **[Operational](/docs/operational/readme.md)**: Runbooks, restoration tasks, and telemetry mappings.
+- **[External](/docs/external/readme.md)**: Consumption strategies and API behavioral expectations.

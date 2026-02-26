@@ -9,17 +9,14 @@ pillar: developer
 
 Shapes, rules, and human processes for building and maintaining the system.
 
-```mermaid
-graph LR
-    Dev[Developer] --> Pat[Pattern]
-    Dev --> Stan[Standard]
-    Dev --> Work[Workflow]
-```
+## Definition & Standard
+*Nuance: The "Source of Truth" for how code and documents should be structured.*
+- [pattern/](pattern/): Contextless definitions of atomic code and document geometry.
+- [standard/](standard/): PADU matrices rating patterns for operational fitness.
 
-## Sub-directories
-- [pattern/](pattern/): Contextless definitions of code and document geometry.
-- [standard/](standard/): PADU matrices rating patterns for operations.
-- [workflow/](workflow/): Human-centric guides for the SDLC.
+## Execution & Workflow
+*Nuance: Practical guides for humans and agents performing day-to-day development.*
+- [workflow/](workflow/): Human-centric guides for the SDLC (Getting Started, Git, etc.).
 
 ---
 ## Machine Navigation Metadata
