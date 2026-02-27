@@ -15,6 +15,9 @@ Global boundaries and primary domain of the AI RAG documentation system.
 ## 2. Core Capabilities (T2)
 *Nuance: Bounded contexts that orchestrate multiple T3 modules to deliver business value.*
 - **Doc Ingestion:** Physical processing and validation of the documentation graph.
+- **Game Navigation (T2):** Orchestrates ship movement and spatial transitions using Newtonian physics.
+- **Game Combat (T2):** Orchestrates ship-to-ship engagement and projectile lifecycles.
+- **Game Economy (T2):** Orchestrates resource flow, faction budgets, trade, and NPC AI.
 - **Graph Orchestration:** Maintaining structural integrity and cross-linking between pillars.
 - **Governance Enforcement:** Automating protocol compliance and landscape audits.
 - **Repository Consumption:** Strategies for Greenfield bootstrapping and Brownfield discovery.

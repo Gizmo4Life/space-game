@@ -81,7 +81,14 @@ graph TD
 - [ops-triage-path](ops-triage-path.md)
 - [ops-escalation-path](ops-escalation-path.md)
 
-## 6. UI/UX & Navigation
+## 6. Game Engine & Simulation
+*Nuance: Shapes for high-performance C++ games and Newtonian physics.*
+- [cpp-ecs-component](cpp-ecs-component.md)
+- [cpp-ecs-system-static](cpp-ecs-system-static.md)
+- [kinematics-newtonian-2d](kinematics-newtonian-2d.md)
+- [rendering-spatial-bridge](rendering-spatial-bridge.md)
+
+## 7. UI/UX & Navigation
 *Nuance: Patterns for ensuring machine-readability and human scannability.*
 - [doc-breadcrumb-navigation](doc-breadcrumb-navigation.md)
 - [doc-flat-hierarchy](doc-flat-hierarchy.md)

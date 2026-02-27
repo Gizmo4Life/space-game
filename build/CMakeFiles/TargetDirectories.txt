@@ -1,0 +1,3 @@
+/Users/Dan/Documents/repos/space-game/build/CMakeFiles/SpaceGame.dir
+/Users/Dan/Documents/repos/space-game/build/CMakeFiles/edit_cache.dir
+/Users/Dan/Documents/repos/space-game/build/CMakeFiles/rebuild_cache.dir

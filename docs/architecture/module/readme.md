@@ -41,6 +41,13 @@ graph TD
 - [doc-system](doc-system.md): File system structure and DaC engine.
 - [ai-config](ai-config.md): Persona behavioral injections.
 
+## 2. Game Engine (C++)
+*Nuance: High-performance modules implementing the spatial simulation and interactive systems.*
+- [physics](physics.md): Box2D-powered Newtonian physics engine.
+- [system-gate](system-gate.md): Inter-system jump and loading logic.
+- [game-combat](game-combat.md): Ship-to-ship engagement and projectile systems.
+- [game-economy](game-economy.md): Faction budgeting, trade, and NPC orchestration.
+
 ## 2. Governance Layer
 *Nuance: The "Brain" of the repository, defining the rules and protocols.*
 - [developer-patterns](developer-patterns.md): Atomic structural definitions.

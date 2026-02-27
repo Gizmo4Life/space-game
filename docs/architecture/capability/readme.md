@@ -15,6 +15,11 @@ graph LR
         Ingest[Doc Ingestion]
         Orch[Graph Orchestration]
     end
+    subgraph Game Mechanics
+        Nav[Navigation]
+        Combat[Combat]
+        Econ[Economy]
+    end
     subgraph Execution
         Gov[Governance Enforcement]
         Cons[Repository Consumption]
@@ -25,12 +30,20 @@ graph LR
     Orch --> Gov
     Orch --> Cons
     Orch --> Rel
+    Nav --> Combat
+    Econ --> Combat
 ```
 
 ## 1. Core Ingestion & Graph
 *Nuance: Primary capabilities for building the Knowledge Graph from raw data.*
 - [agent-orchestration](agent-orchestration.md): Context injection and agent behavioral rules.
 - [doc-ingestion](/docs/architecture/capability/doc-ingestion.md): Physical file processing and validation. (Planned)
+
+## 2. Game Mechanics
+*Nuance: Strategic capabilities governing the Top-Down Space Faring engine.*
+- [navigation](navigation.md): Orchestrates Newtonian flight and system transitions.
+- [combat](combat.md): Orchestrates projectile dynamics and damage resolution.
+- [economy](economy.md): Orchestrates resource flow, faction budgets, and trade.
 
 ## 2. Governance & Compliance
 *Nuance: Capabilities dedicated to ensuring the repository adheres to its own rules.*
