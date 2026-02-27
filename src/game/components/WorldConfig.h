@@ -5,7 +5,7 @@ namespace space {
 /// Game-wide world configuration constants.
 struct WorldConfig {
   static constexpr float WORLD_HALF_SIZE = 60000.0f; // pixels
-  static constexpr float GRAVITY_G = 0.75f;
+  static constexpr float GRAVITY_G = 1.0f;
   static constexpr float MAX_GRAVITY_FORCE = 50.0f;
   static constexpr float WORLD_SCALE = 0.05f; // Map scale (orbit distances)
   static constexpr float SHIP_SCALE =
