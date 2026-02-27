@@ -142,10 +142,24 @@ CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Dan/Documents/repos/space-game/src/engine/physics/GravitySystem.cpp -o CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.s
 
+CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
+CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o: /Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.cpp
+CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o -MF CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o -c /Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.cpp
+
+CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.cpp > CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.i
+
+CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.cpp -o CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.s
+
 CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
 CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: /Users/Dan/Documents/repos/space-game/src/engine/combat/WeaponSystem.cpp
 CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o -MF CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o -c /Users/Dan/Documents/repos/space-game/src/engine/combat/WeaponSystem.cpp
 
 CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.i: cmake_force
@@ -159,7 +173,7 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.s: cmake_force
 CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
 CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o: /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.cpp
 CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o -MF CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o -c /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.cpp
 
 CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.i: cmake_force
@@ -173,7 +187,7 @@ CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.s: cmake_force
 CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
 CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o: /Users/Dan/Documents/repos/space-game/src/rendering/MainRenderer.cpp
 CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o -MF CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o -c /Users/Dan/Documents/repos/space-game/src/rendering/MainRenderer.cpp
 
 CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.i: cmake_force
@@ -187,7 +201,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.s: cmake_force
 CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
 CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/repos/space-game/src/rendering/RenderSystem.cpp
 CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o -MF CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o -c /Users/Dan/Documents/repos/space-game/src/rendering/RenderSystem.cpp
 
 CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.i: cmake_force
@@ -201,7 +215,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.s: cmake_force
 CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
 CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.cpp
 CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o -MF CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o -c /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.cpp
 
 CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.i: cmake_force
@@ -215,7 +229,7 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.s: cmake_force
 CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
 CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o: /Users/Dan/Documents/repos/space-game/src/game/FactionManager.cpp
 CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o -MF CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o -c /Users/Dan/Documents/repos/space-game/src/game/FactionManager.cpp
 
 CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.i: cmake_force
@@ -229,7 +243,7 @@ CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.s: cmake_force
 CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
 CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: /Users/Dan/Documents/repos/space-game/src/game/EconomyManager.cpp
 CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o -MF CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o -c /Users/Dan/Documents/repos/space-game/src/game/EconomyManager.cpp
 
 CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.i: cmake_force
@@ -243,7 +257,7 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.s: cmake_force
 CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: CMakeFiles/SpaceGame.dir/flags.make
 CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.cpp
 CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: CMakeFiles/SpaceGame.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o -MF CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o.d -o CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o -c /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.cpp
 
 CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.i: cmake_force
@@ -261,6 +275,7 @@ SpaceGame_OBJECTS = \
 "CMakeFiles/SpaceGame.dir/src/engine/physics/PhysicsEngine.cpp.o" \
 "CMakeFiles/SpaceGame.dir/src/engine/physics/OrbitalSystem.cpp.o" \
 "CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.o" \
+"CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o" \
 "CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o" \
 "CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o" \
 "CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o" \
@@ -278,6 +293,7 @@ SpaceGame: CMakeFiles/SpaceGame.dir/src/engine/physics/KinematicsSystem.cpp.o
 SpaceGame: CMakeFiles/SpaceGame.dir/src/engine/physics/PhysicsEngine.cpp.o
 SpaceGame: CMakeFiles/SpaceGame.dir/src/engine/physics/OrbitalSystem.cpp.o
 SpaceGame: CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.o
+SpaceGame: CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o
 SpaceGame: CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o
 SpaceGame: CMakeFiles/SpaceGame.dir/src/engine/telemetry/Telemetry.cpp.o
 SpaceGame: CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o
@@ -382,7 +398,7 @@ SpaceGame: /usr/local/lib/libopentelemetry_trace.dylib
 SpaceGame: /usr/local/lib/libopentelemetry_resources.dylib
 SpaceGame: /usr/local/lib/libopentelemetry_common.dylib
 SpaceGame: CMakeFiles/SpaceGame.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Linking CXX executable SpaceGame"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/Dan/Documents/repos/space-game/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Linking CXX executable SpaceGame"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/SpaceGame.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

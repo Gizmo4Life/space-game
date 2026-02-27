@@ -8,8 +8,11 @@ enum class AIBelief { Trader, Escort, Raider };
 
 enum class AIState { Idle, Docked, Traveling, Combat, Fleeing };
 
+enum class VesselType { Military, Freight, Passenger };
+
 struct NPCComponent {
   uint32_t factionId;
+  VesselType vesselType = VesselType::Passenger;
   AIBelief belief = AIBelief::Trader;
   AIState state = AIState::Idle;
 

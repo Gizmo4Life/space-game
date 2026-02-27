@@ -22,10 +22,13 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
 ## 3. Key Systems
 - **MainRenderer**: Owns the `sf::RenderWindow`, handles SFML lifecycle (open/close/clear/display).
 - **RenderSystem::update**: Four-pass rendering pipeline:
-  1. **Background layer** — Static/orbital entities (`TransformComponent` + `SpriteComponent`, excluding `InertialBody`)
-  2. **Foreground layer** — Physics bodies (`InertialBody` + `SpriteComponent`) with Box2D position sync
-  3. **UI layer** — Offscreen indicators for `CelestialBody` and `NPCComponent` entities with distance labels
-  4. **Projectile layer** — `ProjectileComponent` bullets as colored circles
+  1. **Background layer** — Static/orbital entities (`TransformComponent` + `SpriteComponent`). Planets are rendered as **circular sprites** (generated in `WorldLoader`) with colors based on `CelestialType`.
+  2. **Foreground layer** — Physics bodies (`InertialBody` + `SpriteComponent`). NPC ships use **procedural shapes** to indicate class:
+    - **Military**: Sharp Wedge
+    - **Freight**: Rigid Block
+    - **Passenger**: Sleek Oval
+  3. **UI layer** — Offscreen indicators for `CelestialBody` and `NPCComponent` entities with distance labels. Labels include **Population counts** and **Vessel Classes**.
+  4. **Projectile layer** — `ProjectileComponent` bullets as colored circles.
 
 ## 4. Pattern Composition
 - [Pattern] rendering-spatial-bridge (P) — Box2D→SFML coordinate transform (×30 scale)

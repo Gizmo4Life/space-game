@@ -25,6 +25,7 @@ add_executable(SpaceGame
     src/engine/physics/PhysicsEngine.cpp
     src/engine/physics/OrbitalSystem.cpp
     src/engine/physics/GravitySystem.cpp
+    src/engine/physics/AsteroidSystem.cpp
     src/engine/combat/WeaponSystem.cpp
     src/engine/telemetry/Telemetry.cpp
     src/rendering/MainRenderer.cpp

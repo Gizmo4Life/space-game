@@ -13,14 +13,35 @@ void FactionManager::init() {
   factions.clear();
   relationships.clear();
 
-  // Generate 4-6 procedural factions
-  int count = 4 + (rand() % 3);
+  // Faction 0 is always "Civilian" / Neutral
+  FactionData civ;
+  civ.id = 0;
+  civ.name = "Civilian";
+  civ.color = sf::Color(150, 150, 150);
+  civ.militaryWeight = 0.05f;
+  civ.freightWeight = 0.45f;
+  civ.passengerWeight = 0.5f;
+  factions[0] = civ;
+
+  // Generate 8-12 procedural factions
+  int count = 8 + (rand() % 5);
   for (uint32_t i = 0; i < static_cast<uint32_t>(count); ++i) {
     FactionData data;
     data.id = i + 1; // 0 is reserve/none
     data.name = generateFactionName();
     data.color =
         sf::Color(rand() % 155 + 100, rand() % 155 + 100, rand() % 155 + 100);
+
+    // Randomize weights
+    float total = 0.0f;
+    data.militaryWeight = (rand() % 100) * 0.01f;
+    data.freightWeight = (rand() % 100) * 0.01f;
+    data.passengerWeight = (rand() % 100) * 0.01f;
+    total = data.militaryWeight + data.freightWeight + data.passengerWeight;
+    data.militaryWeight /= total;
+    data.freightWeight /= total;
+    data.passengerWeight /= total;
+
     factions[data.id] = data;
   }
 

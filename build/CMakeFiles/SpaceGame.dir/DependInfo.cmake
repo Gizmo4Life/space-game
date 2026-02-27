@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/Dan/Documents/repos/space-game/src/engine/combat/WeaponSystem.cpp" "CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o.d"
+  "/Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.cpp" "CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o.d"
   "/Users/Dan/Documents/repos/space-game/src/engine/physics/GravitySystem.cpp" "CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.o.d"
   "/Users/Dan/Documents/repos/space-game/src/engine/physics/KinematicsSystem.cpp" "CMakeFiles/SpaceGame.dir/src/engine/physics/KinematicsSystem.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/engine/physics/KinematicsSystem.cpp.o.d"
   "/Users/Dan/Documents/repos/space-game/src/engine/physics/OrbitalSystem.cpp" "CMakeFiles/SpaceGame.dir/src/engine/physics/OrbitalSystem.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/engine/physics/OrbitalSystem.cpp.o.d"

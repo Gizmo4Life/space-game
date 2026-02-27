@@ -4,6 +4,7 @@
 #include "game/components/WorldConfig.h"
 #include <box2d/box2d.h>
 #include <cmath>
+#include <iostream>
 
 namespace space {
 

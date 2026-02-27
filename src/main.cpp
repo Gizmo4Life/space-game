@@ -6,6 +6,7 @@
 #include <optional>
 
 #include "engine/combat/WeaponSystem.h"
+#include "engine/physics/AsteroidSystem.h"
 #include "engine/physics/GravitySystem.h"
 #include "engine/physics/KinematicsSystem.h"
 #include "engine/physics/OrbitalSystem.h"
@@ -128,6 +129,7 @@ int main() {
     physics.update(dt);
     OrbitalSystem::update(registry, dt);
     KinematicsSystem::update(registry, dt);
+    AsteroidSystem::update(registry, physics.getWorldId(), dt);
 
     // World Wrap
     auto &inertial = registry.get<InertialBody>(playerEntity);

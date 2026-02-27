@@ -6,6 +6,7 @@ namespace space {
 struct Faction {
   // Map of Faction ID -> Allegiance percentage (0.0 to 1.0)
   std::map<uint32_t, float> allegiances;
+  bool isAtWar = false;
 
   uint32_t getMajorityFaction() const {
     uint32_t majorityId = 0;

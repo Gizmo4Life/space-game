@@ -14,6 +14,7 @@
 #include "game/components/WeaponComponent.h"
 #include "game/components/WorldConfig.h"
 #include <SFML/Graphics.hpp>
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -36,7 +37,17 @@ void NPCShipManager::update(entt::registry &registry, float deltaTime) {
   if (initialized_) {
     spawnTimer_ -= deltaTime;
     if (spawnTimer_ <= 0) {
-      spawnTimer_ = SPAWN_INTERVAL;
+      // Calculate total population to adjust spawn interval
+      float totalPop = 0.0f;
+      auto ecoView = registry.view<PlanetEconomy>();
+      for (auto e : ecoView) {
+        totalPop += ecoView.get<PlanetEconomy>(e).populationCount;
+      }
+
+      // Base interval is 8s at 10k pop, scales down to 0.5s at 100k+ pop
+      // 3x Density Boost
+      float popFactor = std::clamp(totalPop / 10000.0f, 0.5f, 16.0f) * 3.0f;
+      spawnTimer_ = SPAWN_INTERVAL / popFactor;
 
       // Count current NPCs
       int count = 0;
@@ -66,21 +77,22 @@ void NPCShipManager::update(entt::registry &registry, float deltaTime) {
 // ─── Spawn at a random planet ───────────────────────────────────────────
 void NPCShipManager::spawnAtRandomPlanet(entt::registry &registry) {
   auto planet = pickRandomPlanet(registry);
-  if (planet == entt::null)
-    return;
-
   auto &planetTrans = registry.get<TransformComponent>(planet);
 
-  // Pick a random faction
-  auto &factionMgr = FactionManager::instance();
-  auto &factions = factionMgr.getAllFactions();
-  if (factions.empty())
-    return;
-
-  // Pick random faction
-  auto it = factions.begin();
-  std::advance(it, rand() % factions.size());
-  uint32_t factionId = it->first;
+  // Pick a faction based on planet's allegiance
+  uint32_t factionId = 0; // Default to Civilian
+  if (registry.all_of<Faction>(planet)) {
+    auto &fComp = registry.get<Faction>(planet);
+    float roll = (rand() % 100) * 0.01f;
+    float accum = 0.0f;
+    for (auto const &[fId, weight] : fComp.allegiances) {
+      accum += weight;
+      if (roll <= accum) {
+        factionId = fId;
+        break;
+      }
+    }
+  }
 
   // Spawn near the planet (slight offset so ships don't overlap)
   float angle = static_cast<float>(rand()) / RAND_MAX * 6.28f;
@@ -92,19 +104,28 @@ void NPCShipManager::spawnAtRandomPlanet(entt::registry &registry) {
 
   auto entity = spawnShip(registry, factionId, spawnPos, worldId_);
 
-  // Set home planet and random belief
+  // Set home planet and type based on faction weights
   if (registry.valid(entity)) {
     auto &npc = registry.get<NPCComponent>(entity);
     npc.homePlanet = planet;
 
-    // 50% traders, 25% escorts, 25% raiders
-    int roll = rand() % 100;
-    if (roll < 50)
-      npc.belief = AIBelief::Trader;
-    else if (roll < 75)
+    auto &fMgr = FactionManager::instance();
+    const FactionData &fData = fMgr.getFaction(factionId);
+
+    float roll = (rand() % 100) * 0.01f;
+    if (roll < fData.militaryWeight) {
+      npc.vesselType = VesselType::Military;
       npc.belief = AIBelief::Escort;
-    else
-      npc.belief = AIBelief::Raider;
+      registry.get<NameComponent>(entity).name = fData.name + " Patrol";
+    } else if (roll < fData.militaryWeight + fData.freightWeight) {
+      npc.vesselType = VesselType::Freight;
+      npc.belief = AIBelief::Trader;
+      registry.get<NameComponent>(entity).name = fData.name + " Freighter";
+    } else {
+      npc.vesselType = VesselType::Passenger;
+      npc.belief = AIBelief::Trader; // Standard traveler
+      registry.get<NameComponent>(entity).name = fData.name + " Transport";
+    }
 
     npc.state = AIState::Idle;
     npc.decisionTimer = 0.0f; // Decide immediately
@@ -114,17 +135,28 @@ void NPCShipManager::spawnAtRandomPlanet(entt::registry &registry) {
 // ─── Pick a random planet entity ────────────────────────────────────────
 entt::entity NPCShipManager::pickRandomPlanet(entt::registry &registry,
                                               entt::entity exclude) {
-  std::vector<entt::entity> planets;
-  // PlanetEconomy distinguishes planets from stars
+  std::vector<std::pair<entt::entity, float>> planets;
+  float totalWeight = 0.0f;
+
   auto view = registry.view<PlanetEconomy, TransformComponent>();
   for (auto entity : view) {
     if (entity != exclude) {
-      planets.push_back(entity);
+      float weight = view.get<PlanetEconomy>(entity).populationCount;
+      planets.push_back({entity, weight});
+      totalWeight += weight;
     }
   }
-  if (planets.empty())
+  if (planets.empty() || totalWeight <= 0)
     return entt::null;
-  return planets[rand() % planets.size()];
+
+  float roll = (rand() % 1000) * 0.001f * totalWeight;
+  float accum = 0.0f;
+  for (auto const &[entity, weight] : planets) {
+    accum += weight;
+    if (roll <= accum)
+      return entity;
+  }
+  return planets.back().first;
 }
 
 // ─── AI State Machine ───────────────────────────────────────────────────
@@ -345,13 +377,33 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
                                  npcConfig_.rotationSpeed);
   registry.emplace<WeaponComponent>(entity);
 
-  // Create faction-colored diamond sprite for NPC
-  sf::Image img({20, 20}, sf::Color::Transparent);
-  for (int x = 0; x < 20; ++x) {
-    for (int y = 0; y < 20; ++y) {
-      int cx = std::abs(x - 10);
-      int cy = std::abs(y - 10);
-      if (cx + cy <= 9) {
+  // Create faction-colored sprite based on vessel type
+  sf::Image img({24, 24}, sf::Color::Transparent);
+  VesselType vType = npc.vesselType;
+
+  for (int x = 0; x < 24; ++x) {
+    for (int y = 0; y < 24; ++y) {
+      int cx = x - 12;
+      int cy = y - 12;
+      bool draw = false;
+
+      if (vType == VesselType::Military) {
+        // Sharp wedge/triangle
+        if (y >= 12 - x / 2 && y <= 12 + x / 2 && x <= 20)
+          draw = true;
+      } else if (vType == VesselType::Freight) {
+        // Blocky rectangle
+        if (std::abs(cx) <= 8 && std::abs(cy) <= 5)
+          draw = true;
+      } else {
+        // Passenger: Sleek oval
+        float dx = cx / 10.0f;
+        float dy = cy / 6.0f;
+        if (dx * dx + dy * dy <= 1.0f)
+          draw = true;
+      }
+
+      if (draw) {
         img.setPixel(
             {static_cast<unsigned int>(x), static_cast<unsigned int>(y)},
             fData.color);
@@ -363,10 +415,11 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
   SpriteComponent sc;
   sc.texture = texture;
   sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
-  sc.sprite->setOrigin({10.0f, 10.0f});
+  sc.sprite->setOrigin({12.0f, 12.0f});
   registry.emplace<SpriteComponent>(entity, sc);
 
-  std::cout << "[NPC] Spawned " << fData.name << " vessel\n";
+  std::cout << "[NPC] Spawned " << fData.name << " "
+            << registry.get<NameComponent>(entity).name << "\n";
 
   span->End();
   return entity;

@@ -8,7 +8,7 @@ namespace space {
 class TradeManager {
 public:
   static bool buy(entt::registry &registry, entt::entity buyer,
-                  entt::entity planet, RefinedGood good, float amount) {
+                  entt::entity planet, Resource res, float amount) {
     if (!registry.all_of<CargoComponent, CreditsComponent>(buyer))
       return false;
     if (!registry.all_of<PlanetEconomy>(planet))
@@ -18,24 +18,27 @@ public:
     auto &credits = registry.get<CreditsComponent>(buyer);
     auto &eco = registry.get<PlanetEconomy>(planet);
 
-    float price = eco.currentPrices[good];
+    if (eco.currentPrices.find(res) == eco.currentPrices.end())
+      return false;
+
+    float price = eco.currentPrices[res];
     float totalCost = price * amount;
 
     if (credits.amount < totalCost)
       return false;
-    if (eco.stockpile[good] < amount)
+    if (eco.stockpile[res] < amount)
       return false;
-    if (!cargo.add(good, amount))
+    if (!cargo.add(res, amount))
       return false;
 
     credits.amount -= totalCost;
-    eco.stockpile[good] -= amount;
+    eco.stockpile[res] -= amount;
 
     return true;
   }
 
   static bool sell(entt::registry &registry, entt::entity seller,
-                   entt::entity planet, RefinedGood good, float amount) {
+                   entt::entity planet, Resource res, float amount) {
     if (!registry.all_of<CargoComponent, CreditsComponent>(seller))
       return false;
     if (!registry.all_of<PlanetEconomy>(planet))
@@ -45,14 +48,17 @@ public:
     auto &credits = registry.get<CreditsComponent>(seller);
     auto &eco = registry.get<PlanetEconomy>(planet);
 
-    float price = eco.currentPrices[good] * 0.9f; // Buyback at 90%
+    if (eco.currentPrices.find(res) == eco.currentPrices.end())
+      return false;
+
+    float price = eco.currentPrices[res] * 0.9f; // Buyback at 90%
     float totalProfit = price * amount;
 
-    if (!cargo.remove(good, amount))
+    if (!cargo.remove(res, amount))
       return false;
 
     credits.amount += totalProfit;
-    eco.stockpile[good] += amount;
+    eco.stockpile[res] += amount;
 
     return true;
   }

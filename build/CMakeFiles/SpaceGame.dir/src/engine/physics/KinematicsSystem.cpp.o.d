@@ -1129,4 +1129,6 @@ CMakeFiles/SpaceGame.dir/src/engine/physics/KinematicsSystem.cpp.o: \
   /usr/local/include/SFML/System/Angle.hpp \
   /usr/local/include/SFML/System/Angle.inl \
   /usr/local/include/SFML/System/Vector2.inl \
-  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/istream

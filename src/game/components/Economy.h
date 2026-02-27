@@ -4,64 +4,94 @@
 
 namespace space {
 
-enum class RawResource { MetalOre, Hydrocarbons, Silicates, BioMatter };
-
-enum class RefinedGood { Plasteel, FusionFuel, Electronics, NutritionSlurry };
-
-struct PlanetEconomy {
-  // Abundance multipliers for raw harvesting (0.0 to 1.0)
-  std::map<RawResource, float> rawAbundance;
-
-  // Stockpile of refined goods
-  std::map<RefinedGood, float> stockpile;
-
-  // Growth/Refinement stats
-  float infrastructureLevel = 1.0f;
-  float populationCount = 1000.0f;
-
-  // Market prices for refined goods
-  std::map<RefinedGood, float> currentPrices;
+enum class Resource {
+  // Basic
+  Water,
+  Crops,
+  Hydrocarbons,
+  Metals,
+  RareMetals,
+  Isotopes,
+  // Refined
+  Food,
+  Plastics,
+  ManufacturingGoods,
+  Electronics,
+  Fuel,
+  Powercells,
+  Weapons
 };
 
-// Helper to convert Raw -> Refined mapping
-inline RefinedGood getRefinedFromRaw(RawResource raw) {
-  switch (raw) {
-  case RawResource::MetalOre:
-    return RefinedGood::Plasteel;
-  case RawResource::Hydrocarbons:
-    return RefinedGood::FusionFuel;
-  case RawResource::Silicates:
-    return RefinedGood::Electronics;
-  case RawResource::BioMatter:
-    return RefinedGood::NutritionSlurry;
-  }
-  return RefinedGood::Plasteel;
-}
+struct PlanetEconomy {
+  float populationCount = 10.0f; // In thousands
+  std::map<Resource, float> stockpile;
+  std::map<Resource, int> factories;
+  std::map<Resource, float> currentPrices;
 
-inline std::string getGoodName(RefinedGood good) {
-  switch (good) {
-  case RefinedGood::Plasteel:
-    return "Plasteel";
-  case RefinedGood::FusionFuel:
-    return "Fuel";
-  case RefinedGood::Electronics:
-    return "Electronics";
-  case RefinedGood::NutritionSlurry:
+  // Base consumption per 1k population
+  std::map<Resource, float> baseConsumption;
+};
+
+inline std::string getResourceName(Resource res) {
+  switch (res) {
+  case Resource::Water:
+    return "Water";
+  case Resource::Crops:
+    return "Crops";
+  case Resource::Hydrocarbons:
+    return "Hydrocarbons";
+  case Resource::Metals:
+    return "Metals";
+  case Resource::RareMetals:
+    return "Rare Metals";
+  case Resource::Isotopes:
+    return "Isotopes";
+  case Resource::Food:
     return "Food";
+  case Resource::Plastics:
+    return "Plastics";
+  case Resource::ManufacturingGoods:
+    return "Mfg Goods";
+  case Resource::Electronics:
+    return "Electronics";
+  case Resource::Fuel:
+    return "Fuel";
+  case Resource::Powercells:
+    return "Powercells";
+  case Resource::Weapons:
+    return "Weapons";
   }
   return "Unknown";
 }
 
-inline std::string getGoodInitial(RefinedGood good) {
-  switch (good) {
-  case RefinedGood::Plasteel:
-    return "P";
-  case RefinedGood::FusionFuel:
-    return "F";
-  case RefinedGood::Electronics:
-    return "E";
-  case RefinedGood::NutritionSlurry:
-    return "S";
+inline std::string getResourceInitial(Resource res) {
+  switch (res) {
+  case Resource::Water:
+    return "W";
+  case Resource::Crops:
+    return "C";
+  case Resource::Hydrocarbons:
+    return "H";
+  case Resource::Metals:
+    return "M";
+  case Resource::RareMetals:
+    return "R";
+  case Resource::Isotopes:
+    return "I";
+  case Resource::Food:
+    return "Fd";
+  case Resource::Plastics:
+    return "Pl";
+  case Resource::ManufacturingGoods:
+    return "Mg";
+  case Resource::Electronics:
+    return "El";
+  case Resource::Fuel:
+    return "Fl";
+  case Resource::Powercells:
+    return "Pc";
+  case Resource::Weapons:
+    return "Wp";
   }
   return "?";
 }

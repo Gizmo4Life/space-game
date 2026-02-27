@@ -153,6 +153,30 @@ src/engine/combat/WeaponSystem.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.s
 .PHONY : src/engine/combat/WeaponSystem.cpp.s
 
+src/engine/physics/AsteroidSystem.o: src/engine/physics/AsteroidSystem.cpp.o
+.PHONY : src/engine/physics/AsteroidSystem.o
+
+# target to build an object file
+src/engine/physics/AsteroidSystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o
+.PHONY : src/engine/physics/AsteroidSystem.cpp.o
+
+src/engine/physics/AsteroidSystem.i: src/engine/physics/AsteroidSystem.cpp.i
+.PHONY : src/engine/physics/AsteroidSystem.i
+
+# target to preprocess a source file
+src/engine/physics/AsteroidSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.i
+.PHONY : src/engine/physics/AsteroidSystem.cpp.i
+
+src/engine/physics/AsteroidSystem.s: src/engine/physics/AsteroidSystem.cpp.s
+.PHONY : src/engine/physics/AsteroidSystem.s
+
+# target to generate assembly for a file
+src/engine/physics/AsteroidSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.s
+.PHONY : src/engine/physics/AsteroidSystem.cpp.s
+
 src/engine/physics/GravitySystem.o: src/engine/physics/GravitySystem.cpp.o
 .PHONY : src/engine/physics/GravitySystem.o
 
@@ -453,6 +477,9 @@ help:
 	@echo "... src/engine/combat/WeaponSystem.o"
 	@echo "... src/engine/combat/WeaponSystem.i"
 	@echo "... src/engine/combat/WeaponSystem.s"
+	@echo "... src/engine/physics/AsteroidSystem.o"
+	@echo "... src/engine/physics/AsteroidSystem.i"
+	@echo "... src/engine/physics/AsteroidSystem.s"
 	@echo "... src/engine/physics/GravitySystem.o"
 	@echo "... src/engine/physics/GravitySystem.i"
 	@echo "... src/engine/physics/GravitySystem.s"

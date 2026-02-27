@@ -14,6 +14,11 @@ struct FactionData {
   sf::Color color;
   float credits = 5000.0f;
   float aggressionLevel = 0.2f; // 0 (Passive) to 1 (Raiding)
+
+  // Vessel Spawn Weights (sum should be ~1.0)
+  float militaryWeight = 0.2f;
+  float freightWeight = 0.5f;
+  float passengerWeight = 0.3f;
 };
 
 class FactionManager {

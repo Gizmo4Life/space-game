@@ -34,7 +34,7 @@ private:
   bool initialized_ = false;
   ShipConfig npcConfig_;
 
-  static constexpr int MAX_NPCS = 20;
+  static constexpr int MAX_NPCS = 50;
   static constexpr float SPAWN_INTERVAL = 8.0f;
 };
 

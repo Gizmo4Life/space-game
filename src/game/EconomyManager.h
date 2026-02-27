@@ -15,7 +15,8 @@ public:
   void update(entt::registry &registry, float deltaTime);
 
   // Get current market price based on supply/demand
-  float calculatePrice(RefinedGood good, float currentStock, float population);
+  float calculatePrice(Resource res, float currentStock, float population,
+                       bool isAtWar);
 
 private:
   EconomyManager() = default;

@@ -1,7 +1,6 @@
-CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: \
-  /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.cpp \
-  /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
+CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o: \
+  /Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.cpp \
+  /Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.h \
   /usr/local/include/box2d/box2d.h /usr/local/include/box2d/base.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/stdint.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config \
@@ -1120,19 +1119,11 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: \
   /usr/local/include/entt/signal/fwd.hpp \
   /usr/local/include/entt/signal/sigh.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
-  /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
-  /usr/local/include/SFML/Graphics/Color.hpp \
-  /usr/local/include/SFML/Graphics/Color.inl \
   /Users/Dan/Documents/repos/space-game/src/game/components/AsteroidBelt.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/OrbitalComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
   /usr/local/include/SFML/Graphics.hpp \
   /usr/local/include/SFML/Graphics/BlendMode.hpp \
@@ -1141,6 +1132,8 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
   /usr/local/include/SFML/Graphics/CircleShape.hpp \
   /usr/local/include/SFML/Graphics/Shape.hpp \
+  /usr/local/include/SFML/Graphics/Color.hpp \
+  /usr/local/include/SFML/Graphics/Color.inl \
   /usr/local/include/SFML/Graphics/Drawable.hpp \
   /usr/local/include/SFML/Graphics/PrimitiveType.hpp \
   /usr/local/include/SFML/Graphics/Rect.hpp \
@@ -1260,6 +1253,4 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: \
   /usr/local/include/SFML/System/MemoryInputStream.hpp \
   /usr/local/include/SFML/System/Sleep.hpp \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h

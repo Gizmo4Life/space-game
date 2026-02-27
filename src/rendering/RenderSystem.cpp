@@ -80,6 +80,41 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                 " (" + fData.name + " " + std::to_string(percent) + "%)";
           }
 
+          if (registry.all_of<PlanetEconomy>(entity)) {
+            auto &eco = registry.get<PlanetEconomy>(entity);
+            labelText += " Pop: " + std::to_string((int)eco.populationCount);
+          }
+
+          if (registry.all_of<CelestialBody>(entity)) {
+            auto &cb = registry.get<CelestialBody>(entity);
+            std::string typeStr = "";
+            switch (cb.type) {
+            case CelestialType::Rocky:
+              typeStr = "Rocky";
+              break;
+            case CelestialType::Icy:
+              typeStr = "Icy";
+              break;
+            case CelestialType::Lava:
+              typeStr = "Lava";
+              break;
+            case CelestialType::Earthlike:
+              typeStr = "Earthlike";
+              break;
+            case CelestialType::GasGiant:
+              typeStr = "Gas Giant";
+              break;
+            case CelestialType::Star:
+              typeStr = "Star";
+              break;
+            case CelestialType::Asteroid:
+              typeStr = "Asteroid";
+              break;
+            }
+            if (!typeStr.empty())
+              labelText += " [" + typeStr + "]";
+          }
+
           sf::Text text(*font, labelText, 18);
           text.setFillColor(factionColor);
 
@@ -96,11 +131,18 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
           if (registry.all_of<PlanetEconomy>(entity)) {
             auto &eco = registry.get<PlanetEconomy>(entity);
             std::string ecoText = "";
-            for (auto const &[good, price] : eco.currentPrices) {
-              if (!ecoText.empty())
-                ecoText += " | ";
-              ecoText += getGoodInitial(good) + ": $" +
-                         std::to_string(static_cast<int>(price));
+
+            // Only show a few relevant prices to avoid clutter
+            std::vector<Resource> toShow = {Resource::Food, Resource::Fuel,
+                                            Resource::Weapons};
+            for (auto res : toShow) {
+              if (eco.currentPrices.count(res)) {
+                if (!ecoText.empty())
+                  ecoText += " | ";
+                ecoText +=
+                    getResourceInitial(res) + ": $" +
+                    std::to_string(static_cast<int>(eco.currentPrices.at(res)));
+              }
             }
 
             if (!ecoText.empty()) {

@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o"
   "CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o.d"
+  "CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o"
+  "CMakeFiles/SpaceGame.dir/src/engine/physics/AsteroidSystem.cpp.o.d"
   "CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.o"
   "CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.o.d"
   "CMakeFiles/SpaceGame.dir/src/engine/physics/KinematicsSystem.cpp.o"

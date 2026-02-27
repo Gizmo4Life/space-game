@@ -1247,6 +1247,7 @@ CMakeFiles/SpaceGame.dir/src/main.cpp.o: \
   /usr/local/include/entt/signal/emitter.hpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /Users/Dan/Documents/repos/space-game/src/engine/combat/WeaponSystem.h \
+  /Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.h \
   /Users/Dan/Documents/repos/space-game/src/engine/physics/GravitySystem.h \
   /Users/Dan/Documents/repos/space-game/src/engine/physics/KinematicsSystem.h \
   /Users/Dan/Documents/repos/space-game/src/engine/physics/PhysicsEngine.h \
