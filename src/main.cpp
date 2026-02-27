@@ -51,22 +51,8 @@ int main() {
   auto playerEntity =
       WorldLoader::spawnPlayer(registry, physics.getWorldId(), playerConfig);
 
-  // --- Spawn NPC Ships (2 per faction) ---
-  {
-    auto &factionMgr = FactionManager::instance();
-    auto &npcMgr = NPCShipManager::instance();
-    for (auto const &[id, data] : factionMgr.getAllFactions()) {
-      for (int i = 0; i < 2; ++i) {
-        float angle = static_cast<float>(rand()) / RAND_MAX * 6.28f;
-        float dist = 500.0f + static_cast<float>(rand() % 2000);
-        sf::Vector2f pos(std::cos(angle) * dist, std::sin(angle) * dist);
-        npcMgr.spawnShip(registry, id, pos, physics.getWorldId());
-      }
-    }
-    std::cout << "[NPC] Spawned " << factionMgr.getAllFactions().size() * 2
-              << " NPC ships across " << factionMgr.getAllFactions().size()
-              << " factions\n";
-  }
+  // --- NPC Ship Manager (auto-spawns at planets) ---
+  NPCShipManager::instance().init(physics.getWorldId());
 
   // --- Camera Setup ---
   sf::View cameraView(sf::FloatRect({0, 0}, {1200, 800}));
