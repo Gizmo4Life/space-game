@@ -1,11 +1,27 @@
 #include "KinematicsSystem.h"
 #include "game/components/InertialBody.h"
+#include "game/components/TransformComponent.h"
+#include "game/components/WorldConfig.h"
+#include <box2d/box2d.h>
 #include <cmath>
 
 namespace space {
 
 void KinematicsSystem::update(entt::registry &registry, float deltaTime) {
-  // Logic for high-level kinematics if needed.
+  auto view = registry.view<InertialBody, TransformComponent>();
+  for (auto entity : view) {
+    auto &inertial = view.get<InertialBody>(entity);
+    auto &transform = view.get<TransformComponent>(entity);
+
+    if (b2Body_IsValid(inertial.bodyId)) {
+      b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
+      b2Rot rot = b2Body_GetRotation(inertial.bodyId);
+
+      transform.position.x = pos.x * WorldConfig::WORLD_SCALE;
+      transform.position.y = pos.y * WorldConfig::WORLD_SCALE;
+      transform.rotation = atan2f(rot.s, rot.c) * 180.0f / 3.14159f;
+    }
+  }
 }
 
 void KinematicsSystem::applyThrust(entt::registry &registry,
@@ -13,12 +29,9 @@ void KinematicsSystem::applyThrust(entt::registry &registry,
   auto &inertial = registry.get<InertialBody>(entity);
   if (b2Body_IsValid(inertial.bodyId)) {
     b2Rot rot = b2Body_GetRotation(inertial.bodyId);
-    // User is using positive thrustForce now (100.0f).
-    // Apex of triangle is at +X (pixels), which is +X in physics.
-    // Negating both components to fix the persistent inversion reported by the
-    // user
-    b2Vec2 force = {-rot.c * inertial.thrustForce * power,
-                    -rot.s * inertial.thrustForce * power};
+    // Applying thrust along the +X forward axis
+    b2Vec2 force = {rot.c * inertial.thrustForce * power,
+                    rot.s * inertial.thrustForce * power};
 
     b2Body_ApplyForceToCenter(inertial.bodyId, force, true);
   }

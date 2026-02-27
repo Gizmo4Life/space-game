@@ -18,6 +18,7 @@
 #include "game/components/InertialBody.h"
 #include "game/components/ShipConfig.h"
 #include "game/components/SpriteComponent.h"
+#include "game/components/WorldConfig.h"
 #include "rendering/MainRenderer.h"
 #include "rendering/RenderSystem.h"
 
@@ -55,7 +56,8 @@ int main() {
   NPCShipManager::instance().init(physics.getWorldId());
 
   // --- Camera Setup ---
-  sf::View cameraView(sf::FloatRect({0, 0}, {1200, 800}));
+  float zoom = WorldConfig::DEFAULT_ZOOM;
+  sf::View cameraView(sf::FloatRect({0, 0}, {1200 * zoom, 800 * zoom}));
   bool spaceHeld = false; // Declared and initialized here
   sf::Clock clock;
 
@@ -107,6 +109,8 @@ int main() {
       KinematicsSystem::applyRotation(registry, playerEntity, -1.0f);
     if (dHeld)
       KinematicsSystem::applyRotation(registry, playerEntity, 1.0f);
+    if (spaceHeld)
+      WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
 
     // Visual Feedback
     auto &sc = registry.get<SpriteComponent>(playerEntity);
@@ -129,7 +133,7 @@ int main() {
     auto &inertial = registry.get<InertialBody>(playerEntity);
     b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
     b2Vec2 wrappedPos = pos;
-    float limit = 50000.0f; // Significantly increased for the new grand scale
+    float limit = WorldConfig::WORLD_HALF_SIZE / WorldConfig::WORLD_SCALE;
     if (pos.x < -limit)
       wrappedPos.x = limit;
     else if (pos.x > limit)
@@ -145,7 +149,9 @@ int main() {
     }
 
     // Camera Follow
-    cameraView.setCenter({pos.x * 30.0f, pos.y * 30.0f});
+    // Camera Follow - Using WORLD_SCALE for position
+    cameraView.setCenter(
+        {pos.x * WorldConfig::SHIP_SCALE, pos.y * WorldConfig::SHIP_SCALE});
     renderer.getWindow().setView(cameraView);
 
     renderer.clear();

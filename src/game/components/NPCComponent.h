@@ -18,9 +18,9 @@ struct NPCComponent {
   sf::Vector2f targetPosition;
 
   float decisionTimer = 0.0f;
-  float dockTimer = 0.0f;       // Time remaining docked
-  float arrivalRadius = 150.0f; // How close counts as "arrived"
-  float patrolAngle = 0.0f;     // For escort circular patrol
+  float dockTimer = 0.0f;      // Time remaining docked
+  float arrivalRadius = 30.0f; // How close counts as "arrived"
+  float patrolAngle = 0.0f;    // For escort circular patrol
 };
 
 } // namespace space

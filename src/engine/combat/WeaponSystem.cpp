@@ -21,7 +21,18 @@ void WeaponSystem::update(entt::registry &registry, float deltaTime) {
     }
   }
 
-  // 2. Update Projectile TTL
+  // 2. Update Ship Stats (Energy Regen)
+  auto statsView = registry.view<ShipStats>();
+  for (auto entity : statsView) {
+    auto &stats = statsView.get<ShipStats>(entity);
+    if (stats.currentEnergy < stats.energyCapacity) {
+      stats.currentEnergy += 10.0f * deltaTime; // Regen 10 energy/sec
+      if (stats.currentEnergy > stats.energyCapacity)
+        stats.currentEnergy = stats.energyCapacity;
+    }
+  }
+
+  // 3. Update Projectile TTL
   auto projView = registry.view<ProjectileComponent>();
   std::vector<entt::entity> toDestroy;
 
@@ -71,7 +82,7 @@ void WeaponSystem::handleCollisions(entt::registry &registry) {
       float dy = projPos.y - shipPos.y;
       float distSq = dx * dx + dy * dy;
 
-      if (distSq < 400.0f) { // 20 units radius
+      if (distSq < 90000.0f) { // 300 units radius (~15 pixels at scale 0.05)
         auto &stats = shipView.get<ShipStats>(shipEntity);
         stats.currentHull -= proj.damage;
         toDestroy.push_back(projEntity);

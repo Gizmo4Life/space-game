@@ -10,8 +10,8 @@ Provide a realistic yet accessible flight model for spacecraft, allowing players
 
 ## 2. Orchestration Flow
 1. **Input Handling:** Process raw player input for thrust and rotation via specialized input modules.
-2. **Physics Simulation:** Apply forces to the ship entity using the [Physics] (T3) module to calculate velocity and position based on Newtonian mechanics.
-3. **Collision Detection:** Verify spatial validity against environmental obstacles or entities.
+2. **Physics Simulation:** Apply forces to the ship entity using the [Physics] (T3) module. Navigation operates on the `SHIP_SCALE` (30.0) for combat and ship-level movement, while using `WORLD_SCALE` (0.05) for solar system-level positioning and orbital mechanics.
+3. **Alignment**: Thrust and rotation are aligned to the ship's +X forward axis, ensuring intuitive traversal.
 4. **Link Transit:** Detect proximity to [SystemGate] (T3) entities to trigger interplanetary transitions.
 
 ## 3. Data Flow & Integrity

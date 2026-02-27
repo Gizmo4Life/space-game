@@ -1324,9 +1324,10 @@ CMakeFiles/SpaceGame.dir/src/main.cpp.o: \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
-  /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
+  /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
   /Users/Dan/Documents/repos/space-game/src/rendering/MainRenderer.h \
   /Users/Dan/Documents/repos/space-game/src/rendering/RenderSystem.h

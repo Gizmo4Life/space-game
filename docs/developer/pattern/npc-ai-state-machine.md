@@ -8,51 +8,65 @@ pillar: developer
 
 # Pattern: NPC AI State Machine
 
-**Intent:** Drive NPC behaviour through a timer-gated decision loop with belief and state enums.
+**Intent:** Drive NPC behaviour through a timer-gated decision loop with belief and state enums, spawning at planets and traveling between them.
 
 ## Shape
 
 ```cpp
-// Component — carries AI state per entity
 struct NPCComponent {
   uint32_t    factionId;
   AIBelief    belief;         // Trader, Escort, Raider
   AIState     state;          // Idle, Docked, Traveling, Combat, Fleeing
   entt::entity targetEntity;
+  entt::entity homePlanet;    // Planet of origin
   sf::Vector2f targetPosition;
-  float       decisionTimer;  // Seconds until next re-evaluation
+  float       decisionTimer;
+  float       dockTimer;      // Time remaining docked
+  float       arrivalRadius;  // 150 units
+  float       patrolAngle;    // For escort circular orbit
 };
 
-// System — tick loop
 void NPCShipManager::update(registry, dt) {
-  for (auto [entity, npc, inertial] : view) {
-    npc.decisionTimer -= dt;
-    if (npc.decisionTimer <= 0) {
-      npc.decisionTimer = 5.0f;  // Re-evaluate every 5s
-      acquireTarget(npc, registry);
+  // 1. Spawn timer: new ship at random planet every 8s (cap 20)
+  // 2. Tick AI state machine for all NPCs
+}
+
+void NPCShipManager::tickAI(registry, dt) {
+  for (auto [entity, npc, body] : view) {
+    switch (npc.state) {
+      case Idle:      acquireTarget(npc); break;
+      case Traveling: navigateToward(npc, body); break;
+      case Docked:    waitOrPatrol(npc, body, dt); break;
     }
-    navigateToward(npc, inertial);
   }
 }
 ```
 
 ## Key Constraints
-- **Fixed interval** — Decision logic runs every 5 seconds, not every frame.
-- **Belief-state separation** — `AIBelief` defines *role* (permanent), `AIState` defines *activity* (transient).
-- **Target acquisition** — Scans all `PlanetEconomy` entities, selects nearest.
-- **Physics integration** — Uses `InertialBody` thrust, not direct position manipulation.
+- **Planet-based spawning** — Ships spawn at `PlanetEconomy` entity positions, not random coords.
+- **Continuous respawn** — Timer spawns 1 ship every 8 seconds, capped at 20 total NPCs.
+- **Belief distribution** — 50% Trader, 25% Escort, 25% Raider (random on spawn).
+- **State transitions** — `Idle → Traveling → Docked → Idle` loop, with future Combat branching.
+- **Physics integration** — Uses `InertialBody` thrust at 50% force, zeroes velocity on dock.
 
-## State Transitions (Future)
+## Belief Behaviors
+
+| Belief | Idle → | Docked behavior | Home planet |
+|--------|--------|-----------------|-------------|
+| Trader | Pick random planet (exclude home) | Wait 3-6s, reassign home | Updates on dock |
+| Escort | Navigate to home planet | Orbit at 200px radius | Static |
+| Raider | Pick random planet | Wait 3-6s | Static |
+
+## State Transitions
 ```mermaid
 stateDiagram-v2
     Idle --> Traveling: Target acquired
-    Traveling --> Docked: At planet
-    Traveling --> Combat: Hostile detected
-    Docked --> Traveling: Trade complete
-    Combat --> Fleeing: Hull < 30%
-    Fleeing --> Idle: Safe distance
+    Traveling --> Docked: Within arrivalRadius
+    Docked --> Idle: dockTimer expired
+    Traveling --> Idle: Target invalid
 ```
 
 ## Applied In
-- `NPCComponent` — Per-entity AI data.
-- `NPCShipManager::update` — Decision engine and navigation.
+- `NPCComponent` — Per-entity AI data with `homePlanet` and `dockTimer`.
+- `NPCShipManager::tickAI` — State machine and navigation.
+- `NPCShipManager::spawnAtRandomPlanet` — Planet-based spawning.

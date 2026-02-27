@@ -1253,6 +1253,9 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: \
   /usr/local/include/box2d/id.h /usr/local/include/box2d/types.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h
+  /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream

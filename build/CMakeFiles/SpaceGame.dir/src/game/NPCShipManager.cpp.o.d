@@ -1,6 +1,7 @@
 CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: \
   /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.cpp \
   /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
   /usr/local/include/SFML/System/Vector2.hpp \
   /usr/local/include/SFML/System/Export.hpp \
   /usr/local/include/SFML/Config.hpp \
@@ -1126,6 +1127,7 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: \
   /usr/local/include/entt/signal/fwd.hpp \
   /usr/local/include/entt/signal/sigh.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
+  /Users/Dan/Documents/repos/space-game/src/engine/combat/WeaponSystem.h \
   /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
   /usr/local/include/opentelemetry/nostd/shared_ptr.h \
   /usr/local/include/opentelemetry/nostd/unique_ptr.h \
@@ -1326,4 +1328,5 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: \
   /usr/local/include/SFML/System/Sleep.hpp \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream

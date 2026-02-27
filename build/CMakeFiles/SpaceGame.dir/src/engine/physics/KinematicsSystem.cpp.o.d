@@ -1120,4 +1120,13 @@ CMakeFiles/SpaceGame.dir/src/engine/physics/KinematicsSystem.cpp.o: \
   /usr/local/include/entt/signal/fwd.hpp \
   /usr/local/include/entt/signal/sigh.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
-  /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h
+  /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
+  /usr/local/include/SFML/System/Vector2.hpp \
+  /usr/local/include/SFML/System/Export.hpp \
+  /usr/local/include/SFML/Config.hpp \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
+  /usr/local/include/SFML/System/Angle.hpp \
+  /usr/local/include/SFML/System/Angle.inl \
+  /usr/local/include/SFML/System/Vector2.inl \
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h

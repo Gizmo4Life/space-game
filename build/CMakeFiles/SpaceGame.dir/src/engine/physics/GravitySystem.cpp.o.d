@@ -1128,4 +1128,5 @@ CMakeFiles/SpaceGame.dir/src/engine/physics/GravitySystem.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
   /usr/local/include/SFML/System/Angle.hpp \
   /usr/local/include/SFML/System/Angle.inl \
-  /usr/local/include/SFML/System/Vector2.inl
+  /usr/local/include/SFML/System/Vector2.inl \
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h

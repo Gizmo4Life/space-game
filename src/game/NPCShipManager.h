@@ -1,4 +1,4 @@
-#pragma once
+#include "game/components/ShipConfig.h"
 #include <SFML/System/Vector2.hpp>
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
@@ -32,6 +32,7 @@ private:
   b2WorldId worldId_{};
   float spawnTimer_ = 0.0f;
   bool initialized_ = false;
+  ShipConfig npcConfig_;
 
   static constexpr int MAX_NPCS = 20;
   static constexpr float SPAWN_INTERVAL = 8.0f;

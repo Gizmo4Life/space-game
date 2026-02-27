@@ -7,14 +7,17 @@
 #include "game/components/InertialBody.h"
 #include "game/components/NameComponent.h"
 #include "game/components/OrbitalComponent.h"
+#include "game/components/PlayerComponent.h"
 #include "game/components/ShipConfig.h"
 #include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
+#include "game/components/WorldConfig.h"
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -43,8 +46,10 @@ void WorldLoader::loadStars(entt::registry &registry, int count) {
     SpriteComponent sc;
     sc.texture = texture;
     sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
-    sc.sprite->setPosition({static_cast<float>(rand() % 20000 - 10000),
-                            static_cast<float>(rand() % 20000 - 10000)});
+    int scatter = static_cast<int>(WorldConfig::WORLD_HALF_SIZE * 2);
+    sc.sprite->setPosition(
+        {static_cast<float>(rand() % scatter - scatter / 2),
+         static_cast<float>(rand() % scatter - scatter / 2)});
     registry.emplace<SpriteComponent>(star, sc);
   }
 }
@@ -90,21 +95,32 @@ void WorldLoader::generateStarSystem(entt::registry &registry,
       tc.position = {0, 0};
     }
     registry.emplace<TransformComponent>(star, tc);
-    registry.emplace<CelestialBody>(star, 20000.0f, 5000.0f);
+    registry.emplace<CelestialBody>(star, 50000.0f, 128.0f);
     registry.emplace<NameComponent>(star, generateName());
   }
 
   int planetCount = 4 + (rand() % 5);
+  constexpr float STAR_MASS = 50000.0f;
+  constexpr float G = WorldConfig::GRAVITY_G;
+
   for (int i = 0; i < planetCount; ++i) {
     auto planet = registry.create();
 
-    float dist = 1200.0f + i * 1400.0f + (rand() % 400); // Scaled up 3x
-    float eccentricity = (rand() % 35) / 100.0f;
+    float dist = 800.0f + i * 600.0f + (rand() % 1000);
+    float eccentricity = (rand() % 25) / 100.0f; // 0-0.25 for stability
     float semiMajor = dist;
     float semiMinor = dist * sqrtf(1.0f - eccentricity * eccentricity);
 
+    // Kepler-derived period: T = 2π√(a³ / (G × M))
+    // a in pixels → convert to Box2D meters for consistency
+    float aMeters = dist / WorldConfig::WORLD_SCALE;
+    float period = 2.0f * 3.14159f *
+                   sqrtf((aMeters * aMeters * aMeters) / (G * STAR_MASS));
+    // Scale for visual appeal (orbits complete in ~60-300s)
+    period *= 0.15f;
+
     registry.emplace<OrbitalComponent>(
-        planet, barycenter, semiMajor, semiMinor, dist / 2.0f, // Slower orbits
+        planet, barycenter, semiMajor, semiMinor, period,
         static_cast<float>(rand() % 628) / 100.0f,
         static_cast<float>(rand() % 628) / 100.0f);
 
@@ -143,7 +159,8 @@ void WorldLoader::generateStarSystem(entt::registry &registry,
     sc.sprite->setOrigin({radius, radius});
     registry.emplace<SpriteComponent>(planet, sc);
     registry.emplace<TransformComponent>(planet);
-    registry.emplace<CelestialBody>(planet, size * 100.0f, dist * 0.9f);
+    float surfaceR = radius; // Visual radius = surface radius
+    registry.emplace<CelestialBody>(planet, size * 50.0f, surfaceR);
     registry.emplace<NameComponent>(planet, generateName());
 
     // Assign mixed allegiances
@@ -184,7 +201,9 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
-  bodyDef.position = {30.0f, 30.0f};
+  // Spawn at a reasonable starting distance in metrics
+  float spawnMeters = 900.0f / WorldConfig::WORLD_SCALE;
+  bodyDef.position = {spawnMeters, spawnMeters};
   bodyDef.linearDamping = config.linearDamping;
   bodyDef.angularDamping = config.angularDamping;
   b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
@@ -196,9 +215,11 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   registry.emplace<InertialBody>(ship, bodyId, config.thrustForce,
                                  config.rotationSpeed);
-  registry.emplace<ShipStats>(ship);
   registry.emplace<WeaponComponent>(ship);
-  registry.emplace<CargoComponent>(ship);
+  registry.emplace<NameComponent>(ship, "Player Ship");
+  registry.emplace<ShipStats>(ship);
+  registry.emplace<PlayerComponent>(ship);
+  registry.emplace<TransformComponent>(ship, sf::Vector2f(900.0f, 900.0f));
   registry.emplace<CreditsComponent>(ship);
 
   Faction f;
@@ -207,7 +228,8 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   sf::Image img({32, 24}, sf::Color::Transparent);
   for (int x = 0; x < 32; ++x) {
-    int height = (x * 12) / 32;
+    // Pointy end at x=31 (+X forward)
+    int height = ((31 - x) * 12) / 32;
     for (int y = 12 - height; y < 12 + height; ++y) {
       img.setPixel({static_cast<unsigned int>(x), static_cast<unsigned int>(y)},
                    sf::Color::Cyan);
@@ -221,7 +243,6 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
   sc.sprite->setOrigin({16.0f, 12.0f});
   registry.emplace<SpriteComponent>(ship, sc);
-  registry.emplace<NameComponent>(ship, "Player Craft");
 
   return ship;
 }

@@ -10,7 +10,7 @@ Enable ship-to-ship engagement through projectile and beam-based weapon systems.
 
 ## 2. Orchestration Flow
 1. **Weapon Fire:** `WeaponSystem::fire` checks cooldown and energy, deducts from `ShipStats`, spawns a `ProjectileComponent` entity with a Box2D bullet body.
-2. **Trajectory Calculation:** Projectiles receive initial velocity from owner orientation; Box2D handles physics.
+2. **Trajectory Calculation:** Projectiles receive initial velocity from owner orientation along the +X forward axis. Thrust and weapon firing are aligned to this same axis for intuitive control.
 3. **Hit Verification:** `WeaponSystem::handleCollisions` performs distance-based proximity checks between projectiles and ships (excluding owner).
 4. **Damage Resolution:** Deducts damage from `ShipStats.currentHull`; destroys projectile on hit.
 5. **TTL Cleanup:** Expired projectiles are destroyed each tick.

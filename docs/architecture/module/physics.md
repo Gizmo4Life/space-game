@@ -24,6 +24,9 @@ Newtonian kinematics, gravity wells, orbital mechanics, and Box2D world manageme
 - **KinematicsSystem**: Applies thrust/rotation forces and syncs Box2D positions with `TransformComponent`.
 - **GravitySystem**: Iterates `CelestialBody` × `InertialBody` pairs, applies gravitational pull.
 - **OrbitalSystem**: Updates `TransformComponent` via Kepler ellipse equations for moons/planets.
+- **Dual-Scale System**: Manages two distinct scaling factors in `WorldConfig.h`:
+  - `WORLD_SCALE` (0.05): Used for large-scale orbital distances and map limits.
+  - `SHIP_SCALE` (30.0): Used for "foreground" combat (ship physics and rendering), allowing ships to appear larger than their literal world-scale size.
 
 ## 4. Pattern Composition
 - [Pattern] cpp-ecs-system-static (P) — `KinematicsSystem`, `GravitySystem`, `OrbitalSystem`

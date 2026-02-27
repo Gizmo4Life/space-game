@@ -1130,6 +1130,7 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/OrbitalComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
   /usr/local/include/SFML/Graphics.hpp \
@@ -1258,4 +1259,6 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: \
   /usr/local/include/SFML/System/MemoryInputStream.hpp \
   /usr/local/include/SFML/System/Sleep.hpp \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h
+  /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream

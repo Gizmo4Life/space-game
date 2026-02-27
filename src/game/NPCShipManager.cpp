@@ -1,4 +1,5 @@
 #include "NPCShipManager.h"
+#include "engine/combat/WeaponSystem.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/components/CargoComponent.h"
@@ -11,6 +12,7 @@
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
+#include "game/components/WorldConfig.h"
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <iostream>
@@ -194,7 +196,8 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
       } else if (registry.all_of<InertialBody>(npc.targetEntity)) {
         auto &tBody = registry.get<InertialBody>(npc.targetEntity);
         b2Vec2 tp = b2Body_GetPosition(tBody.bodyId);
-        targetPixel = {tp.x * 30.0f, tp.y * 30.0f};
+        targetPixel = {tp.x * WorldConfig::WORLD_SCALE,
+                       tp.y * WorldConfig::WORLD_SCALE};
       } else {
         npc.state = AIState::Idle;
         break;
@@ -220,13 +223,28 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
       } else {
         // Apply thrust toward target (in Box2D coords)
         float angle = std::atan2(diff.y, diff.x);
-        float thrust = inertial.thrustForce * 0.5f; // NPCs fly gently
+        float thrust =
+            inertial.thrustForce; // NPCs use their full acceleration specs
         b2Vec2 force = {std::cos(angle) * thrust, std::sin(angle) * thrust};
         b2Body_ApplyForceToCenter(inertial.bodyId, force, true);
 
         // Rotate to face direction of travel
         b2Rot targetRot = b2MakeRot(angle);
         b2Body_SetTransform(inertial.bodyId, myPos, targetRot);
+
+        // Combat: fire if target is a ship and somewhat in front
+        if (registry.all_of<InertialBody>(npc.targetEntity)) {
+          // Check alignment
+          b2Rot myRot = b2Body_GetRotation(inertial.bodyId);
+          float myAngle = std::atan2(myRot.s, myRot.c);
+          float angleErr = std::abs(myAngle - angle);
+          if (angleErr > 3.14159f)
+            angleErr = std::abs(angleErr - 2.0f * 3.14159f);
+
+          if (angleErr < 0.2f && dist < 1500.0f) {
+            WeaponSystem::fire(registry, entity, worldId_);
+          }
+        }
       }
       break;
     }
@@ -241,7 +259,7 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
         auto &homeTrans =
             registry.get<TransformComponent>(npc.homePlanet).position;
         npc.patrolAngle += dt * 0.3f;      // Slow orbit
-        float patrolDist = 200.0f / 30.0f; // In Box2D units
+        float patrolDist = 500.0f / 30.0f; // In Box2D units
         float px = homeTrans.x / 30.0f + std::cos(npc.patrolAngle) * patrolDist;
         float py = homeTrans.y / 30.0f + std::sin(npc.patrolAngle) * patrolDist;
 
@@ -313,16 +331,19 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
   bodyDef.position = {position.x, position.y};
-  bodyDef.linearDamping = 0.5f;
-  bodyDef.angularDamping = 1.0f;
+  bodyDef.linearDamping = npcConfig_.linearDamping;
+  bodyDef.angularDamping = npcConfig_.angularDamping;
 
   b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
 
+  b2Polygon dynamicBox = b2MakeBox(0.6f, 0.4f);
   b2ShapeDef shapeDef = b2DefaultShapeDef();
-  b2Polygon dynamicBox = b2MakeBox(0.5f, 0.3f);
+  shapeDef.density = 1.0f;
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 
-  registry.emplace<InertialBody>(entity, bodyId, 1000.0f, 20.0f);
+  registry.emplace<InertialBody>(entity, bodyId, npcConfig_.thrustForce,
+                                 npcConfig_.rotationSpeed);
+  registry.emplace<WeaponComponent>(entity);
 
   // Create faction-colored diamond sprite for NPC
   sf::Image img({20, 20}, sf::Color::Transparent);

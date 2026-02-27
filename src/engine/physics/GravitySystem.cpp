@@ -2,13 +2,16 @@
 #include "game/components/CelestialBody.h"
 #include "game/components/InertialBody.h"
 #include "game/components/TransformComponent.h"
+#include "game/components/WorldConfig.h"
 #include <box2d/box2d.h>
 #include <cmath>
 
 namespace space {
 
 void GravitySystem::update(entt::registry &registry) {
-  const float G = 0.1f; // Reduced for a weaker, cinematic pull
+  constexpr float G = WorldConfig::GRAVITY_G;
+  constexpr float PPM = WorldConfig::WORLD_SCALE;
+  constexpr float MAX_FORCE = WorldConfig::MAX_GRAVITY_FORCE;
 
   auto gravityView = registry.view<CelestialBody, TransformComponent>();
   auto shipsView = registry.view<InertialBody>();
@@ -21,13 +24,15 @@ void GravitySystem::update(entt::registry &registry) {
     b2Vec2 shipPos = b2Body_GetPosition(inertial.bodyId);
 
     for (auto celestialEntity : gravityView) {
+      if (shipEntity == celestialEntity)
+        continue;
+
       auto &celestial = gravityView.get<CelestialBody>(celestialEntity);
       auto &transform = gravityView.get<TransformComponent>(celestialEntity);
 
-      // Distance in meters (celestial.position is pixels, need to convert or
-      // unify) MainRenderer: 30 pixels per meter.
-      b2Vec2 celestialPos = {transform.position.x / 30.0f,
-                             transform.position.y / 30.0f};
+      // Convert pixel position to Box2D meters
+      b2Vec2 celestialPos = {transform.position.x / PPM,
+                             transform.position.y / PPM};
 
       b2Vec2 delta = celestialPos - shipPos;
       float r2 = delta.x * delta.x + delta.y * delta.y;
@@ -36,15 +41,18 @@ void GravitySystem::update(entt::registry &registry) {
       if (r < 0.1f)
         continue; // Prevent division by zero
 
-      // Check influence radius
-      if (r * 30.0f > celestial.gravityRadius)
+      // Surface exclusion: no gravity inside planet's visual radius
+      // surfaceRadius is in pixels, convert to meters for comparison
+      float surfaceMeters = celestial.surfaceRadius / PPM;
+      if (r < surfaceMeters)
         continue;
 
+      // Pure inverse square: F = G * M / r²
       float forceMag = (G * celestial.mass) / r2;
 
-      // Limit max force for stability
-      if (forceMag > 100.0f)
-        forceMag = 100.0f;
+      // Stability cap
+      if (forceMag > MAX_FORCE)
+        forceMag = MAX_FORCE;
 
       b2Vec2 gravityForce = {(delta.x / r) * forceMag,
                              (delta.y / r) * forceMag};

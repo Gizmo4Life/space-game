@@ -6,17 +6,51 @@
 #include "game/components/InertialBody.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
+#include "game/components/PlayerComponent.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
+#include "game/components/WorldConfig.h"
+#include <SFML/Graphics.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <cmath>
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace space {
 
 void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                           const sf::Font *font) {
+  // 0. Setup Views
+  sf::View originalView = window.getView();
+  float zoom = WorldConfig::DEFAULT_ZOOM;
+
+  // Find Player position for centering
+  sf::Vector2f playerPhysPos(0, 0);
+  auto playerView = registry.view<PlayerComponent, InertialBody>();
+  for (auto e : playerView) {
+    auto &inertial = playerView.get<InertialBody>(e);
+    if (b2Body_IsValid(inertial.bodyId)) {
+      b2Vec2 bPos = b2Body_GetPosition(inertial.bodyId);
+      playerPhysPos = {bPos.x, bPos.y};
+      break;
+    }
+  }
+
+  // View 1: Background (Planets) at WORLD_SCALE
+  sf::View bgView(sf::FloatRect({0, 0}, {1200 * zoom, 800 * zoom}));
+  bgView.setCenter({playerPhysPos.x * WorldConfig::WORLD_SCALE,
+                    playerPhysPos.y * WorldConfig::WORLD_SCALE});
+
+  // View 2: Foreground (Ships, Projectiles) at SHIP_SCALE
+  sf::View fgView(sf::FloatRect({0, 0}, {1200 * zoom, 800 * zoom}));
+  fgView.setCenter({playerPhysPos.x * WorldConfig::SHIP_SCALE,
+                    playerPhysPos.y * WorldConfig::SHIP_SCALE});
+
   // 1. Render Static/Orbital Transforms (Stars, Planets) - BACKGROUND LAYER
+  window.setView(bgView);
   {
     auto view = registry.view<TransformComponent, SpriteComponent>(
         entt::exclude<InertialBody>);
@@ -84,17 +118,20 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
     }
   }
 
-  // 2. Render Physics Bodies (Ship, etc.) - FOREGROUND LAYER
+  // 2. Render Physics Bodies (Ship, Projectiles) - FOREGROUND LAYER
+  window.setView(fgView);
   {
-    auto view = registry.view<InertialBody, SpriteComponent>();
-    for (auto entity : view) {
-      auto &inertial = view.get<InertialBody>(entity);
-      auto &spriteComp = view.get<SpriteComponent>(entity);
+    // A. Ships
+    auto shipView = registry.view<InertialBody, SpriteComponent>();
+    for (auto entity : shipView) {
+      auto &inertial = shipView.get<InertialBody>(entity);
+      auto &spriteComp = shipView.get<SpriteComponent>(entity);
       if (b2Body_IsValid(inertial.bodyId) && spriteComp.sprite) {
         b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
         b2Rot rot = b2Body_GetRotation(inertial.bodyId);
         float angleDegrees = atan2f(rot.s, rot.c) * 180.0f / 3.14159f;
-        sf::Vector2f pixelPos(pos.x * 30.0f, pos.y * 30.0f);
+        sf::Vector2f pixelPos(pos.x * WorldConfig::SHIP_SCALE,
+                              pos.y * WorldConfig::SHIP_SCALE);
 
         spriteComp.sprite->setPosition(pixelPos);
         spriteComp.sprite->setRotation(sf::degrees(angleDegrees));
@@ -110,11 +147,27 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         }
       }
     }
+
+    // B. Projectiles
+    auto projView = registry.view<ProjectileComponent, InertialBody>();
+    for (auto entity : projView) {
+      auto &inertial = projView.get<InertialBody>(entity);
+      if (b2Body_IsValid(inertial.bodyId)) {
+        b2Vec2 bPos = b2Body_GetPosition(inertial.bodyId);
+        sf::CircleShape bullet(2.0f);
+        bullet.setFillColor(sf::Color::Yellow);
+        bullet.setOrigin({1.0f, 1.0f});
+        bullet.setPosition({bPos.x * WorldConfig::SHIP_SCALE,
+                            bPos.y * WorldConfig::SHIP_SCALE});
+        window.draw(bullet);
+      }
+    }
   }
 
   // 3. Render Offscreen indicators - UI LAYER
+  window.setView(originalView);
   {
-    sf::View mainView = window.getView();
+    sf::View mainView = originalView;
     sf::FloatRect viewBounds(mainView.getCenter() - mainView.getSize() / 2.f,
                              mainView.getSize());
 
@@ -185,11 +238,24 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         factionColor = fData.color;
         labelText += " (" + fData.name + ")";
       }
-      drawIndicator(trans.position, labelText, factionColor, 12.0f);
+
+      // Indicators for background objects use BG view mapping
+      // For now, mapping them to FG space for consistency?
+      // Actually, if they are offscreen, they should point to where they would
+      // be in FG view if they were there. But planets move at 0.05. Let's use
+      // BG relative position for background indicators
+      sf::Vector2f indicatorPos = {
+          (trans.position.x - playerPhysPos.x * WorldConfig::WORLD_SCALE) +
+              originalView.getCenter().x,
+          (trans.position.y - playerPhysPos.y * WorldConfig::WORLD_SCALE) +
+              originalView.getCenter().y};
+
+      drawIndicator(indicatorPos, labelText, factionColor, 12.0f);
     }
 
-    // NPC ships (physics bodies — use world-space position)
-    auto npcView = registry.view<NPCComponent, NameComponent, InertialBody>();
+    // NPC ships (physics bodies — use SHIP_SCALE for indicators)
+    auto npcView = registry.view<NPCComponent, NameComponent, InertialBody>(
+        entt::exclude<PlayerComponent>);
     for (auto entity : npcView) {
       auto &name = npcView.get<NameComponent>(entity);
       auto &inertial = npcView.get<InertialBody>(entity);
@@ -197,7 +263,8 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         continue;
 
       b2Vec2 bPos = b2Body_GetPosition(inertial.bodyId);
-      sf::Vector2f pixelPos(bPos.x * 30.0f, bPos.y * 30.0f);
+      sf::Vector2f pixelPos(bPos.x * WorldConfig::SHIP_SCALE,
+                            bPos.y * WorldConfig::SHIP_SCALE);
 
       sf::Color color = sf::Color(255, 200, 100);
       std::string labelText = name.name;
@@ -208,20 +275,6 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         color = fData.color;
       }
       drawIndicator(pixelPos, labelText, color, 8.0f);
-    }
-  }
-
-  // 3. Render Projectiles
-  {
-    auto view = registry.view<ProjectileComponent, TransformComponent>();
-    for (auto entity : view) {
-      auto &transform = view.get<TransformComponent>(entity);
-
-      sf::CircleShape bullet(2.0f);
-      bullet.setFillColor(sf::Color::Yellow);
-      bullet.setOrigin({1.0f, 1.0f});
-      bullet.setPosition({transform.position.x, transform.position.y});
-      window.draw(bullet);
     }
   }
 }

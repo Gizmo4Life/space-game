@@ -31,30 +31,46 @@ Each NPC ship carries an `NPCComponent` that drives its behaviour:
 | Field | Type | Purpose |
 |-------|------|---------|
 | `factionId` | `uint32_t` | Faction this vessel serves |
-| `belief` | `AIBelief` | Role: **Trader**, **Escort**, or **Raider** |
+| `belief` | `AIBelief` | Role: **Trader** (50%), **Escort** (25%), or **Raider** (25%) |
 | `state` | `AIState` | Current state: **Idle**, **Docked**, **Traveling**, **Combat**, **Fleeing** |
 | `targetEntity` | `entt::entity` | Current navigation/combat target |
+| `homePlanet` | `entt::entity` | Planet of origin (updated for traders on dock) |
 | `targetPosition` | `sf::Vector2f` | Fallback coordinate target |
-| `decisionTimer` | `float` | Countdown until next AI decision (5s interval) |
+| `decisionTimer` | `float` | Countdown until next AI decision |
+| `dockTimer` | `float` | Time remaining docked at planet |
+| `arrivalRadius` | `float` | Distance threshold for "arrived" (150 units) |
+| `patrolAngle` | `float` | Current angle for escort circular patrol |
 
 ### 4.2. Entity Composition
 `NPCShipManager::spawnShip` creates a fully-formed ship entity with:
-- `TransformComponent` — world position
+- `TransformComponent` — world position (at planet)
 - `NameComponent` — `"{FactionName} Vessel"`
 - `Faction` — allegiance map (1.0 to owning faction)
-- `NPCComponent` — AI state machine
+- `NPCComponent` — AI state machine (belief assigned randomly)
 - `CargoComponent` — empty cargo hold
 - `CreditsComponent` — initial balance of 500 credits
 - `ShipStats` — hull/energy
-- `InertialBody` — Box2D dynamic body (15×15 box, linear damping 0.5, angular damping 1.0)
+- `InertialBody` — Box2D dynamic body (linear damping 0.5, angular damping 1.0)
 - `SpriteComponent` — faction-colored diamond sprite (20×20 px)
 
-### 4.3. Decision Engine
-The AI loop runs in `NPCShipManager::update`:
-1. **Timer tick** — `decisionTimer` decrements each frame.
-2. **Target acquisition** (every 5s) — scans all `PlanetEconomy` entities, selects nearest.
-3. **Navigation** — applies thrust force towards target if distance > 50 units.
-4. **Future:** Belief-based branching (Traders dock & trade, Raiders engage ships, Escorts guard).
+### 4.3. Spawning
+- `NPCShipManager::init(worldId)` called once at startup
+- Ships spawn **at planet positions** every 8 seconds (cap: 20 NPCs)
+- Random faction and random belief assigned per spawn
+- Home planet recorded for each ship
+
+### 4.4. Decision Engine (State Machine)
+```
+Idle → Traveling → Docked → Idle (loop)
+                ↘ Combat → Fleeing (future)
+```
+
+**By belief:**
+- **Trader** — pick random planet (excluding home) → travel → dock 3-6s → reassign home → repeat
+- **Escort** — travel to home planet → orbit at 200px radius patrol → re-evaluate after 15-25s
+- **Raider** — travel to random planet (combat engagement placeholder)
+
+**Navigation:** Applies 50% thrust toward target, rotates to face travel direction. Velocity zeroed on dock arrival.
 
 ## 5. Pattern Composition
 - [Pattern] cpp-ecs-component (P) — `PlanetEconomy`, `CargoComponent`, `Faction`, `NPCComponent`, `CreditsComponent`
