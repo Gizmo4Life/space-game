@@ -26,9 +26,11 @@ Ship-to-ship engagement, projectile lifecycles, and damage resolution.
 ## 4. Pattern Composition
 - [Pattern] cpp-ecs-component (P) — `WeaponComponent`, `ProjectileComponent`, `ShipStats`
 - [Pattern] cpp-ecs-system-static (P) — `WeaponSystem::update`, `WeaponSystem::fire`
+- [Pattern] otel-span-instrumentation (P) — `combat.weapon.fire`, `combat.collision.resolve`
 - [Pattern] logic-idempotency (P)
 
 ## 5. Telemetry & Observability
-- **Semantic Spans:** `combat.weapon.fire`, `combat.collision.resolve`
-- **Health Probes:** `combat.projectile.active_count`, `combat.damage.total_inflicted`
-- **Status:** ⚠️ _Declared but not yet instrumented in source code._
+- **Semantic Spans (OTEL):**
+  - `combat.weapon.fire` — attributes: `combat.projectile_speed`
+  - `combat.collision.resolve` — attributes: `combat.hits`
+- **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger

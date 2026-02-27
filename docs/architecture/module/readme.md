@@ -11,10 +11,11 @@ Physical code clusters and implementation mappings.
 
 ```mermaid
 graph TD
-    subgraph System Core
-        Core[src-core]
-        Sys[doc-system]
-        AI[ai-config]
+    subgraph Game Engine
+        Phys[physics]
+        Rend[rendering]
+        Comb[game-combat]
+        Econ[game-economy]
     end
     subgraph Governance Layer
         Prot[governance-protocols]
@@ -27,28 +28,29 @@ graph TD
         Ops[operational-pillar]
     end
 
-    Sys --> Core
+    Phys --> Comb
+    Phys --> Rend
+    Econ --> Comb
     Pat --> Stan
     Stan --> Prot
     Prot --> Work
     Work --> Ops
-    Ext --> Core
 ```
 
-## 1. System Core
-*Nuance: The primary implementation logic for the RAG engine.*
-- [src-core](src-core.md): Physical application logic.
+## 1. Game Engine (C++)
+*Nuance: High-performance modules implementing the spatial simulation and interactive systems.*
+- [physics](physics.md): Box2D-powered Newtonian physics engine.
+- [rendering](src-core.md): SFML rendering pipeline, camera, offscreen indicators.
+- [game-combat](game-combat.md): Ship-to-ship engagement and projectile systems.
+- [game-economy](game-economy.md): Faction budgeting, trade, and NPC orchestration.
+- [system-gate](system-gate.md): Inter-system jump and loading logic.
+
+## 2. Documentation System
+*Nuance: Structural modules governing how the repository is organized.*
 - [doc-system](doc-system.md): File system structure and DaC engine.
 - [ai-config](ai-config.md): Persona behavioral injections.
 
-## 2. Game Engine (C++)
-*Nuance: High-performance modules implementing the spatial simulation and interactive systems.*
-- [physics](physics.md): Box2D-powered Newtonian physics engine.
-- [system-gate](system-gate.md): Inter-system jump and loading logic.
-- [game-combat](game-combat.md): Ship-to-ship engagement and projectile systems.
-- [game-economy](game-economy.md): Faction budgeting, trade, and NPC orchestration.
-
-## 2. Governance Layer
+## 3. Governance Layer
 *Nuance: The "Brain" of the repository, defining the rules and protocols.*
 - [developer-patterns](developer-patterns.md): Atomic structural definitions.
 - [governance-standards](governance-standards.md): Compliance and fitness rules.

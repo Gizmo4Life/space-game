@@ -82,11 +82,16 @@ graph TD
 - [ops-escalation-path](ops-escalation-path.md)
 
 ## 6. Game Engine & Simulation
-*Nuance: Shapes for high-performance C++ games and Newtonian physics.*
+*Nuance: Shapes for high-performance C++ games, Newtonian physics, and runtime observability.*
 - [cpp-ecs-component](cpp-ecs-component.md)
 - [cpp-ecs-system-static](cpp-ecs-system-static.md)
+- [cpp-singleton-manager](cpp-singleton-manager.md)
 - [kinematics-newtonian-2d](kinematics-newtonian-2d.md)
 - [rendering-spatial-bridge](rendering-spatial-bridge.md)
+- [rendering-offscreen-indicator](rendering-offscreen-indicator.md)
+- [world-procedural-generation](world-procedural-generation.md)
+- [npc-ai-state-machine](npc-ai-state-machine.md)
+- [otel-span-instrumentation](otel-span-instrumentation.md)
 
 ## 7. UI/UX & Navigation
 *Nuance: Patterns for ensuring machine-readability and human scannability.*

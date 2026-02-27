@@ -47,6 +47,7 @@ Each NPC ship carries an `NPCComponent` that drives its behaviour:
 - `CreditsComponent` — initial balance of 500 credits
 - `ShipStats` — hull/energy
 - `InertialBody` — Box2D dynamic body (15×15 box, linear damping 0.5, angular damping 1.0)
+- `SpriteComponent` — faction-colored diamond sprite (20×20 px)
 
 ### 4.3. Decision Engine
 The AI loop runs in `NPCShipManager::update`:
@@ -58,9 +59,16 @@ The AI loop runs in `NPCShipManager::update`:
 ## 5. Pattern Composition
 - [Pattern] cpp-ecs-component (P) — `PlanetEconomy`, `CargoComponent`, `Faction`, `NPCComponent`, `CreditsComponent`
 - [Pattern] cpp-ecs-system-static (P) — `EconomyManager::update`, `FactionManager::update`
+- [Pattern] cpp-singleton-manager (P) — `EconomyManager`, `FactionManager`, `NPCShipManager`
+- [Pattern] npc-ai-state-machine (P) — `NPCComponent` belief/state, timer-gated decisions
+- [Pattern] world-procedural-generation (P) — Faction names, NPC spawn positions
+- [Pattern] otel-span-instrumentation (P) — `economy.update.tick`, `faction.credit.accumulate`, `npc.ai.tick`, `npc.spawn`
 - [Pattern] logic-idempotency (P)
 
 ## 6. Telemetry & Observability
-- **Semantic Spans:** `economy.update.tick`, `faction.credit.accumulate`, `npc.spawn`, `trade.execute`
-- **Health Probes:** `economy.planet.count`, `faction.total_credits`, `npc.active_count`
-- **Status:** ⚠️ _Declared but not yet instrumented in source code._
+- **Semantic Spans (OTEL):**
+  - `economy.update.tick` — attributes: `economy.planet_count`
+  - `faction.credit.accumulate` — attributes: `faction.total_credits`, `faction.count`
+  - `npc.ai.tick` — attributes: `npc.active_count`
+  - `npc.spawn` — attributes: `npc.faction_id`
+- **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger
