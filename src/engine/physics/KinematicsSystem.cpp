@@ -1,5 +1,6 @@
 #include "KinematicsSystem.h"
 #include "game/components/InertialBody.h"
+#include "game/components/PlayerComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WorldConfig.h"
 #include <box2d/box2d.h>
@@ -17,6 +18,16 @@ void KinematicsSystem::update(entt::registry &registry, float deltaTime) {
     if (b2Body_IsValid(inertial.bodyId)) {
       b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
       b2Rot rot = b2Body_GetRotation(inertial.bodyId);
+
+      // --- Velocity Clamping ---
+      b2Vec2 vel = b2Body_GetLinearVelocity(inertial.bodyId);
+      float speedSq = vel.x * vel.x + vel.y * vel.y;
+      if (speedSq > inertial.maxLinearVelocity * inertial.maxLinearVelocity) {
+        float speed = std::sqrt(speedSq);
+        vel.x = (vel.x / speed) * inertial.maxLinearVelocity;
+        vel.y = (vel.y / speed) * inertial.maxLinearVelocity;
+        b2Body_SetLinearVelocity(inertial.bodyId, vel);
+      }
 
       transform.position.x = pos.x * WorldConfig::WORLD_SCALE;
       transform.position.y = pos.y * WorldConfig::WORLD_SCALE;

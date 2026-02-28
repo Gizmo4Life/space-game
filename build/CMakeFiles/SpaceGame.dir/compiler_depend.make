@@ -834,6 +834,7 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: /Users/Dan/Docume
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iomanip \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ios \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iosfwd \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/istream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iterator \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/limits \
@@ -1046,6 +1047,8 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: /Users/Dan/Docume
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/xmmintrin.h \
   /Users/Dan/Documents/repos/space-game/src/engine/combat/WeaponSystem.h \
   /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
+  /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
@@ -4719,6 +4722,7 @@ CMakeFiles/SpaceGame.dir/src/engine/physics/KinematicsSystem.cpp.o: /Users/Dan/D
   /Users/Dan/Documents/repos/space-game/src/engine/physics/KinematicsSystem.h \
   /Users/Dan/Documents/repos/space-game/src/engine/physics/PhysicsEngine.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
   /usr/local/include/SFML/Config.hpp \
@@ -8129,6 +8133,7 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: /Users/Dan/Documents/rep
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/initializer_list \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ios \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iosfwd \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/istream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iterator \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/limits \
@@ -8337,8 +8342,18 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: /Users/Dan/Documents/rep
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/xmmintrin.h \
   /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
   /Users/Dan/Documents/repos/space-game/src/game/EconomyManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
+  /usr/local/include/SFML/Config.hpp \
+  /usr/local/include/SFML/Graphics/Color.hpp \
+  /usr/local/include/SFML/Graphics/Color.inl \
+  /usr/local/include/SFML/System/Angle.hpp \
+  /usr/local/include/SFML/System/Angle.inl \
+  /usr/local/include/SFML/System/Export.hpp \
+  /usr/local/include/SFML/System/Vector2.hpp \
+  /usr/local/include/SFML/System/Vector2.inl \
   /usr/local/include/entt/config/config.h \
   /usr/local/include/entt/config/macro.h \
   /usr/local/include/entt/config/version.h \
@@ -9362,6 +9377,7 @@ CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o: /Users/Dan/Documents/rep
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/initializer_list \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ios \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iosfwd \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/istream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iterator \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/limits \
@@ -10817,6 +10833,7 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: /Users/Dan/Documents/rep
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
@@ -12152,6 +12169,7 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/OrbitalComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
@@ -16102,8 +16120,6 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Users/Dan/Documents/repos/space-game/src/engine/physics/KinematicsSystem.h:
 
-/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream:
-
 /Users/Dan/Documents/repos/space-game/src/engine/physics/KinematicsSystem.cpp:
 
 /Users/Dan/Documents/repos/space-game/src/engine/physics/GravitySystem.h:
@@ -16621,6 +16637,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/locale:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/list:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iosfwd:
 

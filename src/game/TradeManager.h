@@ -26,13 +26,13 @@ public:
 
     if (credits.amount < totalCost)
       return false;
-    if (eco.stockpile[res] < amount)
+    if (eco.marketStockpile[res] < amount)
       return false;
     if (!cargo.add(res, amount))
       return false;
 
     credits.amount -= totalCost;
-    eco.stockpile[res] -= amount;
+    eco.marketStockpile[res] -= amount;
 
     return true;
   }
@@ -58,7 +58,7 @@ public:
       return false;
 
     credits.amount += totalProfit;
-    eco.stockpile[res] += amount;
+    eco.marketStockpile[res] += amount;
 
     return true;
   }

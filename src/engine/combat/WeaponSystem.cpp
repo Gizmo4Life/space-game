@@ -1,11 +1,14 @@
 #include "WeaponSystem.h"
 #include "engine/telemetry/Telemetry.h"
+#include "game/FactionManager.h"
+#include "game/components/Faction.h"
 #include "game/components/InertialBody.h"
 #include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
 #include <cmath>
+#include <iostream>
 #include <opentelemetry/trace/provider.h>
 #include <vector>
 
@@ -13,7 +16,7 @@ namespace space {
 
 void WeaponSystem::update(entt::registry &registry, float deltaTime) {
   // 1. Update Cooldowns
-  auto weaponView = registry.view<WeaponComponent>();
+  auto weaponView = registry.template view<WeaponComponent>();
   for (auto entity : weaponView) {
     auto &weapon = weaponView.get<WeaponComponent>(entity);
     if (weapon.currentCooldown > 0) {
@@ -22,7 +25,7 @@ void WeaponSystem::update(entt::registry &registry, float deltaTime) {
   }
 
   // 2. Update Ship Stats (Energy Regen)
-  auto statsView = registry.view<ShipStats>();
+  auto statsView = registry.template view<ShipStats>();
   for (auto entity : statsView) {
     auto &stats = statsView.get<ShipStats>(entity);
     if (stats.currentEnergy < stats.energyCapacity) {
@@ -33,7 +36,7 @@ void WeaponSystem::update(entt::registry &registry, float deltaTime) {
   }
 
   // 3. Update Projectile TTL
-  auto projView = registry.view<ProjectileComponent>();
+  auto projView = registry.template view<ProjectileComponent>();
   std::vector<entt::entity> toDestroy;
 
   for (auto entity : projView) {
@@ -59,8 +62,8 @@ void WeaponSystem::update(entt::registry &registry, float deltaTime) {
 void WeaponSystem::handleCollisions(entt::registry &registry) {
   auto span =
       Telemetry::instance().tracer()->StartSpan("combat.collision.resolve");
-  auto projView = registry.view<ProjectileComponent, InertialBody>();
-  auto shipView = registry.view<ShipStats, InertialBody>();
+  auto projView = registry.template view<ProjectileComponent, InertialBody>();
+  auto shipView = registry.template view<ShipStats, InertialBody>();
 
   std::vector<entt::entity> toDestroy;
   int hitCount = 0;
@@ -82,9 +85,37 @@ void WeaponSystem::handleCollisions(entt::registry &registry) {
       float dy = projPos.y - shipPos.y;
       float distSq = dx * dx + dy * dy;
 
-      if (distSq < 90000.0f) { // 300 units radius (~15 pixels at scale 0.05)
+      if (distSq < 64.0f) { // 8.0 units radius (~16 pixels at SHIP_SCALE=2.0)
         auto &stats = shipView.get<ShipStats>(shipEntity);
         stats.currentHull -= proj.damage;
+
+        // --- Relationship Impact ---
+        if (registry.all_of<Faction>(proj.owner) &&
+            registry.all_of<Faction>(shipEntity)) {
+          uint32_t attackerFaction =
+              registry.get<Faction>(proj.owner).getMajorityFaction();
+          uint32_t victimFaction =
+              registry.get<Faction>(shipEntity).getMajorityFaction();
+
+          if (attackerFaction != victimFaction) {
+            auto &fMgr = FactionManager::instance();
+            // 1. Direct Penalty
+            fMgr.adjustRelationship(attackerFaction, victimFaction, -0.01f);
+
+            // 2. "Enemy of my enemy is my friend"
+            // Find other factions that hate the victim
+            for (auto const &[fId, _] : fMgr.getAllFactions()) {
+              if (fId == attackerFaction || fId == victimFaction)
+                continue;
+              float relVictim = fMgr.getRelationship(fId, victimFaction);
+              if (relVictim <= -0.9f) {
+                // We are attacking their mortal enemy!
+                fMgr.adjustRelationship(attackerFaction, fId, 0.005f);
+              }
+            }
+          }
+        }
+
         toDestroy.push_back(projEntity);
         hitCount++;
         break;
@@ -142,17 +173,31 @@ entt::entity WeaponSystem::fire(entt::registry &registry, entt::entity owner,
   b2Circle circle = {{0, 0}, 0.1f};
   b2CreateCircleShape(bodyId, &shapeDef, &circle);
 
-  float angle = b2Body_GetRotation(ownerInertial.bodyId)
-                    .c; // Approximation of angle from cos
-  // Better way to get angle from Box2D 3.0 rotation
   b2Rot rot = b2Body_GetRotation(ownerInertial.bodyId);
   float ownerAngle = std::atan2(rot.s, rot.c);
+  float projSpeed = 5000.0f; // Matches WeaponComponent
 
-  b2Vec2 velocity = {std::cos(ownerAngle) * weapon.projectileSpeed,
-                     std::sin(ownerAngle) * weapon.projectileSpeed};
-  b2Body_SetLinearVelocity(bodyId, velocity);
+  // Inherit ship velocity
+  b2Vec2 shipVel = b2Body_GetLinearVelocity(ownerInertial.bodyId);
+  b2Vec2 projectileRelativeVel = {std::cos(ownerAngle) * projSpeed,
+                                  std::sin(ownerAngle) * projSpeed};
 
-  registry.emplace<InertialBody>(projectile, bodyId);
+  b2Vec2 finalVel = {shipVel.x + projectileRelativeVel.x,
+                     shipVel.y + projectileRelativeVel.y};
+
+  b2Body_SetLinearVelocity(bodyId, finalVel);
+
+  // Debug check
+  b2Vec2 actualVel = b2Body_GetLinearVelocity(bodyId);
+  float actualSpeed =
+      std::sqrt(actualVel.x * actualVel.x + actualVel.y * actualVel.y);
+  std::cout << "[Combat] Projectile Speed: " << actualSpeed
+            << " m/s (Requested: "
+            << std::sqrt(finalVel.x * finalVel.x + finalVel.y * finalVel.y)
+            << ")\n";
+
+  // Projectiles need a high speed limit to avoid KinematicsSystem clamping
+  registry.emplace<InertialBody>(projectile, bodyId, 0.0f, 0.0f, 10000.0f);
   registry.emplace<TransformComponent>(projectile, ownerTrans.position);
 
   span->SetAttribute("combat.projectile_speed", (double)weapon.projectileSpeed);

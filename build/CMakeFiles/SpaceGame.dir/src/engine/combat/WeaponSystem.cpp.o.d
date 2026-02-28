@@ -1219,6 +1219,10 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /usr/local/include/opentelemetry/trace/scope.h \
   /usr/local/include/opentelemetry/context/runtime_context.h \
   /usr/local/include/opentelemetry/trace/span_startoptions.h \
+  /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
+  /usr/local/include/SFML/Graphics/Color.hpp \
+  /usr/local/include/SFML/Graphics/Color.inl \
+  /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
@@ -1228,8 +1232,6 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /usr/local/include/SFML/Config.hpp \
   /usr/local/include/SFML/Graphics/CircleShape.hpp \
   /usr/local/include/SFML/Graphics/Shape.hpp \
-  /usr/local/include/SFML/Graphics/Color.hpp \
-  /usr/local/include/SFML/Graphics/Color.inl \
   /usr/local/include/SFML/Graphics/Drawable.hpp \
   /usr/local/include/SFML/Graphics/PrimitiveType.hpp \
   /usr/local/include/SFML/Graphics/Rect.hpp \
@@ -1320,6 +1322,7 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /usr/local/include/SFML/System/Sleep.hpp \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /usr/local/include/opentelemetry/trace/provider.h \
   /usr/local/include/opentelemetry/common/spin_lock_mutex.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/thread \

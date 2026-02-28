@@ -1214,6 +1214,7 @@ CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o: \
   /usr/local/include/opentelemetry/trace/span_startoptions.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /usr/local/include/opentelemetry/trace/provider.h \
   /usr/local/include/opentelemetry/common/spin_lock_mutex.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/thread \

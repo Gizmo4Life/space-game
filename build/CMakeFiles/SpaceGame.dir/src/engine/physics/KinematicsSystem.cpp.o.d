@@ -1121,6 +1121,7 @@ CMakeFiles/SpaceGame.dir/src/engine/physics/KinematicsSystem.cpp.o: \
   /usr/local/include/entt/signal/sigh.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /usr/local/include/SFML/System/Vector2.hpp \
   /usr/local/include/SFML/System/Export.hpp \

@@ -81,6 +81,8 @@ int main() {
           dHeld = true;
         if (keyPressed->code == sf::Keyboard::Key::Space) // Added for spacebar
           spaceHeld = true;
+        if (keyPressed->code == sf::Keyboard::Key::L)
+          lHeld = true;
         if (keyPressed->code == sf::Keyboard::Key::Escape)
           renderer.getWindow().close();
       }
@@ -112,6 +114,33 @@ int main() {
       KinematicsSystem::applyRotation(registry, playerEntity, 1.0f);
     if (spaceHeld)
       WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
+
+    if (lHeld) {
+      // Find nearest planet with economy
+      auto &pTrans = registry.get<TransformComponent>(playerEntity);
+      auto eView = registry.view<PlanetEconomy, TransformComponent>();
+      entt::entity nearestPlanet = entt::null;
+      float minDistSq = 200.0f * 200.0f; // Landing Range
+
+      for (auto e : eView) {
+        auto &pt = eView.get<TransformComponent>(e);
+        float dx = pTrans.position.x - pt.position.x;
+        float dy = pTrans.position.y - pt.position.y;
+        float dSq = dx * dx + dy * dy;
+        if (dSq < minDistSq) {
+          minDistSq = dSq;
+          nearestPlanet = e;
+        }
+      }
+
+      if (nearestPlanet != entt::null) {
+        // Buy a military ship as a standard fleet addition
+        EconomyManager::instance().buyShip(registry, nearestPlanet,
+                                           playerEntity, VesselType::Military,
+                                           physics.getWorldId());
+        lHeld = false; // Prevent rapid-fire purchasing
+      }
+    }
 
     // Visual Feedback
     auto &sc = registry.get<SpriteComponent>(playerEntity);

@@ -18,6 +18,10 @@ public:
   float calculatePrice(Resource res, float currentStock, float population,
                        bool isAtWar);
 
+  // Buy a ship from a planet
+  bool buyShip(entt::registry &registry, entt::entity planet,
+               entt::entity player, VesselType type, b2WorldId worldId);
+
 private:
   EconomyManager() = default;
 

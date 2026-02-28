@@ -1129,6 +1129,14 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: \
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
+  /usr/local/include/SFML/System/Vector2.hpp \
+  /usr/local/include/SFML/System/Export.hpp \
+  /usr/local/include/SFML/Config.hpp \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
+  /usr/local/include/SFML/System/Angle.hpp \
+  /usr/local/include/SFML/System/Angle.inl \
+  /usr/local/include/SFML/System/Vector2.inl \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/OrbitalComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
@@ -1137,18 +1145,11 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: \
   /usr/local/include/SFML/Graphics.hpp \
   /usr/local/include/SFML/Graphics/BlendMode.hpp \
   /usr/local/include/SFML/Graphics/Export.hpp \
-  /usr/local/include/SFML/Config.hpp \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
   /usr/local/include/SFML/Graphics/CircleShape.hpp \
   /usr/local/include/SFML/Graphics/Shape.hpp \
   /usr/local/include/SFML/Graphics/Drawable.hpp \
   /usr/local/include/SFML/Graphics/PrimitiveType.hpp \
   /usr/local/include/SFML/Graphics/Rect.hpp \
-  /usr/local/include/SFML/System/Vector2.hpp \
-  /usr/local/include/SFML/System/Export.hpp \
-  /usr/local/include/SFML/System/Angle.hpp \
-  /usr/local/include/SFML/System/Angle.inl \
-  /usr/local/include/SFML/System/Vector2.inl \
   /usr/local/include/SFML/Graphics/Rect.inl \
   /usr/local/include/SFML/Graphics/RenderStates.hpp \
   /usr/local/include/SFML/Graphics/CoordinateType.hpp \

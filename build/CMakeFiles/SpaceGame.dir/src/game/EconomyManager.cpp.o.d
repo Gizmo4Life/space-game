@@ -1211,7 +1211,18 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: \
   /usr/local/include/opentelemetry/trace/scope.h \
   /usr/local/include/opentelemetry/context/runtime_context.h \
   /usr/local/include/opentelemetry/trace/span_startoptions.h \
+  /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
+  /usr/local/include/SFML/Graphics/Color.hpp \
+  /usr/local/include/SFML/Graphics/Color.inl \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
+  /usr/local/include/SFML/System/Vector2.hpp \
+  /usr/local/include/SFML/System/Export.hpp \
+  /usr/local/include/SFML/Config.hpp \
+  /usr/local/include/SFML/System/Angle.hpp \
+  /usr/local/include/SFML/System/Angle.inl \
+  /usr/local/include/SFML/System/Vector2.inl \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /usr/local/include/opentelemetry/trace/provider.h \
   /usr/local/include/opentelemetry/common/spin_lock_mutex.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/thread \

@@ -82,7 +82,8 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
 
           if (registry.all_of<PlanetEconomy>(entity)) {
             auto &eco = registry.get<PlanetEconomy>(entity);
-            labelText += " Pop: " + std::to_string((int)eco.populationCount);
+            labelText +=
+                " Pop: " + std::to_string((int)eco.getTotalPopulation());
           }
 
           if (registry.all_of<CelestialBody>(entity)) {

@@ -19,17 +19,41 @@ enum class Resource {
   Electronics,
   Fuel,
   Powercells,
-  Weapons
+  Weapons,
+  // Infrastructure
+  Shipyard,
+  Refinery
+};
+
+enum class VesselType { Military, Freight, Passenger };
+
+enum class FactionStrategy { Industrial, Trade, Military };
+
+struct FactionEconomy {
+  float populationCount = 0.0f; // In thousands
+  std::map<Resource, float> stockpile;
+  std::map<Resource, int> factories;
+  std::map<VesselType, int> fleetPool; // Ready ships
+  FactionStrategy strategy = FactionStrategy::Industrial;
+  float credits = 1000.0f;
+  bool isAbandoned = false;
 };
 
 struct PlanetEconomy {
-  float populationCount = 10.0f; // In thousands
-  std::map<Resource, float> stockpile;
-  std::map<Resource, int> factories;
+  std::map<uint32_t, FactionEconomy> factionData;
+  std::map<Resource, float> marketStockpile; // Aggregate supply for trade
   std::map<Resource, float> currentPrices;
 
-  // Base consumption per 1k population
+  // Base consumption per 1k population (Global reference)
   std::map<Resource, float> baseConsumption;
+
+  float getTotalPopulation() const {
+    float total = 0.0f;
+    for (auto const &[id, fEco] : factionData) {
+      total += fEco.populationCount;
+    }
+    return total;
+  }
 };
 
 inline std::string getResourceName(Resource res) {
@@ -60,6 +84,10 @@ inline std::string getResourceName(Resource res) {
     return "Powercells";
   case Resource::Weapons:
     return "Weapons";
+  case Resource::Shipyard:
+    return "Shipyard";
+  case Resource::Refinery:
+    return "Refinery";
   }
   return "Unknown";
 }
@@ -92,6 +120,10 @@ inline std::string getResourceInitial(Resource res) {
     return "Pc";
   case Resource::Weapons:
     return "Wp";
+  case Resource::Shipyard:
+    return "Sy";
+  case Resource::Refinery:
+    return "Rf";
   }
   return "?";
 }

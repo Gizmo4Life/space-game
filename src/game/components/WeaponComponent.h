@@ -12,7 +12,7 @@ struct ProjectileComponent {
 struct WeaponComponent {
   float fireCooldown = 0.5f;
   float currentCooldown = 0.0f;
-  float projectileSpeed = 1500.0f;
+  float projectileSpeed = 5000.0f;
   float energyCost = 5.0f;
 };
 
