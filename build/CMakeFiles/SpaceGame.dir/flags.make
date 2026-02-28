@@ -6,5 +6,5 @@ CXX_DEFINES = -DOPENTELEMETRY_ABI_VERSION_NO=1 -DOPENTELEMETRY_PROTO_API="" -DPR
 
 CXX_INCLUDES = -I/Users/Dan/Documents/repos/space-game/src
 
-CXX_FLAGS = -std=gnu++20
+CXX_FLAGS = -g -std=gnu++20
 

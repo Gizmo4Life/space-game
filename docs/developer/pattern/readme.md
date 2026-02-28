@@ -89,8 +89,10 @@ graph TD
 - [kinematics-newtonian-2d](kinematics-newtonian-2d.md)
 - [rendering-spatial-bridge](rendering-spatial-bridge.md)
 - [rendering-offscreen-indicator](rendering-offscreen-indicator.md)
+- [rendering-pause-overlay](rendering-pause-overlay.md)
 - [world-procedural-generation](world-procedural-generation.md)
 - [npc-ai-state-machine](npc-ai-state-machine.md)
+- [npc-fleet-leader-boids](npc-fleet-leader-boids.md)
 - [otel-span-instrumentation](otel-span-instrumentation.md)
 
 ## 7. UI/UX & Navigation

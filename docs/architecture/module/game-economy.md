@@ -8,7 +8,7 @@ dependencies: ["physics-module"]
 
 # Module: Game Economy
 
-Faction budgeting, planetary economics, trade transactions, and NPC orchestration.
+Faction budgeting, planetary economics, trade transactions, NPC orchestration, and the player's ship market.
 
 ## 1. Physical Scope
 - **Path:** `/src/game/` (EconomyManager, FactionManager, NPCShipManager, TradeManager)
@@ -19,7 +19,7 @@ Faction budgeting, planetary economics, trade transactions, and NPC orchestratio
 - [Capability] Economy (T2)
 
 ## 3. Key Systems
-- **EconomyManager**: Drives factory production, population-driven consumption, growth/starvation dynamics, and dynamic pricing.
+- **EconomyManager**: Drives factory production, population-driven consumption, growth/starvation dynamics, dynamic pricing, and the competitive ship market (`getShipBids`, `buyShip`).
 - **FactionManager**: Procedural faction generation, relationship tracking, and credit accumulation. Identifies "Wartime" status for strategic consumption spikes.
 - **TradeManager**: Static buy/sell interface for ship-to-planet resource transactions.
 - **WorldLoader**: Seeds planets with factories based on celestial type (Rocky, Icy, Earthlike).
@@ -74,6 +74,8 @@ Each NPC ship carries an `NPCComponent` that drives its behaviour:
 | `dockTimer` | `float` | Time remaining docked at planet |
 | `arrivalRadius` | `float` | Distance threshold for "arrived" (150 units) |
 | `patrolAngle` | `float` | Current angle for escort circular patrol |
+| `isPlayerFleet` | `bool` | When `true`, ship belongs to the player's purchased fleet |
+| `leaderEntity` | `entt::entity` | Entity to follow (player ship, for fleet vessels) |
 
 ### 4.2. Entity Composition
 `NPCShipManager::spawnShip` creates a fully-formed ship entity with:
@@ -108,13 +110,14 @@ Idle → Traveling → Docked → Idle (loop)
 **Navigation:** Applies 50% thrust toward target, rotates to face travel direction. Velocity zeroed on dock arrival.
 
 ## 6. Pattern Composition
-- [Pattern] cpp-ecs-component (P) — `PlanetEconomy`, `CargoComponent`, `Faction`, `NPCComponent`, `CreditsComponent`
-- [Pattern] cpp-ecs-system-static (P) — `EconomyManager::update`, `FactionManager::update`
-- [Pattern] cpp-singleton-manager (P) — `EconomyManager`, `FactionManager`, `NPCShipManager`
-- [Pattern] npc-ai-state-machine (P) — `NPCComponent` belief/state, timer-gated decisions
-- [Pattern] world-procedural-generation (P) — Faction names, NPC spawn positions, and Resource seeding.
-- [Pattern] otel-span-instrumentation (P) — `economy.update.tick`, `faction.credit.accumulate`, `npc.ai.tick`, `npc.spawn`
-- [Pattern] logic-idempotency (P)
+- [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `PlanetEconomy`, `CargoComponent`, `Faction`, `NPCComponent`, `CreditsComponent`
+- [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `EconomyManager::update`, `FactionManager::update`
+- [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `EconomyManager`, `FactionManager`, `NPCShipManager`
+- [npc-ai-state-machine](/docs/developer/pattern/npc-ai-state-machine.md) (P) — `NPCComponent` belief/state, timer-gated decisions
+- [npc-fleet-leader-boids](/docs/developer/pattern/npc-fleet-leader-boids.md) (P) — Player fleet ships following a leader with weighted boids + aggressive catch-up
+- [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Faction names, NPC spawn positions, and Resource seeding
+- [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P) — `economy.update.tick`, `faction.credit.accumulate`, `npc.ai.tick`, `npc.spawn`
+- [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 
 ## 7. Telemetry & Observability
 - **Semantic Spans (OTEL):**

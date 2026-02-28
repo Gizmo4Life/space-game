@@ -901,6 +901,15 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/perfect_forward.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/bind_back.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/bind_front.h \
+  /usr/local/include/box2d/box2d.h /usr/local/include/box2d/base.h \
+  /usr/local/include/box2d/collision.h \
+  /usr/local/include/box2d/math_functions.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/float.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/float.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/float.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/stdbool.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdbool.h \
+  /usr/local/include/box2d/id.h /usr/local/include/box2d/types.h \
   /usr/local/include/entt/entt.hpp \
   /usr/local/include/entt/config/config.h \
   /usr/local/include/entt/config/version.h \
@@ -1111,6 +1120,15 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: \
   /usr/local/include/entt/signal/fwd.hpp \
   /usr/local/include/entt/signal/sigh.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
+  /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
+  /usr/local/include/SFML/System/Vector2.hpp \
+  /usr/local/include/SFML/System/Export.hpp \
+  /usr/local/include/SFML/Config.hpp \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
+  /usr/local/include/SFML/System/Angle.hpp \
+  /usr/local/include/SFML/System/Angle.inl \
+  /usr/local/include/SFML/System/Vector2.inl \
   /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
   /usr/local/include/opentelemetry/nostd/shared_ptr.h \
   /usr/local/include/opentelemetry/nostd/unique_ptr.h \
@@ -1154,7 +1172,6 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: \
   /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
   /usr/local/include/opentelemetry/nostd/internal/absl/types/variant.h \
   /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/config.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
   /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/options.h \
   /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/policy_checks.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/any \
@@ -1214,14 +1231,14 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /usr/local/include/SFML/Graphics/Color.hpp \
   /usr/local/include/SFML/Graphics/Color.inl \
+  /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
-  /usr/local/include/SFML/System/Vector2.hpp \
-  /usr/local/include/SFML/System/Export.hpp \
-  /usr/local/include/SFML/Config.hpp \
-  /usr/local/include/SFML/System/Angle.hpp \
-  /usr/local/include/SFML/System/Angle.inl \
-  /usr/local/include/SFML/System/Vector2.inl \
+  /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /usr/local/include/opentelemetry/trace/provider.h \
   /usr/local/include/opentelemetry/common/spin_lock_mutex.h \

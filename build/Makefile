@@ -417,6 +417,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/rendering/LandingScreen.o: src/rendering/LandingScreen.cpp.o
+.PHONY : src/rendering/LandingScreen.o
+
+# target to build an object file
+src/rendering/LandingScreen.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o
+.PHONY : src/rendering/LandingScreen.cpp.o
+
+src/rendering/LandingScreen.i: src/rendering/LandingScreen.cpp.i
+.PHONY : src/rendering/LandingScreen.i
+
+# target to preprocess a source file
+src/rendering/LandingScreen.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.i
+.PHONY : src/rendering/LandingScreen.cpp.i
+
+src/rendering/LandingScreen.s: src/rendering/LandingScreen.cpp.s
+.PHONY : src/rendering/LandingScreen.s
+
+# target to generate assembly for a file
+src/rendering/LandingScreen.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.s
+.PHONY : src/rendering/LandingScreen.cpp.s
+
 src/rendering/MainRenderer.o: src/rendering/MainRenderer.cpp.o
 .PHONY : src/rendering/MainRenderer.o
 
@@ -510,6 +534,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/rendering/LandingScreen.o"
+	@echo "... src/rendering/LandingScreen.i"
+	@echo "... src/rendering/LandingScreen.s"
 	@echo "... src/rendering/MainRenderer.o"
 	@echo "... src/rendering/MainRenderer.i"
 	@echo "... src/rendering/MainRenderer.s"

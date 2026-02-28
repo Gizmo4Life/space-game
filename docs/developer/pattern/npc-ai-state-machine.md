@@ -24,6 +24,8 @@ struct NPCComponent {
   float       dockTimer;      // Time remaining docked
   float       arrivalRadius;  // 150 units
   float       patrolAngle;    // For escort circular orbit
+  bool        isPlayerFleet;  // True for player-purchased fleet ships
+  entt::entity leaderEntity;  // Entity to follow (for fleet ships)
 };
 
 void NPCShipManager::update(registry, dt) {
@@ -67,6 +69,7 @@ stateDiagram-v2
 ```
 
 ## Applied In
-- `NPCComponent` — Per-entity AI data with `homePlanet` and `dockTimer`.
+- `NPCComponent` — Per-entity AI data with `homePlanet`, `dockTimer`, `isPlayerFleet`, `leaderEntity`.
 - `NPCShipManager::tickAI` — State machine and navigation.
 - `NPCShipManager::spawnAtRandomPlanet` — Planet-based spawning.
+- Extended by [npc-fleet-leader-boids](/docs/developer/pattern/npc-fleet-leader-boids.md) for player fleet ships.

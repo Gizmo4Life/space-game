@@ -1,9 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
-#include <cmath>
 #include <entt/entt.hpp>
-#include <iostream>
-#include <optional>
 
 #include "engine/combat/WeaponSystem.h"
 #include "engine/physics/AsteroidSystem.h"
@@ -16,10 +13,13 @@
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
 #include "game/WorldLoader.h"
+#include "game/components/Economy.h"
 #include "game/components/InertialBody.h"
 #include "game/components/ShipConfig.h"
 #include "game/components/SpriteComponent.h"
+#include "game/components/TransformComponent.h"
 #include "game/components/WorldConfig.h"
+#include "rendering/LandingScreen.h"
 #include "rendering/MainRenderer.h"
 #include "rendering/RenderSystem.h"
 
@@ -56,13 +56,16 @@ int main() {
   // --- NPC Ship Manager (auto-spawns at planets) ---
   NPCShipManager::instance().init(physics.getWorldId());
 
-  // --- Camera Setup ---
+  // --- Camera / Input Setup ---
   float zoom = WorldConfig::DEFAULT_ZOOM;
   sf::View cameraView(sf::FloatRect({0, 0}, {1200 * zoom, 800 * zoom}));
-  bool spaceHeld = false; // Declared and initialized here
-  sf::Clock clock;
 
   bool wHeld = false, sHeld = false, aHeld = false, dHeld = false;
+  bool spaceHeld = false;
+  bool lHeld = false; // 'L' to land
+
+  LandingScreen landingScreen;
+  sf::Clock clock;
 
   while (renderer.isOpen()) {
     while (const std::optional<sf::Event> event =
@@ -70,57 +73,69 @@ int main() {
       if (event->is<sf::Event::Closed>())
         renderer.getWindow().close();
 
-      if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-        if (keyPressed->code == sf::Keyboard::Key::W)
-          wHeld = true;
-        if (keyPressed->code == sf::Keyboard::Key::S)
-          sHeld = true;
-        if (keyPressed->code == sf::Keyboard::Key::A)
-          aHeld = true;
-        if (keyPressed->code == sf::Keyboard::Key::D)
-          dHeld = true;
-        if (keyPressed->code == sf::Keyboard::Key::Space) // Added for spacebar
-          spaceHeld = true;
-        if (keyPressed->code == sf::Keyboard::Key::L)
-          lHeld = true;
-        if (keyPressed->code == sf::Keyboard::Key::Escape)
-          renderer.getWindow().close();
+      // Route events to landing screen when open
+      if (landingScreen.isOpen()) {
+        landingScreen.handleEvent(*event, registry, physics.getWorldId());
+        continue;
       }
 
-      if (const auto *keyReleased = event->getIf<sf::Event::KeyReleased>()) {
-        if (keyReleased->code == sf::Keyboard::Key::W)
+      if (const auto *kp = event->getIf<sf::Event::KeyPressed>()) {
+        if (kp->code == sf::Keyboard::Key::W)
+          wHeld = true;
+        if (kp->code == sf::Keyboard::Key::S)
+          sHeld = true;
+        if (kp->code == sf::Keyboard::Key::A)
+          aHeld = true;
+        if (kp->code == sf::Keyboard::Key::D)
+          dHeld = true;
+        if (kp->code == sf::Keyboard::Key::Space)
+          spaceHeld = true;
+        if (kp->code == sf::Keyboard::Key::L)
+          lHeld = true;
+        if (kp->code == sf::Keyboard::Key::Escape)
+          renderer.getWindow().close();
+      }
+      if (const auto *kr = event->getIf<sf::Event::KeyReleased>()) {
+        if (kr->code == sf::Keyboard::Key::W)
           wHeld = false;
-        if (keyReleased->code == sf::Keyboard::Key::S)
+        if (kr->code == sf::Keyboard::Key::S)
           sHeld = false;
-        if (keyReleased->code == sf::Keyboard::Key::A)
+        if (kr->code == sf::Keyboard::Key::A)
           aHeld = false;
-        if (keyReleased->code == sf::Keyboard::Key::D)
+        if (kr->code == sf::Keyboard::Key::D)
           dHeld = false;
-        if (keyReleased->code == sf::Keyboard::Key::Space)
+        if (kr->code == sf::Keyboard::Key::Space)
           spaceHeld = false;
+        if (kr->code == sf::Keyboard::Key::L)
+          lHeld = false;
       }
     }
 
     float dt = clock.restart().asSeconds();
 
-    // System Input Actions
-    if (wHeld)
-      KinematicsSystem::applyThrust(registry, playerEntity, 1.0f);
-    if (sHeld)
-      KinematicsSystem::applyThrust(registry, playerEntity, -0.6f);
-    if (aHeld)
-      KinematicsSystem::applyRotation(registry, playerEntity, -1.0f);
-    if (dHeld)
-      KinematicsSystem::applyRotation(registry, playerEntity, 1.0f);
-    if (spaceHeld)
-      WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
+    // ── Landing screen pauses the game loop ──────────────────────────────────
+    if (landingScreen.isOpen()) {
+      renderer.clear();
+      RenderSystem::update(registry, renderer.getWindow(),
+                           fontLoaded ? &gameFont : nullptr);
+      // Switch to UI view so the overlay fills the screen
+      renderer.getWindow().setView(renderer.getWindow().getDefaultView());
+      landingScreen.render(renderer.getWindow(), registry,
+                           fontLoaded ? &gameFont : nullptr);
+      renderer.display();
+      continue;
+    }
 
+    // ── Normal gameplay
+    // ───────────────────────────────────────────────────────
+
+    // 'L': find nearest planet and open landing screen
     if (lHeld) {
-      // Find nearest planet with economy
+      lHeld = false; // consume
       auto &pTrans = registry.get<TransformComponent>(playerEntity);
       auto eView = registry.view<PlanetEconomy, TransformComponent>();
       entt::entity nearestPlanet = entt::null;
-      float minDistSq = 200.0f * 200.0f; // Landing Range
+      float minDistSq = 300.0f * 300.0f; // world-unit landing range
 
       for (auto e : eView) {
         auto &pt = eView.get<TransformComponent>(e);
@@ -133,23 +148,27 @@ int main() {
         }
       }
 
-      if (nearestPlanet != entt::null) {
-        // Buy a military ship as a standard fleet addition
-        EconomyManager::instance().buyShip(registry, nearestPlanet,
-                                           playerEntity, VesselType::Military,
-                                           physics.getWorldId());
-        lHeld = false; // Prevent rapid-fire purchasing
-      }
+      if (nearestPlanet != entt::null)
+        landingScreen.open(nearestPlanet, playerEntity);
     }
 
-    // Visual Feedback
-    auto &sc = registry.get<SpriteComponent>(playerEntity);
+    // Ship controls
     if (wHeld)
-      sc.sprite->setColor(sf::Color::White);
-    else
-      sc.sprite->setColor(sf::Color::Cyan);
+      KinematicsSystem::applyThrust(registry, playerEntity, 1.0f);
+    if (sHeld)
+      KinematicsSystem::applyThrust(registry, playerEntity, -0.6f);
+    if (aHeld)
+      KinematicsSystem::applyRotation(registry, playerEntity, -1.0f);
+    if (dHeld)
+      KinematicsSystem::applyRotation(registry, playerEntity, 1.0f);
+    if (spaceHeld)
+      WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
 
-    // Physics & Transformation Updates
+    // Visual Feedback — thruster glow
+    auto &sc = registry.get<SpriteComponent>(playerEntity);
+    sc.sprite->setColor(wHeld ? sf::Color::White : sf::Color::Cyan);
+
+    // Physics & AI updates
     GravitySystem::update(registry);
     EconomyManager::instance().update(registry, dt);
     WeaponSystem::update(registry, dt);
@@ -163,24 +182,21 @@ int main() {
     // World Wrap
     auto &inertial = registry.get<InertialBody>(playerEntity);
     b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
-    b2Vec2 wrappedPos = pos;
+    b2Vec2 wrapped = pos;
     float limit = WorldConfig::WORLD_HALF_SIZE / WorldConfig::WORLD_SCALE;
     if (pos.x < -limit)
-      wrappedPos.x = limit;
+      wrapped.x = limit;
     else if (pos.x > limit)
-      wrappedPos.x = -limit;
+      wrapped.x = -limit;
     if (pos.y < -limit)
-      wrappedPos.y = limit;
+      wrapped.y = limit;
     else if (pos.y > limit)
-      wrappedPos.y = -limit;
-
-    if (wrappedPos.x != pos.x || wrappedPos.y != pos.y) {
-      b2Body_SetTransform(inertial.bodyId, wrappedPos,
+      wrapped.y = -limit;
+    if (wrapped.x != pos.x || wrapped.y != pos.y)
+      b2Body_SetTransform(inertial.bodyId, wrapped,
                           b2Body_GetRotation(inertial.bodyId));
-    }
 
     // Camera Follow
-    // Camera Follow - Using WORLD_SCALE for position
     cameraView.setCenter(
         {pos.x * WorldConfig::SHIP_SCALE, pos.y * WorldConfig::SHIP_SCALE});
     renderer.getWindow().setView(cameraView);

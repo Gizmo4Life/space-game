@@ -62,100 +62,26 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         spriteComp.sprite->setRotation(sf::degrees(transform.rotation));
         window.draw(*spriteComp.sprite);
 
-        // Draw Label OUTSIDE the body
+        // Draw planet name label above body
         if (font && registry.all_of<NameComponent>(entity)) {
           auto &nameComp = registry.get<NameComponent>(entity);
 
           sf::Color factionColor = sf::Color(200, 200, 255);
-          std::string labelText = nameComp.name;
-
           if (registry.all_of<Faction>(entity)) {
             auto &f = registry.get<Faction>(entity);
             uint32_t majorityId = f.getMajorityFaction();
-            auto &fData = FactionManager::instance().getFaction(majorityId);
-            factionColor = fData.color;
-
-            int percent = static_cast<int>(f.allegiances.at(majorityId) * 100);
-            labelText +=
-                " (" + fData.name + " " + std::to_string(percent) + "%)";
+            factionColor =
+                FactionManager::instance().getFaction(majorityId).color;
           }
 
-          if (registry.all_of<PlanetEconomy>(entity)) {
-            auto &eco = registry.get<PlanetEconomy>(entity);
-            labelText +=
-                " Pop: " + std::to_string((int)eco.getTotalPopulation());
-          }
-
-          if (registry.all_of<CelestialBody>(entity)) {
-            auto &cb = registry.get<CelestialBody>(entity);
-            std::string typeStr = "";
-            switch (cb.type) {
-            case CelestialType::Rocky:
-              typeStr = "Rocky";
-              break;
-            case CelestialType::Icy:
-              typeStr = "Icy";
-              break;
-            case CelestialType::Lava:
-              typeStr = "Lava";
-              break;
-            case CelestialType::Earthlike:
-              typeStr = "Earthlike";
-              break;
-            case CelestialType::GasGiant:
-              typeStr = "Gas Giant";
-              break;
-            case CelestialType::Star:
-              typeStr = "Star";
-              break;
-            case CelestialType::Asteroid:
-              typeStr = "Asteroid";
-              break;
-            }
-            if (!typeStr.empty())
-              labelText += " [" + typeStr + "]";
-          }
-
-          sf::Text text(*font, labelText, 18);
+          sf::Text text(*font, nameComp.name, 16);
           text.setFillColor(factionColor);
-
-          // Dynamic offset based on sprite size
           sf::FloatRect bounds = spriteComp.sprite->getGlobalBounds();
-          float offset = (bounds.size.y / 2.0f) + 20.0f;
-
+          float offset = (bounds.size.y / 2.0f) + 18.0f;
           text.setOrigin({text.getLocalBounds().size.x / 2.0f, 0.0f});
           text.setPosition(
               {transform.position.x, transform.position.y + offset});
           window.draw(text);
-
-          // Economy Info (Second Line)
-          if (registry.all_of<PlanetEconomy>(entity)) {
-            auto &eco = registry.get<PlanetEconomy>(entity);
-            std::string ecoText = "";
-
-            // Only show a few relevant prices to avoid clutter
-            std::vector<Resource> toShow = {Resource::Food, Resource::Fuel,
-                                            Resource::Weapons};
-            for (auto res : toShow) {
-              if (eco.currentPrices.count(res)) {
-                if (!ecoText.empty())
-                  ecoText += " | ";
-                ecoText +=
-                    getResourceInitial(res) + ": $" +
-                    std::to_string(static_cast<int>(eco.currentPrices.at(res)));
-              }
-            }
-
-            if (!ecoText.empty()) {
-              sf::Text ecoLabel(*font, ecoText, 14);
-              ecoLabel.setFillColor(sf::Color(180, 180, 180));
-              ecoLabel.setOrigin(
-                  {ecoLabel.getLocalBounds().size.x / 2.0f, 0.0f});
-              ecoLabel.setPosition({transform.position.x,
-                                    transform.position.y + offset + 20.0f});
-              window.draw(ecoLabel);
-            }
-          }
         }
       }
     }

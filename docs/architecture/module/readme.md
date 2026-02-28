@@ -16,6 +16,7 @@ graph TD
         Rend[rendering]
         Comb[game-combat]
         Econ[game-economy]
+        UI[game-ui]
     end
     subgraph Governance Layer
         Prot[governance-protocols]
@@ -41,8 +42,9 @@ graph TD
 *Nuance: High-performance modules implementing the spatial simulation and interactive systems.*
 - [physics](physics.md): Box2D-powered Newtonian physics engine.
 - [rendering](src-core.md): SFML rendering pipeline, camera, offscreen indicators.
+- [game-ui](game-ui.md): Planetary landing screen, pause overlay, and ship market.
 - [game-combat](game-combat.md): Ship-to-ship engagement and projectile systems.
-- [game-economy](game-economy.md): Faction budgeting, trade, and NPC orchestration.
+- [game-economy](game-economy.md): Faction budgeting, trade, NPC orchestration, and competitive ship market.
 - [system-gate](system-gate.md): Inter-system jump and loading logic.
 
 ## 2. Documentation System

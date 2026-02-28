@@ -1245,7 +1245,6 @@ CMakeFiles/SpaceGame.dir/src/main.cpp.o: \
   /usr/local/include/entt/signal/fwd.hpp \
   /usr/local/include/entt/signal/sigh.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
   /Users/Dan/Documents/repos/space-game/src/engine/combat/WeaponSystem.h \
   /Users/Dan/Documents/repos/space-game/src/engine/physics/AsteroidSystem.h \
   /Users/Dan/Documents/repos/space-game/src/engine/physics/GravitySystem.h \
@@ -1329,6 +1328,8 @@ CMakeFiles/SpaceGame.dir/src/main.cpp.o: \
   /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
+  /Users/Dan/Documents/repos/space-game/src/rendering/LandingScreen.h \
   /Users/Dan/Documents/repos/space-game/src/rendering/MainRenderer.h \
   /Users/Dan/Documents/repos/space-game/src/rendering/RenderSystem.h

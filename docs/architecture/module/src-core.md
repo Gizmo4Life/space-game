@@ -12,7 +12,7 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
 
 ## 1. Physical Scope
 - **Path:** `/src/rendering/`
-- **Systems:** `RenderSystem`, `MainRenderer`
+- **Systems:** `RenderSystem`, `MainRenderer`, `LandingScreen`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
@@ -29,11 +29,13 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
     - **Passenger**: Sleek Oval
   3. **UI layer** — Offscreen indicators for `CelestialBody` and `NPCComponent` entities with distance labels. Labels include **Population counts** and **Vessel Classes**.
   4. **Projectile layer** — `ProjectileComponent` bullets as colored circles.
+- **LandingScreen**: See [game-ui module](/docs/architecture/module/game-ui.md) — pause overlay with planet info + ship market.
 
 ## 4. Pattern Composition
-- [Pattern] rendering-spatial-bridge (P) — Box2D→SFML coordinate transform (×30 scale)
-- [Pattern] rendering-offscreen-indicator (P) — Edge arrows with distance for off-camera entities
-- [Pattern] cpp-ecs-system-static (P) — `RenderSystem::update`
+- [rendering-spatial-bridge](/docs/developer/pattern/rendering-spatial-bridge.md) (P) — Box2D→SFML coordinate transform (×30 scale)
+- [rendering-offscreen-indicator](/docs/developer/pattern/rendering-offscreen-indicator.md) (P) — Edge arrows with distance for off-camera entities
+- [rendering-pause-overlay](/docs/developer/pattern/rendering-pause-overlay.md) (P) — `LandingScreen` game-loop suspension and full-screen UI
+- [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `RenderSystem::update`
 
 ## 5. Telemetry & Observability
 - **Status:** 🔲 Not yet instrumented — candidate spans: `render.frame`, `render.indicator.count`

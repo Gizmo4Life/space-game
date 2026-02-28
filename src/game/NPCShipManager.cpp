@@ -303,9 +303,10 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
       // If very far from leader, steer aggressively back
       if (ldSq > 200.0f * 200.0f) {
         float ld = std::sqrt(ldSq);
-        b2Body_ApplyForceToCenter(
-            inertial.bodyId,
-            {ldx / ld * thrust * 3.0f, ldy / ld * thrust * 3.0f}, true);
+        float tf = inertial.thrustForce;
+        b2Body_ApplyForceToCenter(inertial.bodyId,
+                                  {ldx / ld * tf * 3.0f, ldy / ld * tf * 3.0f},
+                                  true);
       }
     }
 

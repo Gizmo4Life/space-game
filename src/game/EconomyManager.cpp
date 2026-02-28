@@ -279,64 +279,106 @@ float EconomyManager::calculatePrice(Resource res, float currentStock,
   return basePrice * std::clamp(ratio, 0.2f, 10.0f);
 }
 
+// ─── Ship Market ─────────────────────────────────────────────────────────────
+
+float EconomyManager::baseShipPrice(VesselType type) {
+  switch (type) {
+  case VesselType::Military:
+    return 15000.0f;
+  case VesselType::Freight:
+    return 5000.0f;
+  case VesselType::Passenger:
+    return 2500.0f;
+  }
+  return 5000.0f;
+}
+
+std::map<uint32_t, float> EconomyManager::getShipBids(entt::registry &registry,
+                                                      entt::entity planet,
+                                                      VesselType type) {
+  std::map<uint32_t, float> bids;
+
+  if (!registry.valid(planet) || !registry.all_of<PlanetEconomy>(planet))
+    return bids;
+
+  auto &eco = registry.get<PlanetEconomy>(planet);
+  float base = baseShipPrice(type);
+
+  for (auto &[fId, fEco] : eco.factionData) {
+    // Must have a shipyard and available stock
+    if (fEco.factories.count(Resource::Shipyard) == 0 ||
+        fEco.factories.at(Resource::Shipyard) <= 0)
+      continue;
+    auto poolIt = fEco.fleetPool.find(type);
+    if (poolIt == fEco.fleetPool.end() || poolIt->second <= 0)
+      continue;
+
+    // Supply discount: more ships = lower ask. Range: 70%–130% of base.
+    int stock = poolIt->second;
+    float supplyFactor = std::clamp(1.0f - (stock - 1) * 0.05f, 0.7f, 1.3f);
+    bids[fId] = std::round(base * supplyFactor);
+  }
+
+  return bids;
+}
+
 bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
                              entt::entity player, VesselType type,
                              b2WorldId worldId) {
   if (!registry.valid(planet) || !registry.valid(player))
     return false;
-  if (!registry.all_of<PlanetEconomy, Faction>(planet))
-    return false;
   if (!registry.all_of<CreditsComponent>(player))
     return false;
 
-  auto &eco = registry.get<PlanetEconomy>(planet);
-  auto &fComp = registry.get<Faction>(planet);
-  uint32_t fId = fComp.getMajorityFaction();
-
-  // Ensure faction exists in this planet's economy
-  if (eco.factionData.find(fId) == eco.factionData.end())
-    return false;
-  auto &fEco = eco.factionData[fId];
-
-  if (fEco.fleetPool[type] <= 0) {
-    std::cout << "[Economy] Planet " << registry.get<NameComponent>(planet).name
-              << " has no ships of this type in stock.\n";
+  auto bids = getShipBids(registry, planet, type);
+  if (bids.empty()) {
+    std::cout << "[Economy] No shipyard faction has "
+              << (type == VesselType::Military  ? "Military"
+                  : type == VesselType::Freight ? "Freight"
+                                                : "Passenger")
+              << " ships for sale here.\n";
     return false;
   }
 
-  float price = 5000.0f;
-  if (type == VesselType::Military)
-    price = 15000.0f;
-  if (type == VesselType::Passenger)
-    price = 2500.0f;
+  // Pick lowest bidder
+  uint32_t winnerFId = bids.begin()->first;
+  float winnerPrice = bids.begin()->second;
+  for (auto &[fId, price] : bids) {
+    if (price < winnerPrice) {
+      winnerFId = fId;
+      winnerPrice = price;
+    }
+  }
 
   auto &playerCredits = registry.get<CreditsComponent>(player);
-  if (playerCredits.amount < price) {
-    std::cout << "[Economy] Insufficient credits to buy ship (" << price
-              << " needed).\n";
+  if (playerCredits.amount < winnerPrice) {
+    std::cout << "[Economy] Need " << winnerPrice << " credits (have "
+              << playerCredits.amount << ").\n";
     return false;
   }
 
-  // Transaction
-  playerCredits.amount -= price;
-  fEco.credits += price;
+  auto &eco = registry.get<PlanetEconomy>(planet);
+  auto &fEco = eco.factionData.at(winnerFId);
+
+  // Execute transaction
+  playerCredits.amount -= winnerPrice;
+  fEco.credits += winnerPrice;
   fEco.fleetPool[type]--;
 
-  // Spawn Ship
+  // Spawn fleet ship near the planet
   auto &pTrans = registry.get<TransformComponent>(planet);
   sf::Vector2f spawnPos = pTrans.position / WorldConfig::WORLD_SCALE;
-  // Offset a bit
   spawnPos.x += (static_cast<float>(rand() % 20) - 10.0f);
   spawnPos.y += (static_cast<float>(rand() % 20) - 10.0f);
 
-  NPCShipManager::instance().spawnShip(registry, 1, spawnPos, worldId, true,
-                                       player);
+  NPCShipManager::instance().spawnShip(registry, winnerFId, spawnPos, worldId,
+                                       true, player);
 
-  std::cout << "[Economy] Player bought "
-            << (type == VesselType::Military ? "Military" : "Ship")
-            << " from Faction " << fId << " at "
-            << registry.get<NameComponent>(planet).name << "\n";
-
+  std::string typeName = (type == VesselType::Military  ? "Military"
+                          : type == VesselType::Freight ? "Freight"
+                                                        : "Passenger");
+  std::cout << "[Economy] Bought " << typeName << " ship from Faction "
+            << winnerFId << " for " << winnerPrice << " credits.\n";
   return true;
 }
 

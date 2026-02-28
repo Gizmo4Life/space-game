@@ -30,6 +30,7 @@ add_executable(SpaceGame
     src/engine/telemetry/Telemetry.cpp
     src/rendering/MainRenderer.cpp
     src/rendering/RenderSystem.cpp
+    src/rendering/LandingScreen.cpp
     src/game/WorldLoader.cpp
     src/game/FactionManager.cpp
     src/game/EconomyManager.cpp
