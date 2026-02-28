@@ -51,9 +51,12 @@ graph TD
 *Nuance: The skeletal structure of the repository. Defines how files are mapped to the Knowledge Graph.*
 - [doc-t1-landscape](doc-t1-landscape.md)
 - [doc-t2-capability](doc-t2-capability.md)
+- [doc-t2-with-code](doc-t2-with-code.md)
 - [doc-t3-module](doc-t3-module.md)
+- [doc-t3-with-biz-logic](doc-t3-with-biz-logic.md)
 - [doc-pillar-ownership](doc-pillar-ownership.md)
 - [doc-module-dependency](doc-module-dependency.md)
+- [doc-dichotomy](doc-dichotomy.md)
 
 ## 3. Logic, Testing & Verification
 *Nuance: Rules for code correctness and automated verification.*
@@ -71,6 +74,10 @@ graph TD
 - [cicd-secret-vaulting](cicd-secret-vaulting.md)
 - [cicd-test-layering](cicd-test-layering.md)
 - [cicd-vulnerability-scan](cicd-vulnerability-scan.md)
+- [doc-gov-protocol](doc-gov-protocol.md)
+- [doc-gov-standard](doc-gov-standard.md)
+- [doc-ext-contract](doc-ext-contract.md)
+- [doc-ext-integration](doc-ext-integration.md)
 
 ## 5. Operational & Incident Response
 *Nuance: High-density artifacts for system uptime, triage, and restoration.*
@@ -90,10 +97,15 @@ graph TD
 - [rendering-spatial-bridge](rendering-spatial-bridge.md)
 - [rendering-offscreen-indicator](rendering-offscreen-indicator.md)
 - [rendering-pause-overlay](rendering-pause-overlay.md)
+- [rendering-dual-scale](rendering-dual-scale.md)
 - [world-procedural-generation](world-procedural-generation.md)
 - [npc-ai-state-machine](npc-ai-state-machine.md)
 - [npc-fleet-leader-boids](npc-fleet-leader-boids.md)
 - [otel-span-instrumentation](otel-span-instrumentation.md)
+- [economy-resource-chain](economy-resource-chain.md)
+- [economy-dynamic-pricing](economy-dynamic-pricing.md)
+- [economy-competitive-market](economy-competitive-market.md)
+- [faction-relationship-matrix](faction-relationship-matrix.md)
 
 ## 7. UI/UX & Navigation
 *Nuance: Patterns for ensuring machine-readability and human scannability.*
@@ -103,8 +115,10 @@ graph TD
 - [doc-structured-readme](doc-structured-readme.md)
 - [signpost-readme](signpost-readme.md)
 - [doc-walkthrough](doc-walkthrough.md)
+- [ext-greenfield-context](ext-greenfield-context.md)
+- [ext-brownfield-context](ext-brownfield-context.md)
 
-## 7. Anti-Patterns (Discouraged)
+## 8. Anti-Patterns (Discouraged)
 *Nuance: Forbidden or legacy shapes that trigger audit failures.*
 - [doc-directory-nesting](doc-directory-nesting.md)
 - [doc-monolithic-wiki](doc-monolithic-wiki.md)

@@ -4,19 +4,24 @@ type: module
 pillar: architecture
 dependencies: ["physics-module"]
 ---
-# Module: SystemGate
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > System Gate
+
+# Module: System Gate
+
+Inter-system jump detection, scene transition, and world loading between solar systems.
 
 ## 1. Physical Scope
 - **Path:** `/src/engine/world/`
-- **Ownership:** World Design Team
+- **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
-- [Capability] Navigation (T2)
+- [Capability: Navigation](/docs/architecture/capability/navigation.md) (T2)
 
 ## 3. Pattern Composition
-- [Pattern] logic-idempotency (P)
-- [Pattern] doc-t3-with-biz-logic (P)
+- [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 
 ## 4. Telemetry & Observability
-- **Semantic Spans:** `gate.transition`, `system.load`
-- **Health Probes:** `system.gate.state`
+- `gate.transition` — fired on player crossing a system gate
+- `system.load` — fired on world reload
+- **Health Probe:** `system.gate.state`
+- **Status:** 🔲 Not yet fully instrumented — spans defined, probes pending

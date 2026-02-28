@@ -8,121 +8,27 @@ dependencies: ["physics-module"]
 
 # Module: Game Economy
 
-Faction budgeting, planetary economics, trade transactions, NPC orchestration, and the player's ship market.
+Planetary production/consumption simulation, dynamic pricing, trade transactions, and the competitive ship market.
 
 ## 1. Physical Scope
-- **Path:** `/src/game/` (EconomyManager, FactionManager, NPCShipManager, TradeManager)
-- **Components:** `/src/game/components/` (Economy.h, CargoComponent.h, Faction.h, NPCComponent.h)
+- **Path:** `/src/game/` — `EconomyManager.h/.cpp`, `TradeManager.h/.cpp`, `WorldLoader.h/.cpp`
+- **Components:** `components/Economy.h`, `components/CargoComponent.h`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
-- [Capability] Economy (T2)
+- [Capability: Economy](/docs/architecture/capability/economy.md) (T2)
 
-## 3. Key Systems
-- **EconomyManager**: Drives factory production, population-driven consumption, growth/starvation dynamics, dynamic pricing, and the competitive ship market (`getShipBids`, `buyShip`).
-- **FactionManager**: Procedural faction generation, relationship tracking, and credit accumulation. Identifies "Wartime" status for strategic consumption spikes.
-- **TradeManager**: Static buy/sell interface for ship-to-planet resource transactions.
-- **WorldLoader**: Seeds planets with factories based on celestial type (Rocky, Icy, Earthlike).
-
-## 4. Resource Model
-
-### 4.1. `Resource` Enum
-The economy uses a unified resource system categorized into basic and refined goods:
-
-| Category | Resources |
-|----------|-----------|
-| **Basic** | Water, Crops, Hydrocarbons, Metals, Rare Metals, Isotopes |
-| **Refined** | Food, Plastics, Mfg Goods, Electronics, Fuel, Powercells, Weapons |
-
-### 4.2. `PlanetEconomy` Component
-| Field | Type | Purpose |
-|-------|------|---------|
-| `populationCount` | `float` | Population in thousands. Supports 10 factories per 1k. |
-| `stockpile` | `map<Resource, float>` | Current quantity of each resource on the planet. |
-| `factories` | `map<Resource, int>` | Count of active production facilities for each resource. |
-| `currentPrices` | `map<Resource, float>` | Dynamic market price based on `targetStock / currentStock`. |
-
-### 4.3. Production Chains
-Factories produce 1.0 unit/second per factory, modified by deltaTime.
-
-| Output | Input(s) | Notes |
-|--------|----------|-------|
-| **Basic** | None | Produced directly by basic factories. |
-| **Food** | Crops | Essential for population growth. |
-| **Plastics** | Hydrocarbons | Standard refined material. |
-| **Mfg Goods** | Metals | Industrial material; used for wartime consumption. |
-| **Electronics**| Rare Metals | High-value refined good. |
-| **Fuel** | Water | Essential for ship operations and wartime. |
-| **Powercells** | Isotopes | Dense energy storage. |
-| **Weapons** | Metals, Isotopes | Military good; heavy wartime consumption. |
-
-## 5. NPC Ships & AI
-
-### 4.1. Data Model — `NPCComponent`
-Each NPC ship carries an `NPCComponent` that drives its behaviour:
-
-| Field | Type | Purpose |
-|-------|------|---------|
-| `factionId` | `uint32_t` | Faction this vessel serves |
-| `vesselType` | `VesselType` | Class: **Military**, **Freight**, or **Passenger** |
-| `belief` | `AIBelief` | Role: **Trader** (Economy), **Escort** (Patrol), or **Raider** |
-| `state` | `AIState` | Current state: **Idle**, **Docked**, **Traveling**, **Combat**, **Fleeing** |
-| `targetEntity` | `entt::entity` | Current navigation/combat target |
-| `homePlanet` | `entt::entity` | Planet of origin (updated for traders on dock) |
-| `targetPosition` | `sf::Vector2f` | Fallback coordinate target |
-| `decisionTimer` | `float` | Countdown until next AI decision |
-| `dockTimer` | `float` | Time remaining docked at planet |
-| `arrivalRadius` | `float` | Distance threshold for "arrived" (150 units) |
-| `patrolAngle` | `float` | Current angle for escort circular patrol |
-| `isPlayerFleet` | `bool` | When `true`, ship belongs to the player's purchased fleet |
-| `leaderEntity` | `entt::entity` | Entity to follow (player ship, for fleet vessels) |
-
-### 4.2. Entity Composition
-`NPCShipManager::spawnShip` creates a fully-formed ship entity with:
-- `TransformComponent` — world position (near planet)
-- `NameComponent` — `"{FactionName} {VesselRole}"` (e.g., "Civilian Freighter")
-- `Faction` — allegiance map (matches planet distribution)
-- `NPCComponent` — primary AI state machine
-- `CargoComponent` — empty cargo hold
-- `CreditsComponent` — initial balance of 500 credits
-- `ShipStats` — hull/energy
-- `InertialBody` — Box2D dynamic body (linear damping 0.5, angular damping 1.0)
-- `SpriteComponent` — faction-colored procedural sprite (Wedge for Military, Block for Freight, Oval for Passenger)
-
-### 4.3. Spawning
-- `NPCShipManager::init(worldId)` called once at startup.
-- Ships spawn **near planet positions** with frequency scaling by **global population**.
-- **Population Density**: Traffic per capita scales up to 1 ship per 0.5s at high population densities (Cap: 50 NPCs).
-- Faction and Vessel Type are assigned based on the target planet's local `allegiances` and faction-specific `VesselSpawnWeights`.
-- Home planet recorded for each ship.
-
-### 4.4. Decision Engine (State Machine)
-```
-Idle → Traveling → Docked → Idle (loop)
-                ↘ Combat → Fleeing (future)
-```
-
-**By belief:**
-- **Trader** — pick random planet (excluding home) → travel → dock 3-6s → reassign home → repeat
-- **Escort** — travel to home planet → orbit at 200px radius patrol → re-evaluate after 15-25s
-- **Raider** — travel to random planet (combat engagement placeholder)
-
-**Navigation:** Applies 50% thrust toward target, rotates to face travel direction. Velocity zeroed on dock arrival.
-
-## 6. Pattern Composition
-- [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `PlanetEconomy`, `CargoComponent`, `Faction`, `NPCComponent`, `CreditsComponent`
-- [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `EconomyManager::update`, `FactionManager::update`
-- [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `EconomyManager`, `FactionManager`, `NPCShipManager`
-- [npc-ai-state-machine](/docs/developer/pattern/npc-ai-state-machine.md) (P) — `NPCComponent` belief/state, timer-gated decisions
-- [npc-fleet-leader-boids](/docs/developer/pattern/npc-fleet-leader-boids.md) (P) — Player fleet ships following a leader with weighted boids + aggressive catch-up
-- [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Faction names, NPC spawn positions, and Resource seeding
-- [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P) — `economy.update.tick`, `faction.credit.accumulate`, `npc.ai.tick`, `npc.spawn`
+## 3. Pattern Composition
+- [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `PlanetEconomy`, `CargoComponent`, `CreditsComponent`
+- [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `EconomyManager::update`
+- [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `EconomyManager`, `TradeManager`
+- [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Resource seeding via `WorldLoader`
+- [economy-resource-chain](/docs/developer/pattern/economy-resource-chain.md) (P) — Two-tier basic/refined production chain
+- [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P) — `targetStock / currentStock` price formula
+- [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model, atomic ship purchase
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
+- [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 
-## 7. Telemetry & Observability
-- **Semantic Spans (OTEL):**
-  - `economy.update.tick` — attributes: `economy.planet_count`
-  - `faction.credit.accumulate` — attributes: `faction.total_credits`, `faction.count`
-  - `npc.ai.tick` — attributes: `npc.active_count`
-  - `npc.spawn` — attributes: `npc.faction_id`
+## 4. Telemetry & Observability
+- `economy.update.tick` — attributes: `economy.planet_count`
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger

@@ -16,8 +16,8 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
-- [Capability] Navigation (T2)
-- [Capability] Combat (T2)
+- [Capability: Navigation](/docs/architecture/capability/navigation.md) (T2)
+- [Capability: Combat](/docs/architecture/capability/combat.md) (T2)
 
 ## 3. Key Systems
 - **MainRenderer**: Owns the `sf::RenderWindow`, handles SFML lifecycle (open/close/clear/display).

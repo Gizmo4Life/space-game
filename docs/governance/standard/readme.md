@@ -35,4 +35,8 @@ graph TD
 
 ## 3. Semantic Clarity (Intent)
 *Nuance: Standards for capturing intent and nuance before implementation.*
-- [context-elicitation](/docs/governance/standard/context-elicitation.md): Requirement discovery and boundary definition.
+- [context-elicitation](context-elicitation.md): Requirement discovery and boundary definition.
+
+## 4. Game Engine (Domain-Specific)
+*Nuance: Standards governing the C++ game engine technology choices and ECS patterns.*
+- [game-tech-stack](game-tech-stack.md): Approved libraries, physics engine, ECS, and economy patterns.

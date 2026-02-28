@@ -16,24 +16,23 @@ Newtonian kinematics, gravity wells, orbital mechanics, and Box2D world manageme
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
-- [Capability] Navigation (T2)
-- [Capability] Combat (T2)
+- [Capability: Navigation](/docs/architecture/capability/navigation.md) (T2)
+- [Capability: Combat](/docs/architecture/capability/combat.md) (T2)
 
 ## 3. Key Systems
 - **PhysicsEngine**: Owns the Box2D `b2WorldId`, steps the simulation each frame.
 - **KinematicsSystem**: Applies thrust/rotation forces and syncs Box2D positions with `TransformComponent`.
 - **GravitySystem**: Iterates `CelestialBody` × `InertialBody` pairs, applies gravitational pull.
 - **OrbitalSystem**: Updates `TransformComponent` via Kepler ellipse equations for moons/planets.
-- **Dual-Scale System**: Manages two distinct scaling factors in `WorldConfig.h`:
-  - `WORLD_SCALE` (0.05): Used for large-scale orbital distances and map limits.
-  - `SHIP_SCALE` (30.0): Used for "foreground" combat (ship physics and rendering), allowing ships to appear larger than their literal world-scale size.
+- **Dual-Scale System:** Two named coordinate scales in `WorldConfig.h`. See [rendering-dual-scale](/docs/developer/pattern/rendering-dual-scale.md) (P).
 
 ## 4. Pattern Composition
-- [Pattern] cpp-ecs-system-static (P) — `KinematicsSystem`, `GravitySystem`, `OrbitalSystem`
-- [Pattern] cpp-ecs-component (P) — `InertialBody`, `OrbitalComponent`, `TransformComponent`
-- [Pattern] kinematics-newtonian-2d (P) — Gravity and thrust calculations
-- [Pattern] cpp-singleton-manager (P) — `PhysicsEngine`
-- [Pattern] logic-idempotency (P)
+- [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `KinematicsSystem`, `GravitySystem`, `OrbitalSystem`
+- [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `InertialBody`, `OrbitalComponent`, `TransformComponent`
+- [kinematics-newtonian-2d](/docs/developer/pattern/kinematics-newtonian-2d.md) (P) — Gravity and thrust calculations
+- [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `PhysicsEngine`
+- [rendering-dual-scale](/docs/developer/pattern/rendering-dual-scale.md) (P) — `WORLD_SCALE` / `SHIP_SCALE` coordinate contexts
+- [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 
 ## 5. Telemetry & Observability
 - **Status:** 🔲 Not yet instrumented — candidate spans: `physics.step`, `gravity.update`, `orbital.update`

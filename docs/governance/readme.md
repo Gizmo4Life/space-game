@@ -19,6 +19,10 @@ graph LR
 - [protocol/](protocol/): Step-by-step execution scripts for system modification.
 - [standard/](standard/): Global constraints and pattern ratings.
 
+## Reference Documents
+- [agent-manifest](agent-manifest.md): Protocol decision table for agents — maps trigger context to the correct entry-point protocol.
+- [effective-usage-analysis](effective-usage-analysis.md): Strategic guide for maximising Knowledge Graph effectiveness.
+
 ---
 ## Machine Navigation Metadata
 ```yaml

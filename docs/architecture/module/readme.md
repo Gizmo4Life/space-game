@@ -16,6 +16,8 @@ graph TD
         Rend[rendering]
         Comb[game-combat]
         Econ[game-economy]
+        Fac[game-factions]
+        NPC[game-npc]
         UI[game-ui]
     end
     subgraph Governance Layer
@@ -32,6 +34,8 @@ graph TD
     Phys --> Comb
     Phys --> Rend
     Econ --> Comb
+    Fac --> Econ
+    NPC --> Fac
     Pat --> Stan
     Stan --> Prot
     Prot --> Work
@@ -44,7 +48,9 @@ graph TD
 - [rendering](src-core.md): SFML rendering pipeline, camera, offscreen indicators.
 - [game-ui](game-ui.md): Planetary landing screen, pause overlay, and ship market.
 - [game-combat](game-combat.md): Ship-to-ship engagement and projectile systems.
-- [game-economy](game-economy.md): Faction budgeting, trade, NPC orchestration, and competitive ship market.
+- [game-economy](game-economy.md): Planetary production, dynamic pricing, trade transactions, and ship market.
+- [game-factions](game-factions.md): Procedural factions, bilateral relationship matrix, and credit accumulation.
+- [game-npc](game-npc.md): NPC ship spawning, faction-weighted AI, and player fleet management.
 - [system-gate](system-gate.md): Inter-system jump and loading logic.
 
 ## 2. Documentation System

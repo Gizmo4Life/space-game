@@ -17,6 +17,7 @@ Identify structural errors, missing artifacts, and technical drift between the r
 - **Action:** Scan for directories in `src/` or `tools/` that lack a corresponding [T3 Module] in `docs/architecture/module/`.
 - **Action:** Scan for [T3 Modules] that lack a [Signpost Readme] in their physical code directory.
 - **Action:** Verify every [T3 Module] explicitly links to at least one [Standard] and its [Preferred] patterns.
+- **Action:** For each [T3 Module], spot-check that every **named class or system** in the module's physical scope (`.h`/`.cpp` files) is described under a **Key Systems** or dedicated sub-section. A system mentioned only in a file path or passing reference is **not** considered documented. Flag any undescribed class as a **content gap**.
 
 ## 4. Operational & Logic Audit
 - **Action:** Scan for critical telemetry spans in code that lack a corresponding [doc-ops-span-runbook](/docs/developer/pattern/doc-ops-span-runbook.md).

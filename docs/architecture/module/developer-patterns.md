@@ -14,8 +14,7 @@ Atomic architectural and documentation shapes.
 - **Ownership:** All Patterns Leads
 
 ## 2. Capability Alignment
-- [Governance Enforcement](/docs/architecture/capability/governance-enforcement.md)
-- [Doc Ingestion](/docs/architecture/capability/doc-ingestion.md)
+- [Governance Enforcement](/docs/architecture/capability/governance-enforcement.md) (T2)
 
 ## 3. Pattern Composition
 - [Doc YAML Metadata](/docs/developer/pattern/doc-yaml-metadata.md) (Standard: P)

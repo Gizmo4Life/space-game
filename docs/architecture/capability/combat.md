@@ -3,6 +3,8 @@ id: combat-capability
 type: capability
 pillar: architecture
 ---
+[Home](/) > [Architecture](/docs/architecture/readme.md) > [Capability](readme.md) > Combat
+
 # Capability: Combat
 
 ## 1. Business Intent

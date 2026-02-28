@@ -7,17 +7,20 @@ pillar: architecture
 
 # Capability: Governance Enforcement
 
-Orchestrates the formal validation of repository patterns, standards, and protocols to ensure architectural integrity.
+## 1. Business Intent
+Maintain architectural integrity by formally validating that all repository patterns, standards, and protocols are applied consistently and that documentation never drifts from the codebase.
 
-## 1. Description
-Provides the mechanisms for auditing documentation drift, enforcing pattern atomicity, and ensuring that all contributions adhere to the defined Pillar structure.
+## 2. Orchestration Flow
+1. **Structural Audit:** Verify breadcrumbs, YAML frontmatter, and internal links via the Documentation Validation protocol.
+2. **Drift Detection:** Scan `src/` and `docs/` for undocumented code, missing T3 modules, and ghost logic (patterns rated U/D in standards).
+3. **Standard Enforcement:** Verify PADU ratings are assigned and that all T3 modules link to at least one standard.
+4. **Reconciliation:** Create or update T3 module files to align with discovered code shapes.
 
-## 2. Business Logic
-- **Protocol Validation**: Ensuring mandatory gates (like Doc Validation) are executed.
-- **Structural Auditing**: Finding "Ghost Files" and undocumented code shapes.
-- **Standard Enforcement**: Verifying PADU ratings and contextual fitness.
+## 3. Data Flow & Integrity
+- **Trigger:** Manual run of the Discovery or Documentation Validation protocol, or PR gate.
+- **Output:** Updated T2/T3 documentation; flagged violations.
+- **Consistency:** Protocols are idempotent — safe to re-run after partial completion.
 
-## 3. Composition
-- [Governance Protocols](/docs/architecture/module/governance-protocols.md)
-- [Governance Standards](/docs/architecture/module/governance-standards.md)
-- [Developer Patterns](/docs/architecture/module/developer-patterns.md)
+## 4. Operational Context
+- **Primary Modules:** [governance-protocols](/docs/architecture/module/governance-protocols.md), [governance-standards](/docs/architecture/module/governance-standards.md), [developer-patterns](/docs/architecture/module/developer-patterns.md) (T3)
+- **Critical Failure Metric:** Any T3 module exceeding 50 lines, or a ghost logic pattern reaching production.

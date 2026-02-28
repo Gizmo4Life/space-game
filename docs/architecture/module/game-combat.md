@@ -11,26 +11,20 @@ dependencies: ["physics-module"]
 Ship-to-ship engagement, projectile lifecycles, and damage resolution.
 
 ## 1. Physical Scope
-- **Path:** `/src/engine/combat/`
+- **Path:** `/src/engine/combat/` — `WeaponSystem.h/.cpp`
 - **Components:** `/src/game/components/WeaponComponent.h`, `ShipStats.h`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
-- [Capability] Combat (T2)
+- [Capability: Combat](/docs/architecture/capability/combat.md) (T2)
 
-## 3. Key Systems
-- **WeaponSystem**: Manages cooldowns, projectile spawning (Box2D bullet bodies), and distance-based collision detection.
-- **Firing Sequence**: Check constraints → Spend energy → Spawn projectile → Set velocity from owner orientation.
-- **handleCollisions**: Iterates projectiles vs. ships (excluding owner), applies hull damage on proximity hit.
+## 3. Pattern Composition
+- [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `WeaponComponent`, `ProjectileComponent`, `ShipStats`
+- [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `WeaponSystem::update`, `WeaponSystem::fire`
+- [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P) — `combat.weapon.fire`, `combat.collision.resolve`
+- [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 
-## 4. Pattern Composition
-- [Pattern] cpp-ecs-component (P) — `WeaponComponent`, `ProjectileComponent`, `ShipStats`
-- [Pattern] cpp-ecs-system-static (P) — `WeaponSystem::update`, `WeaponSystem::fire`
-- [Pattern] otel-span-instrumentation (P) — `combat.weapon.fire`, `combat.collision.resolve`
-- [Pattern] logic-idempotency (P)
-
-## 5. Telemetry & Observability
-- **Semantic Spans (OTEL):**
-  - `combat.weapon.fire` — attributes: `combat.projectile_speed`
-  - `combat.collision.resolve` — attributes: `combat.hits`
+## 4. Telemetry & Observability
+- `combat.weapon.fire` — attributes: `combat.projectile_speed`
+- `combat.collision.resolve` — attributes: `combat.hits`
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger

@@ -7,16 +7,19 @@ pillar: architecture
 
 # Capability: Agent Orchestration
 
-Orchestrates the interaction between external AI agents and the repository's human-oriented documentation.
+## 1. Business Intent
+Orchestrate the interaction between external AI agents and the repository's human-oriented documentation, enabling autonomous protocol execution without duplicating knowledge.
 
-## 1. Description
-Provides the interfaces, instructions, and workflows that allow AI systems to reason over the repository's rules and execute protocols autonomously.
+## 2. Orchestration Flow
+1. **Directive Injection:** Agent reads `instructions.md` and `copilot-instructions.md` to load persona and behavioral rules.
+2. **Context Retrieval:** Agent traverses the knowledge graph via RAG-optimized patterns and standards to ground its reasoning.
+3. **Workflow Execution:** Slash commands map to workflow `.md` files in `/.agent/workflows/`, which delegate to governance protocols for multi-step operations.
 
-## 2. Business Logic
-- **Instruction Injection**: Providing persona and behavior rules via directive files.
-- **Workflow Execution**: Mapping slash commands to multi-step protocols.
-- **Context Retrieval**: Enabling RAG-optimized discovery of patterns and standards.
+## 3. Data Flow & Integrity
+- **Trigger:** User slash command or inline agent invocation.
+- **Output:** Protocol execution results; updated documentation artifacts.
+- **Consistency:** Workflows are idempotent — safe to re-run if interrupted.
 
-## 3. Composition
-- [Agent Workflows](docs/architecture/module/agent-workflows.md)
-- [AI Config](docs/architecture/module/ai-config.md)
+## 4. Operational Context
+- **Primary Modules:** [agent-workflows](/docs/architecture/module/agent-workflows.md), [ai-config](/docs/architecture/module/ai-config.md) (T3)
+- **Critical Failure Metric:** Workflow referencing a protocol that no longer exists.

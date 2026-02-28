@@ -7,15 +7,19 @@ pillar: architecture
 
 # Capability: Operational Reliability
 
-Ensures the system is observable, maintainable, and recoverable during production incidents.
+## 1. Business Intent
+Ensure the system is observable, maintainable, and recoverable during production incidents by providing atomic runbooks and telemetry compliance gates.
 
-## 1. Description
-Orchestrates the lifecycle of operational artifacts—from telemetry instrumentation to runbook execution and restoration tasks.
+## 2. Orchestration Flow
+1. **Triage:** Operator runs the Operational Triage protocol to map symptoms to components via telemetry spans.
+2. **Runbook Execution:** Atomic, idempotent restoration steps restore the affected component to a known-good state.
+3. **Observability Compliance:** All code changes must emit the required OTEL spans before merging; validated via the Observability Compliance protocol.
 
-## 2. Business Logic
-- **Incident Triage**: Rapidly mapping symptoms to components.
-- **Mitigation Execution**: Providing atomic, idempotent steps for restoration.
-- **Observability Compliance**: Ensuring all changes emit the required signals.
+## 3. Data Flow & Integrity
+- **Trigger:** Production incident alert or pre-merge observability gate.
+- **Output:** System restored to operational state; compliance report generated.
+- **Consistency:** All runbook steps are idempotent — safe to re-run after interruption.
 
-## 3. Composition
-- [Operational Pillar](/docs/architecture/module/operational-pillar.md)
+## 4. Operational Context
+- **Primary Module:** [operational-pillar](/docs/architecture/module/operational-pillar.md) (T3)
+- **Critical Failure Metric:** Mean Time to Recovery (MTTR) exceeding agreed SLO, or a missing OTEL span on a critical path.
