@@ -52,7 +52,7 @@ void LandingScreen::open(entt::entity planet, entt::entity player) {
   open_ = true;
   planetEntity_ = planet;
   playerEntity_ = player;
-  selectedClass_ = VesselClass::Light;
+  selectedTier_ = Tier::T1;
   span->End();
 }
 
@@ -70,21 +70,21 @@ void LandingScreen::handleEvent(const sf::Event &event,
     // Ship type selection
     if (kp->code == sf::Keyboard::Key::Num1 ||
         kp->code == sf::Keyboard::Key::Numpad1)
-      selectedClass_ = VesselClass::Light;
+      selectedTier_ = Tier::T1;
     if (kp->code == sf::Keyboard::Key::Num2 ||
         kp->code == sf::Keyboard::Key::Numpad2)
-      selectedClass_ = VesselClass::Medium;
+      selectedTier_ = Tier::T2;
     if (kp->code == sf::Keyboard::Key::Num3 ||
         kp->code == sf::Keyboard::Key::Numpad3)
-      selectedClass_ = VesselClass::Heavy;
+      selectedTier_ = Tier::T3;
     // Buy
     if (kp->code == sf::Keyboard::Key::Enter ||
         kp->code == sf::Keyboard::Key::B) {
       auto span =
           Telemetry::instance().tracer()->StartSpan("game.ui.ship.purchase");
-      span->SetAttribute("vessel.class", vesselClassName(selectedClass_));
+      span->SetAttribute("vessel.tier", tierName(selectedTier_));
       EconomyManager::instance().buyShip(registry, planetEntity_, playerEntity_,
-                                         selectedClass_, worldId);
+                                         selectedTier_, worldId);
       span->End();
     }
   }
@@ -158,10 +158,14 @@ void LandingScreen::drawPlanetInfo(sf::RenderWindow &w, entt::registry &r,
         Resource::Weapons,      Resource::Electronics,
         Resource::Plastics,     Resource::ManufacturingGoods,
         Resource::Powercells};
+    auto rKey = [](Resource r) {
+      return ProductKey{ProductType::Resource, (uint32_t)r, Tier::T1};
+    };
     for (auto res : allRes) {
-      if (eco.currentPrices.count(res)) {
-        std::string line = "  " + getResourceName(res) + ": $" +
-                           fmt(eco.currentPrices.at(res));
+      auto pk = rKey(res);
+      if (eco.currentPrices.count(pk)) {
+        std::string line =
+            "  " + getResourceName(res) + ": $" + fmt(eco.currentPrices.at(pk));
         text(line, 14, sf::Color(210, 210, 210));
       }
     }
@@ -210,40 +214,24 @@ void LandingScreen::drawShipMarket(sf::RenderWindow &w, entt::registry &r,
   text("Your Credits: $" + fmt(playerCredits, 0), 16, sf::Color(100, 255, 100));
   y += 8.f;
 
-  std::vector<VesselClass> classes = {VesselClass::Light, VesselClass::Medium,
-                                      VesselClass::Heavy};
+  std::vector<Tier> tiers = {Tier::T1, Tier::T2, Tier::T3};
   int keyNum = 1;
-  for (auto vc : classes) {
-    bool isSelected = (vc == selectedClass_);
+  for (auto tier : tiers) {
+    bool isSelected = (tier == selectedTier_);
     sf::Color headerCol =
         isSelected ? sf::Color(255, 220, 80) : sf::Color(180, 180, 180);
-    text("[" + std::to_string(keyNum++) + "] " + vesselClassName(vc) + " Ship",
+    text("[" + std::to_string(keyNum++) + "] " + tierName(tier) + " Ship",
          isSelected ? 18 : 16, headerCol);
 
-    auto bids = EconomyManager::instance().getShipBids(r, planetEntity_, vc);
-    if (bids.empty()) {
+    auto bids = EconomyManager::instance().getHullBids(r, planetEntity_);
+    if (!bids.count(tier)) {
       text("   No sellers available", 13, sf::Color(120, 120, 120));
     } else {
-      std::vector<std::pair<uint32_t, float>> sorted(bids.begin(), bids.end());
-      std::sort(sorted.begin(), sorted.end(),
-                [](auto &a, auto &b) { return a.second < b.second; });
-
-      bool first = true;
-      for (auto &[fId, price] : sorted) {
-        auto &fd = FactionManager::instance().getFaction(fId);
-        bool canAfford = (playerCredits >= price);
-        sf::Color col;
-        std::string prefix;
-        if (first) {
-          col = canAfford ? sf::Color(80, 255, 80) : sf::Color(255, 80, 80);
-          prefix = "   ★ ";
-        } else {
-          col = sf::Color(160, 160, 160);
-          prefix = "     ";
-        }
-        text(prefix + fd.name + "  $" + fmt(price, 0), 14, col);
-        first = false;
-      }
+      float price = bids.at(tier);
+      bool canAfford = (playerCredits >= price);
+      sf::Color col =
+          canAfford ? sf::Color(80, 255, 80) : sf::Color(255, 80, 80);
+      text("   ★ Available: $" + fmt(price, 0), 14, col);
     }
     y += 6.f;
   }
@@ -291,7 +279,7 @@ void LandingScreen::render(sf::RenderWindow &w, entt::registry &r,
             (r.valid(planetEntity_) && r.all_of<NameComponent>(planetEntity_)
                  ? r.get<NameComponent>(planetEntity_).name
                  : "planet") +
-            "   |   [1] Military   [2] Freight   [3] Passenger   "
+            "   |   [1] Light   [2] Medium   [3] Heavy   "
             "[Enter] Buy   [Esc] Depart",
         13);
     hint.setFillColor(sf::Color(180, 180, 180));

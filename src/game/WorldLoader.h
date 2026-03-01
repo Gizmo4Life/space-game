@@ -1,3 +1,5 @@
+#pragma once
+#include "game/components/GameTypes.h"
 #include "game/components/HullDef.h"
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
@@ -16,7 +18,7 @@ public:
                                     bool isMoonSystem = false);
 
   static entt::entity spawnPlayer(entt::registry &registry, b2WorldId worldId,
-                                  VesselClass vc);
+                                  Tier sizeTier);
 };
 
 } // namespace space

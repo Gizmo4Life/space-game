@@ -2,6 +2,7 @@
 #include "game/EconomyManager.h"
 #include "game/FactionManager.h"
 #include "game/components/Economy.h"
+#include "game/components/GameTypes.h"
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
@@ -35,7 +36,7 @@ private:
   entt::entity playerEntity_ = entt::null;
 
   // Selection state for the ship market
-  VesselClass selectedClass_ = VesselClass::Light;
+  Tier selectedTier_ = Tier::T1;
 
   void drawPanel(sf::RenderWindow &w, sf::FloatRect rect, sf::Color bg,
                  sf::Color border);

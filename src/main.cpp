@@ -52,8 +52,8 @@ int main() {
   // --- World Loading ---
   WorldLoader::loadStars(registry, 1000);
   WorldLoader::generateStarSystem(registry, physics.getWorldId());
-  auto playerEntity = WorldLoader::spawnPlayer(registry, physics.getWorldId(),
-                                               VesselClass::Medium);
+  auto playerEntity =
+      WorldLoader::spawnPlayer(registry, physics.getWorldId(), Tier::T2);
 
   // --- NPC Ship Manager (auto-spawns at planets) ---
   NPCShipManager::instance().init(physics.getWorldId());

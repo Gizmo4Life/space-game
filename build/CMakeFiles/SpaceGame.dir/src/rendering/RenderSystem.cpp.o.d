@@ -1237,11 +1237,79 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: \
   /usr/local/include/entt/signal/fwd.hpp \
   /usr/local/include/entt/signal/sigh.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
+  /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
+  /usr/local/include/opentelemetry/nostd/shared_ptr.h \
+  /usr/local/include/opentelemetry/nostd/unique_ptr.h \
+  /usr/local/include/opentelemetry/version.h \
+  /usr/local/include/opentelemetry/common/macros.h \
+  /usr/local/include/opentelemetry/detail/preprocessor.h \
+  /usr/local/include/opentelemetry/trace/tracer.h \
+  /usr/local/include/opentelemetry/context/context.h \
+  /usr/local/include/opentelemetry/context/context_value.h \
+  /usr/local/include/opentelemetry/nostd/variant.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/variant.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/policy_checks.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/any \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/../base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/../base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/../base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/../base/internal/../config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/../base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/../base/internal/../../meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/../base/internal/../../meta/../base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../utility/../meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/attributes.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../base/port.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/variant.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../types/bad_variant_access.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../types/../base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/../types/internal/../../utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/string_view.h \
+  /usr/local/include/opentelemetry/trace/default_span.h \
+  /usr/local/include/opentelemetry/common/attribute_value.h \
+  /usr/local/include/opentelemetry/nostd/span.h \
+  /usr/local/include/opentelemetry/nostd/utility.h \
+  /usr/local/include/opentelemetry/nostd/detail/decay.h \
+  /usr/local/include/opentelemetry/nostd/detail/invoke.h \
+  /usr/local/include/opentelemetry/nostd/detail/void.h \
+  /usr/local/include/opentelemetry/trace/span.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable_view.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable.h \
+  /usr/local/include/opentelemetry/nostd/function_ref.h \
+  /usr/local/include/opentelemetry/nostd/type_traits.h \
+  /usr/local/include/opentelemetry/trace/span_context.h \
+  /usr/local/include/opentelemetry/trace/span_id.h \
+  /usr/local/include/opentelemetry/trace/trace_flags.h \
+  /usr/local/include/opentelemetry/trace/trace_id.h \
+  /usr/local/include/opentelemetry/trace/trace_state.h \
+  /usr/local/include/opentelemetry/common/kv_properties.h \
+  /usr/local/include/opentelemetry/common/string_util.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/regex \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable_view.h \
+  /usr/local/include/opentelemetry/trace/span_metadata.h \
+  /usr/local/include/opentelemetry/common/timestamp.h \
+  /usr/local/include/opentelemetry/trace/scope.h \
+  /usr/local/include/opentelemetry/context/runtime_context.h \
+  /usr/local/include/opentelemetry/trace/span_startoptions.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /usr/local/include/box2d/box2d.h /usr/local/include/box2d/base.h \
@@ -1260,4 +1328,23 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/iostream \
+  /usr/local/include/opentelemetry/trace/provider.h \
+  /usr/local/include/opentelemetry/common/spin_lock_mutex.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/thread \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/formatter.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/jthread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_source.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_shared_ptr.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_state.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/atomic_unique_lock.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_list_view.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_token.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/thread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/this_thread.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/emmintrin.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/xmmintrin.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mmintrin.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mm_malloc.h \
+  /usr/local/include/opentelemetry/trace/noop.h \
+  /usr/local/include/opentelemetry/trace/tracer_provider.h

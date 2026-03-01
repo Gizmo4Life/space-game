@@ -1,6 +1,4 @@
-#pragma once
-#include "game/components/Economy.h"
-#include "game/components/HullDef.h"
+#include "game/components/GameTypes.h"
 #include <SFML/System/Vector2.hpp>
 #include <entt/entt.hpp>
 
@@ -12,7 +10,7 @@ enum class AIState { Idle, Docked, Traveling, Combat, Fleeing };
 
 struct NPCComponent {
   uint32_t factionId;
-  VesselClass vesselClass = VesselClass::Light;
+  Tier sizeTier = Tier::T1;
   AIBelief belief = AIBelief::Trader;
   AIState state = AIState::Idle;
   bool isPlayerFleet = false;
@@ -28,6 +26,7 @@ struct NPCComponent {
   float patrolAngle = 0.0f;    // For escort circular patrol
   float phaseOffset = 0.0f;    // Unique offset to prevent clustering
   float lifeTimer = 0.0f;      // Persistent clock for dynamic patterns
+  bool isForSale = false;      // Mark if this ship is listed on the market
 
   // Orchestration
   float passengerCount = 0.0f;                // Population in transit

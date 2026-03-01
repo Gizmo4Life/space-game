@@ -14592,12 +14592,9 @@ CMakeFiles/SpaceGame.dir/src/main.cpp.o: /Users/Dan/Documents/repos/space-game/s
   /Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.h \
   /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/InstalledModules.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
@@ -20501,6 +20498,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__iterator/size.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__cstddef/size_t.h:
+
+/Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/single_view.h:
 

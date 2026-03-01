@@ -1,8 +1,10 @@
 #pragma once
+#include "game/components/GameTypes.h"
 #include <SFML/Graphics/Color.hpp>
 #include <algorithm>
 #include <entt/entt.hpp>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -12,6 +14,7 @@ struct FactionData {
   uint32_t id;
   std::string name;
   sf::Color color;
+  std::set<ProductKey> unlockedTech;
   float credits = 5000.0f;
   float aggressionLevel = 0.2f; // 0 (Passive) to 1 (Raiding)
 

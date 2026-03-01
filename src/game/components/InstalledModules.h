@@ -1,5 +1,5 @@
 #pragma once
-#include "game/components/ShipModule.h"
+#include "ShipModule.h"
 #include <vector>
 
 namespace space {

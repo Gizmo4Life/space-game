@@ -1220,6 +1220,7 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /usr/local/include/opentelemetry/context/runtime_context.h \
   /usr/local/include/opentelemetry/trace/span_startoptions.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /usr/local/include/SFML/Graphics/Color.hpp \
   /usr/local/include/SFML/Graphics/Color.inl \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \

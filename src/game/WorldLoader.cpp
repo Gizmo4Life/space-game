@@ -297,42 +297,46 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
         int strategyRoll = rand() % 3;
         fEco.strategy = static_cast<FactionStrategy>(strategyRoll);
 
+        auto rKey = [](Resource r) {
+          return ProductKey{ProductType::Resource, (uint32_t)r, Tier::T1};
+        };
+
         // Seed factories by planet type
         if (type == CelestialType::Rocky) {
-          fEco.factories[Resource::Metals] = 5;
-          fEco.factories[Resource::RareMetals] = 2;
+          fEco.factories[rKey(Resource::Metals)] = 5;
+          fEco.factories[rKey(Resource::RareMetals)] = 2;
         } else if (type == CelestialType::Lava) {
-          fEco.factories[Resource::Metals] = 3;
-          fEco.factories[Resource::Hydrocarbons] = 2;
+          fEco.factories[rKey(Resource::Metals)] = 3;
+          fEco.factories[rKey(Resource::Hydrocarbons)] = 2;
         } else if (type == CelestialType::Icy) {
-          fEco.factories[Resource::Water] = 5;
-          fEco.factories[Resource::Isotopes] = 2;
+          fEco.factories[rKey(Resource::Water)] = 5;
+          fEco.factories[rKey(Resource::Isotopes)] = 2;
         } else if (type == CelestialType::Earthlike) {
-          fEco.factories[Resource::Crops] = 5;
-          fEco.factories[Resource::Water] = 2;
+          fEco.factories[rKey(Resource::Crops)] = 5;
+          fEco.factories[rKey(Resource::Water)] = 2;
         }
-        fEco.factories[Resource::Food] =
+        fEco.factories[rKey(Resource::Food)] =
             std::max(1, (int)(fEco.populationCount * 3));
-        fEco.factories[Resource::Fuel] =
+        fEco.factories[rKey(Resource::Fuel)] =
             std::max(1, (int)(fEco.populationCount));
 
         fEco.credits = fEco.populationCount * 100.0f;
 
         // Initial stockpiles
-        fEco.stockpile[Resource::Food] = fEco.populationCount * 50.0f;
-        fEco.stockpile[Resource::Water] = fEco.populationCount * 50.0f;
-        fEco.stockpile[Resource::Metals] = fEco.populationCount * 100.0f;
-        fEco.stockpile[Resource::Fuel] = fEco.populationCount * 50.0f;
+        fEco.stockpile[rKey(Resource::Food)] = fEco.populationCount * 50.0f;
+        fEco.stockpile[rKey(Resource::Water)] = fEco.populationCount * 50.0f;
+        fEco.stockpile[rKey(Resource::Metals)] = fEco.populationCount * 100.0f;
+        fEco.stockpile[rKey(Resource::Fuel)] = fEco.populationCount * 50.0f;
 
         if (fEco.strategy == FactionStrategy::Military)
-          fEco.factories[Resource::Shipyard] = 1;
+          fEco.factories[rKey(Resource::Shipyard)] = 1;
         if (fEco.strategy == FactionStrategy::Industrial)
-          fEco.factories[Resource::Refinery] = 1;
+          fEco.factories[rKey(Resource::Refinery)] = 1;
 
-        // Starting fleet by class
-        fEco.fleetPool[VesselClass::Light] = 5;
-        fEco.fleetPool[VesselClass::Medium] = 2;
-        fEco.fleetPool[VesselClass::Heavy] = 1;
+        // Starting fleet by tier
+        fEco.fleetPool[Tier::T1] = 5;
+        fEco.fleetPool[Tier::T2] = 2;
+        fEco.fleetPool[Tier::T3] = 1;
 
         eco.factionData[fid] = fEco;
       }
@@ -346,7 +350,7 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
 }
 
 entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
-                                      b2WorldId worldId, VesselClass vc) {
+                                      b2WorldId worldId, Tier sizeTier) {
   auto ship = registry.create();
 
   b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -388,9 +392,9 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 
   // Apply modular outfit (handles Hull, Engines, Weapons, Stats, etc.)
-  ShipOutfitter::instance().applyOutfit(registry, ship, 1, vc);
+  ShipOutfitter::instance().applyOutfit(registry, ship, 1, sizeTier);
 
-  const HullDef &hull = ShipOutfitter::instance().getHull(1, vc);
+  const HullDef &hull = ShipOutfitter::instance().getHull(1, sizeTier);
 
   registry.emplace_or_replace<InertialBody>(ship, bodyId, 500.0f, 0.05f, 20.0f);
   registry.emplace_or_replace<WeaponComponent>(ship);

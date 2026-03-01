@@ -1,377 +1,256 @@
-#include "EconomyManager.h"
-#include "NPCShipManager.h"
-#include "engine/telemetry/Telemetry.h"
-#include "game/FactionManager.h"
-#include "game/components/CargoComponent.h"
-#include "game/components/CelestialBody.h"
-#include "game/components/Faction.h"
-#include "game/components/InertialBody.h"
-#include "game/components/NameComponent.h"
-#include "game/components/TransformComponent.h"
-#include "game/components/WeaponComponent.h"
-#include "game/components/WorldConfig.h"
-#include <SFML/Graphics/Color.hpp>
+#include "game/EconomyManager.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <opentelemetry/trace/provider.h>
+#include <map>
+#include <string>
+#include <type_traits>
 #include <vector>
+
+#include <entt/entt.hpp>
+#include <opentelemetry/trace/provider.h>
+
+#include "engine/telemetry/Telemetry.h"
+#include "game/FactionManager.h"
+#include "game/NPCShipManager.h"
+#include "game/ShipOutfitter.h"
+#include "game/components/Economy.h"
+#include "game/components/GameTypes.h"
+#include "game/components/Landed.h"
+#include "game/components/NPCComponent.h"
+#include "game/components/NameComponent.h"
+#include "game/components/ShipModule.h"
+#include "game/components/TransformComponent.h"
 
 namespace space {
 
+void EconomyManager::init() {
+  recipes.clear();
+  productionPriority.clear();
+
+  auto resKey = [](Resource r) {
+    return ProductKey{ProductType::Resource, static_cast<uint32_t>(r),
+                      Tier::T1};
+  };
+
+  // Base Resources
+  recipes[resKey(Resource::Water)] = {{}, 0.05f, 20.0f};
+  recipes[resKey(Resource::Crops)] = {{}, 0.1f, 15.0f};
+  recipes[resKey(Resource::Hydrocarbons)] = {{}, 0.1f, 15.0f};
+  recipes[resKey(Resource::Metals)] = {{}, 0.2f, 10.0f};
+  recipes[resKey(Resource::RareMetals)] = {{}, 0.5f, 5.0f};
+  recipes[resKey(Resource::Isotopes)] = {{}, 0.5f, 5.0f};
+
+  // Processed Goods
+  recipes[resKey(Resource::Food)] = {
+      {{resKey(Resource::Crops), 1.0f}}, 0.05f, 10.0f};
+  recipes[resKey(Resource::Plastics)] = {
+      {{resKey(Resource::Hydrocarbons), 1.0f}}, 0.1f, 10.0f};
+  recipes[resKey(Resource::Electronics)] = {
+      {{resKey(Resource::Metals), 1.0f}, {resKey(Resource::RareMetals), 0.2f}},
+      0.3f,
+      5.0f};
+  recipes[resKey(Resource::Fuel)] = {{{resKey(Resource::Hydrocarbons), 0.5f},
+                                      {resKey(Resource::Isotopes), 0.1f}},
+                                     0.2f,
+                                     15.0f};
+
+  // Module Production (Engines, Weapons, etc.)
+  // We use ProductType::Module and the module's ID + Tier
+  auto &reg = ModuleRegistry::instance();
+  for (size_t i = 0; i < reg.modules.size(); ++i) {
+    const auto &m = reg.modules[i];
+    Tier tier = m.hasAttribute(AttributeType::Size)
+                    ? m.getAttributeTier(AttributeType::Size)
+                    : Tier::T1;
+    ProductKey pk{ProductType::Module, (uint32_t)i, tier};
+
+    // Tiered input costs: T1=1x, T2=3x, T3=8x
+    float scale = 1.0f;
+    if (tier == Tier::T2)
+      scale = 3.0f;
+    if (tier == Tier::T3)
+      scale = 8.0f;
+
+    Recipe r;
+    r.inputs[resKey(Resource::Metals)] = 2.0f * scale;
+    r.inputs[resKey(Resource::Electronics)] = 1.0f * scale;
+    r.laborRequired = 0.5f * scale;
+    r.baseOutputRate = 0.1f; // Slow production
+    recipes[pk] = r;
+    productionPriority.push_back(pk);
+  }
+
+  // Prepend resources to priority so they build first
+  std::vector<ProductKey> resPriority = {
+      resKey(Resource::Food), resKey(Resource::Fuel),
+      resKey(Resource::Electronics), resKey(Resource::Plastics)};
+  productionPriority.insert(productionPriority.begin(), resPriority.begin(),
+                            resPriority.end());
+}
+
 void EconomyManager::update(entt::registry &registry, float deltaTime) {
-  auto span = Telemetry::instance().tracer()->StartSpan("game.economy.tick");
+  auto span =
+      space::Telemetry::instance().tracer()->StartSpan("game.economy.process");
   auto view = registry.view<PlanetEconomy>();
 
   for (auto entity : view) {
     auto &eco = view.get<PlanetEconomy>(entity);
-    bool isAtWar = false;
-    if (registry.all_of<Faction>(entity)) {
-      isAtWar = registry.get<Faction>(entity).isAtWar;
-    }
+    for (auto &[factionId, fEco] : eco.factionData)
+      processProduction(fEco, deltaTime);
 
-    // Reset market stockpile for fresh contributions
     eco.marketStockpile.clear();
-
-    float totalPop = 0.0f;
-    for (auto &[factionId, fEco] : eco.factionData) {
-      totalPop += fEco.populationCount;
-
-      // 1. Population Growth/Starvation (Faction Internal)
-      float foodStock = fEco.stockpile[Resource::Food];
-      float neededFood = fEco.populationCount * 0.02f * deltaTime;
-      if (foodStock >= neededFood) {
-        fEco.stockpile[Resource::Food] -= neededFood;
-        fEco.populationCount += (foodStock * 0.001f) * deltaTime;
-      } else {
-        fEco.stockpile[Resource::Food] = 0;
-        fEco.populationCount -= (fEco.populationCount * 0.05f) * deltaTime;
-      }
-      if (fEco.populationCount < 0.1f) {
-        fEco.populationCount = 0.0f;
-        fEco.isAbandoned = true;
-      } else {
-        fEco.isAbandoned = false;
-      }
-
-      // 2. Factory Execution (Faction Internal)
-      // Staffing Ratio: 100 people (0.1 pop units) per factory slot
-      // Guard: minimum 1 so tiny colonies don't produce zero
-      int laborPool =
-          std::max(1, static_cast<int>(fEco.populationCount * 10.0f));
-
-      // Industrial Strategy Bonus: 20% more efficient labor utilization
-      if (fEco.strategy == FactionStrategy::Industrial) {
-        laborPool = std::max(1, static_cast<int>(laborPool * 1.2f));
-      }
-
-      int usedLabor = 0;
-
-      for (auto const &[res, constructedCount] : fEco.factories) {
-        if (usedLabor >= laborPool)
-          break;
-
-        // Staffing: You can only run what you have buildings for AND have
-        // people to staff
-        int toRun = std::min(constructedCount, laborPool - usedLabor);
-        float baseRate = 1.0f * toRun * deltaTime;
-
-        // Industrial Strategy Bonus: 15% faster production
-        if (fEco.strategy == FactionStrategy::Industrial) {
-          baseRate *= 1.15f;
-        }
-
-        // Basic Resources
-        if (res == Resource::Water || res == Resource::Crops ||
-            res == Resource::Hydrocarbons || res == Resource::Metals ||
-            res == Resource::RareMetals || res == Resource::Isotopes) {
-          fEco.stockpile[res] += baseRate;
-          usedLabor += toRun;
-        } else {
-          bool hasInputs = false;
-          if (res == Resource::Food &&
-              fEco.stockpile[Resource::Crops] >= baseRate) {
-            fEco.stockpile[Resource::Crops] -= baseRate;
-            fEco.stockpile[Resource::Food] += baseRate;
-            hasInputs = true;
-          } else if (res == Resource::Plastics &&
-                     fEco.stockpile[Resource::Hydrocarbons] >= baseRate) {
-            fEco.stockpile[Resource::Hydrocarbons] -= baseRate;
-            fEco.stockpile[Resource::Plastics] += baseRate;
-            hasInputs = true;
-          } else if (res == Resource::Electronics &&
-                     fEco.stockpile[Resource::Metals] >= baseRate &&
-                     fEco.stockpile[Resource::RareMetals] >= baseRate * 0.2f) {
-            fEco.stockpile[Resource::Metals] -= baseRate;
-            fEco.stockpile[Resource::RareMetals] -= baseRate * 0.2f;
-            fEco.stockpile[Resource::Electronics] += baseRate;
-            hasInputs = true;
-          } else if (res == Resource::Fuel &&
-                     fEco.stockpile[Resource::Hydrocarbons] >= baseRate) {
-            fEco.stockpile[Resource::Hydrocarbons] -= baseRate;
-            fEco.stockpile[Resource::Fuel] += baseRate;
-            hasInputs = true;
-          } else if (res == Resource::Weapons &&
-                     fEco.stockpile[Resource::Metals] >= baseRate &&
-                     fEco.stockpile[Resource::Isotopes] >= baseRate * 0.5f) {
-            fEco.stockpile[Resource::Metals] -= baseRate;
-            fEco.stockpile[Resource::Isotopes] -= baseRate * 0.5f;
-            fEco.stockpile[Resource::Weapons] += baseRate;
-            hasInputs = true;
-          } else if (res == Resource::Refinery &&
-                     fEco.stockpile[Resource::Hydrocarbons] >= baseRate &&
-                     fEco.stockpile[Resource::Metals] >= baseRate * 0.5f) {
-            // Refinery: Hydrocarbons + Metals -> Fuel + Mfg Goods
-            fEco.stockpile[Resource::Hydrocarbons] -= baseRate;
-            fEco.stockpile[Resource::Metals] -= baseRate * 0.5f;
-            fEco.stockpile[Resource::Fuel] += baseRate * 1.5f;
-            fEco.stockpile[Resource::ManufacturingGoods] += baseRate * 0.5f;
-            hasInputs = true;
-          } else if (res == Resource::Shipyard) {
-            // Shipyard: Build ships by class based on faction strategy
-            // Heavy: 80 Metals, 15 Electronics, 30 Fuel
-            // Medium: 50 Metals, 10 Electronics, 20 Fuel
-            // Light: 20 Metals, 3 Electronics, 8 Fuel
-            if (fEco.stockpile[Resource::Metals] >= 80.0f &&
-                fEco.stockpile[Resource::Electronics] >= 15.0f &&
-                fEco.stockpile[Resource::Fuel] >= 30.0f) {
-              fEco.stockpile[Resource::Metals] -= 80.0f;
-              fEco.stockpile[Resource::Electronics] -= 15.0f;
-              fEco.stockpile[Resource::Fuel] -= 30.0f;
-              fEco.fleetPool[VesselClass::Heavy]++;
-              hasInputs = true;
-            } else if (fEco.stockpile[Resource::Metals] >= 50.0f &&
-                       fEco.stockpile[Resource::Electronics] >= 10.0f &&
-                       fEco.stockpile[Resource::Fuel] >= 20.0f) {
-              fEco.stockpile[Resource::Metals] -= 50.0f;
-              fEco.stockpile[Resource::Electronics] -= 10.0f;
-              fEco.stockpile[Resource::Fuel] -= 20.0f;
-              fEco.fleetPool[VesselClass::Medium]++;
-              hasInputs = true;
-            } else if (fEco.stockpile[Resource::Metals] >= 20.0f &&
-                       fEco.stockpile[Resource::Electronics] >= 3.0f &&
-                       fEco.stockpile[Resource::Fuel] >= 8.0f) {
-              fEco.stockpile[Resource::Metals] -= 20.0f;
-              fEco.stockpile[Resource::Electronics] -= 3.0f;
-              fEco.stockpile[Resource::Fuel] -= 8.0f;
-              fEco.fleetPool[VesselClass::Light]++;
-              hasInputs = true;
-            }
-          }
-
-          if (hasInputs)
-            usedLabor += toRun;
-          else {
-            // --- Buy Inputs from Market ---
-            std::vector<Resource> inputs;
-            if (res == Resource::Food)
-              inputs = {Resource::Water, Resource::Crops};
-            else if (res == Resource::Fuel)
-              inputs = {Resource::Hydrocarbons};
-            else if (res == Resource::Electronics)
-              inputs = {Resource::Metals, Resource::RareMetals};
-            else if (res == Resource::Weapons)
-              inputs = {Resource::Metals, Resource::Isotopes};
-
-            for (auto in : inputs) {
-              if (fEco.stockpile[in] < baseRate &&
-                  eco.marketStockpile[in] > baseRate &&
-                  fEco.credits >= eco.currentPrices[in] * baseRate) {
-                float buyAmt = baseRate;
-                eco.marketStockpile[in] -= buyAmt;
-                fEco.stockpile[in] += buyAmt;
-                fEco.credits -= buyAmt * eco.currentPrices[in];
-
-                // Reward relationship with planet owner
-                if (registry.all_of<Faction>(entity)) {
-                  uint32_t ownerFaction =
-                      registry.get<Faction>(entity).getMajorityFaction();
-                  if (ownerFaction != factionId) {
-                    FactionManager::instance().adjustRelationship(
-                        factionId, ownerFaction, 0.001f);
-                  }
-                }
-
-                std::cout << "[Economy] Faction " << factionId << " bought "
-                          << buyAmt << " " << getResourceName(in)
-                          << " from market\n";
-              }
-            }
-          }
-        }
-      }
-
-      // 3. Contribution to Planetary Market
-      // Factions list portions of their stockpile above a minimum buffer for
-      // sale
-      for (auto const &[res, amount] : fEco.stockpile) {
-        float buffer = fEco.populationCount * 0.5f; // Keep 500 units per 1k pop
-
-        // Military factions keep 2x buffer for Weapons/Fuel
-        if (fEco.strategy == FactionStrategy::Military &&
-            (res == Resource::Weapons || res == Resource::Fuel)) {
-          buffer *= 2.0f;
-        }
-
-        // Trade factions have 20% smaller buffer to encourage trade
-        if (fEco.strategy == FactionStrategy::Trade) {
-          buffer *= 0.8f;
-        }
-
-        float surplus = std::max(0.0f, amount - buffer);
-        float contributionRate = 0.2f;
-
-        // Trade factions contribute 50% more of their surplus to the market
-        if (fEco.strategy == FactionStrategy::Trade) {
-          contributionRate = 0.3f;
-        }
-
-        float sellAmt = surplus * contributionRate;
-        if (sellAmt > 0.01f) {
-          eco.marketStockpile[res] += sellAmt;
-          fEco.stockpile[res] -= sellAmt;
-          fEco.credits += sellAmt * eco.currentPrices[res];
-        }
-      }
+    for (auto const &[fId, fEco] : eco.factionData) {
+      for (auto const &[prod, amount] : fEco.stockpile)
+        eco.marketStockpile[prod] += amount;
     }
 
-    // 4. Update Planetary Prices
-    std::vector<Resource> allResources = {Resource::Water,
-                                          Resource::Crops,
-                                          Resource::Hydrocarbons,
-                                          Resource::Metals,
-                                          Resource::RareMetals,
-                                          Resource::Isotopes,
-                                          Resource::Food,
-                                          Resource::Plastics,
-                                          Resource::ManufacturingGoods,
-                                          Resource::Electronics,
-                                          Resource::Fuel,
-                                          Resource::Powercells,
-                                          Resource::Weapons};
-
-    for (auto res : allResources) {
-      float marketSupply = eco.marketStockpile[res];
-      eco.currentPrices[res] =
-          calculatePrice(res, marketSupply, totalPop, isAtWar);
+    for (auto &[product, amount] : eco.marketStockpile) {
+      eco.currentPrices[product] =
+          calculatePrice(product, amount, eco.getTotalPopulation(), false);
     }
   }
   span->End();
 }
 
-float EconomyManager::calculatePrice(Resource res, float currentStock,
+void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
+  float availableLabor = fEco.populationCount * 0.1f;
+  for (const auto &product : productionPriority) {
+    if (fEco.factories.count(product) == 0 || availableLabor <= 0)
+      continue;
+    auto it = recipes.find(product);
+    if (it == recipes.end())
+      continue;
+    const auto &recipe = it->second;
+    float potentialOutput =
+        fEco.factories.at(product) * recipe.baseOutputRate * deltaTime;
+    float inputScale = 1.0f;
+    for (const auto &[input, req] : recipe.inputs) {
+      if (fEco.stockpile[input] < req * potentialOutput) {
+        if (req * potentialOutput > 0)
+          inputScale = std::min(inputScale, fEco.stockpile[input] /
+                                                (req * potentialOutput));
+        else
+          inputScale = 0;
+      }
+    }
+    float laborScale = 1.0f;
+    if (potentialOutput * recipe.laborRequired > 0)
+      laborScale = std::min(1.0f, availableLabor /
+                                      (potentialOutput * recipe.laborRequired));
+
+    float finalOutput = potentialOutput * std::min(inputScale, laborScale);
+    if (finalOutput > 0) {
+      for (const auto &[input, req] : recipe.inputs)
+        fEco.stockpile[input] -= req * finalOutput;
+      fEco.stockpile[product] += finalOutput;
+      availableLabor -= finalOutput * recipe.laborRequired;
+    }
+  }
+}
+
+float EconomyManager::calculatePrice(ProductKey pk, float currentStock,
                                      float population, bool isAtWar) {
-  float basePrice = 100.0f;
-  if (res == Resource::RareMetals || res == Resource::Isotopes ||
-      res == Resource::Electronics || res == Resource::Weapons) {
-    basePrice = 500.0f;
-  }
-
-  float targetStock = population * 0.5f; // Target 500 units per 1k pop
-  if (isAtWar && (res == Resource::Weapons || res == Resource::Fuel)) {
-    targetStock *= 2.0f; // Double target stock during war
-  }
-
-  if (currentStock <= 0.1f)
-    return basePrice * 10.0f;
-
-  float ratio = targetStock / currentStock;
-  return basePrice * std::clamp(ratio, 0.2f, 10.0f);
+  float base = (pk.type == ProductType::Resource) ? 10.0f : 200.0f;
+  if (currentStock < population * 0.05f)
+    base *= 2.5f;
+  if (currentStock > population * 0.5f)
+    base *= 0.7f;
+  if (pk.tier == Tier::T2)
+    base *= 3.0f;
+  if (pk.tier == Tier::T3)
+    base *= 8.0f;
+  return base;
 }
 
-// ─── Ship Market ─────────────────────────────────────────────────────────────
-
-float EconomyManager::baseShipPrice(VesselClass vc) {
-  switch (vc) {
-  case VesselClass::Light:
-    return 2500.0f;
-  case VesselClass::Medium:
-    return 8000.0f;
-  case VesselClass::Heavy:
-    return 20000.0f;
+std::vector<ShipOffer> EconomyManager::getShipOffers(entt::registry &registry,
+                                                     entt::entity planet) {
+  std::vector<ShipOffer> offers;
+  auto view = registry.view<Landed, NPCComponent>();
+  for (auto entity : view) {
+    const auto &landed = view.get<Landed>(entity);
+    const auto &npc = view.get<NPCComponent>(entity);
+    if (landed.planet == planet && npc.isForSale) {
+      float value =
+          ShipOutfitter::instance().calculateShipValue(registry, entity);
+      offers.push_back({entity, npc.factionId, value});
+    }
   }
-  return 8000.0f;
+  return offers;
 }
 
-std::map<uint32_t, float> EconomyManager::getShipBids(entt::registry &registry,
-                                                      entt::entity planet,
-                                                      VesselClass vc) {
-  std::map<uint32_t, float> bids;
-
-  if (!registry.valid(planet) || !registry.all_of<PlanetEconomy>(planet))
+std::map<uint16_t, float>
+EconomyManager::getModuleBids(entt::registry &registry, entt::entity planet,
+                              ProductKey pk) {
+  std::map<uint16_t, float> bids;
+  if (!registry.all_of<PlanetEconomy>(planet))
     return bids;
-
   auto &eco = registry.get<PlanetEconomy>(planet);
-  float base = baseShipPrice(vc);
-
-  for (auto &[fId, fEco] : eco.factionData) {
-    // Must have a shipyard and available stock
-    if (fEco.factories.count(Resource::Shipyard) == 0 ||
-        fEco.factories.at(Resource::Shipyard) <= 0)
-      continue;
-    auto poolIt = fEco.fleetPool.find(vc);
-    if (poolIt == fEco.fleetPool.end() || poolIt->second <= 0)
-      continue;
-
-    // Supply discount: more ships = lower ask. Range: 70%–130% of base.
-    int stock = poolIt->second;
-    float supplyFactor = std::clamp(1.0f - (stock - 1) * 0.05f, 0.7f, 1.3f);
-    bids[fId] = std::round(base * supplyFactor);
+  for (auto const &[fId, fEco] : eco.factionData) {
+    if (fEco.stockpile.count(pk) && fEco.stockpile.at(pk) >= 1.0f) {
+      bids[static_cast<uint16_t>(fId)] = calculatePrice(
+          pk, eco.marketStockpile[pk], eco.getTotalPopulation(), false);
+    }
   }
+  return bids;
+}
 
+std::map<Tier, float> EconomyManager::getHullBids(entt::registry &registry,
+                                                  entt::entity planet) {
+  std::map<Tier, float> bids;
+  if (!registry.all_of<PlanetEconomy>(planet))
+    return bids;
+  auto &eco = registry.get<PlanetEconomy>(planet);
+  for (auto const &[fId, fEco] : eco.factionData) {
+    for (auto const &[tier, count] : fEco.fleetPool) {
+      if (count > 0) {
+        // Hull price logic (simplified)
+        float price = 1000.0f * static_cast<float>(tier);
+        bids[tier] = std::min(bids.count(tier) ? bids[tier] : price, price);
+      }
+    }
+  }
   return bids;
 }
 
 bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
-                             entt::entity player, VesselClass vc,
+                             entt::entity player, Tier sizeTier,
                              b2WorldId worldId) {
-  if (!registry.valid(planet) || !registry.valid(player))
+  if (!registry.all_of<PlanetEconomy>(planet))
     return false;
-  if (!registry.all_of<CreditsComponent>(player))
-    return false;
-
-  auto bids = getShipBids(registry, planet, vc);
-  if (bids.empty()) {
-    std::cout << "[Economy] No shipyard has " << vesselClassName(vc)
-              << " ships for sale.\n";
-    return false;
-  }
-
-  // Pick lowest bidder
-  uint32_t winnerFId = bids.begin()->first;
-  float winnerPrice = bids.begin()->second;
-  for (auto &[fId, price] : bids) {
-    if (price < winnerPrice) {
-      winnerFId = fId;
-      winnerPrice = price;
+  auto &eco = registry.get<PlanetEconomy>(planet);
+  for (auto &[fId, fEco] : eco.factionData) {
+    if (fEco.fleetPool.count(sizeTier) && fEco.fleetPool.at(sizeTier) > 0) {
+      float price = 1000.0f * static_cast<float>(sizeTier);
+      if (registry.get<CreditsComponent>(player).amount >= price) {
+        registry.get<CreditsComponent>(player).amount -= price;
+        fEco.fleetPool[sizeTier]--;
+        fEco.credits += price;
+        // Spawn actual ship for player (replacement logic)
+        auto &trans = registry.get<TransformComponent>(planet);
+        NPCShipManager::instance().spawnShip(registry, fId, trans.position,
+                                             worldId, sizeTier, true);
+        return true;
+      }
     }
   }
+  return false;
+}
 
-  auto &playerCredits = registry.get<CreditsComponent>(player);
-  if (playerCredits.amount < winnerPrice) {
-    std::cout << "[Economy] Need " << winnerPrice << " credits (have "
-              << playerCredits.amount << ").\n";
+bool EconomyManager::buyModularShip(entt::registry &registry,
+                                    entt::entity shipEntity,
+                                    entt::entity player) {
+  if (!registry.valid(shipEntity) || !registry.all_of<NPCComponent>(shipEntity))
     return false;
-  }
 
-  auto &eco = registry.get<PlanetEconomy>(planet);
-  auto &fEco = eco.factionData.at(winnerFId);
+  auto &npc = registry.get<NPCComponent>(shipEntity);
+  float price =
+      ShipOutfitter::instance().calculateShipValue(registry, shipEntity);
 
-  playerCredits.amount -= winnerPrice;
-  fEco.credits += winnerPrice;
-  fEco.fleetPool[vc]--;
+  npc.isForSale = false;
+  registry.remove<NPCComponent>(shipEntity);
 
-  auto &pTrans = registry.get<TransformComponent>(planet);
-  sf::Vector2f spawnPos = pTrans.position / WorldConfig::WORLD_SCALE;
-  spawnPos.x += (static_cast<float>(rand() % 20) - 10.0f);
-  spawnPos.y += (static_cast<float>(rand() % 20) - 10.0f);
-
-  NPCShipManager::instance().spawnShip(registry, winnerFId, spawnPos, worldId,
-                                       true, player);
-
-  std::cout << "[Economy] Bought " << vesselClassName(vc)
-            << " ship from Faction " << winnerFId << " for " << winnerPrice
-            << " credits.\n";
+  std::cout << "[Economy] modular ship PURCHASED for " << price << "\n";
   return true;
 }
 

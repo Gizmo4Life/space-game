@@ -1,7 +1,8 @@
 #pragma once
-#include "game/components/HullDef.h"
+#include "game/components/GameTypes.h"
 #include <map>
 #include <string>
+#include <type_traits>
 
 namespace space {
 
@@ -30,9 +31,9 @@ enum class FactionStrategy { Industrial, Trade, Military };
 
 struct FactionEconomy {
   float populationCount = 0.0f; // In thousands
-  std::map<Resource, float> stockpile;
-  std::map<Resource, int> factories;
-  std::map<VesselClass, int> fleetPool; // Ready ships by class
+  std::map<ProductKey, float> stockpile;
+  std::map<ProductKey, int> factories;
+  std::map<Tier, int> fleetPool; // Ready ships by size tier
   FactionStrategy strategy = FactionStrategy::Industrial;
   float credits = 1000.0f;
   bool isAbandoned = false;
@@ -40,8 +41,8 @@ struct FactionEconomy {
 
 struct PlanetEconomy {
   std::map<uint32_t, FactionEconomy> factionData;
-  std::map<Resource, float> marketStockpile; // Aggregate supply for trade
-  std::map<Resource, float> currentPrices;
+  std::map<ProductKey, float> marketStockpile; // Aggregate supply for trade
+  std::map<ProductKey, float> currentPrices;
 
   // Base consumption per 1k population (Global reference)
   std::map<Resource, float> baseConsumption;

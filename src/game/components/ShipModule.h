@@ -1,60 +1,32 @@
 #pragma once
+#include "game/components/GameTypes.h"
 #include <string>
 #include <vector>
 
 namespace space {
 
-enum class MountSize { Small, Medium, Large };
-
 using ModuleId = uint16_t;
 
-// ─── Catalogue definition structs (data table, not ECS components) ───────────
-
-struct EngineModuleDef {
+struct ModuleDef {
   std::string name;
-  MountSize size;
+  std::vector<ModuleAttribute> attributes;
   float volumeCost;
-  float thrust;
-  float rotSpeed;
-};
+  float maintenanceCost;
 
-struct WeaponModuleDef {
-  std::string name;
-  float volumeCost;
-  float damage;
-  float cooldown;
-  float energyCost;
-};
+  // Helper to find a specific attribute
+  bool hasAttribute(AttributeType type) const {
+    for (const auto &attr : attributes)
+      if (attr.type == type)
+        return true;
+    return false;
+  }
 
-struct ShieldModuleDef {
-  std::string name;
-  float volumeCost;
-  float shieldCap;
-  float regenRate;
-};
-
-struct CargoModuleDef {
-  std::string name;
-  float volumeCost;
-  float capacity;
-};
-
-struct PassengerModuleDef {
-  std::string name;
-  float volumeCost;
-  float capacity;
-};
-
-struct FuelModuleDef {
-  std::string name;
-  float volumeCost;
-  float capacity;
-};
-
-struct PowerModuleDef {
-  std::string name;
-  float volumeCost;
-  float output;
+  Tier getAttributeTier(AttributeType type) const {
+    for (const auto &attr : attributes)
+      if (attr.type == type)
+        return attr.tier;
+    return Tier::T1;
+  }
 };
 
 // ─── Singleton registry
@@ -68,39 +40,9 @@ public:
 
   void init(); // populate standard catalogue
 
-  const EngineModuleDef &engine(ModuleId id) const { return engines[id]; }
-  const WeaponModuleDef &weapon(ModuleId id) const { return weapons[id]; }
-  const ShieldModuleDef &shield(ModuleId id) const { return shields[id]; }
-  const CargoModuleDef &cargo(ModuleId id) const { return cargos[id]; }
-  const PassengerModuleDef &passenger(ModuleId id) const {
-    return passengers[id];
-  }
-  const FuelModuleDef &fuel(ModuleId id) const { return fuels[id]; }
-  const PowerModuleDef &power(ModuleId id) const { return powers[id]; }
+  const ModuleDef &getModule(ModuleId id) const { return modules[id]; }
 
-  // Stable catalogue IDs — engines
-  static constexpr ModuleId ION_THRUSTER_MK1 = 0;
-  static constexpr ModuleId FUSION_DRIVE_MK1 = 1;
-  static constexpr ModuleId HEAVY_THRUST_MK1 = 2;
-
-  // Stable catalogue IDs — weapons
-  static constexpr ModuleId PULSE_CANNON = 0;
-  static constexpr ModuleId RAILGUN = 1;
-
-  // Stable catalogue IDs — internals
-  static constexpr ModuleId SHIELD_GEN_MK1 = 0;
-  static constexpr ModuleId CARGO_BAY = 0;
-  static constexpr ModuleId PASSENGER_CABIN = 0;
-  static constexpr ModuleId FUEL_TANK = 0;
-  static constexpr ModuleId POWER_CORE_MK1 = 0;
-
-  std::vector<EngineModuleDef> engines;
-  std::vector<WeaponModuleDef> weapons;
-  std::vector<ShieldModuleDef> shields;
-  std::vector<CargoModuleDef> cargos;
-  std::vector<PassengerModuleDef> passengers;
-  std::vector<FuelModuleDef> fuels;
-  std::vector<PowerModuleDef> powers;
+  std::vector<ModuleDef> modules;
 
 private:
   ModuleRegistry() = default;

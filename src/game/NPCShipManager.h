@@ -1,9 +1,27 @@
-#include "game/components/ShipConfig.h"
+#pragma once
 #include <SFML/System/Vector2.hpp>
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
+#include <map>
+#include <type_traits>
+#include <vector>
+
+#include "game/components/GameTypes.h"
 
 namespace space {
+
+enum class MissionType { Trade, Patrol, Escort, Piracy };
+
+struct Mission {
+  uint32_t id;
+  MissionType type;
+  uint32_t factionId;
+  std::vector<entt::entity> ships;
+  entt::entity origin = entt::null;
+  entt::entity destination = entt::null;
+  float riskScore = 0.0f;
+  bool isActive = true;
+};
 
 class NPCShipManager {
 public:
@@ -12,34 +30,32 @@ public:
     return inst;
   }
 
-  /// Call once after world generation to store worldId
   void init(b2WorldId worldId);
-
-  /// Per-frame update: spawns new ships + ticks AI
   void update(entt::registry &registry, float deltaTime);
 
   entt::entity spawnShip(entt::registry &registry, uint32_t factionId,
                          sf::Vector2f position, b2WorldId worldId,
-                         bool isPlayerFleet = false,
+                         Tier sizeTier = Tier::T1, bool isPlayerFleet = false,
                          entt::entity leaderEntity = entt::null);
 
 private:
   NPCShipManager() = default;
 
+  void spawnMission(entt::registry &registry, MissionType type,
+                    uint32_t factionId);
+  void processMissions(entt::registry &registry, float dt);
+
   void spawnAtRandomPlanet(entt::registry &registry);
   void tickAI(entt::registry &registry, float dt);
-  entt::entity pickRandomPlanet(entt::registry &registry,
-                                entt::entity exclude = entt::null);
-  entt::entity pickExpansionTarget(entt::registry &registry,
-                                   uint32_t factionId);
 
   b2WorldId worldId_{};
   float spawnTimer_ = 0.0f;
-  bool initialized_ = false;
-  ShipConfig npcConfig_;
+  std::vector<Mission> activeMissions_;
+  std::map<uint32_t, float>
+      factionRiskRegistry_; // factionId -> last known risk
 
   static constexpr int MAX_NPCS = 200;
-  static constexpr float SPAWN_INTERVAL = 4.0f;
+  static constexpr float SPAWN_INTERVAL = 10.0f; // Slower spawn, mission-based
 };
 
 } // namespace space
