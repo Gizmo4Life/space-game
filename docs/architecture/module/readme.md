@@ -51,6 +51,7 @@ graph TD
 - [game-economy](game-economy.md): Planetary production, dynamic pricing, trade transactions, and ship market.
 - [game-factions](game-factions.md): Procedural factions, bilateral relationship matrix, and credit accumulation.
 - [game-npc](game-npc.md): NPC ship spawning, faction-weighted AI, and player fleet management.
+- [game-core](game-core.md): Procedural world generation, player spawning, and modular vessel outfitting.
 - [system-gate](system-gate.md): Inter-system jump and loading logic.
 
 ## 2. Documentation System

@@ -1,16 +1,20 @@
 #include "WorldLoader.h"
+#include "engine/telemetry/Telemetry.h"
+#include "game/EconomyManager.h"
 #include "game/FactionManager.h"
+#include "game/NPCShipManager.h"
+#include "game/ShipOutfitter.h"
 #include "game/components/AsteroidBelt.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/CelestialBody.h"
 #include "game/components/Economy.h"
 #include "game/components/Faction.h"
+#include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/OrbitalComponent.h"
 #include "game/components/PlayerComponent.h"
-#include "game/components/ShipConfig.h"
 #include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
@@ -21,6 +25,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <opentelemetry/trace/provider.h>
 #include <string>
 #include <vector>
 
@@ -97,6 +102,9 @@ void WorldLoader::loadStars(entt::registry &registry, int count) {
 
 void WorldLoader::generateStarSystem(entt::registry &registry,
                                      b2WorldId worldId) {
+  auto span = Telemetry::instance().tracer()->StartSpan("game.core.world.load");
+  auto engineSpan =
+      Telemetry::instance().tracer()->StartSpan("engine.world.system.load");
   auto barycenter = registry.create();
   registry.emplace<TransformComponent>(barycenter, sf::Vector2f(0.0f, 0.0f),
                                        0.0f);
@@ -141,347 +149,204 @@ void WorldLoader::generateStarSystem(entt::registry &registry,
     registry.emplace<NameComponent>(star, generateName());
   }
 
-  // Generate planets/belts recursively
   generateOrbitalSystem(registry, worldId, barycenter, 250000.0f, 1000.0f,
                         6000.0f);
+  engineSpan->End();
+  span->End();
 }
 
 void WorldLoader::generateOrbitalSystem(entt::registry &registry,
                                         b2WorldId worldId, entt::entity parent,
                                         float totalMass, float minSMA,
                                         float maxSMA, bool isMoonSystem) {
-  int numBins = isMoonSystem ? 3 : 8;
-  float binWidth = (maxSMA - minSMA) / numBins;
-  float massPerBin = totalMass / numBins;
+  // Moon systems: up to 4 moons, random rocky/icy
+  if (isMoonSystem) {
+    int numMoons = 2 + (rand() % 3); // 2-4 moons
+    float binWidth = (maxSMA - minSMA) / numMoons;
+    for (int i = 0; i < numMoons; ++i) {
+      float binMin = minSMA + i * binWidth;
+      float binSMA = binMin + (rand() % 100) * 0.01f * binWidth;
+      float moonMass = (100.0f + rand() % 200); // small
+      CelestialType type =
+          (rand() % 2 == 0) ? CelestialType::Rocky : CelestialType::Icy;
+      float radius = 8.0f + moonMass / 50.0f;
+      auto moon = registry.create();
+      registry.emplace<NameComponent>(moon, generateName());
+      registry.emplace<CelestialBody>(moon, moonMass, radius, type);
+      float period = 2.0f * 3.14159f *
+                     sqrtf(powf(binSMA / WorldConfig::WORLD_SCALE, 3) /
+                           (1.0f * 50000.0f)) *
+                     0.2f;
+      registry.emplace<OrbitalComponent>(moon, parent, binSMA, binSMA, period,
+                                         (rand() % 628) * 0.01f, 0.0f);
+      registry.emplace<TransformComponent>(moon);
+      // Visuals
+      sf::Color pColor = getPlanetColor(type);
+      unsigned int iSize = (unsigned int)radius * 2;
+      if (iSize < 1)
+        iSize = 1;
+      auto texture = std::make_shared<sf::Texture>();
+      sf::Image img({iSize, iSize}, sf::Color::Transparent);
+      for (unsigned int py = 0; py < iSize; ++py)
+        for (unsigned int px = 0; px < iSize; ++px) {
+          float dx = (float)px - radius;
+          float dy = (float)py - radius;
+          if (dx * dx + dy * dy <= radius * radius)
+            img.setPixel({px, py}, pColor);
+        }
+      texture->loadFromImage(img);
+      SpriteComponent sc;
+      sc.texture = texture;
+      sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
+      sc.sprite->setOrigin({radius, radius});
+      registry.emplace<SpriteComponent>(moon, sc);
+    }
+    return;
+  }
 
-  float planetThreshold = isMoonSystem ? 200.0f : WorldConfig::PLANET_THRESHOLD;
-  float dwarfThreshold = isMoonSystem ? planetThreshold * 0.4f
-                                      : WorldConfig::DWARF_PLANET_THRESHOLD;
+  // Main star system: 6 deterministic typed orbital slots
+  // Slot 0: Dwarf Planet | 1: Rocky | 2: Lava | 3: Earthlike | 4: Icy | 5: Gas
+  // Giant
+  const int numBins = 6;
+  float binWidth = (maxSMA - minSMA) / numBins;
+
+  static const CelestialType binTypes[numBins] = {
+      CelestialType::Rocky,     // slot 0 — dwarf planet (small mass)
+      CelestialType::Rocky,     // slot 1
+      CelestialType::Lava,      // slot 2
+      CelestialType::Earthlike, // slot 3
+      CelestialType::Icy,       // slot 4
+      CelestialType::GasGiant,  // slot 5
+  };
+  static const bool binIsDwarf[numBins] = {true,  false, false,
+                                           false, false, false};
 
   for (int i = 0; i < numBins; ++i) {
     float binMin = minSMA + i * binWidth;
-    float binMax = binMin + binWidth;
     float binSMA = binMin + (rand() % 100) * 0.01f * binWidth;
+    CelestialType type = binTypes[i];
+    bool isDwarf = binIsDwarf[i];
 
-    float binMass = massPerBin * (0.5f + (rand() % 100) * 0.01f);
+    float radius;
+    float mass;
 
-    if (binMass < dwarfThreshold) {
-      // Asteroid Belt only
-      auto belt = registry.create();
-      AsteroidBelt ab;
-      ab.parent = parent;
-      ab.minSMA = binMin;
-      ab.maxSMA = binMax;
-      ab.eccentricity = (rand() % 20) * 0.01f;
-      ab.inclination = (rand() % 10) * 0.1f;
-      ab.density = 2.0f;
-      ab.isIcy = (binSMA > 3000.0f); // Icy if far out
-      registry.emplace<AsteroidBelt>(belt, ab);
-    } else if (binMass < planetThreshold) {
-      // Asteroid field with Dwarf Planet
-      auto belt = registry.create();
-      AsteroidBelt ab;
-      ab.parent = parent;
-      ab.minSMA = binMin;
-      ab.maxSMA = binMax;
-      ab.density = 1.0f;
-      registry.emplace<AsteroidBelt>(belt, ab);
-
-      float dwarfMass = binMass * (0.3f + (rand() % 40) * 0.01f);
-      auto dwarf = registry.create();
-      registry.emplace<NameComponent>(dwarf, generateName());
-
-      CelestialType type = getPlanetType(dwarfMass);
-      float radius = 20.0f + (dwarfMass / 100.0f);
-      registry.emplace<CelestialBody>(dwarf, dwarfMass, radius, type);
-
-      float period =
-          2.0f * 3.14159f *
-          sqrtf(powf(binSMA / WorldConfig::WORLD_SCALE, 3) / (1.0f * 50000.0f));
-      period *= 0.2f;
-
-      registry.emplace<OrbitalComponent>(dwarf, parent, binSMA, binSMA, period,
-                                         (rand() % 628) * 0.01f,
-                                         ab.inclination);
-      registry.emplace<TransformComponent>(dwarf);
-      registry.emplace<SpriteComponent>(dwarf); // Graphics TBD
+    if (isDwarf || type == CelestialType::GasGiant) {
+      // Dwarf: small rocky body with thin belt; Gas Giant: large, no population
+      mass = isDwarf ? (500.0f + rand() % 300) : (8000.0f + rand() % 4000);
+      radius = isDwarf ? (12.0f + mass / 200.0f) : (50.0f + mass / 400.0f);
     } else {
-      // Planet System
-      float mainBodyShare = 0.5f + (rand() % 40) * 0.01f;
-      float mainBodyMass = binMass * mainBodyShare;
-      float remainingMass = binMass - mainBodyMass;
+      mass = 2000.0f + rand() % 3000;
+      radius = 25.0f + mass / 400.0f;
+    }
 
-      entt::entity systemRoot =
-          planetThreshold > 5000 ? registry.create() : parent;
+    auto planet = registry.create();
+    registry.emplace<NameComponent>(planet, generateName());
+    registry.emplace<CelestialBody>(planet, mass, radius, type);
 
-      if (mainBodyShare < 0.7f) {
-        // Binary System
-        auto bary = registry.create();
-        registry.emplace<TransformComponent>(bary);
-        float period = 2.0f * 3.14159f *
-                       sqrtf(powf(binSMA / WorldConfig::WORLD_SCALE, 3) /
-                             (1.0f * 50000.0f));
-        period *= 0.2f;
-        registry.emplace<OrbitalComponent>(bary, parent, binSMA, binSMA, period,
-                                           (rand() % 628) * 0.01f);
+    float period =
+        2.0f * 3.14159f *
+        sqrtf(powf(binSMA / WorldConfig::WORLD_SCALE, 3) / (1.0f * 50000.0f));
+    period *= 0.2f;
+    registry.emplace<OrbitalComponent>(planet, parent, binSMA, binSMA, period,
+                                       (rand() % 628) * 0.01f, 0.0f);
+    registry.emplace<TransformComponent>(planet);
 
-        float m1 = mainBodyMass;
-        float m2 = remainingMass;
-        float dist = 100.0f + (rand() % 100);
-
-        for (int j = 0; j < 2; ++j) {
-          auto p = registry.create();
-          float mass = (j == 0) ? m1 : m2;
-          float pDist =
-              (j == 0) ? (dist * m2 / (m1 + m2)) : (dist * m1 / (m1 + m2));
-          float pPhase = (j == 0) ? 0.0f : 3.1415f;
-
-          registry.emplace<NameComponent>(p, generateName());
-          CelestialType type = getPlanetType(mass);
-          float radius = 25.0f + (mass / 400.0f);
-          registry.emplace<CelestialBody>(p, mass, radius, type);
-
-          float pPeriod = 2.0f * 3.14159f *
-                          sqrtf(powf(dist / WorldConfig::WORLD_SCALE, 3) /
-                                (1.0f * (m1 + m2)));
-          pPeriod *= 0.1f;
-
-          registry.emplace<OrbitalComponent>(p, bary, pDist, pDist, pPeriod,
-                                             pPhase);
-          registry.emplace<TransformComponent>(p);
-
-          // Visuals - DRAW CIRCLE instead of square
-          auto texture = std::make_shared<sf::Texture>();
-          unsigned int iSize = (unsigned int)radius * 2;
-          if (iSize < 1)
-            iSize = 1;
-          sf::Image img({iSize, iSize}, sf::Color::Transparent);
-          sf::Color pColor = getPlanetColor(type);
-          for (unsigned int py = 0; py < iSize; ++py) {
-            for (unsigned int px = 0; px < iSize; ++px) {
-              float dx = (float)px - radius;
-              float dy = (float)py - radius;
-              if (dx * dx + dy * dy <= radius * radius) {
-                img.setPixel({px, py}, pColor);
-              }
-            }
-          }
-          texture->loadFromImage(img);
-          SpriteComponent sc;
-          sc.texture = texture;
-          sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
-          sc.sprite->setOrigin({radius, radius});
-          registry.emplace<SpriteComponent>(p, sc);
-
-          // Habitability & Population
-          if (type == CelestialType::Rocky || type == CelestialType::Icy ||
-              type == CelestialType::Earthlike) {
-
-            // Faction setup
-            Faction f;
-            uint32_t mainFact = FactionManager::instance().getRandomFactionId();
-            if (mainFact == 0)
-              mainFact = 1; // Ensure a major faction
-            float mainAllegiance = 0.6f + (rand() % 30) * 0.01f;
-            f.allegiances[mainFact] = mainAllegiance;
-            f.allegiances[0] =
-                0.05f + (rand() % 10) * 0.01f; // Neutral/Civilian
-            registry.emplace<Faction>(p, f);
-
-            // Economy setup (Per Faction)
-            PlanetEconomy eco;
-            float totalPop;
-            if (type == CelestialType::Earthlike) {
-              totalPop = 100000.0f + (rand() % 900000); // 100M - 1B
-            } else {
-              totalPop = 1000.0f + (rand() % 99000); // 1M - 100M
-            }
-
-            for (auto const &[fid, weight] : f.allegiances) {
-              FactionEconomy fEco;
-              fEco.populationCount = totalPop * weight;
-
-              // Assign random strategy
-              int strategyRoll = rand() % 3;
-              if (strategyRoll == 0)
-                fEco.strategy = FactionStrategy::Industrial;
-              else if (strategyRoll == 1)
-                fEco.strategy = FactionStrategy::Trade;
-              else
-                fEco.strategy = FactionStrategy::Military;
-
-              fEco.credits =
-                  (totalPop * weight) * 100.0f; // 100 credits per 1k people
-
-              // Seed basic factories
-              float factoriesPerPop =
-                  totalPop * weight / 10.0f; // 1 factory per 10k people
-              if (type == CelestialType::Rocky)
-                fEco.factories[Resource::Metals] =
-                    std::max(1, (int)factoriesPerPop);
-              else if (type == CelestialType::Icy)
-                fEco.factories[Resource::Water] =
-                    std::max(1, (int)factoriesPerPop);
-              else if (type == CelestialType::Earthlike)
-                fEco.factories[Resource::Crops] =
-                    std::max(1, (int)factoriesPerPop);
-
-              // Refined factories
-              fEco.factories[Resource::Food] =
-                  std::max(1, (int)(factoriesPerPop / 2));
-              fEco.factories[Resource::Fuel] =
-                  std::max(1, (int)(factoriesPerPop / 4));
-
-              // Initial stockpiles scaled to pop
-              fEco.stockpile[Resource::Food] = fEco.populationCount * 50.0f;
-              fEco.stockpile[Resource::Water] = fEco.populationCount * 50.0f;
-              fEco.stockpile[Resource::Metals] = fEco.populationCount * 100.0f;
-              fEco.stockpile[Resource::Fuel] = fEco.populationCount * 50.0f;
-              fEco.stockpile[Resource::ManufacturingGoods] =
-                  fEco.populationCount * 10.0f;
-
-              // Infrastructure seeding
-              if (fEco.strategy == FactionStrategy::Military)
-                fEco.factories[Resource::Shipyard] =
-                    std::max(1, (int)(factoriesPerPop / 10));
-              if (fEco.strategy == FactionStrategy::Industrial)
-                fEco.factories[Resource::Refinery] =
-                    std::max(1, (int)(factoriesPerPop / 10));
-
-              // Starting fleet scaled
-              fEco.fleetPool[VesselType::Military] =
-                  std::max(5, (int)(factoriesPerPop / 50));
-              fEco.fleetPool[VesselType::Freight] =
-                  std::max(10, (int)(factoriesPerPop / 20));
-              fEco.fleetPool[VesselType::Passenger] =
-                  std::max(10, (int)(factoriesPerPop / 20));
-
-              eco.factionData[fid] = fEco;
-            }
-            registry.emplace<PlanetEconomy>(p, eco);
-          }
-        }
-      } else {
-        // Single Planet
-        auto planet = registry.create();
-        registry.emplace<NameComponent>(planet, generateName());
-        CelestialType type = getPlanetType(mainBodyMass);
-        float radius = 30.0f + (mainBodyMass / 500.0f);
-        registry.emplace<CelestialBody>(planet, mainBodyMass, radius, type);
-
-        float period = 2.0f * 3.14159f *
-                       sqrtf(powf(binSMA / 0.05f, 3) / (1.0f * 50000.0f));
-        period *= 0.2f;
-
-        registry.emplace<OrbitalComponent>(planet, parent, binSMA, binSMA,
-                                           period, (rand() % 628) * 0.01f);
-        registry.emplace<TransformComponent>(planet);
-
-        // Visuals - DRAW CIRCLE
-        auto texture = std::make_shared<sf::Texture>();
-        sf::Color pColor = getPlanetColor(type);
-        unsigned int iSize = (unsigned int)radius * 2;
-        if (iSize < 1)
-          iSize = 1;
-        sf::Image img({iSize, iSize}, sf::Color::Transparent);
-        for (unsigned int py = 0; py < iSize; ++py) {
-          for (unsigned int px = 0; px < iSize; ++px) {
-            float dx = (float)px - radius;
-            float dy = (float)py - radius;
-            if (dx * dx + dy * dy <= radius * radius) {
-              img.setPixel({px, py}, pColor);
-            }
-          }
-        }
-        texture->loadFromImage(img);
-        SpriteComponent sc;
-        sc.texture = texture;
-        sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
-        sc.sprite->setOrigin({radius, radius});
-        registry.emplace<SpriteComponent>(planet, sc);
-
-        // Habitability & Population
-        if (type == CelestialType::Rocky || type == CelestialType::Icy ||
-            type == CelestialType::Earthlike) {
-
-          // Faction setup
-          Faction f;
-          uint32_t mainFact = FactionManager::instance().getRandomFactionId();
-          if (mainFact == 0)
-            mainFact = 1;
-          float mainAllegiance = 0.7f + (rand() % 20) * 0.01f;
-          f.allegiances[mainFact] = mainAllegiance;
-          f.allegiances[0] = 0.05f + (rand() % 5) * 0.01f;
-          registry.emplace<Faction>(planet, f);
-
-          // Economy setup (Per Faction)
-          PlanetEconomy eco;
-          float totalPop = (10000.0f + (rand() % 40000));
-          if (type == CelestialType::Earthlike)
-            totalPop *= 5.0f;
-          totalPop /= 1000.0f;
-
-          for (auto const &[fid, weight] : f.allegiances) {
-            FactionEconomy fEco;
-            fEco.populationCount = totalPop * weight;
-
-            // Assign random strategy
-            int strategyRoll = rand() % 3;
-            if (strategyRoll == 0)
-              fEco.strategy = FactionStrategy::Industrial;
-            else if (strategyRoll == 1)
-              fEco.strategy = FactionStrategy::Trade;
-            else
-              fEco.strategy = FactionStrategy::Military;
-
-            // Seed factories by type
-            if (type == CelestialType::Rocky) {
-              fEco.factories[Resource::Metals] = 5;
-              fEco.factories[Resource::RareMetals] = 2;
-            } else if (type == CelestialType::Icy) {
-              fEco.factories[Resource::Water] = 5;
-            } else if (type == CelestialType::Earthlike) {
-              fEco.factories[Resource::Crops] = 5;
-              fEco.factories[Resource::Water] = 2;
-            }
-
-            int refinedCap = static_cast<int>(fEco.populationCount * 5);
-            fEco.factories[Resource::Food] = std::max(1, refinedCap / 3);
-            fEco.factories[Resource::Fuel] = std::max(1, refinedCap / 10);
-
-            fEco.stockpile[Resource::Food] = 1000.0f * weight;
-            fEco.stockpile[Resource::Water] = 100.0f * weight;
-            fEco.stockpile[Resource::Metals] = 200.0f * weight;
-            fEco.stockpile[Resource::Electronics] = 50.0f * weight;
-            fEco.stockpile[Resource::Fuel] = 100.0f * weight;
-
-            if (fEco.strategy == FactionStrategy::Military)
-              fEco.factories[Resource::Shipyard] = 1;
-            if (fEco.strategy == FactionStrategy::Industrial)
-              fEco.factories[Resource::Refinery] = 1;
-
-            fEco.fleetPool[VesselType::Military] = 2;
-            fEco.fleetPool[VesselType::Freight] = 3;
-            fEco.fleetPool[VesselType::Passenger] = 5;
-
-            eco.factionData[fid] = fEco;
-          }
-          registry.emplace<PlanetEconomy>(planet, eco);
-        }
-
-        // Moon system recursion
-        if (remainingMass > planetThreshold * 0.1f && !isMoonSystem) {
-          generateOrbitalSystem(registry, worldId, planet, remainingMass,
-                                radius * 3.0f, radius * 12.0f, true);
-        }
+    // Visuals
+    sf::Color pColor = getPlanetColor(type);
+    unsigned int iSize = (unsigned int)radius * 2;
+    if (iSize < 1)
+      iSize = 1;
+    auto texture = std::make_shared<sf::Texture>();
+    sf::Image img({iSize, iSize}, sf::Color::Transparent);
+    for (unsigned int py = 0; py < iSize; ++py)
+      for (unsigned int px = 0; px < iSize; ++px) {
+        float dx = (float)px - radius;
+        float dy = (float)py - radius;
+        if (dx * dx + dy * dy <= radius * radius)
+          img.setPixel({px, py}, pColor);
       }
+    texture->loadFromImage(img);
+    SpriteComponent sc;
+    sc.texture = texture;
+    sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
+    sc.sprite->setOrigin({radius, radius});
+    registry.emplace<SpriteComponent>(planet, sc);
+
+    // Economy for habitable planet types only (not Dwarf or GasGiant)
+    bool habitable = !isDwarf && type != CelestialType::GasGiant;
+    if (habitable) {
+      Faction f;
+      uint32_t mainFact = FactionManager::instance().getRandomFactionId();
+      if (mainFact == 0)
+        mainFact = 2; // avoid faction 0 (Civilian) as owner
+      float mainAllegiance = 0.7f + (rand() % 20) * 0.01f;
+      f.allegiances[mainFact] = mainAllegiance;
+      f.allegiances[0] = 0.05f + (rand() % 5) * 0.01f;
+      registry.emplace<Faction>(planet, f);
+
+      PlanetEconomy eco;
+      // Modest population: 5-25k, Earthlike 3×, in thousands
+      float totalPop = 5.0f + (rand() % 21);
+      if (type == CelestialType::Earthlike)
+        totalPop *= 3.0f;
+
+      for (auto const &[fid, weight] : f.allegiances) {
+        FactionEconomy fEco;
+        fEco.populationCount = totalPop * weight;
+
+        int strategyRoll = rand() % 3;
+        fEco.strategy = static_cast<FactionStrategy>(strategyRoll);
+
+        // Seed factories by planet type
+        if (type == CelestialType::Rocky) {
+          fEco.factories[Resource::Metals] = 5;
+          fEco.factories[Resource::RareMetals] = 2;
+        } else if (type == CelestialType::Lava) {
+          fEco.factories[Resource::Metals] = 3;
+          fEco.factories[Resource::Hydrocarbons] = 2;
+        } else if (type == CelestialType::Icy) {
+          fEco.factories[Resource::Water] = 5;
+          fEco.factories[Resource::Isotopes] = 2;
+        } else if (type == CelestialType::Earthlike) {
+          fEco.factories[Resource::Crops] = 5;
+          fEco.factories[Resource::Water] = 2;
+        }
+        fEco.factories[Resource::Food] =
+            std::max(1, (int)(fEco.populationCount * 3));
+        fEco.factories[Resource::Fuel] =
+            std::max(1, (int)(fEco.populationCount));
+
+        fEco.credits = fEco.populationCount * 100.0f;
+
+        // Initial stockpiles
+        fEco.stockpile[Resource::Food] = fEco.populationCount * 50.0f;
+        fEco.stockpile[Resource::Water] = fEco.populationCount * 50.0f;
+        fEco.stockpile[Resource::Metals] = fEco.populationCount * 100.0f;
+        fEco.stockpile[Resource::Fuel] = fEco.populationCount * 50.0f;
+
+        if (fEco.strategy == FactionStrategy::Military)
+          fEco.factories[Resource::Shipyard] = 1;
+        if (fEco.strategy == FactionStrategy::Industrial)
+          fEco.factories[Resource::Refinery] = 1;
+
+        // Starting fleet by class
+        fEco.fleetPool[VesselClass::Light] = 5;
+        fEco.fleetPool[VesselClass::Medium] = 2;
+        fEco.fleetPool[VesselClass::Heavy] = 1;
+
+        eco.factionData[fid] = fEco;
+      }
+      registry.emplace<PlanetEconomy>(planet, eco);
+
+      // Moon system for all non-dwarf planets
+      generateOrbitalSystem(registry, worldId, planet, mass * 0.1f,
+                            radius * 3.0f, radius * 12.0f, true);
     }
   }
 }
 
 entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
-                                      b2WorldId worldId,
-                                      const ShipConfig &config) {
+                                      b2WorldId worldId, VesselClass vc) {
   auto ship = registry.create();
 
   b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -513,8 +378,7 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   bodyDef.position = {spawnPos.x / WorldConfig::WORLD_SCALE,
                       spawnPos.y / WorldConfig::WORLD_SCALE};
-  bodyDef.linearDamping = config.linearDamping;
-  bodyDef.angularDamping = config.angularDamping;
+  bodyDef.userData = (void *)(uintptr_t)ship;
   b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
 
   b2Polygon dynamicBox = b2MakeBox(0.6f, 0.4f);
@@ -523,12 +387,15 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   shapeDef.filter.maskBits = 0; // Disable physical collisions
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 
-  registry.emplace_or_replace<InertialBody>(ship, bodyId, config.thrustForce,
-                                            config.rotationSpeed,
-                                            config.maxLinearVelocity);
+  // Apply modular outfit (handles Hull, Engines, Weapons, Stats, etc.)
+  ShipOutfitter::instance().applyOutfit(registry, ship, 1, vc);
+
+  const HullDef &hull = ShipOutfitter::instance().getHull(1, vc);
+
+  registry.emplace_or_replace<InertialBody>(ship, bodyId, 500.0f, 0.05f, 20.0f);
   registry.emplace_or_replace<WeaponComponent>(ship);
-  registry.emplace_or_replace<NameComponent>(ship, "Player Ship");
-  registry.emplace_or_replace<ShipStats>(ship);
+  registry.emplace_or_replace<NameComponent>(ship,
+                                             "Player Ship (" + hull.name + ")");
   registry.emplace_or_replace<PlayerComponent>(ship);
   registry.emplace_or_replace<TransformComponent>(ship, spawnPos);
   registry.emplace_or_replace<CreditsComponent>(ship);

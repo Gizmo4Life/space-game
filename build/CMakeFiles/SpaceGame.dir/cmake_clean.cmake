@@ -19,6 +19,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o.d"
   "CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o"
   "CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o.d"
+  "CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o"
+  "CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o.d"
   "CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o"
   "CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o.d"
   "CMakeFiles/SpaceGame.dir/src/main.cpp.o"

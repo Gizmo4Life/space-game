@@ -369,6 +369,30 @@ src/game/NPCShipManager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.s
 .PHONY : src/game/NPCShipManager.cpp.s
 
+src/game/ShipOutfitter.o: src/game/ShipOutfitter.cpp.o
+.PHONY : src/game/ShipOutfitter.o
+
+# target to build an object file
+src/game/ShipOutfitter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o
+.PHONY : src/game/ShipOutfitter.cpp.o
+
+src/game/ShipOutfitter.i: src/game/ShipOutfitter.cpp.i
+.PHONY : src/game/ShipOutfitter.i
+
+# target to preprocess a source file
+src/game/ShipOutfitter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.i
+.PHONY : src/game/ShipOutfitter.cpp.i
+
+src/game/ShipOutfitter.s: src/game/ShipOutfitter.cpp.s
+.PHONY : src/game/ShipOutfitter.s
+
+# target to generate assembly for a file
+src/game/ShipOutfitter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.s
+.PHONY : src/game/ShipOutfitter.cpp.s
+
 src/game/WorldLoader.o: src/game/WorldLoader.cpp.o
 .PHONY : src/game/WorldLoader.o
 
@@ -528,6 +552,9 @@ help:
 	@echo "... src/game/NPCShipManager.o"
 	@echo "... src/game/NPCShipManager.i"
 	@echo "... src/game/NPCShipManager.s"
+	@echo "... src/game/ShipOutfitter.o"
+	@echo "... src/game/ShipOutfitter.i"
+	@echo "... src/game/ShipOutfitter.s"
 	@echo "... src/game/WorldLoader.o"
 	@echo "... src/game/WorldLoader.i"
 	@echo "... src/game/WorldLoader.s"

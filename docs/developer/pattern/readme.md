@@ -64,6 +64,7 @@ graph TD
 - [logic-test-first](logic-test-first.md)
 - [test-case-duality](test-case-duality.md)
 - [padu-evaluation](padu-evaluation.md)
+- [trade-static-interface](trade-static-interface.md)
 
 ## 4. CI/CD & Infrastructure
 *Nuance: Patterns governing the automated deployment and verification pipeline.*
@@ -106,6 +107,7 @@ graph TD
 - [economy-dynamic-pricing](economy-dynamic-pricing.md)
 - [economy-competitive-market](economy-competitive-market.md)
 - [faction-relationship-matrix](faction-relationship-matrix.md)
+- [ship-modular-composition](ship-modular-composition.md)
 
 ## 7. UI/UX & Navigation
 *Nuance: Patterns for ensuring machine-readability and human scannability.*

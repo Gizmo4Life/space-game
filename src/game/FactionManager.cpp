@@ -31,8 +31,8 @@ void FactionManager::init() {
   player.color = sf::Color::Cyan;
   factions[1] = player;
 
-  // Generate 8-12 procedural factions
-  int count = 8 + (rand() % 5);
+  // Generate exactly 5 procedural factions (IDs 2–6)
+  int count = 5;
   for (uint32_t i = 0; i < static_cast<uint32_t>(count); ++i) {
     FactionData data;
     data.id = i + 2; // Start from 2

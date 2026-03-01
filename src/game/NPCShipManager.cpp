@@ -32,7 +32,7 @@ void NPCShipManager::init(b2WorldId worldId) {
 
 // ─── Main update ────────────────────────────────────────────────────────
 void NPCShipManager::update(entt::registry &registry, float deltaTime) {
-  auto span = Telemetry::instance().tracer()->StartSpan("npc.ai.tick");
+  auto span = Telemetry::instance().tracer()->StartSpan("game.npc.ai.tick");
 
   // Continuous spawning
   if (initialized_) {
@@ -100,16 +100,16 @@ void NPCShipManager::spawnAtRandomPlanet(entt::registry &registry) {
   auto &fMgr = FactionManager::instance();
   const FactionData &fData = fMgr.getFaction(factionId);
   auto &eco = registry.get<PlanetEconomy>(planet);
-  VesselType vTypeReq;
+  VesselClass vcReq;
   float roll = (rand() % 100) * 0.01f;
   if (roll < fData.militaryWeight)
-    vTypeReq = VesselType::Military;
+    vcReq = VesselClass::Heavy;
   else if (roll < fData.militaryWeight + fData.freightWeight)
-    vTypeReq = VesselType::Freight;
+    vcReq = VesselClass::Medium;
   else
-    vTypeReq = VesselType::Passenger;
+    vcReq = VesselClass::Light;
 
-  if (eco.factionData[factionId].fleetPool[vTypeReq] <= 0) {
+  if (eco.factionData[factionId].fleetPool[vcReq] <= 0) {
     return;
   }
 
@@ -127,15 +127,14 @@ void NPCShipManager::spawnAtRandomPlanet(entt::registry &registry) {
   if (registry.valid(entity)) {
     auto &npc = registry.get<NPCComponent>(entity);
     npc.homePlanet = planet;
-    npc.vesselType = vTypeReq;
+    npc.vesselClass = vcReq;
 
-    // Decrement pool
-    eco.factionData[factionId].fleetPool[vTypeReq]--;
+    eco.factionData[factionId].fleetPool[vcReq]--;
 
-    if (vTypeReq == VesselType::Military) {
+    if (vcReq == VesselClass::Heavy) {
       npc.belief = AIBelief::Escort;
       registry.get<NameComponent>(entity).name = fData.name + " Patrol";
-    } else if (vTypeReq == VesselType::Freight) {
+    } else if (vcReq == VesselClass::Medium) {
       npc.belief = AIBelief::Trader;
       registry.get<NameComponent>(entity).name = fData.name + " Freighter";
     } else {
@@ -363,7 +362,7 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
           auto &fEco = homeEco.factionData[npc.factionId];
 
           // 1. Colonization (Passenger Ships)
-          if (npc.vesselType == VesselType::Passenger &&
+          if (npc.vesselClass == VesselClass::Light &&
               fEco.populationCount > 10.0f && npc.passengerCount <= 0.0f) {
             auto dest = pickExpansionTarget(registry, npc.factionId);
             if (dest != entt::null) {
@@ -380,7 +379,7 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
           }
 
           // 2. Logistics (Freighters)
-          if (npc.vesselType == VesselType::Freight) {
+          if (npc.vesselClass == VesselClass::Medium) {
             float buffer = fEco.populationCount * 0.5f;
             Resource surplusRes = (Resource)-1;
             for (auto const &[res, amt] : fEco.stockpile) {
@@ -750,7 +749,7 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
                                        sf::Vector2f position, b2WorldId worldId,
                                        bool isPlayerFleet,
                                        entt::entity leaderEntity) {
-  auto span = Telemetry::instance().tracer()->StartSpan("npc.spawn");
+  auto span = Telemetry::instance().tracer()->StartSpan("game.npc.spawn");
   span->SetAttribute("npc.faction_id", (int)factionId);
   auto entity = registry.create();
 
@@ -804,9 +803,9 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
                                  npcConfig_.rotationSpeed,
                                  npcConfig_.maxLinearVelocity);
 
-  // Create faction-colored sprite based on vessel type
+  // Create faction-colored sprite based on vessel class
   sf::Image img({24, 24}, sf::Color::Transparent);
-  VesselType vType = npc.vesselType;
+  VesselClass vClass = npc.vesselClass;
 
   for (int x = 0; x < 24; ++x) {
     for (int y = 0; y < 24; ++y) {
@@ -814,16 +813,16 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
       int cy = y - 12;
       bool draw = false;
 
-      if (vType == VesselType::Military) {
-        // Sharp wedge/triangle
+      if (vClass == VesselClass::Heavy) {
+        // Heavy: sharp wedge/triangle
         if (y >= 12 - x / 2 && y <= 12 + x / 2 && x <= 20)
           draw = true;
-      } else if (vType == VesselType::Freight) {
-        // Blocky rectangle
+      } else if (vClass == VesselClass::Medium) {
+        // Medium: blocky rectangle
         if (std::abs(cx) <= 8 && std::abs(cy) <= 5)
           draw = true;
       } else {
-        // Passenger: Sleek oval
+        // Light: sleek oval
         float dx = cx / 10.0f;
         float dy = cy / 6.0f;
         if (dx * dx + dy * dy <= 1.0f)

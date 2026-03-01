@@ -2,7 +2,6 @@
 id: game-npc-module
 type: module
 pillar: architecture
-dependencies: ["game-factions-module", "physics-module"]
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Game NPC
 
@@ -14,6 +13,7 @@ NPC ship spawning, faction-weighted vessel selection, AI state-machine execution
 - **Path:** `/src/game/` — `NPCShipManager.h/.cpp`
 - **Components:** `components/NPCComponent.h`
 - **Ownership:** Core Engine Team
+- **Collaborators:** Uses `ShipOutfitter` for vessel composition.
 
 ## 2. Capability Alignment
 - [Capability: Economy](/docs/architecture/capability/economy.md) (T2)
@@ -24,9 +24,10 @@ NPC ship spawning, faction-weighted vessel selection, AI state-machine execution
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `NPCShipManager::instance()`
 - [npc-ai-state-machine](/docs/developer/pattern/npc-ai-state-machine.md) (P) — belief/state machine, timer-gated decisions
 - [npc-fleet-leader-boids](/docs/developer/pattern/npc-fleet-leader-boids.md) (P) — player fleet follow with weighted boids + aggressive catch-up
+- [ship-modular-composition](/docs/developer/pattern/ship-modular-composition.md) (P) — Spawning logic uses hulls and modular outfits
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 
 ## 4. Telemetry & Observability
-- `npc.ai.tick` — attributes: `npc.active_count`
-- `npc.spawn` — attributes: `npc.faction_id`
+- `game.npc.ai.tick` — attributes: `npc.active_count`
+- `game.npc.spawn` — attributes: `npc.faction_id`
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger

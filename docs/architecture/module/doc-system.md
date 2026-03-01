@@ -2,7 +2,6 @@
 id: doc-system
 type: module
 pillar: architecture
-dependencies: []
 ---
 [Home](/) > [Architecture](/docs/architecture/readme.md) > [Module](readme.md) > Doc System
 

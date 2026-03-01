@@ -35,6 +35,7 @@ add_executable(SpaceGame
     src/game/FactionManager.cpp
     src/game/EconomyManager.cpp
     src/game/NPCShipManager.cpp
+    src/game/ShipOutfitter.cpp
 )
 
 target_include_directories(SpaceGame PRIVATE src)

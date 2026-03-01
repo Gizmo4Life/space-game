@@ -1,4 +1,5 @@
 #pragma once
+#include "game/components/HullDef.h"
 #include <map>
 #include <string>
 
@@ -25,15 +26,13 @@ enum class Resource {
   Refinery
 };
 
-enum class VesselType { Military, Freight, Passenger };
-
 enum class FactionStrategy { Industrial, Trade, Military };
 
 struct FactionEconomy {
   float populationCount = 0.0f; // In thousands
   std::map<Resource, float> stockpile;
   std::map<Resource, int> factories;
-  std::map<VesselType, int> fleetPool; // Ready ships
+  std::map<VesselClass, int> fleetPool; // Ready ships by class
   FactionStrategy strategy = FactionStrategy::Industrial;
   float credits = 1000.0f;
   bool isAbandoned = false;

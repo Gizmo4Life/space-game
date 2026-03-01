@@ -2,7 +2,6 @@
 id: game-combat-module
 type: module
 pillar: architecture
-dependencies: ["physics-module"]
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Game Combat
 
@@ -25,6 +24,6 @@ Ship-to-ship engagement, projectile lifecycles, and damage resolution.
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 
 ## 4. Telemetry & Observability
-- `combat.weapon.fire` — attributes: `combat.projectile_speed`
-- `combat.collision.resolve` — attributes: `combat.hits`
+- `game.combat.weapon.fire` — attributes: `combat.projectile_speed`
+- `game.combat.collision.resolve` — attributes: `combat.hits`
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger

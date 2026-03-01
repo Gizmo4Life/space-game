@@ -53,4 +53,4 @@ Establish the technical foundations for the space-game proof-of-concept using C+
 | :--- | :--- | :--- |
 | [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) | **P** | Required for `PlanetEconomy`, `CargoComponent`, `Faction`, `NPCComponent`, `CreditsComponent`. |
 | **Singleton Manager** | **A** | `EconomyManager`, `FactionManager`, `NPCShipManager` use static `instance()` singletons. Acceptable for prototyping; evaluate ECS-system refactor later. |
-| **Static Trade Interface** | **P** | `TradeManager` uses static buy/sell methods for atomic cargo transactions. |
+| [trade-static-interface](/docs/developer/pattern/trade-static-interface.md) | **P** | `TradeManager` uses static buy/sell methods for atomic cargo transactions. |

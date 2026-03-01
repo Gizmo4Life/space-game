@@ -2,7 +2,6 @@
 id: game-ui-module
 type: module
 pillar: architecture
-dependencies: ["game-economy-module", "physics-module"]
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Game UI
 
@@ -26,4 +25,6 @@ Full-screen landing overlay providing planet information and the competitive shi
 - [npc-fleet-leader-boids](/docs/developer/pattern/npc-fleet-leader-boids.md) (P) — leader-weighted boids + aggressive follow for fleet ships
 
 ## 4. Telemetry & Observability
-- **Status:** 🔲 Not yet instrumented — candidate spans: `ui.landing.open`, `ui.ship.purchase`
+- `game.ui.landing.open` — attributes: `planet.id`, `player.id`
+- `game.ui.ship.purchase` — attributes: `vessel.class`
+- **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0

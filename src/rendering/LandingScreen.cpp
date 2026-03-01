@@ -1,4 +1,5 @@
 #include "LandingScreen.h"
+#include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/CelestialBody.h"
@@ -8,6 +9,7 @@
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <iomanip>
+#include <opentelemetry/trace/provider.h>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -43,25 +45,15 @@ static std::string typeName(CelestialType t) {
   return "Unknown";
 }
 
-static std::string vesselName(VesselType v) {
-  switch (v) {
-  case VesselType::Military:
-    return "Military";
-  case VesselType::Freight:
-    return "Freight";
-  case VesselType::Passenger:
-    return "Passenger";
-  }
-  return "Unknown";
-}
-
 // ─── LandingScreen ───────────────────────────────────────────────────────────
 
 void LandingScreen::open(entt::entity planet, entt::entity player) {
+  auto span = Telemetry::instance().tracer()->StartSpan("game.ui.landing.open");
   open_ = true;
   planetEntity_ = planet;
   playerEntity_ = player;
-  selectedType_ = VesselType::Military;
+  selectedClass_ = VesselClass::Light;
+  span->End();
 }
 
 void LandingScreen::close() { open_ = false; }
@@ -78,18 +70,22 @@ void LandingScreen::handleEvent(const sf::Event &event,
     // Ship type selection
     if (kp->code == sf::Keyboard::Key::Num1 ||
         kp->code == sf::Keyboard::Key::Numpad1)
-      selectedType_ = VesselType::Military;
+      selectedClass_ = VesselClass::Light;
     if (kp->code == sf::Keyboard::Key::Num2 ||
         kp->code == sf::Keyboard::Key::Numpad2)
-      selectedType_ = VesselType::Freight;
+      selectedClass_ = VesselClass::Medium;
     if (kp->code == sf::Keyboard::Key::Num3 ||
         kp->code == sf::Keyboard::Key::Numpad3)
-      selectedType_ = VesselType::Passenger;
+      selectedClass_ = VesselClass::Heavy;
     // Buy
     if (kp->code == sf::Keyboard::Key::Enter ||
         kp->code == sf::Keyboard::Key::B) {
+      auto span =
+          Telemetry::instance().tracer()->StartSpan("game.ui.ship.purchase");
+      span->SetAttribute("vessel.class", vesselClassName(selectedClass_));
       EconomyManager::instance().buyShip(registry, planetEntity_, playerEntity_,
-                                         selectedType_, worldId);
+                                         selectedClass_, worldId);
+      span->End();
     }
   }
 }
@@ -214,21 +210,20 @@ void LandingScreen::drawShipMarket(sf::RenderWindow &w, entt::registry &r,
   text("Your Credits: $" + fmt(playerCredits, 0), 16, sf::Color(100, 255, 100));
   y += 8.f;
 
-  std::vector<VesselType> types = {VesselType::Military, VesselType::Freight,
-                                   VesselType::Passenger};
+  std::vector<VesselClass> classes = {VesselClass::Light, VesselClass::Medium,
+                                      VesselClass::Heavy};
   int keyNum = 1;
-  for (auto vt : types) {
-    bool isSelected = (vt == selectedType_);
+  for (auto vc : classes) {
+    bool isSelected = (vc == selectedClass_);
     sf::Color headerCol =
         isSelected ? sf::Color(255, 220, 80) : sf::Color(180, 180, 180);
-    text("[" + std::to_string(keyNum++) + "] " + vesselName(vt) + " Ship",
+    text("[" + std::to_string(keyNum++) + "] " + vesselClassName(vc) + " Ship",
          isSelected ? 18 : 16, headerCol);
 
-    auto bids = EconomyManager::instance().getShipBids(r, planetEntity_, vt);
+    auto bids = EconomyManager::instance().getShipBids(r, planetEntity_, vc);
     if (bids.empty()) {
       text("   No sellers available", 13, sf::Color(120, 120, 120));
     } else {
-      // Sort by price
       std::vector<std::pair<uint32_t, float>> sorted(bids.begin(), bids.end());
       std::sort(sorted.begin(), sorted.end(),
                 [](auto &a, auto &b) { return a.second < b.second; });
@@ -240,7 +235,6 @@ void LandingScreen::drawShipMarket(sf::RenderWindow &w, entt::registry &r,
         sf::Color col;
         std::string prefix;
         if (first) {
-          // Cheapest — highlight
           col = canAfford ? sf::Color(80, 255, 80) : sf::Color(255, 80, 80);
           prefix = "   ★ ";
         } else {

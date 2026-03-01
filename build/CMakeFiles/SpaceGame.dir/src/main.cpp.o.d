@@ -1322,9 +1322,14 @@ CMakeFiles/SpaceGame.dir/src/main.cpp.o: \
   /usr/local/include/opentelemetry/trace/span_startoptions.h \
   /Users/Dan/Documents/repos/space-game/src/game/EconomyManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
+  /Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/InstalledModules.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \

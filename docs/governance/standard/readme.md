@@ -32,6 +32,7 @@ graph TD
 - [cicd-pipeline](cicd-pipeline.md): Deployment and quality gates.
 - [ops-documentation](ops-documentation.md): Restoration and triage guidelines.
 - [protocol-execution](protocol-execution.md): Rules for valid agent-led operations.
+- [observability-standard](observability-standard.md): Telemetry naming and documentation rules.
 
 ## 3. Semantic Clarity (Intent)
 *Nuance: Standards for capturing intent and nuance before implementation.*

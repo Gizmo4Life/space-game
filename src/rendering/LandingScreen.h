@@ -35,7 +35,7 @@ private:
   entt::entity playerEntity_ = entt::null;
 
   // Selection state for the ship market
-  VesselType selectedType_ = VesselType::Military;
+  VesselClass selectedClass_ = VesselClass::Light;
 
   void drawPanel(sf::RenderWindow &w, sf::FloatRect rect, sf::Color bg,
                  sf::Color border);

@@ -70,7 +70,7 @@ Per tick: `earnings = populationCount × 0.01 × deltaTime` for each faction's p
 | Field | Type | Purpose |
 |-------|------|---------|
 | `factionId` | `uint32_t` | Serving faction. |
-| `vesselType` | `VesselType` | Military, Freight, or Passenger. |
+| `vesselClass` | `VesselClass` | Light, Medium, or Heavy. |
 | `belief` | `AIBelief` | Trader, Escort, or Raider. |
 | `state` | `AIState` | Idle, Docked, Traveling, Combat, Fleeing. |
 | `homePlanet` | `entt::entity` | Planet of origin (updated on dock). |

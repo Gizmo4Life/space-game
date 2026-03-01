@@ -2,7 +2,6 @@
 id: rendering-module
 type: module
 pillar: architecture
-dependencies: ["physics-module"]
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Rendering
 
@@ -38,4 +37,6 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
 - [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `RenderSystem::update`
 
 ## 5. Telemetry & Observability
-- **Status:** 🔲 Not yet instrumented — candidate spans: `render.frame`, `render.indicator.count`
+- `engine.rendering.update` — duration of 4-pass pipeline
+- `engine.rendering.indicator.count` — attributes: `count`
+- **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0

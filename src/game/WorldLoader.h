@@ -1,5 +1,4 @@
-#pragma once
-#include "game/components/ShipConfig.h"
+#include "game/components/HullDef.h"
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
 
@@ -17,7 +16,7 @@ public:
                                     bool isMoonSystem = false);
 
   static entt::entity spawnPlayer(entt::registry &registry, b2WorldId worldId,
-                                  const ShipConfig &config);
+                                  VesselClass vc);
 };
 
 } // namespace space

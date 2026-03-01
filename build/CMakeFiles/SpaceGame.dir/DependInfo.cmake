@@ -18,6 +18,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/Dan/Documents/repos/space-game/src/game/EconomyManager.cpp" "CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o.d"
   "/Users/Dan/Documents/repos/space-game/src/game/FactionManager.cpp" "CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o.d"
   "/Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.cpp" "CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o.d"
+  "/Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.cpp" "CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o.d"
   "/Users/Dan/Documents/repos/space-game/src/game/WorldLoader.cpp" "CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o.d"
   "/Users/Dan/Documents/repos/space-game/src/main.cpp" "CMakeFiles/SpaceGame.dir/src/main.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/main.cpp.o.d"
   "/Users/Dan/Documents/repos/space-game/src/rendering/LandingScreen.cpp" "CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o" "gcc" "CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o.d"

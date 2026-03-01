@@ -1,4 +1,5 @@
 #include "RenderSystem.h"
+#include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/components/CelestialBody.h"
 #include "game/components/Economy.h"
@@ -16,6 +17,7 @@
 #include <SFML/Graphics/Text.hpp>
 #include <cmath>
 #include <iostream>
+#include <opentelemetry/trace/provider.h>
 #include <string>
 #include <vector>
 
@@ -23,6 +25,8 @@ namespace space {
 
 void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                           const sf::Font *font) {
+  auto span =
+      Telemetry::instance().tracer()->StartSpan("engine.rendering.update");
   // 0. Setup Views
   sf::View originalView = window.getView();
   float zoom = WorldConfig::DEFAULT_ZOOM;
@@ -139,12 +143,14 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
     sf::View mainView = originalView;
     sf::FloatRect viewBounds(mainView.getCenter() - mainView.getSize() / 2.f,
                              mainView.getSize());
+    int indicatorCount = 0;
 
     // Helper lambda to draw an offscreen indicator with distance
     auto drawIndicator = [&](sf::Vector2f entityPos, const std::string &label,
                              sf::Color color, float indicatorSize = 12.0f) {
       if (viewBounds.contains(entityPos))
         return;
+      indicatorCount++;
 
       sf::Vector2f diff = entityPos - mainView.getCenter();
       float distance = std::sqrt(diff.x * diff.x + diff.y * diff.y);
@@ -245,7 +251,9 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
       }
       drawIndicator(pixelPos, labelText, color, 8.0f);
     }
+    span->SetAttribute("engine.rendering.indicator.count", indicatorCount);
   }
+  span->End();
 }
 
 } // namespace space

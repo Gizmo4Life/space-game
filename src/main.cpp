@@ -12,10 +12,11 @@
 #include "game/EconomyManager.h"
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
+#include "game/ShipOutfitter.h"
 #include "game/WorldLoader.h"
 #include "game/components/Economy.h"
+#include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
-#include "game/components/ShipConfig.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WorldConfig.h"
@@ -31,6 +32,7 @@ int main() {
 
   // --- Core Systems ---
   FactionManager::instance().init();
+  ShipOutfitter::instance().init();
   MainRenderer renderer(1200, 800, "Escape Velocity - Modularized");
   PhysicsEngine physics;
   entt::registry registry;
@@ -45,13 +47,13 @@ int main() {
   }
 
   // --- Data Configuration ---
-  ShipConfig playerConfig;
+  // VesselClass playerClass = VesselClass::Medium;
 
   // --- World Loading ---
   WorldLoader::loadStars(registry, 1000);
   WorldLoader::generateStarSystem(registry, physics.getWorldId());
-  auto playerEntity =
-      WorldLoader::spawnPlayer(registry, physics.getWorldId(), playerConfig);
+  auto playerEntity = WorldLoader::spawnPlayer(registry, physics.getWorldId(),
+                                               VesselClass::Medium);
 
   // --- NPC Ship Manager (auto-spawns at planets) ---
   NPCShipManager::instance().init(physics.getWorldId());

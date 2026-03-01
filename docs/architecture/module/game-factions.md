@@ -2,7 +2,6 @@
 id: game-factions-module
 type: module
 pillar: architecture
-dependencies: ["game-economy-module"]
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Game Factions
 
@@ -27,5 +26,5 @@ Procedural faction generation, bilateral relationship tracking, and per-faction 
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 
 ## 4. Telemetry & Observability
-- `faction.credit.accumulate` — attributes: `faction.total_credits`, `faction.count`
+- `game.factions.credit.accumulate` — attributes: `faction.total_credits`, `faction.count`
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger

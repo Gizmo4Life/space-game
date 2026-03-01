@@ -20,7 +20,7 @@
 namespace space {
 
 void EconomyManager::update(entt::registry &registry, float deltaTime) {
-  auto span = Telemetry::instance().tracer()->StartSpan("economy.update.tick");
+  auto span = Telemetry::instance().tracer()->StartSpan("game.economy.tick");
   auto view = registry.view<PlanetEconomy>();
 
   for (auto entity : view) {
@@ -56,11 +56,13 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
 
       // 2. Factory Execution (Faction Internal)
       // Staffing Ratio: 100 people (0.1 pop units) per factory slot
-      int laborPool = static_cast<int>(fEco.populationCount * 10.0f);
+      // Guard: minimum 1 so tiny colonies don't produce zero
+      int laborPool =
+          std::max(1, static_cast<int>(fEco.populationCount * 10.0f));
 
       // Industrial Strategy Bonus: 20% more efficient labor utilization
       if (fEco.strategy == FactionStrategy::Industrial) {
-        laborPool = static_cast<int>(laborPool * 1.2f);
+        laborPool = std::max(1, static_cast<int>(laborPool * 1.2f));
       }
 
       int usedLabor = 0;
@@ -126,35 +128,33 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
             fEco.stockpile[Resource::ManufacturingGoods] += baseRate * 0.5f;
             hasInputs = true;
           } else if (res == Resource::Shipyard) {
-            // Shipyard: Build ships based on needs and resources
-            // Military: 50 Metals, 10 Electronics, 20 Fuel
-            // Freight: 80 Metals, 5 Electronics, 30 Fuel
-            // Passenger: 30 Metals, 5 Electronics, 10 Fuel
-
-            // Priority: Military > Freight > Passenger for now
-            if (fEco.stockpile[Resource::Metals] >= 50.0f &&
-                fEco.stockpile[Resource::Electronics] >= 10.0f &&
-                fEco.stockpile[Resource::Fuel] >= 20.0f) {
+            // Shipyard: Build ships by class based on faction strategy
+            // Heavy: 80 Metals, 15 Electronics, 30 Fuel
+            // Medium: 50 Metals, 10 Electronics, 20 Fuel
+            // Light: 20 Metals, 3 Electronics, 8 Fuel
+            if (fEco.stockpile[Resource::Metals] >= 80.0f &&
+                fEco.stockpile[Resource::Electronics] >= 15.0f &&
+                fEco.stockpile[Resource::Fuel] >= 30.0f) {
+              fEco.stockpile[Resource::Metals] -= 80.0f;
+              fEco.stockpile[Resource::Electronics] -= 15.0f;
+              fEco.stockpile[Resource::Fuel] -= 30.0f;
+              fEco.fleetPool[VesselClass::Heavy]++;
+              hasInputs = true;
+            } else if (fEco.stockpile[Resource::Metals] >= 50.0f &&
+                       fEco.stockpile[Resource::Electronics] >= 10.0f &&
+                       fEco.stockpile[Resource::Fuel] >= 20.0f) {
               fEco.stockpile[Resource::Metals] -= 50.0f;
               fEco.stockpile[Resource::Electronics] -= 10.0f;
               fEco.stockpile[Resource::Fuel] -= 20.0f;
-              fEco.fleetPool[VesselType::Military]++;
+              fEco.fleetPool[VesselClass::Medium]++;
               hasInputs = true;
-            } else if (fEco.stockpile[Resource::Metals] >= 80.0f &&
-                       fEco.stockpile[Resource::Electronics] >= 5.0f &&
-                       fEco.stockpile[Resource::Fuel] >= 30.0f) {
-              fEco.stockpile[Resource::Metals] -= 80.0f;
-              fEco.stockpile[Resource::Electronics] -= 5.0f;
-              fEco.stockpile[Resource::Fuel] -= 30.0f;
-              fEco.fleetPool[VesselType::Freight]++;
-              hasInputs = true;
-            } else if (fEco.stockpile[Resource::Metals] >= 30.0f &&
-                       fEco.stockpile[Resource::Electronics] >= 5.0f &&
-                       fEco.stockpile[Resource::Fuel] >= 10.0f) {
-              fEco.stockpile[Resource::Metals] -= 30.0f;
-              fEco.stockpile[Resource::Electronics] -= 5.0f;
-              fEco.stockpile[Resource::Fuel] -= 10.0f;
-              fEco.fleetPool[VesselType::Passenger]++;
+            } else if (fEco.stockpile[Resource::Metals] >= 20.0f &&
+                       fEco.stockpile[Resource::Electronics] >= 3.0f &&
+                       fEco.stockpile[Resource::Fuel] >= 8.0f) {
+              fEco.stockpile[Resource::Metals] -= 20.0f;
+              fEco.stockpile[Resource::Electronics] -= 3.0f;
+              fEco.stockpile[Resource::Fuel] -= 8.0f;
+              fEco.fleetPool[VesselClass::Light]++;
               hasInputs = true;
             }
           }
@@ -281,35 +281,35 @@ float EconomyManager::calculatePrice(Resource res, float currentStock,
 
 // ─── Ship Market ─────────────────────────────────────────────────────────────
 
-float EconomyManager::baseShipPrice(VesselType type) {
-  switch (type) {
-  case VesselType::Military:
-    return 15000.0f;
-  case VesselType::Freight:
-    return 5000.0f;
-  case VesselType::Passenger:
+float EconomyManager::baseShipPrice(VesselClass vc) {
+  switch (vc) {
+  case VesselClass::Light:
     return 2500.0f;
+  case VesselClass::Medium:
+    return 8000.0f;
+  case VesselClass::Heavy:
+    return 20000.0f;
   }
-  return 5000.0f;
+  return 8000.0f;
 }
 
 std::map<uint32_t, float> EconomyManager::getShipBids(entt::registry &registry,
                                                       entt::entity planet,
-                                                      VesselType type) {
+                                                      VesselClass vc) {
   std::map<uint32_t, float> bids;
 
   if (!registry.valid(planet) || !registry.all_of<PlanetEconomy>(planet))
     return bids;
 
   auto &eco = registry.get<PlanetEconomy>(planet);
-  float base = baseShipPrice(type);
+  float base = baseShipPrice(vc);
 
   for (auto &[fId, fEco] : eco.factionData) {
     // Must have a shipyard and available stock
     if (fEco.factories.count(Resource::Shipyard) == 0 ||
         fEco.factories.at(Resource::Shipyard) <= 0)
       continue;
-    auto poolIt = fEco.fleetPool.find(type);
+    auto poolIt = fEco.fleetPool.find(vc);
     if (poolIt == fEco.fleetPool.end() || poolIt->second <= 0)
       continue;
 
@@ -323,20 +323,17 @@ std::map<uint32_t, float> EconomyManager::getShipBids(entt::registry &registry,
 }
 
 bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
-                             entt::entity player, VesselType type,
+                             entt::entity player, VesselClass vc,
                              b2WorldId worldId) {
   if (!registry.valid(planet) || !registry.valid(player))
     return false;
   if (!registry.all_of<CreditsComponent>(player))
     return false;
 
-  auto bids = getShipBids(registry, planet, type);
+  auto bids = getShipBids(registry, planet, vc);
   if (bids.empty()) {
-    std::cout << "[Economy] No shipyard faction has "
-              << (type == VesselType::Military  ? "Military"
-                  : type == VesselType::Freight ? "Freight"
-                                                : "Passenger")
-              << " ships for sale here.\n";
+    std::cout << "[Economy] No shipyard has " << vesselClassName(vc)
+              << " ships for sale.\n";
     return false;
   }
 
@@ -360,12 +357,10 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
   auto &eco = registry.get<PlanetEconomy>(planet);
   auto &fEco = eco.factionData.at(winnerFId);
 
-  // Execute transaction
   playerCredits.amount -= winnerPrice;
   fEco.credits += winnerPrice;
-  fEco.fleetPool[type]--;
+  fEco.fleetPool[vc]--;
 
-  // Spawn fleet ship near the planet
   auto &pTrans = registry.get<TransformComponent>(planet);
   sf::Vector2f spawnPos = pTrans.position / WorldConfig::WORLD_SCALE;
   spawnPos.x += (static_cast<float>(rand() % 20) - 10.0f);
@@ -374,11 +369,9 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
   NPCShipManager::instance().spawnShip(registry, winnerFId, spawnPos, worldId,
                                        true, player);
 
-  std::string typeName = (type == VesselType::Military  ? "Military"
-                          : type == VesselType::Freight ? "Freight"
-                                                        : "Passenger");
-  std::cout << "[Economy] Bought " << typeName << " ship from Faction "
-            << winnerFId << " for " << winnerPrice << " credits.\n";
+  std::cout << "[Economy] Bought " << vesselClassName(vc)
+            << " ship from Faction " << winnerFId << " for " << winnerPrice
+            << " credits.\n";
   return true;
 }
 

@@ -1232,6 +1232,8 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: \
   /usr/local/include/SFML/Graphics/Color.inl \
   /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \

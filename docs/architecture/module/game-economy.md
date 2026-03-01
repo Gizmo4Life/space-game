@@ -2,7 +2,6 @@
 id: game-economy-module
 type: module
 pillar: architecture
-dependencies: ["physics-module"]
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Game Economy
 
@@ -25,10 +24,11 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Resource seeding via `WorldLoader`
 - [economy-resource-chain](/docs/developer/pattern/economy-resource-chain.md) (P) — Two-tier basic/refined production chain
 - [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P) — `targetStock / currentStock` price formula
-- [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model, atomic ship purchase
+- [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model using `VesselClass` for tiered pricing
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 
 ## 4. Telemetry & Observability
-- `economy.update.tick` — attributes: `economy.planet_count`
+- `game.economy.tick` — attributes: `economy.planet_count`
+- `game.economy.trade.transaction` — attributes: `economy.credits_transferred`
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger

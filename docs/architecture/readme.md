@@ -12,6 +12,9 @@ Global boundaries and primary domain of the AI RAG documentation system.
 ## 1. System Scope
 *Nuance: This system governs the relationship between atomic documentation patterns and physical code implementation.* It ensures RAG-optimized knowledge retrieval for autonomous agents.
 
+## 2. System Context
+- [space-game-context](space-game-context.md): The original problem statement, premise, and success criteria for the Top-Down Space Faring engine.
+
 ## 2. Core Capabilities (T2)
 *Nuance: Bounded contexts that orchestrate multiple T3 modules to deliver business value.*
 - **Doc Ingestion:** Physical processing and validation of the documentation graph.

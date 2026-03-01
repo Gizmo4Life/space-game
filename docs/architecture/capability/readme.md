@@ -44,6 +44,7 @@ graph LR
 - [navigation](navigation.md): Orchestrates Newtonian flight and system transitions.
 - [combat](combat.md): Orchestrates projectile dynamics and damage resolution.
 - [economy](economy.md): Orchestrates resource flow, faction budgets, and trade.
+- [ship-modular-system](ship-modular-system.md): Orchestrates dynamic vessel construction and outfitting.
 
 ## 3. Governance & Compliance
 *Nuance: Capabilities dedicated to ensuring the repository adheres to its own rules.*

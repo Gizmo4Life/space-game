@@ -20,5 +20,5 @@ Provide a realistic yet accessible flight model for spacecraft, allowing players
 - **Consistency:** Eventually consistent spatial sync across client/server (if applicable), but locally authoritative for responsiveness.
 
 ## 4. Operational Context
-- **Primary Runbook:** [Navigation Recovery Runbook](docs/operational/runbook/nav-recovery.md)
+- **Primary Runbook:** [Universal System Runbook](/docs/operational/runbook/universal-runbook.md)
 - **Critical Failure Metric:** Velocity jitter or "clipping" through boundaries exceeding 5% of frames.

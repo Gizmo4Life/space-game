@@ -1,5 +1,6 @@
 #pragma once
 #include "game/components/Economy.h"
+#include "game/components/HullDef.h"
 #include <SFML/System/Vector2.hpp>
 #include <entt/entt.hpp>
 
@@ -11,7 +12,7 @@ enum class AIState { Idle, Docked, Traveling, Combat, Fleeing };
 
 struct NPCComponent {
   uint32_t factionId;
-  VesselType vesselType = VesselType::Passenger;
+  VesselClass vesselClass = VesselClass::Light;
   AIBelief belief = AIBelief::Trader;
   AIState state = AIState::Idle;
   bool isPlayerFleet = false;

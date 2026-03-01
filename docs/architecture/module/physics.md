@@ -2,7 +2,6 @@
 id: physics-module
 type: module
 pillar: architecture
-dependencies: []
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Physics
 
@@ -35,4 +34,4 @@ Newtonian kinematics, gravity wells, orbital mechanics, and Box2D world manageme
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 
 ## 5. Telemetry & Observability
-- **Status:** 🔲 Not yet instrumented — candidate spans: `physics.step`, `gravity.update`, `orbital.update`
+- **Status:** 🔲 Not yet instrumented — candidate spans: `engine.physics.step`, `engine.physics.gravity.update`, `engine.physics.orbital.update`
