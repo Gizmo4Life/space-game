@@ -11,15 +11,15 @@ pillar: architecture
 Transform the static, role-based vessel model into a flexible, dynamic composition system. This enables players and NPCs to outfit ships for specialized roles (Combat, Trade, Exploration) using atomic hulls and modules, while ensuring performance stats remain deterministic and balanced.
 
 ## 2. Orchestration Flow
-1. **Hull Selection:** Define the base physical constraints using `HullDef` (Mass, Volume, Mounts, Hardpoints).
+1. **Hull Selection:** Define the base physical constraints using `HullDef` (Mass, Volume, Mounts, Hardpoints, Visual Styles).
 2. **Module Allocation:** Attach function-specific modules (Engines, Weapons, Shields) to mounts or hardpoints via `ShipOutfitter`.
-3. **Stat Computation:** Aggregate total mass, energy draw, and volume to compute final `ShipStats` each frame.
-4. **Validation:** Ensure the final configuration passes physics and energy recharge constraints.
+3. **Attribute-Driven Stat Computation:** Aggregate tiered attributes (`AttributeType` like Size, Mass, Thrust, Capacity) to compute final `ShipStats`. Scaling follows Tier-based multipliers (e.g., T1=1x, T2=3x, T3=8x).
+4. **Procedural Rendering:** Generate ship visuals on-the-fly in `RenderSystem` by compositing the hull style with per-slot nacelle/mount styles and connecting them with functional outriggers.
 
 ## 3. Data Flow & Integrity
-- **Trigger:** Ship market purchase, shipyard outfitting, or NPC spawn event.
-- **Output:** A composed ship entity with `HullDef` and multiple `ShipModule` components.
-- **Consistency:** Atomic transactional outfitting (check requirements → debit → apply). No "partial outfits" allowed in the registry.
+- **Trigger:** Ship market purchase, shipyard outfitting, or NPC spawn event (e.g., `WorldLoader::spawnPlayer`).
+- **Output:** A composed ship entity with `HullDef`, tiered module components, and procedurally generated visuals.
+- **Consistency:** Atomic transactional outfitting using `defaultOutfits_` per Tier to ensure balanced starting states.
 
 ## 4. Operational Context
 - **Primary Modules:** [game-core](/docs/architecture/module/game-core.md), [game-economy](/docs/architecture/module/game-economy.md) (T3)

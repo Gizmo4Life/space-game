@@ -1,0 +1,21 @@
+[Telemetry] OTLP/HTTP exporter -> http://localhost:4318/v1/traces
+[Telemetry] Initialized (SpaceGame)
+[World] Player spawning near populated body at 2286.74, 4678.17
+[NPC] Manager initialized with Missions
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_client.cc:212 [OTLP HTTP Client] Session state: connection failed.Failed to connect to localhost port 4318 after 0 ms: Couldn't connect to server
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_exporter.cc:200 [OTLP TRACE HTTP Exporter] ERROR: Export 512 trace span(s) error: 1
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_client.cc:212 [OTLP HTTP Client] Session state: connection failed.Failed to connect to localhost port 4318 after 0 ms: Couldn't connect to server
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_exporter.cc:200 [OTLP TRACE HTTP Exporter] ERROR: Export 1 trace span(s) error: 1
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_client.cc:212 [OTLP HTTP Client] Session state: connection failed.Failed to connect to localhost port 4318 after 0 ms: Couldn't connect to server
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_exporter.cc:200 [OTLP TRACE HTTP Exporter] ERROR: Export 512 trace span(s) error: 1
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_client.cc:212 [OTLP HTTP Client] Session state: connection failed.Failed to connect to localhost port 4318 after 0 ms: Couldn't connect to server
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_exporter.cc:200 [OTLP TRACE HTTP Exporter] ERROR: Export 3 trace span(s) error: 1
+[NPC] Mission 1 started: 2 for Faction 1
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_client.cc:212 [OTLP HTTP Client] Session state: connection failed.Failed to connect to localhost port 4318 after 0 ms: Couldn't connect to server
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_exporter.cc:200 [OTLP TRACE HTTP Exporter] ERROR: Export 512 trace span(s) error: 1
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_client.cc:212 [OTLP HTTP Client] Session state: connection failed.Failed to connect to localhost port 4318 after 0 ms: Couldn't connect to server
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_exporter.cc:200 [OTLP TRACE HTTP Exporter] ERROR: Export 4 trace span(s) error: 1
+[Faction] Relationship decay: (1,2) 0.471775 -> 0.471482
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_client.cc:212 [OTLP HTTP Client] Session state: connection failed.Failed to connect to localhost port 4318 after 0 ms: Couldn't connect to server
+[Error] File: /private/tmp/opentelemetry-cpp-20260208-7372-5m0hre/opentelemetry-cpp-1.25.0/exporters/otlp/src/otlp_http_exporter.cc:200 [OTLP TRACE HTTP Exporter] ERROR: Export 65 trace span(s) error: 1
+[Telemetry] Shut down.

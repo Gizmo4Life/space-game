@@ -1311,6 +1311,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: \
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /usr/local/include/box2d/box2d.h /usr/local/include/box2d/base.h \
   /usr/local/include/box2d/collision.h \

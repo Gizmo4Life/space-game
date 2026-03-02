@@ -19,6 +19,7 @@
 #include "game/components/Landed.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
+#include "game/components/ShipConfig.h"
 #include "game/components/ShipModule.h"
 #include "game/components/ShipStats.h"
 
@@ -27,7 +28,6 @@ namespace space {
 void ModuleRegistry::init() {
   modules.clear();
 
-  // Helper to create attribute list
   auto attrs = [](std::vector<std::pair<AttributeType, Tier>> pairList) {
     std::vector<ModuleAttribute> res;
     for (auto &p : pairList)
@@ -35,79 +35,133 @@ void ModuleRegistry::init() {
     return res;
   };
 
-  // Engines
-  modules.push_back({"Basic Engine",
+  // --- Engines ---
+  // T1: Light (ID 0)
+  modules.push_back({"E-100 Light Engine",
                      attrs({{AttributeType::Size, Tier::T1},
-                            {AttributeType::Thrust, Tier::T1}}),
-                     10.0f, 1.0f});
-  modules.push_back({"Improved Engine",
-                     attrs({{AttributeType::Size, Tier::T1},
-                            {AttributeType::Thrust, Tier::T2}}),
-                     15.0f, 1.2f});
-  modules.push_back({"Industrial Engine",
+                            {AttributeType::Mass, Tier::T1},
+                            {AttributeType::Thrust, Tier::T1},
+                            {AttributeType::Efficiency, Tier::T1}}),
+                     5.0f, 1.0f});
+  // T2: Medium (ID 1)
+  modules.push_back({"E-200 Medium Engine",
                      attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Thrust, Tier::T1}}),
-                     30.0f, 0.8f});
-  modules.push_back({"Combat Engine",
-                     attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Thrust, Tier::T2}}),
-                     45.0f, 1.0f});
-  modules.push_back({"High-Output Engine",
-                     attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Thrust, Tier::T3}}),
-                     60.0f, 1.2f});
-  modules.push_back({"Capital Engine",
+                            {AttributeType::Mass, Tier::T2},
+                            {AttributeType::Thrust, Tier::T2},
+                            {AttributeType::Efficiency, Tier::T2}}),
+                     15.0f, 3.0f});
+  // T3: Heavy (ID 2)
+  modules.push_back({"E-300 Heavy Engine",
                      attrs({{AttributeType::Size, Tier::T3},
-                            {AttributeType::Thrust, Tier::T3}}),
-                     150.0f, 0.5f});
+                            {AttributeType::Mass, Tier::T3},
+                            {AttributeType::Thrust, Tier::T3},
+                            {AttributeType::Efficiency, Tier::T3}}),
+                     40.0f, 10.0f});
 
-  // Weapons
-  modules.push_back({"Light Cannon",
+  // --- Weapons ---
+  // T1: Light Cannon (ID 3)
+  modules.push_back({"LC-1 Light Cannon",
                      attrs({{AttributeType::Size, Tier::T1},
-                            {AttributeType::Caliber, Tier::T1}}),
-                     5.0f, 2.0f});
-  modules.push_back({"Heavy Cannon",
+                            {AttributeType::Mass, Tier::T1},
+                            {AttributeType::Caliber, Tier::T1},
+                            {AttributeType::ROF, Tier::T2}}),
+                     3.0f, 2.0f});
+  // T2: Medium Cannon (ID 4)
+  modules.push_back({"MC-2 Medium Cannon",
                      attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Caliber, Tier::T2}}),
-                     15.0f, 5.0f});
+                            {AttributeType::Mass, Tier::T2},
+                            {AttributeType::Caliber, Tier::T2},
+                            {AttributeType::ROF, Tier::T2}}),
+                     10.0f, 5.0f});
+  // T3: Heavy Cannon (ID 5)
+  modules.push_back({"HC-3 Heavy Cannon",
+                     attrs({{AttributeType::Size, Tier::T3},
+                            {AttributeType::Mass, Tier::T3},
+                            {AttributeType::Caliber, Tier::T3},
+                            {AttributeType::ROF, Tier::T2}}),
+                     30.0f, 15.0f});
 
-  // Shields
-  modules.push_back({"Small Shield",
+  // --- Shields ---
+  // T1: Light Projector (ID 6)
+  modules.push_back({"S-10 Light Shield",
                      attrs({{AttributeType::Size, Tier::T1},
+                            {AttributeType::Mass, Tier::T1},
                             {AttributeType::Capacity, Tier::T1},
                             {AttributeType::Regen, Tier::T1}}),
-                     10.0f, 3.0f});
-  modules.push_back({"Large Shield",
+                     8.0f, 4.0f});
+  // T2: Medium Projector (ID 7)
+  modules.push_back({"S-20 Medium Shield",
                      attrs({{AttributeType::Size, Tier::T2},
+                            {AttributeType::Mass, Tier::T2},
                             {AttributeType::Capacity, Tier::T2},
                             {AttributeType::Regen, Tier::T2}}),
-                     50.0f, 10.0f});
+                     25.0f, 12.0f});
+  // T3: Heavy Projector (ID 8)
+  modules.push_back({"S-30 Heavy Shield",
+                     attrs({{AttributeType::Size, Tier::T3},
+                            {AttributeType::Mass, Tier::T3},
+                            {AttributeType::Capacity, Tier::T3},
+                            {AttributeType::Regen, Tier::T3}}),
+                     70.0f, 35.0f});
 
-  // Utility
-  modules.push_back({"Cargo Pod",
+  // --- Utility ---
+  // T1: Small Cargo Pod (ID 9)
+  modules.push_back({"C-10 Cargo Pod",
                      attrs({{AttributeType::Size, Tier::T1},
+                            {AttributeType::Mass, Tier::T1},
                             {AttributeType::Volume, Tier::T1}}),
-                     20.0f, 0.5f});
-  modules.push_back({"Reactor",
+                     5.0f, 0.5f});
+  // T2: Medium Cargo Pod (ID 10)
+  modules.push_back({"C-20 Cargo Pod",
+                     attrs({{AttributeType::Size, Tier::T2},
+                            {AttributeType::Mass, Tier::T2},
+                            {AttributeType::Volume, Tier::T2}}),
+                     15.0f, 1.5f});
+  // T3: Large Cargo Bay (ID 11)
+  modules.push_back({"C-30 Cargo Bay",
+                     attrs({{AttributeType::Size, Tier::T3},
+                            {AttributeType::Mass, Tier::T3},
+                            {AttributeType::Volume, Tier::T3}}),
+                     50.0f, 5.0f});
+
+  // T1: Basic Reactor (ID 12)
+  modules.push_back({"R-1 Reactor",
                      attrs({{AttributeType::Size, Tier::T1},
+                            {AttributeType::Mass, Tier::T1},
                             {AttributeType::Output, Tier::T1}}),
-                     5.0f, 2.0f});
+                     10.0f, 2.0f});
+  // T2: Advanced Reactor (ID 13)
+  modules.push_back({"R-2 Reactor",
+                     attrs({{AttributeType::Size, Tier::T2},
+                            {AttributeType::Mass, Tier::T2},
+                            {AttributeType::Output, Tier::T2}}),
+                     25.0f, 5.0f});
+
+  // T3: Fusion Reactor (ID 14)
+  modules.push_back({"R-3 Fusion Reactor",
+                     attrs({{AttributeType::Size, Tier::T3},
+                            {AttributeType::Mass, Tier::T3},
+                            {AttributeType::Output, Tier::T3}}),
+                     60.0f, 12.0f});
 }
 
 void ShipOutfitter::init() {
   ModuleRegistry::instance().init();
-  FactionHullTable civ;
-  civ.hulls[Tier::T1] =
-      makeBasicHull("L1", "Sparrow", Tier::T1, Tier::T1, 500.f, 80.f, 20.f, 1,
-                    {Tier::T1}, 1, {Tier::T1});
-  civ.hulls[Tier::T2] =
-      makeBasicHull("M1", "Falcon", Tier::T2, Tier::T2, 1200.f, 250.f, 50.f, 2,
-                    {Tier::T1, Tier::T2}, 2, {Tier::T1, Tier::T2});
-  civ.hulls[Tier::T3] = makeBasicHull(
-      "H1", "Eagle", Tier::T3, Tier::T3, 3500.f, 800.f, 150.f, 4,
-      {Tier::T1, Tier::T2, Tier::T3}, 4, {Tier::T1, Tier::T2, Tier::T3});
+  factionHulls_ = ShipConfig::getFactionHulls();
 
-  factionHulls_[0] = civ;
+  // Populate Default Outfits (representative IDs from registry)
+  auto defs = ShipConfig::getDefaultOutfits();
+  for (auto const &[tier, data] : defs) {
+    DefaultOutfit dout;
+    dout.engines = data.engines;
+    dout.weapons = data.weapons;
+    dout.shields = data.shields;
+    dout.cargos = data.cargos;
+    dout.passengers = data.passengers;
+    dout.fuels = data.fuels;
+    dout.powers = data.powers;
+    defaultOutfits_[tier] = dout;
+  }
 
   auto &fm = FactionManager::instance();
   auto &reg = ModuleRegistry::instance();
@@ -146,71 +200,54 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
   auto span =
       space::Telemetry::instance().tracer()->StartSpan("game.core.ship.outfit");
   const HullDef &hull = getHull(factionId, sizeTier);
-  auto &reg = ModuleRegistry::instance();
 
-  auto getTierVal = [](Tier t) { return static_cast<float>(t); };
+  // Lookup default outfit for this tier
+  auto doutIt = defaultOutfits_.find(sizeTier);
+  const DefaultOutfit &dout = (doutIt != defaultOutfits_.end())
+                                  ? doutIt->second
+                                  : defaultOutfits_.at(Tier::T1);
 
-  // Use explicit IDs for default outfits for now
-  std::vector<uint32_t> engIds = {0}; // Basic Engine
-  std::vector<uint32_t> wpIds = {6};  // Light Cannon
-  std::vector<uint32_t> shIds = {8};  // Small Shield
-  std::vector<uint32_t> cgIds = {10}; // Cargo Pod
-
+  // 1. Engines
   InstalledEngines ie;
-  ie.ids = engIds;
-  for (auto id : ie.ids) {
-    if (id < reg.modules.size()) {
-      const auto &m = reg.modules[id];
-      if (m.hasAttribute(AttributeType::Thrust)) {
-        ie.totalThrust +=
-            getTierVal(m.getAttributeTier(AttributeType::Thrust)) * 20.0f;
-        ie.totalRotSpeed += 1.0f;
-      }
-    }
+  ie.ids.assign(hull.engineSlots.size(), EMPTY_MODULE);
+  ModuleId defEng = dout.engines.empty() ? EMPTY_MODULE : dout.engines[0];
+  for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
+    ie.ids[i] = defEng;
   }
   registry.emplace_or_replace<InstalledEngines>(entity, ie);
 
+  // 2. Weapons
   InstalledWeapons iw;
-  iw.ids = wpIds;
-  for (auto id : iw.ids) {
-    if (id < reg.modules.size()) {
-      const auto &m = reg.modules[id];
-      if (m.hasAttribute(AttributeType::Caliber)) {
-        iw.damage +=
-            getTierVal(m.getAttributeTier(AttributeType::Caliber)) * 10.0f;
-      }
-    }
+  iw.ids.assign(hull.hardpointSlots.size(), EMPTY_MODULE);
+  ModuleId defWp = dout.weapons.empty() ? EMPTY_MODULE : dout.weapons[0];
+  for (size_t i = 0; i < hull.hardpointSlots.size(); ++i) {
+    iw.ids[i] = defWp;
   }
   registry.emplace_or_replace<InstalledWeapons>(entity, iw);
 
+  // 3. Utility (Multiple slots based on Tier)
+  int slotCount = 1;
+  if (sizeTier == Tier::T2)
+    slotCount = 2;
+  else if (sizeTier == Tier::T3)
+    slotCount = 3;
+
   InstalledShields is;
-  is.ids = shIds;
-  for (auto id : is.ids) {
-    if (id < reg.modules.size()) {
-      const auto &m = reg.modules[id];
-      if (m.hasAttribute(AttributeType::Capacity)) {
-        is.maxShield +=
-            getTierVal(m.getAttributeTier(AttributeType::Capacity)) * 100.0f;
-        is.regenRate +=
-            getTierVal(m.getAttributeTier(AttributeType::Regen)) * 5.0f;
-      }
-    }
-  }
-  is.current = is.maxShield;
+  if (!dout.shields.empty())
+    is.ids.assign(slotCount, dout.shields[0]);
   registry.emplace_or_replace<InstalledShields>(entity, is);
 
   InstalledCargo ic;
-  ic.ids = cgIds;
-  for (auto id : ic.ids) {
-    if (id < reg.modules.size()) {
-      const auto &m = reg.modules[id];
-      if (m.hasAttribute(AttributeType::Volume)) {
-        ic.capacity +=
-            getTierVal(m.getAttributeTier(AttributeType::Volume)) * 50.0f;
-      }
-    }
-  }
+  if (!dout.cargos.empty())
+    ic.ids.assign(slotCount, dout.cargos[0]);
   registry.emplace_or_replace<InstalledCargo>(entity, ic);
+
+  InstalledPower ip;
+  if (!dout.powers.empty())
+    ip.ids.assign(slotCount, dout.powers[0]);
+  registry.emplace_or_replace<InstalledPower>(entity, ip);
+
+  registry.emplace_or_replace<HullDef>(entity, hull);
 
   refreshStats(registry, entity, hull);
   span->End();
@@ -219,6 +256,7 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
 bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
                                 entt::entity planet, ProductKey moduleKey,
                                 int slotIndex) {
+  auto &reg = ModuleRegistry::instance();
   if (!registry.all_of<Landed>(entity) ||
       registry.get<Landed>(entity).planet != planet)
     return false;
@@ -227,6 +265,30 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
   for (auto &[fId, fEco] : eco.factionData) {
     if (fEco.stockpile.count(moduleKey) &&
         fEco.stockpile.at(moduleKey) >= 1.0f) {
+
+      // Slot and Component Validation
+      if (!registry.all_of<HullDef>(entity))
+        return false;
+      const auto &hull = registry.get<HullDef>(entity);
+      const auto &mDef = reg.getModule(moduleKey.id);
+      Tier mSize = mDef.hasAttribute(AttributeType::Size)
+                       ? mDef.getAttributeTier(AttributeType::Size)
+                       : Tier::T1;
+
+      if (mDef.hasAttribute(AttributeType::Thrust)) {
+        if (slotIndex < 0 || slotIndex >= (int)hull.engineSlots.size() ||
+            hull.engineSlots[slotIndex].size < mSize) {
+          std::cout << "[Outfitter] Engine size mismatch or invalid slot\n";
+          return false;
+        }
+      } else if (mDef.hasAttribute(AttributeType::Caliber)) {
+        if (slotIndex < 0 || slotIndex >= (int)hull.hardpointSlots.size() ||
+            hull.hardpointSlots[slotIndex].size < mSize) {
+          std::cout << "[Outfitter] Weapon size mismatch or invalid slot\n";
+          return false;
+        }
+      }
+
       if (registry.all_of<PlayerComponent>(entity)) {
         if (!registry.all_of<CreditsComponent>(entity) ||
             registry.get<CreditsComponent>(entity).amount < 50.0f) {
@@ -238,6 +300,22 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
         std::cout << "[Outfitter] Charged 50C installation fee to faction "
                   << fId << "\n";
       }
+
+      // Installation
+      auto &reg = ModuleRegistry::instance();
+      if (mDef.hasAttribute(AttributeType::Thrust)) {
+        auto &ie = registry.get_or_emplace<InstalledEngines>(entity);
+        if (ie.ids.size() < hull.engineSlots.size())
+          ie.ids.resize(hull.engineSlots.size(), EMPTY_MODULE);
+        ie.ids[slotIndex] = moduleKey.id;
+      } else if (mDef.hasAttribute(AttributeType::Caliber)) {
+        auto &iw = registry.get_or_emplace<InstalledWeapons>(entity);
+        if (iw.ids.size() < hull.hardpointSlots.size())
+          iw.ids.resize(hull.hardpointSlots.size(), EMPTY_MODULE);
+        iw.ids[slotIndex] = moduleKey.id;
+      }
+
+      refreshStats(registry, entity, hull);
       fEco.stockpile[moduleKey] -= 1.0f;
       return true;
     }
@@ -247,13 +325,121 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
 
 void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
                                  const HullDef &hull) const {
+  auto &reg = ModuleRegistry::instance();
+
+  auto getTierMult = [](Tier t) {
+    if (t == Tier::T1)
+      return 1.0f;
+    if (t == Tier::T2)
+      return 3.0f;
+    if (t == Tier::T3)
+      return 8.0f;
+    return 1.0f;
+  };
+
   ShipStats stats;
   stats.maxHull = hull.baseHitpoints * hull.hpMultiplier;
   stats.currentHull = stats.maxHull;
   stats.totalMass = hull.baseMass * hull.massMultiplier;
-
   stats.currentEnergy = 100.0f;
   stats.energyCapacity = 100.0f;
+
+  // 1. Sum up mass from all modules
+  auto sumMass = [&](const std::vector<ModuleId> &ids) {
+    for (auto id : ids) {
+      if (id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(id);
+      stats.totalMass +=
+          getTierMult(m.getAttributeTier(AttributeType::Mass)) * 5.0f;
+    }
+  };
+
+  // 2. Derive Engine Stats
+  if (registry.all_of<InstalledEngines>(entity)) {
+    auto &ie = registry.get<InstalledEngines>(entity);
+    ie.totalThrust = 0;
+    ie.totalRotSpeed = 0;
+    sumMass(ie.ids);
+    for (auto id : ie.ids) {
+      if (id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(id);
+      if (m.hasAttribute(AttributeType::Thrust))
+        ie.totalThrust +=
+            getTierMult(m.getAttributeTier(AttributeType::Thrust)) * 2500000.0f;
+      ie.totalRotSpeed += 1.0f;
+    }
+  }
+
+  // 3. Derive Weapon Stats
+  if (registry.all_of<InstalledWeapons>(entity)) {
+    auto &iw = registry.get<InstalledWeapons>(entity);
+    iw.damage = 0;
+    sumMass(iw.ids);
+    for (auto id : iw.ids) {
+      if (id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(id);
+      if (m.hasAttribute(AttributeType::Caliber))
+        iw.damage +=
+            getTierMult(m.getAttributeTier(AttributeType::Caliber)) * 10.0f;
+    }
+  }
+
+  // 4. Derive Shield Stats
+  if (registry.all_of<InstalledShields>(entity)) {
+    auto &is = registry.get<InstalledShields>(entity);
+    is.maxShield = 0;
+    is.regenRate = 0;
+    sumMass(is.ids);
+    for (auto id : is.ids) {
+      if (id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(id);
+      if (m.hasAttribute(AttributeType::Capacity))
+        is.maxShield +=
+            getTierMult(m.getAttributeTier(AttributeType::Capacity)) * 80.0f;
+      if (m.hasAttribute(AttributeType::Regen))
+        is.regenRate +=
+            getTierMult(m.getAttributeTier(AttributeType::Regen)) * 5.0f;
+    }
+    is.current = std::min(is.current, is.maxShield);
+    if (is.current <= 0)
+      is.current = is.maxShield;
+  }
+
+  // 5. Derive Cargo Stats
+  if (registry.all_of<InstalledCargo>(entity)) {
+    auto &ic = registry.get<InstalledCargo>(entity);
+    ic.capacity = 0;
+    sumMass(ic.ids);
+    for (auto id : ic.ids) {
+      if (id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(id);
+      if (m.hasAttribute(AttributeType::Volume))
+        ic.capacity +=
+            getTierMult(m.getAttributeTier(AttributeType::Volume)) * 50.0f;
+    }
+  }
+
+  // 6. Derive Power Stats
+  if (registry.all_of<InstalledPower>(entity)) {
+    auto &ip = registry.get<InstalledPower>(entity);
+    ip.output = 0;
+    sumMass(ip.ids);
+    for (auto id : ip.ids) {
+      if (id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(id);
+      if (m.hasAttribute(AttributeType::Output))
+        ip.output +=
+            getTierMult(m.getAttributeTier(AttributeType::Output)) * 100.0f;
+    }
+    stats.energyCapacity = ip.output;
+  }
+
   registry.emplace_or_replace<ShipStats>(entity, stats);
 }
 
@@ -271,7 +457,7 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
   };
   if (registry.all_of<InstalledEngines>(entity)) {
     for (auto id : registry.get<InstalledEngines>(entity).ids) {
-      if (id < reg.modules.size())
+      if (id != EMPTY_MODULE && id < reg.modules.size())
         total +=
             addValue(ProductType::Module, id,
                      reg.modules[id].getAttributeTier(AttributeType::Thrust));
@@ -279,7 +465,7 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
   }
   if (registry.all_of<InstalledWeapons>(entity)) {
     for (auto id : registry.get<InstalledWeapons>(entity).ids) {
-      if (id < reg.modules.size())
+      if (id != EMPTY_MODULE && id < reg.modules.size())
         total +=
             addValue(ProductType::Module, id,
                      reg.modules[id].getAttributeTier(AttributeType::Caliber));
@@ -287,7 +473,7 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
   }
   if (registry.all_of<InstalledShields>(entity)) {
     for (auto id : registry.get<InstalledShields>(entity).ids) {
-      if (id < reg.modules.size())
+      if (id != EMPTY_MODULE && id < reg.modules.size())
         total +=
             addValue(ProductType::Module, id,
                      reg.modules[id].getAttributeTier(AttributeType::Capacity));

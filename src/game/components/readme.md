@@ -1,5 +1,6 @@
 # /src/game/components/
 
+→ [T3 Module: Game Core](/docs/architecture/module/game-core.md)
 → [T3 Module: Game Economy](/docs/architecture/module/game-economy.md)
 → [T3 Module: Game Factions](/docs/architecture/module/game-factions.md)
 → [T3 Module: Game NPC](/docs/architecture/module/game-npc.md)
@@ -7,12 +8,13 @@
 → [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
 ## Components
-- `Economy.h` — `PlanetEconomy`, `CreditsComponent`, `CargoComponent`, `Resource` enum
-- `Faction.h` — `Faction` allegiance map per planet/ship entity
-- `NPCComponent.h` — AI belief/state machine, fleet flags, decision timers
-- `CelestialBody.h` — `CelestialType` enum, orbital parameters
-- `WeaponComponent.h` — Cooldown, damage, projectile spec
-- `ShipStats.h` — Hull and energy stats
-- `NameComponent.h` — Display name for any entity
-- `CargoComponent.h` — Cargo hold with resource quantities
-- `WorldConfig.h` — `WORLD_SCALE` and `SHIP_SCALE` constants
+- `ShipConfig.h` — Static hull and outfit registry
+- `HullDef.h` — Shape, mass, and hardpoint geometry
+- `ShipModule.h` — Module attributes and ID definitions
+- `Economy.h` — `PlanetEconomy`, `CreditsComponent`, `CargoComponent`
+- `Faction.h` — Faction allegiance mapping
+- `NPCComponent.h` — AI decision state
+- `CelestialBody.h` — Body type and mass
+- `OrbitalComponent.h` — Orbital parameters and phase
+- `TransformComponent.h` — World position and rotation
+- `WorldConfig.h` — Star system constants

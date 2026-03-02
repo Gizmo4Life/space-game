@@ -10,8 +10,8 @@ pillar: architecture
 Procedural world generation, player spawning, and modular vessel outfitting management.
 
 ## 1. Physical Scope
-- **Path:** `/src/game/` — `WorldLoader.h/.cpp`, `ShipOutfitter.h/.cpp`
-- **Components:** `HullDef`, `ShipModule`, `ShipStats`
+- **Path:** `/src/game/` — `WorldLoader.h/.cpp`, `ShipOutfitter.h/.cpp`, `components/ShipConfig.h`
+- **Components:** `HullDef`, `ShipModule`, `ShipStats`, `ShipConfig`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
@@ -19,13 +19,15 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 - [Capability: Navigation](/docs/architecture/capability/navigation.md) (T2)
 
 ## 3. Key Systems
-- **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Maps `VesselClass` and `Faction` to initial configurations. Handles the composition of `HullDef` and `ShipModule` components.
-- **ModuleRegistry**: Singleton catalogue for all available ship modules (Engines, Weapons, Shields, etc.). Stores base stats like `thrust`, `damage`, and `volumeCost`.
-- **WorldLoader**: Procedural star system generation (stars, planets, moons) and player entity initialization.
+- **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses `Tier` to determine base attributes and utility slot counts. Handles the composition of `HullDef` and `ShipModule` components.
+- **ShipConfig**: Static registry of hull definitions and default outfits. Replaces hardcoded mappings within the outfitter to allow for data-driven ship balancing.
+- **ModuleRegistry**: Singleton catalogue for all available ship modules.
+- **WorldLoader**: Procedural star system generation and deterministic player spawning near inhabited worlds.
 
 ## 4. Pattern Composition
 - [ship-modular-composition](/docs/developer/pattern/ship-modular-composition.md) (P) — Composition of hulls and modules
-- [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Star system seeding
+- [tiered-utility-allocation](/docs/developer/pattern/tiered-utility-allocation.md) (P) — Scaling slot counts by vessel tier
+- [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Star system seeding with orbital pre-calculation
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `ShipOutfitter::instance()`
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `HullDef`, `ShipModule`, `ShipStats` PODs
 

@@ -22,11 +22,11 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
 - **MainRenderer**: Owns the `sf::RenderWindow`, handles SFML lifecycle (open/close/clear/display).
 - **RenderSystem::update**: Four-pass rendering pipeline:
   1. **Background layer** — Static/orbital entities (`TransformComponent` + `SpriteComponent`). Planets are rendered as **circular sprites** (generated in `WorldLoader`) with colors based on `CelestialType`.
-  2. **Foreground layer** — Physics bodies (`InertialBody` + `SpriteComponent`). NPC ships use **procedural shapes** to indicate class:
-    - **Military**: Sharp Wedge
-    - **Freight**: Rigid Block
-    - **Passenger**: Sleek Oval
-  3. **UI layer** — Offscreen indicators for `CelestialBody` and `NPCComponent` entities with distance labels. Labels include **Population counts** and **Vessel Classes**.
+  2. **Foreground layer** — Physics bodies (`InertialBody`). Ships are rendered procedurally using their `HullDef` component:
+     - **Main Hull**: Drawn at COM using `bodyStyle` (Triangle, Square, etc.).
+     - **Nacelles / Turret Mounts**: Drawn at each `MountSlot.localPos` using the slot's `style`.
+     - **Visual Logic**: These shapes determine the ship's profile. Disjoint sections (nacelles on outriggers) are automatically connected to the main hull during generation.
+  3. **UI layer** — Offscreen indicators for `CelestialBody` and `NPCComponent` entities with distance labels. Labels include **Population counts** and **Ship Class names** (Sparrow, Falcon, etc.).
   4. **Projectile layer** — `ProjectileComponent` bullets as colored circles.
 - **LandingScreen**: See [game-ui module](/docs/architecture/module/game-ui.md) — pause overlay with planet info + ship market.
 

@@ -27,7 +27,7 @@ struct CargoComponent {
 };
 
 struct CreditsComponent {
-  float amount = 1000.0f;
+  float amount = 1000000.0f;
 };
 
 } // namespace space

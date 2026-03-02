@@ -14,6 +14,7 @@
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
 #include "game/ShipOutfitter.h"
+#include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/GameTypes.h"
 #include "game/components/Landed.h"

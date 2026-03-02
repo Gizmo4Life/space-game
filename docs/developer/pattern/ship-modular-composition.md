@@ -11,7 +11,7 @@ tags: [cpp, architecture, composition, hull, module]
 - **Requirement:** Define a `HullDef` as the primary frame of the entity.
 - **Requirement:** Distinguish between **Mounts** (for propulsion/utility) and **Hardpoints** (for weapon systems).
 - **Requirement:** Modules must be applied to specific slots (Mounts/Hardpoints) or consume generic **Volume**.
-- **Rule:** Use a centralized manager (`ShipOutfitter`) to apply and validate compositions.
+- **Rule:** Use a centralized manager (`ShipOutfitter`) and registry (`ShipConfig`) to apply and validate compositions.
 - **Rule:** Composition state must be stored as ECS components (e.g., `ShipModule`, `HullComponent`).
 
 ## 2. Nuance

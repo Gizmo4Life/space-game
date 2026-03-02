@@ -140,6 +140,9 @@ void WorldLoader::generateStarSystem(entt::registry &registry,
       registry.emplace<OrbitalComponent>(star, barycenter, 200.0f, 200.0f,
                                          400.0f, (i == 0 ? 0.0f : 3.1415f),
                                          0.0f);
+      // Binary stars are handled by OrbitalComponent, will be updated in next
+      // block
+      tc.position = {0, 0};
     } else {
       tc.position = {0, 0};
     }
@@ -179,7 +182,18 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
                      0.2f;
       registry.emplace<OrbitalComponent>(moon, parent, binSMA, binSMA, period,
                                          (rand() % 628) * 0.01f, 0.0f);
-      registry.emplace<TransformComponent>(moon);
+
+      // Initial position pre-calc
+      auto &orb = registry.get<OrbitalComponent>(moon);
+      sf::Vector2f parentPos(0, 0);
+      if (registry.valid(parent) &&
+          registry.all_of<TransformComponent>(parent)) {
+        parentPos = registry.get<TransformComponent>(parent).position;
+      }
+      float x = orb.semiMajorAxis * cosf(orb.currentPhase);
+      float y = orb.semiMinorAxis * sinf(orb.currentPhase);
+      registry.emplace<TransformComponent>(moon,
+                                           parentPos + sf::Vector2f(x, y));
       // Visuals
       sf::Color pColor = getPlanetColor(type);
       unsigned int iSize = (unsigned int)radius * 2;
@@ -249,7 +263,17 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
     period *= 0.2f;
     registry.emplace<OrbitalComponent>(planet, parent, binSMA, binSMA, period,
                                        (rand() % 628) * 0.01f, 0.0f);
-    registry.emplace<TransformComponent>(planet);
+
+    // Initial position pre-calc
+    auto &orb = registry.get<OrbitalComponent>(planet);
+    sf::Vector2f parentPos(0, 0);
+    if (registry.valid(parent) && registry.all_of<TransformComponent>(parent)) {
+      parentPos = registry.get<TransformComponent>(parent).position;
+    }
+    float x = orb.semiMajorAxis * cosf(orb.currentPhase);
+    float y = orb.semiMinorAxis * sinf(orb.currentPhase);
+    registry.emplace<TransformComponent>(planet,
+                                         parentPos + sf::Vector2f(x, y));
 
     // Visuals
     sf::Color pColor = getPlanetColor(type);
@@ -392,9 +416,11 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 
   // Apply modular outfit (handles Hull, Engines, Weapons, Stats, etc.)
-  ShipOutfitter::instance().applyOutfit(registry, ship, 1, sizeTier);
+  // Player starts in a Medium "jack of all trades" Falcon (M1)
+  Tier startTier = Tier::T2;
+  ShipOutfitter::instance().applyOutfit(registry, ship, 1, startTier);
 
-  const HullDef &hull = ShipOutfitter::instance().getHull(1, sizeTier);
+  const HullDef &hull = ShipOutfitter::instance().getHull(1, startTier);
 
   registry.emplace_or_replace<InertialBody>(ship, bodyId, 500.0f, 0.05f, 20.0f);
   registry.emplace_or_replace<WeaponComponent>(ship);
@@ -402,28 +428,21 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
                                              "Player Ship (" + hull.name + ")");
   registry.emplace_or_replace<PlayerComponent>(ship);
   registry.emplace_or_replace<TransformComponent>(ship, spawnPos);
-  registry.emplace_or_replace<CreditsComponent>(ship);
+  registry.emplace_or_replace<CreditsComponent>(ship,
+                                                WorldConfig::STARTING_CREDITS);
 
   Faction f;
   f.allegiances[1] = 1.0f; // Player is always Faction 1
   registry.emplace_or_replace<Faction>(ship, f);
 
-  sf::Image img({32, 24}, sf::Color::Transparent);
-  for (int x = 0; x < 32; ++x) {
-    // Pointy end at x=31 (+X forward)
-    int height = ((31 - x) * 12) / 32;
-    for (int y = 12 - height; y < 12 + height; ++y) {
-      img.setPixel({static_cast<unsigned int>(x), static_cast<unsigned int>(y)},
-                   sf::Color::Cyan);
-    }
-  }
-  auto texture = std::make_shared<sf::Texture>();
-  texture->loadFromImage(img);
-
+  // Procedural rendering is now handled by RenderSystem (HullDef component)
+  // SpriteComponent is only a fallback or for specialized non-hull ships.
   SpriteComponent sc;
+  auto texture = std::make_shared<sf::Texture>();
+  sf::Image img({2, 2}, sf::Color::Transparent);
+  texture->loadFromImage(img);
   sc.texture = texture;
   sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
-  sc.sprite->setOrigin({16.0f, 12.0f});
   registry.emplace_or_replace<SpriteComponent>(ship, sc);
 
   return ship;

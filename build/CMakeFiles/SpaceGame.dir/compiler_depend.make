@@ -1049,6 +1049,7 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: /Users/Dan/Docume
   /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
@@ -8349,18 +8350,16 @@ CMakeFiles/SpaceGame.dir/src/game/EconomyManager.cpp.o: /Users/Dan/Documents/rep
   /Users/Dan/Documents/repos/space-game/src/game/EconomyManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/Landed.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
   /usr/local/include/SFML/Config.hpp \
   /usr/local/include/SFML/Graphics/Color.hpp \
   /usr/local/include/SFML/Graphics/Color.inl \
@@ -9609,8 +9608,7 @@ CMakeFiles/SpaceGame.dir/src/game/FactionManager.cpp.o: /Users/Dan/Documents/rep
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /usr/local/include/SFML/Graphics/Color.hpp \
   /usr/local/include/SFML/Graphics/Color.inl \
   /usr/local/include/entt/config/config.h \
@@ -10392,11 +10390,59 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: /Users/Dan/Documents/rep
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__mutex/tag_types.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__mutex/unique_lock.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__node_handle \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/accumulate.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/adjacent_difference.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/exclusive_scan.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/gcd_lcm.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/inclusive_scan.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/inner_product.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/iota.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/midpoint.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/partial_sum.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/pstl.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/reduce.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/saturation_arithmetic.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_exclusive_scan.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_inclusive_scan.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_reduce.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ostream/basic_ostream.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/bernoulli_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/binomial_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/cauchy_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/chi_squared_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/clamp_to_integral.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/default_random_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/discard_block_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/discrete_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/exponential_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/extreme_value_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/fisher_f_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/gamma_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/generate_canonical.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/geometric_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/independent_bits_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/is_seed_sequence.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/is_valid.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/knuth_b.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/linear_congruential_engine.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/log2.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/lognormal_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/mersenne_twister_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/negative_binomial_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/normal_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/piecewise_constant_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/piecewise_linear_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/poisson_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/random_device.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/ranlux.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/seed_seq.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/shuffle_order_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/student_t_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/subtract_with_carry_engine.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/uniform_int_distribution.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/uniform_random_bit_generator.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/uniform_real_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/weibull_distribution.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/access.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/all.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/common_view.h \
@@ -10511,6 +10557,7 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: /Users/Dan/Documents/rep
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_empty.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_enum.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_equality_comparable.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_execution_policy.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_final.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_floating_point.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_function.h \
@@ -10636,6 +10683,7 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: /Users/Dan/Documents/rep
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/deque \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/errno.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/exception \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/execution \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/filesystem \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/float.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/format \
@@ -10657,10 +10705,12 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: /Users/Dan/Documents/rep
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/memory \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/mutex \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/new \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ostream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/print \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/queue \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/random \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ranges \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ratio \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/regex \
@@ -10855,15 +10905,16 @@ CMakeFiles/SpaceGame.dir/src/game/NPCShipManager.cpp.o: /Users/Dan/Documents/rep
   /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
@@ -11164,6 +11215,7 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityInternalLegacy.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/AvailabilityVersions.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/___wctype.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/__wctype.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/__xlocale.h \
@@ -11428,19 +11480,44 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__bit/rotate.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__bit_reference \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/chars_format.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/from_chars_integral.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/from_chars_result.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/tables.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/to_chars.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/to_chars_base_10.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/to_chars_floating_point.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/to_chars_integral.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/to_chars_result.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__charconv/traits.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/calendar.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/concepts.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/convert_to_timespec.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/convert_to_tm.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/day.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/duration.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/exception.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/file_clock.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/formatter.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/hh_mm_ss.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/high_resolution_clock.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/literals.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/local_info.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/month.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/month_weekday.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/monthday.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/ostream.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/parser_std_format_spec.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/statically_widen.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/steady_clock.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/sys_info.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/system_clock.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/time_point.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/weekday.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/year.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/year_month.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/year_month_day.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/year_month_weekday.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/zoned_time.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__compare/common_comparison_category.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__compare/compare_partial_order_fallback.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__compare/compare_strong_order_fallback.h \
@@ -11687,11 +11764,59 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__mutex/tag_types.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__mutex/unique_lock.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__node_handle \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/accumulate.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/adjacent_difference.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/exclusive_scan.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/gcd_lcm.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/inclusive_scan.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/inner_product.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/iota.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/midpoint.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/partial_sum.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/pstl.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/reduce.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/saturation_arithmetic.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_exclusive_scan.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_inclusive_scan.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_reduce.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ostream/basic_ostream.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/bernoulli_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/binomial_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/cauchy_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/chi_squared_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/clamp_to_integral.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/default_random_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/discard_block_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/discrete_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/exponential_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/extreme_value_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/fisher_f_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/gamma_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/generate_canonical.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/geometric_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/independent_bits_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/is_seed_sequence.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/is_valid.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/knuth_b.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/linear_congruential_engine.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/log2.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/lognormal_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/mersenne_twister_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/negative_binomial_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/normal_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/piecewise_constant_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/piecewise_linear_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/poisson_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/random_device.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/ranlux.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/seed_seq.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/shuffle_order_engine.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/student_t_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/subtract_with_carry_engine.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/uniform_int_distribution.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/uniform_random_bit_generator.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/uniform_real_distribution.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/weibull_distribution.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/access.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/all.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/common_view.h \
@@ -11733,6 +11858,12 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/views.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__split_buffer \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__std_mbstate_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/atomic_unique_lock.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_list_view.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_shared_ptr.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_source.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_state.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_token.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/char_traits.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/constexpr_c_functions.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/extern_template_lists.h \
@@ -11741,10 +11872,14 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_condition.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/system_error.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/formatter.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/id.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/jthread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/poll_with_backoff.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/support.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/support/pthread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/this_thread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/thread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/find_index.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/ignore.h \
@@ -11806,6 +11941,7 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_empty.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_enum.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_equality_comparable.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_execution_policy.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_final.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_floating_point.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_function.h \
@@ -11903,6 +12039,7 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__variant/monostate.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__verbose_abort \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/algorithm \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/any \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/array \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/atomic \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/bit \
@@ -11910,6 +12047,8 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cassert \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cctype \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cerrno \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/charconv \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/chrono \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/climits \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/clocale \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cmath \
@@ -11928,7 +12067,9 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/deque \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/errno.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/exception \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/execution \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/format \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/forward_list \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/functional \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/initializer_list \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ios \
@@ -11945,14 +12086,18 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/memory \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/mutex \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/new \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/optional \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ostream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/print \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/queue \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/random \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ranges \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ratio \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/regex \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/span \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/sstream \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/stack \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/stddef.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/stdexcept \
@@ -11964,6 +12109,7 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string_view \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/system_error \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/thread \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/tuple \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/type_traits \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/typeinfo \
@@ -12128,16 +12274,37 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_rsize_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_size_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_wchar_t.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/emmintrin.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/limits.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mm_malloc.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mmintrin.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/ptrcheck.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdarg.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stddef.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdint.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/xmmintrin.h \
+  /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
+  /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InstalledModules.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/Landed.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
+  /usr/local/include/SFML/Config.hpp \
+  /usr/local/include/SFML/Graphics/Color.hpp \
+  /usr/local/include/SFML/Graphics/Color.inl \
+  /usr/local/include/SFML/System/Angle.hpp \
+  /usr/local/include/SFML/System/Angle.inl \
+  /usr/local/include/SFML/System/Export.hpp \
+  /usr/local/include/SFML/System/Vector2.hpp \
+  /usr/local/include/SFML/System/Vector2.inl \
   /usr/local/include/entt/config/config.h \
   /usr/local/include/entt/config/macro.h \
   /usr/local/include/entt/config/version.h \
@@ -12275,7 +12442,77 @@ CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o: /Users/Dan/Documents/repo
   /usr/local/include/entt/signal/dispatcher.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
   /usr/local/include/entt/signal/fwd.hpp \
-  /usr/local/include/entt/signal/sigh.hpp
+  /usr/local/include/entt/signal/sigh.hpp \
+  /usr/local/include/opentelemetry/common/attribute_value.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable_view.h \
+  /usr/local/include/opentelemetry/common/kv_properties.h \
+  /usr/local/include/opentelemetry/common/macros.h \
+  /usr/local/include/opentelemetry/common/spin_lock_mutex.h \
+  /usr/local/include/opentelemetry/common/string_util.h \
+  /usr/local/include/opentelemetry/common/timestamp.h \
+  /usr/local/include/opentelemetry/context/context.h \
+  /usr/local/include/opentelemetry/context/context_value.h \
+  /usr/local/include/opentelemetry/context/runtime_context.h \
+  /usr/local/include/opentelemetry/detail/preprocessor.h \
+  /usr/local/include/opentelemetry/nostd/detail/decay.h \
+  /usr/local/include/opentelemetry/nostd/detail/invoke.h \
+  /usr/local/include/opentelemetry/nostd/detail/void.h \
+  /usr/local/include/opentelemetry/nostd/function_ref.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/attributes.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/policy_checks.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/port.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/bad_variant_access.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/internal/variant.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/variant.h \
+  /usr/local/include/opentelemetry/nostd/shared_ptr.h \
+  /usr/local/include/opentelemetry/nostd/span.h \
+  /usr/local/include/opentelemetry/nostd/string_view.h \
+  /usr/local/include/opentelemetry/nostd/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/unique_ptr.h \
+  /usr/local/include/opentelemetry/nostd/utility.h \
+  /usr/local/include/opentelemetry/nostd/variant.h \
+  /usr/local/include/opentelemetry/trace/default_span.h \
+  /usr/local/include/opentelemetry/trace/noop.h \
+  /usr/local/include/opentelemetry/trace/provider.h \
+  /usr/local/include/opentelemetry/trace/scope.h \
+  /usr/local/include/opentelemetry/trace/span.h \
+  /usr/local/include/opentelemetry/trace/span_context.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable_view.h \
+  /usr/local/include/opentelemetry/trace/span_id.h \
+  /usr/local/include/opentelemetry/trace/span_metadata.h \
+  /usr/local/include/opentelemetry/trace/span_startoptions.h \
+  /usr/local/include/opentelemetry/trace/trace_flags.h \
+  /usr/local/include/opentelemetry/trace/trace_id.h \
+  /usr/local/include/opentelemetry/trace/trace_state.h \
+  /usr/local/include/opentelemetry/trace/tracer.h \
+  /usr/local/include/opentelemetry/trace/tracer_provider.h \
+  /usr/local/include/opentelemetry/version.h
 
 CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.cpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h \
@@ -12893,6 +13130,12 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/views.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__split_buffer \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__std_mbstate_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/atomic_unique_lock.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_list_view.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_shared_ptr.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_source.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_state.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_token.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/char_traits.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/constexpr_c_functions.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/extern_template_lists.h \
@@ -12901,10 +13144,14 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_condition.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/system_error.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/formatter.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/id.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/jthread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/poll_with_backoff.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/support.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/support/pthread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/this_thread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/thread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/find_index.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/ignore.h \
@@ -13063,6 +13310,7 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__variant/monostate.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__verbose_abort \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/algorithm \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/any \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/array \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/atomic \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/bit \
@@ -13117,6 +13365,7 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/queue \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ranges \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ratio \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/regex \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/span \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/sstream \
@@ -13132,6 +13381,7 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string_view \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/system_error \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/thread \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/tuple \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/type_traits \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/typeinfo \
@@ -13297,13 +13547,18 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_rsize_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_size_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_wchar_t.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/emmintrin.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/float.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/limits.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mm_malloc.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mmintrin.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/ptrcheck.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdarg.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdbool.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stddef.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdint.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/xmmintrin.h \
+  /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
   /Users/Dan/Documents/repos/space-game/src/game/EconomyManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
@@ -13314,14 +13569,13 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/InstalledModules.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/OrbitalComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipConfig.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
@@ -13549,7 +13803,77 @@ CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o: /Users/Dan/Documents/repos/
   /usr/local/include/entt/signal/dispatcher.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
   /usr/local/include/entt/signal/fwd.hpp \
-  /usr/local/include/entt/signal/sigh.hpp
+  /usr/local/include/entt/signal/sigh.hpp \
+  /usr/local/include/opentelemetry/common/attribute_value.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable_view.h \
+  /usr/local/include/opentelemetry/common/kv_properties.h \
+  /usr/local/include/opentelemetry/common/macros.h \
+  /usr/local/include/opentelemetry/common/spin_lock_mutex.h \
+  /usr/local/include/opentelemetry/common/string_util.h \
+  /usr/local/include/opentelemetry/common/timestamp.h \
+  /usr/local/include/opentelemetry/context/context.h \
+  /usr/local/include/opentelemetry/context/context_value.h \
+  /usr/local/include/opentelemetry/context/runtime_context.h \
+  /usr/local/include/opentelemetry/detail/preprocessor.h \
+  /usr/local/include/opentelemetry/nostd/detail/decay.h \
+  /usr/local/include/opentelemetry/nostd/detail/invoke.h \
+  /usr/local/include/opentelemetry/nostd/detail/void.h \
+  /usr/local/include/opentelemetry/nostd/function_ref.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/attributes.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/policy_checks.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/port.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/bad_variant_access.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/internal/variant.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/variant.h \
+  /usr/local/include/opentelemetry/nostd/shared_ptr.h \
+  /usr/local/include/opentelemetry/nostd/span.h \
+  /usr/local/include/opentelemetry/nostd/string_view.h \
+  /usr/local/include/opentelemetry/nostd/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/unique_ptr.h \
+  /usr/local/include/opentelemetry/nostd/utility.h \
+  /usr/local/include/opentelemetry/nostd/variant.h \
+  /usr/local/include/opentelemetry/trace/default_span.h \
+  /usr/local/include/opentelemetry/trace/noop.h \
+  /usr/local/include/opentelemetry/trace/provider.h \
+  /usr/local/include/opentelemetry/trace/scope.h \
+  /usr/local/include/opentelemetry/trace/span.h \
+  /usr/local/include/opentelemetry/trace/span_context.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable_view.h \
+  /usr/local/include/opentelemetry/trace/span_id.h \
+  /usr/local/include/opentelemetry/trace/span_metadata.h \
+  /usr/local/include/opentelemetry/trace/span_startoptions.h \
+  /usr/local/include/opentelemetry/trace/trace_flags.h \
+  /usr/local/include/opentelemetry/trace/trace_id.h \
+  /usr/local/include/opentelemetry/trace/trace_state.h \
+  /usr/local/include/opentelemetry/trace/tracer.h \
+  /usr/local/include/opentelemetry/trace/tracer_provider.h \
+  /usr/local/include/opentelemetry/version.h
 
 CMakeFiles/SpaceGame.dir/src/main.cpp.o: /Users/Dan/Documents/repos/space-game/src/main.cpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h \
@@ -14595,6 +14919,7 @@ CMakeFiles/SpaceGame.dir/src/main.cpp.o: /Users/Dan/Documents/repos/space-game/s
   /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WorldConfig.h \
@@ -15506,6 +15831,12 @@ CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o: /Users/Dan/Documents
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/views.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__split_buffer \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__std_mbstate_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/atomic_unique_lock.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_list_view.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_shared_ptr.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_source.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_state.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_token.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/char_traits.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/constexpr_c_functions.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/extern_template_lists.h \
@@ -15514,10 +15845,14 @@ CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o: /Users/Dan/Documents
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_condition.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/system_error.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/formatter.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/id.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/jthread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/poll_with_backoff.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/support.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/support/pthread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/this_thread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/thread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/find_index.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/ignore.h \
@@ -15676,6 +16011,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o: /Users/Dan/Documents
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__variant/monostate.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__verbose_abort \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/algorithm \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/any \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/array \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/atomic \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/bit \
@@ -15729,6 +16065,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o: /Users/Dan/Documents
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/queue \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ranges \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ratio \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/regex \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/span \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/sstream \
@@ -15744,6 +16081,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o: /Users/Dan/Documents
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string_view \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/system_error \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/thread \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/tuple \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/type_traits \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/typeinfo \
@@ -15909,22 +16247,26 @@ CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o: /Users/Dan/Documents
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_rsize_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_size_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_wchar_t.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/emmintrin.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/float.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/limits.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mm_malloc.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mmintrin.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/ptrcheck.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdarg.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdbool.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stddef.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdint.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/xmmintrin.h \
+  /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
   /Users/Dan/Documents/repos/space-game/src/game/EconomyManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/rendering/LandingScreen.h \
   /usr/local/include/SFML/Config.hpp \
   /usr/local/include/SFML/Graphics.hpp \
@@ -16147,7 +16489,77 @@ CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o: /Users/Dan/Documents
   /usr/local/include/entt/signal/dispatcher.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
   /usr/local/include/entt/signal/fwd.hpp \
-  /usr/local/include/entt/signal/sigh.hpp
+  /usr/local/include/entt/signal/sigh.hpp \
+  /usr/local/include/opentelemetry/common/attribute_value.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable_view.h \
+  /usr/local/include/opentelemetry/common/kv_properties.h \
+  /usr/local/include/opentelemetry/common/macros.h \
+  /usr/local/include/opentelemetry/common/spin_lock_mutex.h \
+  /usr/local/include/opentelemetry/common/string_util.h \
+  /usr/local/include/opentelemetry/common/timestamp.h \
+  /usr/local/include/opentelemetry/context/context.h \
+  /usr/local/include/opentelemetry/context/context_value.h \
+  /usr/local/include/opentelemetry/context/runtime_context.h \
+  /usr/local/include/opentelemetry/detail/preprocessor.h \
+  /usr/local/include/opentelemetry/nostd/detail/decay.h \
+  /usr/local/include/opentelemetry/nostd/detail/invoke.h \
+  /usr/local/include/opentelemetry/nostd/detail/void.h \
+  /usr/local/include/opentelemetry/nostd/function_ref.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/attributes.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/policy_checks.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/port.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/bad_variant_access.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/internal/variant.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/variant.h \
+  /usr/local/include/opentelemetry/nostd/shared_ptr.h \
+  /usr/local/include/opentelemetry/nostd/span.h \
+  /usr/local/include/opentelemetry/nostd/string_view.h \
+  /usr/local/include/opentelemetry/nostd/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/unique_ptr.h \
+  /usr/local/include/opentelemetry/nostd/utility.h \
+  /usr/local/include/opentelemetry/nostd/variant.h \
+  /usr/local/include/opentelemetry/trace/default_span.h \
+  /usr/local/include/opentelemetry/trace/noop.h \
+  /usr/local/include/opentelemetry/trace/provider.h \
+  /usr/local/include/opentelemetry/trace/scope.h \
+  /usr/local/include/opentelemetry/trace/span.h \
+  /usr/local/include/opentelemetry/trace/span_context.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable_view.h \
+  /usr/local/include/opentelemetry/trace/span_id.h \
+  /usr/local/include/opentelemetry/trace/span_metadata.h \
+  /usr/local/include/opentelemetry/trace/span_startoptions.h \
+  /usr/local/include/opentelemetry/trace/trace_flags.h \
+  /usr/local/include/opentelemetry/trace/trace_id.h \
+  /usr/local/include/opentelemetry/trace/trace_state.h \
+  /usr/local/include/opentelemetry/trace/tracer.h \
+  /usr/local/include/opentelemetry/trace/tracer_provider.h \
+  /usr/local/include/opentelemetry/version.h
 
 CMakeFiles/SpaceGame.dir/src/rendering/MainRenderer.cpp.o: /Users/Dan/Documents/repos/space-game/src/rendering/MainRenderer.cpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/Availability.h \
@@ -17829,6 +18241,12 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/views.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__split_buffer \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__std_mbstate_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/atomic_unique_lock.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_list_view.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/intrusive_shared_ptr.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_source.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_state.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__stop_token/stop_token.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/char_traits.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/constexpr_c_functions.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__string/extern_template_lists.h \
@@ -17837,10 +18255,14 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_code.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/error_condition.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__system_error/system_error.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/formatter.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/id.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/jthread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/poll_with_backoff.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/support.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/support/pthread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/this_thread.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__thread/thread.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tree \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/find_index.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/ignore.h \
@@ -17999,6 +18421,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__variant/monostate.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__verbose_abort \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/algorithm \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/any \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/array \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/atomic \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/bit \
@@ -18053,6 +18476,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/queue \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ranges \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/ratio \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/regex \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/set \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/span \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/sstream \
@@ -18068,6 +18492,7 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string_view \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/system_error \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/thread \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/tuple \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/type_traits \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/typeinfo \
@@ -18233,23 +18658,28 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_rsize_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_size_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_wchar_t.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/emmintrin.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/float.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/limits.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mm_malloc.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/mmintrin.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/ptrcheck.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdarg.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdbool.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stddef.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/stdint.h \
+  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/xmmintrin.h \
+  /Users/Dan/Documents/repos/space-game/src/engine/telemetry/Telemetry.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/CelestialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Economy.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NPCComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/NameComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/PlayerComponent.h \
-  /Users/Dan/Documents/repos/space-game/src/game/components/ShipModule.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/SpriteComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/TransformComponent.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/WeaponComponent.h \
@@ -18476,10 +18906,78 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
   /usr/local/include/entt/signal/dispatcher.hpp \
   /usr/local/include/entt/signal/emitter.hpp \
   /usr/local/include/entt/signal/fwd.hpp \
-  /usr/local/include/entt/signal/sigh.hpp
+  /usr/local/include/entt/signal/sigh.hpp \
+  /usr/local/include/opentelemetry/common/attribute_value.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable.h \
+  /usr/local/include/opentelemetry/common/key_value_iterable_view.h \
+  /usr/local/include/opentelemetry/common/kv_properties.h \
+  /usr/local/include/opentelemetry/common/macros.h \
+  /usr/local/include/opentelemetry/common/spin_lock_mutex.h \
+  /usr/local/include/opentelemetry/common/string_util.h \
+  /usr/local/include/opentelemetry/common/timestamp.h \
+  /usr/local/include/opentelemetry/context/context.h \
+  /usr/local/include/opentelemetry/context/context_value.h \
+  /usr/local/include/opentelemetry/context/runtime_context.h \
+  /usr/local/include/opentelemetry/detail/preprocessor.h \
+  /usr/local/include/opentelemetry/nostd/detail/decay.h \
+  /usr/local/include/opentelemetry/nostd/detail/invoke.h \
+  /usr/local/include/opentelemetry/nostd/detail/void.h \
+  /usr/local/include/opentelemetry/nostd/function_ref.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/attributes.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/options.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/policy_checks.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/port.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/macros.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/optimization.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/bad_variant_access.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/internal/variant.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/config.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/identity.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/inline_variable.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/base/internal/invoke.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/meta/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/utility/utility.h \
+  /usr/local/include/opentelemetry/nostd/internal/absl/types/variant.h \
+  /usr/local/include/opentelemetry/nostd/shared_ptr.h \
+  /usr/local/include/opentelemetry/nostd/span.h \
+  /usr/local/include/opentelemetry/nostd/string_view.h \
+  /usr/local/include/opentelemetry/nostd/type_traits.h \
+  /usr/local/include/opentelemetry/nostd/unique_ptr.h \
+  /usr/local/include/opentelemetry/nostd/utility.h \
+  /usr/local/include/opentelemetry/nostd/variant.h \
+  /usr/local/include/opentelemetry/trace/default_span.h \
+  /usr/local/include/opentelemetry/trace/noop.h \
+  /usr/local/include/opentelemetry/trace/provider.h \
+  /usr/local/include/opentelemetry/trace/scope.h \
+  /usr/local/include/opentelemetry/trace/span.h \
+  /usr/local/include/opentelemetry/trace/span_context.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable.h \
+  /usr/local/include/opentelemetry/trace/span_context_kv_iterable_view.h \
+  /usr/local/include/opentelemetry/trace/span_id.h \
+  /usr/local/include/opentelemetry/trace/span_metadata.h \
+  /usr/local/include/opentelemetry/trace/span_startoptions.h \
+  /usr/local/include/opentelemetry/trace/trace_flags.h \
+  /usr/local/include/opentelemetry/trace/trace_id.h \
+  /usr/local/include/opentelemetry/trace/trace_state.h \
+  /usr/local/include/opentelemetry/trace/tracer.h \
+  /usr/local/include/opentelemetry/trace/tracer_provider.h \
+  /usr/local/include/opentelemetry/version.h
 
-
-/Users/Dan/Documents/repos/space-game/src/rendering/MainRenderer.h:
 
 /Users/Dan/Documents/repos/space-game/src/main.cpp:
 
@@ -18487,13 +18985,69 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Users/Dan/Documents/repos/space-game/src/game/WorldLoader.cpp:
 
-/Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.h:
-
 /Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.cpp:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/random:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/numeric:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/execution:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/subtract_with_carry_engine.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/shuffle_order_engine.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/poisson_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/is_seed_sequence.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/independent_bits_engine.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/geometric_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/generate_canonical.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/gamma_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/extreme_value_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/exponential_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/discrete_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/discard_block_engine.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/default_random_engine.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/chi_squared_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/cauchy_distribution.h:
+
+/Users/Dan/Documents/repos/space-game/src/rendering/MainRenderer.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/binomial_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/bernoulli_distribution.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_inclusive_scan.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/saturation_arithmetic.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/pstl.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/midpoint.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/iota.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/inner_product.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/accumulate.h:
 
 /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.cpp:
 
 /Users/Dan/Documents/repos/space-game/src/game/FactionManager.cpp:
+
+/Users/Dan/Documents/repos/space-game/src/game/components/Landed.h:
 
 /Users/Dan/Documents/repos/space-game/src/game/components/HullDef.h:
 
@@ -18501,11 +19055,15 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Users/Dan/Documents/repos/space-game/src/game/components/CargoComponent.h:
 
+/Users/Dan/Documents/repos/space-game/src/game/ShipOutfitter.h:
+
 /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h:
 
 /Users/Dan/Documents/repos/space-game/src/game/EconomyManager.cpp:
 
 /usr/local/include/opentelemetry/sdk/version/version.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/ranlux.h:
 
 /usr/local/include/opentelemetry/sdk/trace/tracer_provider_factory.h:
 
@@ -18569,6 +19127,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /usr/local/include/opentelemetry/nostd/utility.h:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/partial_sum.h:
+
 /usr/local/include/opentelemetry/exporters/otlp/otlp_http_exporter_factory.h:
 
 /usr/local/include/opentelemetry/nostd/string_view.h:
@@ -18625,6 +19185,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /usr/local/include/entt/meta/pointer.hpp:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/linear_congruential_engine.h:
+
 /usr/local/include/entt/meta/fwd.hpp:
 
 /usr/local/include/entt/meta/adl_pointer.hpp:
@@ -18645,6 +19207,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /usr/local/include/entt/entity/entity.hpp:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/seed_seq.h:
+
 /usr/local/include/entt/entity/component.hpp:
 
 /usr/local/include/entt/signal/fwd.hpp:
@@ -18659,13 +19223,19 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /usr/local/include/entt/core/utility.hpp:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/uniform_real_distribution.h:
+
 /usr/local/include/entt/core/tuple.hpp:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/mersenne_twister_engine.h:
 
 /usr/local/include/entt/core/monostate.hpp:
 
 /usr/local/include/entt/core/family.hpp:
 
 /usr/local/include/entt/core/enum.hpp:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_reduce.h:
 
 /usr/local/include/entt/core/algorithm.hpp:
 
@@ -18686,6 +19256,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /usr/local/include/box2d/box2d.h:
 
 /usr/local/include/SFML/Window/WindowHandle.hpp:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/piecewise_linear_distribution.h:
 
 /usr/local/include/SFML/Window/WindowBase.hpp:
 
@@ -18833,6 +19405,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/xlocale/_string.h:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/normal_distribution.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/xlocale/_stdlib.h:
 
 /usr/local/include/opentelemetry/exporters/otlp/otlp_http_exporter_options.h:
@@ -18840,6 +19414,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/xlocale/___wctype.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/xlocale.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/weibull_distribution.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/wctype.h:
 
@@ -18854,6 +19430,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/qos.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/errno.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/inclusive_scan.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h:
 
@@ -18949,6 +19527,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_key_t.h:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/random_device.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_cond_t.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_posix_availability.h:
@@ -18978,6 +19558,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/malloc/_malloc_type.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/machine/endian.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/adjacent_difference.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/mach/machine/_structs.h:
 
@@ -19120,6 +19702,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/bit:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/atomic:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/gcd_lcm.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/algorithm:
 
@@ -19371,6 +19955,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/remove_reference.h:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/piecewise_constant_distribution.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/sfinae_helpers.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__fwd/format.h:
@@ -19533,6 +20119,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__ranges/access.h:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/lognormal_distribution.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/identity.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/uniform_int_distribution.h:
@@ -19596,6 +20184,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /usr/local/include/opentelemetry/common/attribute_value.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__math/remainder.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/negative_binomial_distribution.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__math/inverse_trigonometric_functions.h:
 
@@ -20319,6 +20909,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/swap_ranges.h:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/knuth_b.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/stable_partition.h:
 
 /usr/local/include/opentelemetry/sdk/resource/resource.h:
@@ -20415,6 +21007,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Users/Dan/Documents/repos/space-game/src/rendering/MainRenderer.cpp:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__type_traits/is_execution_policy.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_reverse_copy.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__chrono/local_info.h:
@@ -20440,6 +21034,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__atomic/atomic_lock_free.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/copy_backward.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/reduce.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_swap_ranges.h:
 
@@ -20586,6 +21182,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/ranges_is_sorted.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__concepts/swappable.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/clamp_to_integral.h:
 
 /usr/local/include/opentelemetry/trace/trace_state.h:
 
@@ -20748,6 +21346,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /usr/local/include/opentelemetry/nostd/unique_ptr.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/student_t_distribution.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__format/width_estimation_table.h:
 
@@ -20979,11 +21579,15 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 
 /Users/Dan/Documents/repos/space-game/src/engine/combat/WeaponSystem.cpp:
 
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/transform_exclusive_scan.h:
+
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__tuple/tuple_size.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/find.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__algorithm/none_of.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__numeric/exclusive_scan.h:
 
 /usr/local/include/opentelemetry/nostd/internal/absl/base/attributes.h:
 
@@ -21080,6 +21684,8 @@ CMakeFiles/SpaceGame.dir/src/rendering/RenderSystem.cpp.o: /Users/Dan/Documents/
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__memory/ranges_uninitialized_algorithms.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__atomic/fence.h:
+
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__random/fisher_f_distribution.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/cstddef:
 

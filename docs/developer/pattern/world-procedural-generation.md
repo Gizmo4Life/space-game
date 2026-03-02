@@ -35,6 +35,7 @@ orbit.orbitalPeriod = basePeriod * (1.0f + randFloat());
 - **Distribution** — Polar coordinates produce natural-looking radial scattering.
 - **Name uniqueness** — Combinatorial prefix/suffix tables provide ~100 unique names.
 - **Parameterized ranges** — All generation ranges defined as constants, not magic numbers.
+- **Orbital Position Pre-calculation** — Entities must calculate their initial `TransformComponent` position during generation to ensure correct visibility/spawning before the first `OrbitalSystem` update.
 
 ## Applied In
 - `WorldLoader::generateStarSystem` — Star, planet, and moon placement.

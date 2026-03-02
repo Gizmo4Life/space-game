@@ -30,6 +30,9 @@ public:
 private:
   ShipOutfitter() = default;
 
+  void refreshStats(entt::registry &registry, entt::entity entity,
+                    const HullDef &hull) const;
+
   std::map<uint32_t, FactionHullTable> factionHulls_;
 
   struct DefaultOutfit {

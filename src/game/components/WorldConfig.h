@@ -17,6 +17,8 @@ struct WorldConfig {
   static constexpr float GAS_GIANT_THRESHOLD = 100000.0f;
   static constexpr float PLANET_THRESHOLD = 2000.0f;
   static constexpr float DWARF_PLANET_THRESHOLD = 800.0f;
+
+  static constexpr float STARTING_CREDITS = 1000000.0f;
 };
 
 } // namespace space

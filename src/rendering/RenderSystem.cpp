@@ -4,6 +4,7 @@
 #include "game/components/CelestialBody.h"
 #include "game/components/Economy.h"
 #include "game/components/Faction.h"
+#include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
@@ -22,6 +23,59 @@
 #include <vector>
 
 namespace space {
+
+static sf::Vector2f rotateVector(sf::Vector2f vec, float degrees) {
+  float rad = degrees * 3.14159f / 180.0f;
+  return {vec.x * cos(rad) - vec.y * sin(rad),
+          vec.x * sin(rad) + vec.y * cos(rad)};
+}
+
+static void drawHullComponent(sf::RenderWindow &window, VisualStyle style,
+                              sf::Vector2f pos, float rotation, sf::Color color,
+                              float scale) {
+  if (style == VisualStyle::Triangle) {
+    sf::ConvexShape triangle(3);
+    triangle.setPoint(0, {0, -12 * scale});
+    triangle.setPoint(1, {-10 * scale, 10 * scale});
+    triangle.setPoint(2, {10 * scale, 10 * scale});
+    triangle.setFillColor(color);
+    triangle.setOutlineThickness(1.0f);
+    triangle.setOutlineColor(sf::Color(50, 50, 50));
+    triangle.setPosition(pos);
+    triangle.setRotation(sf::degrees(rotation));
+    window.draw(triangle);
+  } else if (style == VisualStyle::Square) {
+    sf::RectangleShape rect({20 * scale, 20 * scale});
+    rect.setOrigin({10 * scale, 10 * scale});
+    rect.setFillColor(color);
+    rect.setOutlineThickness(1.0f);
+    rect.setOutlineColor(sf::Color(50, 50, 50));
+    rect.setPosition(pos);
+    rect.setRotation(sf::degrees(rotation));
+    window.draw(rect);
+  } else if (style == VisualStyle::Circular) {
+    sf::CircleShape circle(10 * scale);
+    circle.setOrigin({10 * scale, 10 * scale});
+    circle.setFillColor(color);
+    circle.setOutlineThickness(1.0f);
+    circle.setOutlineColor(sf::Color(50, 50, 50));
+    circle.setPosition(pos);
+    circle.setRotation(sf::degrees(rotation));
+    window.draw(circle);
+  } else if (style == VisualStyle::Sleek) {
+    sf::ConvexShape sleek(4);
+    sleek.setPoint(0, {0, -15 * scale});
+    sleek.setPoint(1, {-8 * scale, 5 * scale});
+    sleek.setPoint(2, {0, 10 * scale});
+    sleek.setPoint(3, {8 * scale, 5 * scale});
+    sleek.setFillColor(color);
+    sleek.setOutlineThickness(1.0f);
+    sleek.setOutlineColor(sf::Color(50, 50, 50));
+    sleek.setPosition(pos);
+    sleek.setRotation(sf::degrees(rotation));
+    window.draw(sleek);
+  }
+}
 
 void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                           const sf::Font *font) {
@@ -95,27 +149,76 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
   window.setView(fgView);
   {
     // A. Ships
-    auto shipView = registry.view<InertialBody, SpriteComponent>();
+    auto shipView = registry.view<InertialBody>();
     for (auto entity : shipView) {
       auto &inertial = shipView.get<InertialBody>(entity);
-      auto &spriteComp = shipView.get<SpriteComponent>(entity);
-      if (b2Body_IsValid(inertial.bodyId) && spriteComp.sprite) {
+      if (b2Body_IsValid(inertial.bodyId)) {
         b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
         b2Rot rot = b2Body_GetRotation(inertial.bodyId);
         float angleDegrees = atan2f(rot.s, rot.c) * 180.0f / 3.14159f;
         sf::Vector2f pixelPos(pos.x * WorldConfig::SHIP_SCALE,
                               pos.y * WorldConfig::SHIP_SCALE);
 
-        spriteComp.sprite->setPosition(pixelPos);
-        spriteComp.sprite->setRotation(sf::degrees(angleDegrees));
-        window.draw(*spriteComp.sprite);
+        if (registry.all_of<HullDef>(entity)) {
+          auto &hull = registry.get<HullDef>(entity);
+          sf::Color shipColor = sf::Color(140, 140, 160);
+          if (registry.all_of<Faction>(entity)) {
+            auto &f = registry.get<Faction>(entity);
+            shipColor = FactionManager::instance()
+                            .getFaction(f.getMajorityFaction())
+                            .color;
+          }
+
+          // 1. Draw Outriggers (Connections)
+          auto drawOutriggers = [&](const std::vector<MountSlot> &slots) {
+            for (const auto &slot : slots) {
+              if (slot.localPos.x == 0 && slot.localPos.y == 0)
+                continue;
+              sf::Vector2f startPos = pixelPos;
+              sf::Vector2f endPos =
+                  pixelPos + rotateVector(slot.localPos * 12.0f, angleDegrees);
+              sf::Vertex line[] = {sf::Vertex(startPos, sf::Color(80, 80, 80)),
+                                   sf::Vertex(endPos, sf::Color(80, 80, 80))};
+              window.draw(line, 2, sf::PrimitiveType::Lines);
+            }
+          };
+          drawOutriggers(hull.engineSlots);
+          drawOutriggers(hull.hardpointSlots);
+
+          // 2. Draw Main Body
+          drawHullComponent(window, hull.bodyStyle, pixelPos, angleDegrees,
+                            shipColor, 1.0f);
+
+          // 3. Draw Engine Nacelles
+          for (const auto &slot : hull.engineSlots) {
+            sf::Vector2f offset =
+                rotateVector(slot.localPos * 12.0f, angleDegrees);
+            drawHullComponent(window, slot.style, pixelPos + offset,
+                              angleDegrees, shipColor, 0.7f);
+          }
+
+          // 4. Draw Weapons/Hardpoints
+          for (const auto &slot : hull.hardpointSlots) {
+            sf::Vector2f offset =
+                rotateVector(slot.localPos * 12.0f, angleDegrees);
+            drawHullComponent(window, slot.style, pixelPos + offset,
+                              angleDegrees, shipColor, 0.5f);
+          }
+        } else if (registry.all_of<SpriteComponent>(entity)) {
+          auto &spriteComp = registry.get<SpriteComponent>(entity);
+          if (spriteComp.sprite) {
+            spriteComp.sprite->setPosition(pixelPos);
+            spriteComp.sprite->setRotation(sf::degrees(angleDegrees));
+            window.draw(*spriteComp.sprite);
+          }
+        }
 
         // Draw Player Label
         if (font && registry.all_of<NameComponent>(entity)) {
           sf::Text text(*font, registry.get<NameComponent>(entity).name, 14);
           text.setFillColor(sf::Color::White);
           text.setOrigin({text.getLocalBounds().size.x / 2.0f, 0.0f});
-          text.setPosition({pixelPos.x, pixelPos.y + 25.0f});
+          text.setPosition({pixelPos.x, pixelPos.y + 35.0f});
           window.draw(text);
         }
       }

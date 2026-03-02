@@ -6,6 +6,7 @@
 namespace space {
 
 using ModuleId = uint16_t;
+const ModuleId EMPTY_MODULE = 0xFFFF;
 
 struct ModuleDef {
   std::string name;
