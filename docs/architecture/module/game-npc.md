@@ -24,13 +24,12 @@ NPC ship spawning, faction-weighted vessel selection, AI state-machine execution
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `NPCShipManager::instance()`
 - [npc-ai-state-machine](/docs/developer/pattern/npc-ai-state-machine.md) (P) — belief/state machine, timer-gated decisions
 - [npc-fleet-leader-boids](/docs/developer/pattern/npc-fleet-leader-boids.md) (P) — player fleet follow with weighted boids + aggressive catch-up
-- [mission-performance-feedback-loop](/docs/developer/pattern/mission-performance-feedback-loop.md) (P) — `NPCShipManager` records kills/losses in `MissionStats`, providing the fitness metric for `FactionBrain` to trigger DNA drift.
+- [mission-performance-feedback-loop](/docs/developer/pattern/mission-performance-feedback-loop.md) (P) — `NPCShipManager` records kills/losses in `MissionStats`, providing the fitness metric for `EconomyManager` to trigger DNA drift.
 - [ship-modular-composition](/docs/developer/pattern/ship-modular-composition.md) (P) — Spawning logic uses hulls and modular outfits
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 
 ## 4. Telemetry & Observability
 - `game.npc.ai.tick` — attributes: `npc.active_count`
 - `game.npc.spawn` — attributes: `npc.faction_id`
-- **Observability Gap:** Combat death registry lacks specific module-loss traces (only outfit hash level).
-- **Observability Gap:** No telemetry for "AI re-evaluation" ticks in `FactionBrain`.
-- **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger
+- `game.core.ship.outfit` — attributes: `vessel.outfit_hash`, `vessel.module.*`
+- **Status:** ✅ Fully instrumented via `opentelemetry-cpp`

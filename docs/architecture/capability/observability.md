@@ -26,3 +26,7 @@ Provide unified, distributed tracing and metrics across the engine and game simu
 | `Tracer` | Central entry point for span creation. |
 | `Span` | Represents a single logical unit of work. |
 | `Metric` | Aggregate value representing system state (e.g., framerate). |
+| `Baggage` | Key-value pairs propagated across spans for context. |
+
+## 5. Known Gaps
+- **None Identified**: Core economic, genetic, and outfitting telemetry is fully instrumented as of Phase 9.

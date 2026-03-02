@@ -32,6 +32,6 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 ## 4. Telemetry & Observability
 - `game.economy.tick` — attributes: `economy.planet_count`
 - `game.economy.trade.transaction` — attributes: `economy.credits_transferred`
-- **Observability Gap:** Missing telemetry spans for `tryExpandInfrastructure` events.
-- **Observability Gap:** No per-faction industrial "surplus/deficit" metrics; only aggregate stockpiles.
-- **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger
+- `game.economy.factory.build` — attributes: `economy.product_type`, `economy.product_id`, `economy.cost_credits`
+- `game.economy.stockpile.delta` — attributes: `faction.id`, `product.id`, `stockpile.delta`
+- **Status:** ✅ Fully instrumented via `opentelemetry-cpp`

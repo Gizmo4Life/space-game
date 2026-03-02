@@ -12,9 +12,6 @@
 #include <opentelemetry/trace/provider.h>
 #include <random>
 
-// TODO: Implement deeper DNA axes for political traits (e.g., Xenophobia vs.
-// Cooperation).
-// TODO: Refine the fuzzy logic for faction alliances based on DNA alignment.
 // Observability Gap: DNA drift events are not recorded in mission history or
 // telemetry.
 
@@ -32,6 +29,7 @@ void FactionManager::init() {
   civ.dna.aggression = 0.05f;
   civ.dna.industrialism = 0.3f;
   civ.dna.commercialism = 0.8f;
+  civ.dna.cooperation = 0.9f; // High cooperation for civilians
   for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
     TierDNA &tdna = civ.dna.tierDNA[t];
     tdna.fleetScale = (t == Tier::T1) ? 0.8f : 0.2f;
@@ -48,6 +46,7 @@ void FactionManager::init() {
   player.name = "Player";
   player.color = sf::Color::Cyan;
   player.dna.aggression = 0.5f;
+  player.dna.cooperation = 0.5f;
   for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
     player.dna.tierDNA[t] = TierDNA(); // Default 0.5 balanced
   }
@@ -66,6 +65,7 @@ void FactionManager::init() {
     data.dna.aggression = (rand() % 100) * 0.01f;
     data.dna.industrialism = (rand() % 100) * 0.01f;
     data.dna.commercialism = (rand() % 100) * 0.01f;
+    data.dna.cooperation = (rand() % 100) * 0.01f;
 
     data.dna.visual.layoutPattern = rand() % 4;
     data.dna.visual.nacelleStyle = rand() % 4;
@@ -95,24 +95,32 @@ void FactionManager::init() {
     }
   }
 
-  // Initialize relationships: most neutral, some allies, some rivals
-  for (auto const &[idA, _] : factions) {
-    for (auto const &[idB, __] : factions) {
+  // Initialize relationships: alignment-based fuzzy logic
+  for (auto const &[idA, dataA] : factions) {
+    for (auto const &[idB, dataB] : factions) {
       if (idA >= idB)
         continue;
 
-      float rel = 0.0f;
-      int roll = rand() % 100;
-      if (roll < 5)
-        rel = 1.0f; // 5% chance of being total Allies
-      else if (roll < 10)
-        rel = -1.0f; // 5% chance of being Mortal Enemies
-      else if (roll < 20)
-        rel = -0.5f; // 10% chance of being Rivals
-      else if (roll < 30)
-        rel = 0.5f; // 10% chance of being Friendly
+      // Calculate alignment: similar DNA = better starting relationship
+      float aggDiff = std::abs(dataA.dna.aggression - dataB.dna.aggression);
+      float indDiff =
+          std::abs(dataA.dna.industrialism - dataB.dna.industrialism);
+      float comDiff =
+          std::abs(dataA.dna.commercialism - dataB.dna.commercialism);
+      float coopDiff = std::abs(dataA.dna.cooperation - dataB.dna.cooperation);
 
-      relationships[{idA, idB}] = rel;
+      float avgDiff = (aggDiff + indDiff + comDiff + coopDiff) / 4.0f;
+      float alignment = 1.0f - avgDiff;
+
+      // Cooperation scales how much alignment matters
+      float baseRel = (alignment - 0.5f) * 2.0f; // -1.0 to 1.0
+      float multiplier = (dataA.dna.cooperation + dataB.dna.cooperation) * 0.5f;
+      float startRel = baseRel * multiplier;
+
+      // Clamp and set
+      startRel = std::max(-1.0f, std::min(1.0f, startRel));
+      relationships[{idA, idB}] = startRel;
+      relationships[{idB, idA}] = startRel;
     }
   }
 }

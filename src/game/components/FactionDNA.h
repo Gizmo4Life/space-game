@@ -28,6 +28,7 @@ struct FactionDNA {
   float aggression = 0.5f;    // 0: Pacifist, 1: Aggressive
   float industrialism = 0.5f; // 0: Build Ships, 1: Build Factories
   float commercialism = 0.5f; // 0: Internal Supply, 1: Profit Trade
+  float cooperation = 0.5f;   // 0: Xenophobic/Isolated, 1: Diplomatic/Allies
 
   // Per-Tier Design (T1, T2, T3)
   std::map<Tier, TierDNA> tierDNA;

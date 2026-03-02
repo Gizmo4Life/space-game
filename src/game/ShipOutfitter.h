@@ -32,6 +32,10 @@ public:
 
   float calculateShipValue(entt::registry &registry, entt::entity entity) const;
 
+  // Persistent Storage Hooks
+  void saveProceduralHulls() const;
+  void loadProceduralHulls();
+
 private:
   ShipOutfitter() = default;
 

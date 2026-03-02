@@ -19,12 +19,13 @@ Procedural faction generation, bilateral relationship tracking, and per-faction 
 
 ## 3. Pattern Composition
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `Faction` component
-- [faction-dna-genetic-profile](/docs/developer/pattern/faction-dna-genetic-profile.md) (P) — Multi-axis strategic DNA (Aggressive, Industrial, Commercial)
+- [faction-dna-genetic-profile](/docs/developer/pattern/faction-dna-genetic-profile.md) (P) — Multi-axis strategic DNA (Aggressive, Industrial, Commercial, Cooperative)
 - [procedural-hull-generation](/docs/developer/pattern/procedural-hull-generation.md) (P) — Role-based HullDef construction (Combat, Cargo, General)
-- [evolutionary-strategy-drift](/docs/developer/pattern/evolutionary-strategy-drift.md) (P) — K/D-ratio driven DNA mutation in `FactionManager`
+- [evolutionary-strategy-drift](/docs/developer/pattern/evolutionary-strategy-drift.md) (P) — K/D-ratio driven DNA mutation in `EconomyManager`
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `FactionManager::instance()`
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 
 ## 4. Telemetry & Observability
 - `game.factions.credit.accumulate` — attributes: `faction.total_credits`, `faction.count`
-- **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger
+- `game.faction.dna.drift` — attributes: `faction.id`, `faction.dna.axis`, `faction.performance.ratio`
+- **Status:** ✅ Fully instrumented via `opentelemetry-cpp`

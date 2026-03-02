@@ -23,11 +23,7 @@
 #include "game/components/ShipModule.h"
 #include "game/components/TransformComponent.h"
 
-// TODO: Implement persistent storage for procedurally generated hulls to avoid
-// regeneration on reload.
-// TODO: Add more variety to factory construction costs based on planet type or
-// faction tier. Observability Gap: No telemetry spans for factory construction
-// events. Observability Gap: Stockpile levels are only aggregate; per-faction
+// Observability Gap: Stockpile levels are only aggregate; per-faction
 // surplus/deficit metrics missing.
 
 namespace space {
@@ -96,39 +92,30 @@ void EconomyManager::init() {
   productionPriority.insert(productionPriority.begin(), resPriority.begin(),
                             resPriority.end());
 
-  // Hull Production
-  // T1 Sparrow: 5 Metals, 5 Plastics, 1 Engine T1
-  ProductKey t1Hull{ProductType::Hull, 0, Tier::T1};
-  Recipe t1r;
-  t1r.inputs[resKey(Resource::Metals)] = 5.0f;
-  t1r.inputs[resKey(Resource::Plastics)] = 5.0f;
-  t1r.inputs[ProductKey{ProductType::Module, 0, Tier::T1}] = 1.0f;
-  t1r.laborRequired = 2.0f;
-  t1r.baseOutputRate = 0.05f;
-  recipes[t1Hull] = t1r;
-  productionPriority.push_back(t1Hull);
+  // Hull Production: Generic T1-T3 Recipes
+  for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
+    ProductKey hullKey{ProductType::Hull, 0, t};
+    Recipe hr;
 
-  // T2 Falcon: 15 Metals, 15 Plastics, 2 Engines T2
-  ProductKey t2Hull{ProductType::Hull, 0, Tier::T2};
-  Recipe t2r;
-  t2r.inputs[resKey(Resource::Metals)] = 15.0f;
-  t2r.inputs[resKey(Resource::Plastics)] = 15.0f;
-  t2r.inputs[ProductKey{ProductType::Module, 1, Tier::T2}] = 2.0f;
-  t2r.laborRequired = 5.0f;
-  t2r.baseOutputRate = 0.02f;
-  recipes[t2Hull] = t2r;
-  productionPriority.push_back(t2Hull);
+    auto metalKey = resKey(Resource::Metals);
+    auto plasticKey = resKey(Resource::Plastics);
 
-  // T3 Eagle: 40 Metals, 40 Plastics, 4 Engines T3
-  ProductKey t3Hull{ProductType::Hull, 0, Tier::T3};
-  Recipe t3r;
-  t3r.inputs[resKey(Resource::Metals)] = 40.0f;
-  t3r.inputs[resKey(Resource::Plastics)] = 40.0f;
-  t3r.inputs[ProductKey{ProductType::Module, 2, Tier::T3}] = 4.0f;
-  t3r.laborRequired = 15.0f;
-  t3r.baseOutputRate = 0.005f;
-  recipes[t3Hull] = t3r;
-  productionPriority.push_back(t3Hull);
+    float resourceScale =
+        (t == Tier::T1) ? 5.0f : (t == Tier::T2 ? 15.0f : 40.0f);
+    hr.inputs[metalKey] = resourceScale;
+    hr.inputs[plasticKey] = resourceScale;
+
+    uint32_t engineId = (t == Tier::T1) ? 0 : (t == Tier::T2 ? 1 : 2);
+    hr.inputs[ProductKey{ProductType::Module, engineId, t}] =
+        (t == Tier::T1) ? 1.0f : (t == Tier::T2 ? 2.0f : 4.0f);
+
+    hr.laborRequired = resourceScale * 0.4f;
+    hr.baseOutputRate =
+        (t == Tier::T1) ? 0.05f : (t == Tier::T2 ? 0.02f : 0.005f);
+
+    recipes[hullKey] = hr;
+    productionPriority.push_back(hullKey);
+  }
 }
 
 void EconomyManager::update(entt::registry &registry, float deltaTime) {
@@ -138,8 +125,10 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
 
   for (auto entity : view) {
     auto &eco = view.get<PlanetEconomy>(entity);
-    for (auto &[factionId, fEco] : eco.factionData)
+    for (auto &[factionId, fEco] : eco.factionData) {
       processProduction(fEco, deltaTime);
+      reEvaluateFactionDNA(fEco, deltaTime);
+    }
 
     eco.marketStockpile.clear();
     for (auto const &[fId, fEco] : eco.factionData) {
@@ -185,6 +174,19 @@ void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
 
     float finalOutput = potentialOutput * std::min(inputScale, laborScale);
     if (finalOutput > 0) {
+      // Telemetry: Instrument stockpile delta
+      auto deltaSpan = space::Telemetry::instance().tracer()->StartSpan(
+          "game.economy.stockpile.delta");
+      deltaSpan->SetAttribute("economy.faction_id",
+                              static_cast<int>(fEco.factionId));
+      deltaSpan->SetAttribute("economy.product_type",
+                              static_cast<int>(product.type));
+      deltaSpan->SetAttribute("economy.product_id",
+                              static_cast<int>(product.id));
+      deltaSpan->SetAttribute("economy.product_tier",
+                              static_cast<int>(product.tier));
+      deltaSpan->SetAttribute("economy.delta", finalOutput);
+
       for (const auto &[input, req] : recipe.inputs)
         fEco.stockpile[input] -= req * finalOutput;
 
@@ -206,6 +208,7 @@ void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
       }
 
       availableLabor -= finalOutput * recipe.laborRequired;
+      deltaSpan->End();
     }
   }
 }
@@ -216,16 +219,26 @@ void EconomyManager::tryExpandInfrastructure(FactionEconomy &fEco,
   if (rand() % 100 != 0)
     return;
 
-  float constructionCost = 5000.0f;
-  float goodsRequired = 50.0f;
   ProductKey mgKey = {ProductType::Resource,
                       static_cast<uint32_t>(Resource::ManufacturingGoods)};
 
-  if (fEco.credits < constructionCost || fEco.stockpile[mgKey] < goodsRequired)
-    return;
-
   for (const auto &pk : productionPriority) {
     if (fEco.factories.count(pk) > 0)
+      continue;
+
+    // Variety: Scale costs based on Tier and Faction Industrialism
+    float tierMult = (pk.tier == Tier::T1)   ? 1.0f
+                     : (pk.tier == Tier::T2) ? 4.0f
+                                             : 12.0f;
+    float constructionCost = 5000.0f * tierMult;
+    float goodsRequired = 50.0f * tierMult;
+
+    // Industrial factions are more efficient at building
+    constructionCost *= (1.2f - fEco.dna.industrialism * 0.4f);
+    goodsRequired *= (1.2f - fEco.dna.industrialism * 0.4f);
+
+    if (fEco.credits < constructionCost ||
+        fEco.stockpile[mgKey] < goodsRequired)
       continue;
 
     // "Need" check: Is an input for an existing factory missing?
@@ -254,18 +267,34 @@ void EconomyManager::tryExpandInfrastructure(FactionEconomy &fEco,
         alignment = fEco.dna.commercialism;
       else
         alignment = fEco.dna.industrialism; // Base resources
+    } else if (pk.type == ProductType::Hull) {
+      // Aggression and Industrialism drive shipbuilding capacity
+      alignment = std::max(fEco.dna.aggression, fEco.dna.industrialism);
     }
 
     // Weighted roll for expansion: needed items get a massive boost
     float chance = (alignment * 0.2f) + (needed ? 0.8f : 0.0f);
     if ((static_cast<float>(rand() % 100) / 100.0f) < chance) {
+      // Telemetry: Instrument factory construction
+      auto span = space::Telemetry::instance().tracer()->StartSpan(
+          "game.economy.factory.build");
+      span->SetAttribute("economy.product_type", static_cast<int>(pk.type));
+      span->SetAttribute("economy.product_id", static_cast<int>(pk.id));
+      span->SetAttribute("economy.product_tier", static_cast<int>(pk.tier));
+      span->SetAttribute("economy.cost_credits", constructionCost);
+      span->SetAttribute("economy.cost_goods", goodsRequired);
+
       fEco.factories[pk] = 1;
       fEco.credits -= constructionCost;
       fEco.stockpile[mgKey] -= goodsRequired;
-      std::cout << "[Economy] Faction built NEW FACTORY for "
+
+      std::cout << "[Economy] Faction built NEW T" << static_cast<int>(pk.tier)
+                << " FACTORY for "
                 << (pk.type == ProductType::Module ? "Module " : "Resource ")
                 << pk.id << " (Cost: " << constructionCost << " credits + "
                 << goodsRequired << " Mfg Goods)\n";
+
+      span->End();
       return;
     }
   }
@@ -273,7 +302,13 @@ void EconomyManager::tryExpandInfrastructure(FactionEconomy &fEco,
 
 float EconomyManager::calculatePrice(ProductKey pk, float currentStock,
                                      float population, bool isAtWar) {
-  float base = (pk.type == ProductType::Resource) ? 10.0f : 200.0f;
+  float base = 10.0f;
+  if (pk.type == ProductType::Resource)
+    base = 10.0f;
+  else if (pk.type == ProductType::Module)
+    base = 200.0f;
+  else if (pk.type == ProductType::Hull)
+    base = 2500.0f; // Hulls are significantly more expensive
   if (currentStock < population * 0.05f)
     base *= 2.5f;
   if (currentStock > population * 0.5f)
@@ -327,8 +362,9 @@ std::map<Tier, float> EconomyManager::getHullBids(entt::registry &registry,
     for (auto const &[key, count] : fEco.fleetPool) {
       if (count > 0) {
         Tier tier = key.first;
-        // Hull price logic (simplified)
-        float price = 1000.0f * static_cast<float>(tier);
+        ProductKey pk{ProductType::Hull, 0, tier};
+        float price = calculatePrice(pk, eco.marketStockpile[pk],
+                                     eco.getTotalPopulation(), false);
         bids[tier] = std::min(bids.count(tier) ? bids[tier] : price, price);
       }
     }
@@ -346,7 +382,9 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
     // Look for any ship of this tier
     for (auto const &[key, count] : fEco.fleetPool) {
       if (key.first == sizeTier && count > 0) {
-        float price = 1000.0f * static_cast<float>(sizeTier);
+        ProductKey pk{ProductType::Hull, 0, sizeTier};
+        float price = calculatePrice(pk, eco.marketStockpile[pk],
+                                     eco.getTotalPopulation(), false);
         if (registry.get<CreditsComponent>(player).amount >= price) {
           registry.get<CreditsComponent>(player).amount -= price;
           fEco.fleetPool[key]--;
@@ -378,6 +416,62 @@ bool EconomyManager::buyModularShip(entt::registry &registry,
 
   std::cout << "[Economy] modular ship PURCHASED for " << price << "\n";
   return true;
+}
+
+void EconomyManager::reEvaluateFactionDNA(FactionEconomy &fEco,
+                                          float deltaTime) {
+  // Drift check: Rare event (every ~10,000 simulated ticks)
+  if (rand() % 10000 != 0)
+    return;
+
+  auto &dna = fEco.dna;
+  auto &stats = fEco.stats;
+
+  // Calculate Value K/D ratio
+  float totalLost = stats.totalValueLost;
+  float totalKilled = stats.totalValueKilled;
+  float ratio = (totalLost > 0) ? (totalKilled / totalLost) : 2.0f;
+
+  float driftAmount = 0.05f;
+  std::string axis = "";
+  float oldValue = 0.0f;
+  float newValue = 0.0f;
+
+  if (ratio < 0.8f) {
+    // High losses: Shift towards Industrialism or Commercialism
+    if (rand() % 2 == 0) {
+      axis = "industrialism";
+      oldValue = dna.industrialism;
+      dna.industrialism = std::min(1.0f, dna.industrialism + driftAmount);
+      newValue = dna.industrialism;
+    } else {
+      axis = "commercialism";
+      oldValue = dna.commercialism;
+      dna.commercialism = std::min(1.0f, dna.commercialism + driftAmount);
+      newValue = dna.commercialism;
+    }
+  } else if (ratio > 1.5f) {
+    // High success: Increase Aggression
+    axis = "aggression";
+    oldValue = dna.aggression;
+    dna.aggression = std::min(1.0f, dna.aggression + driftAmount);
+    newValue = dna.aggression;
+  }
+
+  if (!axis.empty() && oldValue != newValue) {
+    auto span = space::Telemetry::instance().tracer()->StartSpan(
+        "game.faction.dna.drift");
+    span->SetAttribute("faction.id", static_cast<int>(fEco.factionId));
+    span->SetAttribute("faction.dna.axis", axis);
+    span->SetAttribute("faction.dna.old_value", oldValue);
+    span->SetAttribute("faction.dna.new_value", newValue);
+    span->SetAttribute("faction.performance.ratio", ratio);
+
+    std::cout << "[Economy] DNA DRIFT for Faction " << fEco.factionId << ": "
+              << axis << " " << oldValue << " -> " << newValue
+              << " (Ratio: " << ratio << ")\n";
+    span->End();
+  }
 }
 
 } // namespace space

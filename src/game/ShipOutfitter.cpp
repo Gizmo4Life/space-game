@@ -1,15 +1,11 @@
 #include "game/ShipOutfitter.h"
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <random>
-
-// TODO: Implement hull-specific module exclusions (e.g., no heavy weapons on
-// light hulls).
-// TODO: Support dynamic module tiering based on Faction TierDNA.
-// Observability Gap: Outfit hash calculation is not instrumented; hard to track
-// configuration popularity.
+#include <tuple>
 #include <type_traits>
 #include <vector>
 
@@ -174,62 +170,116 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
   const HullDef &hull = getHull(factionId, sizeTier, role);
   const auto &fData = FactionManager::instance().getFaction(factionId);
   const FactionDNA &dna = fData.dna;
+  const TierDNA &tdna = dna.tierDNA.at(sizeTier);
+
+  // Helper: Find best module based on DNA and constraints
+  auto findBestModule = [&](AttributeType attr, Tier maxTier,
+                            bool prioritized) -> uint32_t {
+    const auto &modReg = ModuleRegistry::instance().getModules();
+    uint32_t bestIdx = EMPTY_MODULE;
+    Tier bestTier = Tier::T1;
+
+    for (size_t i = 0; i < modReg.size(); ++i) {
+      if (!modReg[i].hasAttribute(attr))
+        continue;
+
+      Tier mSize = modReg[i].getAttributeTier(AttributeType::Size);
+      if (mSize > maxTier)
+        continue;
+
+      // Match highest tier possible for the slot
+      if (bestIdx == EMPTY_MODULE || mSize > bestTier) {
+        bestIdx = static_cast<uint32_t>(i);
+        bestTier = mSize;
+      }
+    }
+    return bestIdx;
+  };
 
   // 1. Engines
   InstalledEngines ie;
   ie.ids.assign(hull.engineSlots.size(), EMPTY_MODULE);
-  auto findModule = [&](AttributeType attr, Tier t) -> uint32_t {
-    const auto &modReg = ModuleRegistry::instance().getModules();
-    for (size_t i = 0; i < modReg.size(); ++i) {
-      if (modReg[i].hasAttribute(attr) &&
-          modReg[i].getAttributeTier(AttributeType::Size) == t)
-        return static_cast<uint32_t>(i);
-    }
-    return EMPTY_MODULE;
-  };
-
   for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
-    ie.ids[i] = findModule(AttributeType::Thrust, hull.engineSlots[i].size);
+    ie.ids[i] =
+        findBestModule(AttributeType::Thrust, hull.engineSlots[i].size, true);
   }
   registry.emplace_or_replace<InstalledEngines>(entity, ie);
 
-  // 2. Weapons
+  // 2. Weapons - Apply exclusions for non-combat roles
   InstalledWeapons iw;
   iw.ids.assign(hull.hardpointSlots.size(), EMPTY_MODULE);
-  if (role != "Cargo" && role != "Freight") {
+  bool canHaveWeapons =
+      (role != "Cargo" && role != "Freight") || dna.aggression > 0.7f;
+  if (canHaveWeapons) {
     for (size_t i = 0; i < hull.hardpointSlots.size(); ++i) {
-      iw.ids[i] =
-          findModule(AttributeType::Caliber, hull.hardpointSlots[i].size);
+      // Light hulls (T1) cannot have T3 weapons even if slot allows
+      Tier maxWeaponTier = hull.hardpointSlots[i].size;
+      if (sizeTier == Tier::T1 && maxWeaponTier > Tier::T2)
+        maxWeaponTier = Tier::T2;
+
+      iw.ids[i] = findBestModule(AttributeType::Caliber, maxWeaponTier,
+                                 role == "Combat");
     }
   }
   registry.emplace_or_replace<InstalledWeapons>(entity, iw);
 
-  // 3. Utility - Dynamic slot count based on internalVolume
+  // 3. Utility - Dynamic slot count based on internalVolume and TierDNA
   int slotCount = std::max(1, static_cast<int>(hull.internalVolume / 100.0f));
 
   InstalledShields is;
-  if (dna.aggression > 0.2f || role == "Combat")
-    is.ids.assign(std::max(1, slotCount / 3),
-                  findModule(AttributeType::Capacity, sizeTier));
+  bool wantShields =
+      dna.aggression > 0.2f || role == "Combat" || tdna.prefDurability > 0.6f;
+  if (wantShields) {
+    int shieldSlots = std::max(
+        1, static_cast<int>(slotCount * (0.2f + tdna.prefDurability * 0.4f)));
+    is.ids.assign(shieldSlots,
+                  findBestModule(AttributeType::Capacity, sizeTier, true));
+  }
   registry.emplace_or_replace<InstalledShields>(entity, is);
 
   InstalledCargo ic;
-  if (dna.commercialism > 0.4f || role == "Cargo" || role == "Freight") {
-    int cargoSlots = (role == "Cargo" || role == "Freight")
-                         ? (slotCount * 2 / 3)
-                         : (slotCount / 3);
-    ic.ids.assign(std::max(1, cargoSlots),
-                  findModule(AttributeType::Volume, sizeTier));
+  bool wantCargo = dna.commercialism > 0.4f || role == "Cargo" ||
+                   role == "Freight" || tdna.prefVolume > 0.6f;
+  if (wantCargo) {
+    int baseCargo = (role == "Cargo" || role == "Freight") ? (slotCount / 2)
+                                                           : (slotCount / 4);
+    int cargoSlots =
+        std::max(1, static_cast<int>(baseCargo * (0.5f + tdna.prefVolume)));
+    ic.ids.assign(cargoSlots,
+                  findBestModule(AttributeType::Volume, sizeTier, true));
   }
   registry.emplace_or_replace<InstalledCargo>(entity, ic);
 
   InstalledPower ip;
   ip.ids.assign(std::max(1, slotCount / 3),
-                findModule(AttributeType::Output, sizeTier));
+                findBestModule(AttributeType::Output, sizeTier, true));
   registry.emplace_or_replace<InstalledPower>(entity, ip);
 
   registry.emplace_or_replace<HullDef>(entity, hull);
   refreshStats(registry, entity, hull);
+
+  // Instrumentation: Capture config popularity
+  ShipOutfitHash oh = calculateOutfitHash(registry, entity);
+  span->SetAttribute("vessel.outfit_hash", std::to_string(oh));
+  span->SetAttribute("vessel.role", role);
+  span->SetAttribute("vessel.specialization", tdna.specialization);
+
+  // Granular module metadata
+  auto addModuleAttributes = [&](const std::string &prefix,
+                                 const std::vector<uint32_t> &ids) {
+    for (size_t i = 0; i < ids.size(); ++i) {
+      if (ids[i] != EMPTY_MODULE) {
+        span->SetAttribute("vessel.module." + prefix + "." + std::to_string(i),
+                           static_cast<int>(ids[i]));
+      }
+    }
+  };
+  addModuleAttributes("engine", ie.ids);
+  addModuleAttributes("weapon", iw.ids);
+  addModuleAttributes("shield", is.ids);
+  addModuleAttributes("cargo", ic.ids);
+  addModuleAttributes("power", ip.ids);
+
   span->End();
 }
 
@@ -487,6 +537,137 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   }
 
   registry.emplace_or_replace<ShipStats>(entity, stats);
+}
+
+void ShipOutfitter::saveProceduralHulls() const {
+  std::ofstream ofs("procedural_hulls.dat", std::ios::binary);
+  if (!ofs)
+    return;
+
+  uint32_t count = static_cast<uint32_t>(proceduralHulls_.size());
+  ofs.write(reinterpret_cast<const char *>(&count), sizeof(count));
+
+  for (auto const &[key, hull] : proceduralHulls_) {
+    // Key: tuple<uint32_t, Tier, string>
+    uint32_t fId = std::get<0>(key);
+    Tier tier = std::get<1>(key);
+    const std::string &role = std::get<2>(key);
+
+    ofs.write(reinterpret_cast<const char *>(&fId), sizeof(fId));
+    ofs.write(reinterpret_cast<const char *>(&tier), sizeof(tier));
+    uint32_t roleLen = static_cast<uint32_t>(role.size());
+    ofs.write(reinterpret_cast<const char *>(&roleLen), sizeof(roleLen));
+    ofs.write(role.data(), roleLen);
+
+    // HullDef
+    auto saveSlots = [&](const std::vector<MountSlot> &slots) {
+      uint32_t sCount = static_cast<uint32_t>(slots.size());
+      ofs.write(reinterpret_cast<const char *>(&sCount), sizeof(sCount));
+      for (const auto &s : slots) {
+        ofs.write(reinterpret_cast<const char *>(&s.id), sizeof(s.id));
+        ofs.write(reinterpret_cast<const char *>(&s.size), sizeof(s.size));
+        ofs.write(reinterpret_cast<const char *>(&s.localPos.x),
+                  sizeof(s.localPos.x));
+        ofs.write(reinterpret_cast<const char *>(&s.localPos.y),
+                  sizeof(s.localPos.y));
+        ofs.write(reinterpret_cast<const char *>(&s.style), sizeof(s.style));
+      }
+    };
+
+    saveSlots(hull.engineSlots);
+    saveSlots(hull.hardpointSlots);
+
+    auto saveString = [&](const std::string &s) {
+      uint32_t len = static_cast<uint32_t>(s.size());
+      ofs.write(reinterpret_cast<const char *>(&len), sizeof(len));
+      ofs.write(s.data(), len);
+    };
+
+    saveString(hull.name);
+    saveString(hull.className);
+    ofs.write(reinterpret_cast<const char *>(&hull.sizeTier),
+              sizeof(hull.sizeTier));
+    ofs.write(reinterpret_cast<const char *>(&hull.armorTier),
+              sizeof(hull.armorTier));
+    ofs.write(reinterpret_cast<const char *>(&hull.baseMass),
+              sizeof(hull.baseMass));
+    ofs.write(reinterpret_cast<const char *>(&hull.baseHitpoints),
+              sizeof(hull.baseHitpoints));
+    ofs.write(reinterpret_cast<const char *>(&hull.internalVolume),
+              sizeof(hull.internalVolume));
+    ofs.write(reinterpret_cast<const char *>(&hull.bodyStyle),
+              sizeof(hull.bodyStyle));
+    ofs.write(reinterpret_cast<const char *>(&hull.hpMultiplier),
+              sizeof(hull.hpMultiplier));
+    ofs.write(reinterpret_cast<const char *>(&hull.massMultiplier),
+              sizeof(hull.massMultiplier));
+    ofs.write(reinterpret_cast<const char *>(&hull.maintenanceMultiplier),
+              sizeof(hull.maintenanceMultiplier));
+  }
+}
+
+void ShipOutfitter::loadProceduralHulls() {
+  std::ifstream ifs("procedural_hulls.dat", std::ios::binary);
+  if (!ifs)
+    return;
+
+  uint32_t count = 0;
+  ifs.read(reinterpret_cast<char *>(&count), sizeof(count));
+
+  for (uint32_t i = 0; i < count; ++i) {
+    uint32_t fId = 0;
+    Tier tier = Tier::T1;
+    ifs.read(reinterpret_cast<char *>(&fId), sizeof(fId));
+    ifs.read(reinterpret_cast<char *>(&tier), sizeof(tier));
+
+    uint32_t roleLen = 0;
+    ifs.read(reinterpret_cast<char *>(&roleLen), sizeof(roleLen));
+    std::string role(roleLen, ' ');
+    ifs.read(&role[0], roleLen);
+
+    HullDef hull;
+    auto loadSlots = [&](std::vector<MountSlot> &slots) {
+      uint32_t sCount = 0;
+      ifs.read(reinterpret_cast<char *>(&sCount), sizeof(sCount));
+      slots.resize(sCount);
+      for (auto &s : slots) {
+        ifs.read(reinterpret_cast<char *>(&s.id), sizeof(s.id));
+        ifs.read(reinterpret_cast<char *>(&s.size), sizeof(s.size));
+        ifs.read(reinterpret_cast<char *>(&s.localPos.x), sizeof(s.localPos.x));
+        ifs.read(reinterpret_cast<char *>(&s.localPos.y), sizeof(s.localPos.y));
+        ifs.read(reinterpret_cast<char *>(&s.style), sizeof(s.style));
+      }
+    };
+
+    loadSlots(hull.engineSlots);
+    loadSlots(hull.hardpointSlots);
+
+    auto loadString = [&](std::string &s) {
+      uint32_t len = 0;
+      ifs.read(reinterpret_cast<char *>(&len), sizeof(len));
+      s.resize(len);
+      ifs.read(&s[0], len);
+    };
+
+    loadString(hull.name);
+    loadString(hull.className);
+    ifs.read(reinterpret_cast<char *>(&hull.sizeTier), sizeof(hull.sizeTier));
+    ifs.read(reinterpret_cast<char *>(&hull.armorTier), sizeof(hull.armorTier));
+    ifs.read(reinterpret_cast<char *>(&hull.baseMass), sizeof(hull.baseMass));
+    ifs.read(reinterpret_cast<char *>(&hull.baseHitpoints),
+             sizeof(hull.baseHitpoints));
+    ifs.read(reinterpret_cast<char *>(&hull.internalVolume),
+             sizeof(hull.internalVolume));
+    ifs.read(reinterpret_cast<char *>(&hull.bodyStyle), sizeof(hull.bodyStyle));
+    ifs.read(reinterpret_cast<char *>(&hull.hpMultiplier),
+             sizeof(hull.hpMultiplier));
+    ifs.read(reinterpret_cast<char *>(&hull.massMultiplier),
+             sizeof(hull.massMultiplier));
+    ifs.read(reinterpret_cast<char *>(&hull.maintenanceMultiplier),
+             sizeof(hull.maintenanceMultiplier));
+
+    proceduralHulls_[{fId, tier, role}] = hull;
+  }
 }
 
 } // namespace space
