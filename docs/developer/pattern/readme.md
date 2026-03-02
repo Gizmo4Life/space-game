@@ -100,15 +100,20 @@ graph TD
 - [rendering-pause-overlay](rendering-pause-overlay.md)
 - [rendering-dual-scale](rendering-dual-scale.md)
 - [world-procedural-generation](world-procedural-generation.md)
-- [npc-ai-state-machine](npc-ai-state-machine.md)
+- [npc-ai-state-machine](npc-ai-state-machine.md): Finite state machine for behavioral orchestration.
 - [npc-fleet-leader-boids](npc-fleet-leader-boids.md)
 - [otel-span-instrumentation](otel-span-instrumentation.md)
 - [economy-resource-chain](economy-resource-chain.md)
-- [economy-dynamic-pricing](economy-dynamic-pricing.md)
-- [economy-competitive-market](economy-competitive-market.md)
-- [economy-infrastructure-expansion](economy-infrastructure-expansion.md)
+- [economy-dynamic-pricing](economy-dynamic-pricing.md): Supply/demand based price formulas.
+- [economy-competitive-market](economy-competitive-market.md): Faction bid model for tiered vessels.
+- [economy-infrastructure-expansion](economy-infrastructure-expansion.md): Autonomous factory construction.
+- [dna-weighted-infrastructure-expansion](dna-weighted-infrastructure-expansion.md): Biasing factory choice by strategic axis.
 - [faction-relationship-matrix](faction-relationship-matrix.md)
-- [ship-modular-composition](ship-modular-composition.md)
+- [ship-modular-composition](ship-modular-composition.md): Composition of hulls and specific module layout.
+- [procedural-hull-generation](procedural-hull-generation.md): Role-based construction of vessel geometries.
+- [faction-dna-genetic-profile](faction-dna-genetic-profile.md): Strategic axis weights for procedural behavior.
+- [evolutionary-strategy-drift](evolutionary-strategy-drift.md): Stochastic DNA mutation based on performance metrics.
+- [mission-performance-feedback-loop](mission-performance-feedback-loop.md): Tracking kills/losses to drive evolutionary fitness.
 
 ## 7. UI/UX & Navigation
 *Nuance: Patterns for ensuring machine-readability and human scannability.*

@@ -9,12 +9,13 @@ pillar: architecture
 Govern the flow of resources, credits, and political power across the game world. This capability manages planetary production/consumption cycles, faction strategic budgets, NPC trade behaviour, and the dynamic pricing that gives the universe economic life.
 
 ## 2. Orchestration Flow
-1. **Production Cycle:** Factories on planets produce resources via `EconomyManager`. Basic factories yield raw materials; refined factories consume inputs to produce higher-tier goods each tick.
-2. **Consumption & Dynamics:** Population consumes goods; food surplus/deficit drives growth or starvation.
-3. **Faction Income:** `FactionManager` accumulates credits from controlled planets proportional to per-faction population.
-4. **Wartime Shifts:** Factions at war experience increased consumption of Weapons, Fuel, and Metals, driving up prices and shifting production priorities.
-5. **Trade Execution:** `TradeManager` facilitates buy/sell transactions between ships and planets based on local supply and demand.
-6. **NPC Orchestration:** `NPCShipManager` spawns and drives AI ships per faction, populating the trade lanes and patrol routes.
+1. **Production Cycle:** Planets produce resources via `EconomyManager`. High-tier goods (e.g., Electronics, Mechanics) are produced in factories. Factions build new factories based on "Need" (input shortages) and DNA-weighted priorities (Aggression -> Weapons, Commercialism -> Consumer Goods).
+2. **Consumption & Dynamics:** Population consumes goods; deficits drive local price spikes.
+3. **Faction Income:** `FactionManager` accumulates credits from controlled planets. Industrial factions generate a bonus 10% wealth base.
+4. **Genetic Ship Design:** `FactionDNA` drives per-tier preferences. `HullGenerator` creates specialized hulls for **Combat** (durability), **Cargo** (volume), and **General** roles.
+5. **Adaptive Evolution:** `FactionBrain` (in `FactionManager`) triggers DNA drift based on mission success (K/D value ratio). Poor performance shifts DNA towards defense or industry.
+6. **Trade Execution:** `TradeManager` facilitators buy/sell transactions.
+7. **NPC Orchestration:** `NPCShipManager` spawns ships with `AIBelief` (Trader, Raider, Escort) and tracks mission outcomes.
 
 ## 3. Data Flow & Integrity
 - **Trigger:** Continuous per-tick simulation for production/consumption; event-driven for trades.
@@ -41,11 +42,9 @@ Two-tier resource economy. See [economy-resource-chain](/docs/developer/pattern/
 | `id` | `uint32_t` | Unique faction identifier. |
 | `name` | `std::string` | Procedurally generated (adjective + noun). |
 | `color` | `sf::Color` | Faction color used in all UI rendering. |
-| `credits` | `float` | Strategic budget; starts at 5 000. |
-| `aggressionLevel` | `float` | 0.0 (Passive) → 1.0 (Raiding). |
-| `militaryWeight` | `float` | Fraction of NPC spawns that are Military vessels. |
-| `freightWeight` | `float` | Fraction of NPC spawns that are Freight vessels. |
-| `passengerWeight` | `float` | Fraction of NPC spawns that are Passenger vessels. |
+| `dna` | `FactionDNA` | Genetic strategic axes: Aggression, Industrialism, Commercialism. |
+| `stats` | `MissionStats` | Historical performance, kills/losses, and K/D value ratio. |
+| `credits` | `float` | Strategic budget used for factory expansion and ship outfitting. |
 
 Spawn weights are normalised on generation so they always sum to 1.0.
 

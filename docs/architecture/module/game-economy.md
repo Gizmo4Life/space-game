@@ -23,7 +23,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `EconomyManager`, `TradeManager`
 - [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Resource seeding via `WorldLoader`
 - [economy-resource-chain](/docs/developer/pattern/economy-resource-chain.md) (P) — Three-tier production chain (Basic -> Refined -> Modular)
-- [economy-infrastructure-expansion](/docs/developer/pattern/economy-infrastructure-expansion.md) (P) — Autonomous factory construction
+- [dna-weighted-infrastructure-expansion](/docs/developer/pattern/dna-weighted-infrastructure-expansion.md) (P) — Faction factory construction based on "Need" and DNA axis bias
 - [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P) — `targetStock / currentStock` price formula
 - [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model using `VesselClass` for tiered pricing
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
@@ -32,4 +32,6 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 ## 4. Telemetry & Observability
 - `game.economy.tick` — attributes: `economy.planet_count`
 - `game.economy.trade.transaction` — attributes: `economy.credits_transferred`
+- **Observability Gap:** Missing telemetry spans for `tryExpandInfrastructure` events.
+- **Observability Gap:** No per-faction industrial "surplus/deficit" metrics; only aggregate stockpiles.
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0 → OTLP/HTTP → Jaeger

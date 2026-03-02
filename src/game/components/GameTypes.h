@@ -6,6 +6,8 @@
 namespace space {
 
 enum class Tier { T1 = 1, T2 = 2, T3 = 3, T4 = 4 };
+enum class VisualStyle { Triangle, Square, Circular, Sleek };
+
 enum class AttributeType {
   Size,
   Thrust,

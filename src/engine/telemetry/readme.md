@@ -1,6 +1,6 @@
 # /src/engine/telemetry/
 
-→ [T3 Module: Physics](/docs/architecture/module/physics.md)
+→ [T3 Module: Engine Telemetry](/docs/architecture/module/engine-telemetry.md)
 → [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
 ## Systems

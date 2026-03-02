@@ -4,6 +4,12 @@
 #include <iostream>
 #include <map>
 #include <random>
+
+// TODO: Implement hull-specific module exclusions (e.g., no heavy weapons on
+// light hulls).
+// TODO: Support dynamic module tiering based on Faction TierDNA.
+// Observability Gap: Outfit hash calculation is not instrumented; hard to track
+// configuration popularity.
 #include <type_traits>
 #include <vector>
 
@@ -14,12 +20,11 @@
 #include "game/FactionManager.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
-#include "game/components/HullDef.h"
+#include "game/components/HullGenerator.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
-#include "game/components/ShipConfig.h"
 #include "game/components/ShipModule.h"
 #include "game/components/ShipStats.h"
 
@@ -145,112 +150,124 @@ void ModuleRegistry::init() {
                      60.0f, 12.0f});
 }
 
-void ShipOutfitter::init() {
-  ModuleRegistry::instance().init();
-  factionHulls_ = ShipConfig::getFactionHulls();
+void ShipOutfitter::init() { ModuleRegistry::instance().init(); }
 
-  // Populate Default Outfits (representative IDs from registry)
-  auto defs = ShipConfig::getDefaultOutfits();
-  for (auto const &[tier, data] : defs) {
-    DefaultOutfit dout;
-    dout.engines = data.engines;
-    dout.weapons = data.weapons;
-    dout.shields = data.shields;
-    dout.cargos = data.cargos;
-    dout.passengers = data.passengers;
-    dout.fuels = data.fuels;
-    dout.powers = data.powers;
-    defaultOutfits_[tier] = dout;
+const HullDef &ShipOutfitter::getHull(uint32_t factionId, Tier sizeTier,
+                                      const std::string &role) const {
+  auto key = std::make_tuple(factionId, sizeTier, role);
+  auto it = proceduralHulls_.find(key);
+  if (it != proceduralHulls_.end()) {
+    return it->second;
   }
 
-  auto &fm = FactionManager::instance();
-  auto &reg = ModuleRegistry::instance();
-  std::vector<ProductKey> tech;
-  for (size_t i = 0; i < reg.modules.size(); ++i) {
-    Tier t = Tier::T2;
-    if (reg.modules[i].hasAttribute(AttributeType::Size))
-      t = reg.modules[i].getAttributeTier(AttributeType::Size);
-    tech.push_back({ProductType::Module, (uint32_t)i, t});
-  }
-
-  std::random_device rd;
-  std::mt19937 g(rd());
-  for (auto const &[id, _] : fm.getAllFactions()) {
-    auto data = fm.getFactionPtr(id);
-    if (!data)
-      continue;
-    std::shuffle(tech.begin(), tech.end(), g);
-    for (size_t i = 0; i < tech.size() / 3; ++i)
-      data->unlockedTech.insert(tech[i]);
-  }
-}
-
-const HullDef &ShipOutfitter::getHull(uint32_t factionId, Tier sizeTier) const {
-  auto it = factionHulls_.find(factionId);
-  if (it != factionHulls_.end()) {
-    auto hit = it->second.hulls.find(sizeTier);
-    if (hit != it->second.hulls.end())
-      return hit->second;
-  }
-  return factionHulls_.at(0).hulls.at(sizeTier);
+  const auto &fData = FactionManager::instance().getFaction(factionId);
+  HullDef newHull = HullGenerator::generateHull(fData.dna, sizeTier, role);
+  proceduralHulls_[key] = newHull;
+  return proceduralHulls_[key];
 }
 
 void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
-                                uint32_t factionId, Tier sizeTier) const {
+                                uint32_t factionId, Tier sizeTier,
+                                const std::string &role) const {
   auto span =
       space::Telemetry::instance().tracer()->StartSpan("game.core.ship.outfit");
-  const HullDef &hull = getHull(factionId, sizeTier);
-
-  // Lookup default outfit for this tier
-  auto doutIt = defaultOutfits_.find(sizeTier);
-  const DefaultOutfit &dout = (doutIt != defaultOutfits_.end())
-                                  ? doutIt->second
-                                  : defaultOutfits_.at(Tier::T1);
+  const HullDef &hull = getHull(factionId, sizeTier, role);
+  const auto &fData = FactionManager::instance().getFaction(factionId);
+  const FactionDNA &dna = fData.dna;
 
   // 1. Engines
   InstalledEngines ie;
   ie.ids.assign(hull.engineSlots.size(), EMPTY_MODULE);
-  ModuleId defEng = dout.engines.empty() ? EMPTY_MODULE : dout.engines[0];
+  auto findModule = [&](AttributeType attr, Tier t) -> uint32_t {
+    const auto &modReg = ModuleRegistry::instance().getModules();
+    for (size_t i = 0; i < modReg.size(); ++i) {
+      if (modReg[i].hasAttribute(attr) &&
+          modReg[i].getAttributeTier(AttributeType::Size) == t)
+        return static_cast<uint32_t>(i);
+    }
+    return EMPTY_MODULE;
+  };
+
   for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
-    ie.ids[i] = defEng;
+    ie.ids[i] = findModule(AttributeType::Thrust, hull.engineSlots[i].size);
   }
   registry.emplace_or_replace<InstalledEngines>(entity, ie);
 
   // 2. Weapons
   InstalledWeapons iw;
   iw.ids.assign(hull.hardpointSlots.size(), EMPTY_MODULE);
-  ModuleId defWp = dout.weapons.empty() ? EMPTY_MODULE : dout.weapons[0];
-  for (size_t i = 0; i < hull.hardpointSlots.size(); ++i) {
-    iw.ids[i] = defWp;
+  if (role != "Cargo" && role != "Freight") {
+    for (size_t i = 0; i < hull.hardpointSlots.size(); ++i) {
+      iw.ids[i] =
+          findModule(AttributeType::Caliber, hull.hardpointSlots[i].size);
+    }
   }
   registry.emplace_or_replace<InstalledWeapons>(entity, iw);
 
-  // 3. Utility (Multiple slots based on Tier)
-  int slotCount = 1;
-  if (sizeTier == Tier::T2)
-    slotCount = 2;
-  else if (sizeTier == Tier::T3)
-    slotCount = 3;
+  // 3. Utility - Dynamic slot count based on internalVolume
+  int slotCount = std::max(1, static_cast<int>(hull.internalVolume / 100.0f));
 
   InstalledShields is;
-  if (!dout.shields.empty())
-    is.ids.assign(slotCount, dout.shields[0]);
+  if (dna.aggression > 0.2f || role == "Combat")
+    is.ids.assign(std::max(1, slotCount / 3),
+                  findModule(AttributeType::Capacity, sizeTier));
   registry.emplace_or_replace<InstalledShields>(entity, is);
 
   InstalledCargo ic;
-  if (!dout.cargos.empty())
-    ic.ids.assign(slotCount, dout.cargos[0]);
+  if (dna.commercialism > 0.4f || role == "Cargo" || role == "Freight") {
+    int cargoSlots = (role == "Cargo" || role == "Freight")
+                         ? (slotCount * 2 / 3)
+                         : (slotCount / 3);
+    ic.ids.assign(std::max(1, cargoSlots),
+                  findModule(AttributeType::Volume, sizeTier));
+  }
   registry.emplace_or_replace<InstalledCargo>(entity, ic);
 
   InstalledPower ip;
-  if (!dout.powers.empty())
-    ip.ids.assign(slotCount, dout.powers[0]);
+  ip.ids.assign(std::max(1, slotCount / 3),
+                findModule(AttributeType::Output, sizeTier));
   registry.emplace_or_replace<InstalledPower>(entity, ip);
 
   registry.emplace_or_replace<HullDef>(entity, hull);
-
   refreshStats(registry, entity, hull);
   span->End();
+}
+
+ShipOutfitHash ShipOutfitter::calculateOutfitHash(entt::registry &registry,
+                                                  entt::entity entity) const {
+  uint64_t hash = 0;
+  auto combine = [&](uint64_t v) {
+    hash ^= v + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+  };
+
+  if (registry.all_of<HullDef>(entity)) {
+    const auto &h = registry.get<HullDef>(entity);
+    combine(std::hash<std::string>{}(h.name));
+    combine(static_cast<uint64_t>(h.sizeTier));
+  }
+
+  if (registry.all_of<InstalledEngines>(entity)) {
+    for (auto id : registry.get<InstalledEngines>(entity).ids)
+      combine(id);
+  }
+  if (registry.all_of<InstalledWeapons>(entity)) {
+    for (auto id : registry.get<InstalledWeapons>(entity).ids)
+      combine(id);
+  }
+  if (registry.all_of<InstalledShields>(entity)) {
+    for (auto id : registry.get<InstalledShields>(entity).ids)
+      combine(id);
+  }
+  if (registry.all_of<InstalledCargo>(entity)) {
+    for (auto id : registry.get<InstalledCargo>(entity).ids)
+      combine(id);
+  }
+  if (registry.all_of<InstalledPower>(entity)) {
+    for (auto id : registry.get<InstalledPower>(entity).ids)
+      combine(id);
+  }
+
+  return hash;
 }
 
 bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
@@ -321,6 +338,35 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
     }
   }
   return false;
+}
+
+float ShipOutfitter::calculateShipValue(entt::registry &registry,
+                                        entt::entity entity) const {
+  float total = 0.0f;
+  if (registry.all_of<HullDef>(entity)) {
+    total += 10000.0f *
+             (static_cast<int>(registry.get<HullDef>(entity).sizeTier) + 1);
+  }
+
+  auto addModuleValue = [&](const std::vector<uint32_t> &ids) {
+    for (auto id : ids) {
+      if (id != EMPTY_MODULE)
+        total += 5000.0f; // Simplified flat cost
+    }
+  };
+
+  if (registry.all_of<InstalledEngines>(entity))
+    addModuleValue(registry.get<InstalledEngines>(entity).ids);
+  if (registry.all_of<InstalledWeapons>(entity))
+    addModuleValue(registry.get<InstalledWeapons>(entity).ids);
+  if (registry.all_of<InstalledShields>(entity))
+    addModuleValue(registry.get<InstalledShields>(entity).ids);
+  if (registry.all_of<InstalledCargo>(entity))
+    addModuleValue(registry.get<InstalledCargo>(entity).ids);
+  if (registry.all_of<InstalledPower>(entity))
+    addModuleValue(registry.get<InstalledPower>(entity).ids);
+
+  return total;
 }
 
 void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
@@ -441,45 +487,6 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   }
 
   registry.emplace_or_replace<ShipStats>(entity, stats);
-}
-
-float ShipOutfitter::calculateShipValue(entt::registry &registry,
-                                        entt::entity entity) const {
-  float total = 500.0f;
-  auto &reg = ModuleRegistry::instance();
-  auto addValue = [&](ProductType type, uint32_t id, Tier tier) {
-    float val = (type == ProductType::Resource) ? 10.0f : 100.0f;
-    if (tier == Tier::T2)
-      val *= 3.0f;
-    if (tier == Tier::T3)
-      val *= 8.0f;
-    return val;
-  };
-  if (registry.all_of<InstalledEngines>(entity)) {
-    for (auto id : registry.get<InstalledEngines>(entity).ids) {
-      if (id != EMPTY_MODULE && id < reg.modules.size())
-        total +=
-            addValue(ProductType::Module, id,
-                     reg.modules[id].getAttributeTier(AttributeType::Thrust));
-    }
-  }
-  if (registry.all_of<InstalledWeapons>(entity)) {
-    for (auto id : registry.get<InstalledWeapons>(entity).ids) {
-      if (id != EMPTY_MODULE && id < reg.modules.size())
-        total +=
-            addValue(ProductType::Module, id,
-                     reg.modules[id].getAttributeTier(AttributeType::Caliber));
-    }
-  }
-  if (registry.all_of<InstalledShields>(entity)) {
-    for (auto id : registry.get<InstalledShields>(entity).ids) {
-      if (id != EMPTY_MODULE && id < reg.modules.size())
-        total +=
-            addValue(ProductType::Module, id,
-                     reg.modules[id].getAttributeTier(AttributeType::Capacity));
-    }
-  }
-  return total;
 }
 
 } // namespace space

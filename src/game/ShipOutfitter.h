@@ -1,7 +1,7 @@
 #pragma once
-#include "game/components/GameTypes.h"
-#include "game/components/HullDef.h"
-#include "game/components/ShipModule.h"
+#include "components/GameTypes.h"
+#include "components/HullDef.h"
+#include "components/ShipModule.h"
 #include <entt/entt.hpp>
 #include <map>
 #include <vector>
@@ -17,10 +17,15 @@ public:
 
   void init();
 
-  const HullDef &getHull(uint32_t factionId, Tier sizeTier) const;
+  const HullDef &getHull(uint32_t factionId, Tier sizeTier,
+                         const std::string &role = "General") const;
 
   void applyOutfit(entt::registry &registry, entt::entity entity,
-                   uint32_t factionId, Tier sizeTier) const;
+                   uint32_t factionId, Tier sizeTier,
+                   const std::string &role = "General") const;
+
+  ShipOutfitHash calculateOutfitHash(entt::registry &registry,
+                                     entt::entity entity) const;
 
   bool refitModule(entt::registry &registry, entt::entity entity,
                    entt::entity planet, ProductKey moduleKey, int slotIndex);
@@ -33,7 +38,8 @@ private:
   void refreshStats(entt::registry &registry, entt::entity entity,
                     const HullDef &hull) const;
 
-  std::map<uint32_t, FactionHullTable> factionHulls_;
+  mutable std::map<std::tuple<uint32_t, Tier, std::string>, HullDef>
+      proceduralHulls_;
 
   struct DefaultOutfit {
     std::vector<ModuleId> engines;

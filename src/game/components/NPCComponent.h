@@ -20,6 +20,9 @@ struct NPCComponent {
   entt::entity homePlanet = entt::null;
   sf::Vector2f targetPosition;
 
+  uint32_t missionId = 0;
+  uint64_t outfitHash = 0;
+
   float decisionTimer = 0.0f;
   float dockTimer = 0.0f;      // Time remaining docked
   float arrivalRadius = 30.0f; // How close counts as "arrived"

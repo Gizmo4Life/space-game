@@ -17,14 +17,15 @@ Global boundaries and primary domain of the AI RAG documentation system.
 
 ## 2. Core Capabilities (T2)
 *Nuance: Bounded contexts that orchestrate multiple T3 modules to deliver business value.*
-- **Doc Ingestion:** Physical processing and validation of the documentation graph.
-- **Game Navigation (T2):** Orchestrates ship movement and spatial transitions using Newtonian physics.
-- **Game Combat (T2):** Orchestrates ship-to-ship engagement and projectile lifecycles.
-- **Game Economy (T2):** Orchestrates resource flow, faction budgets, trade, and NPC AI.
-- **Graph Orchestration:** Maintaining structural integrity and cross-linking between pillars.
-- **Governance Enforcement:** Automating protocol compliance and landscape audits.
-- **Repository Consumption:** Strategies for Greenfield bootstrapping and Brownfield discovery.
-- **Operational Reliability:** Orchestrating telemetry, triage, and restoration flows.
+- **Doc Ingestion:** Physical processing and validation of the documentation graph. *(Planned)*
+- [Game Navigation](capability/navigation.md): Orchestrates ship movement and spatial transitions using Newtonian physics.
+- [Game Combat](capability/combat.md): Orchestrates ship-to-ship engagement and projectile lifecycles.
+- [Game Economy](capability/economy.md): Orchestrates resource flow, faction budgets, trade, and NPC AI.
+- [Observability](capability/observability.md): Orchestrates telemetry instrumentation, tracing, and metrics.
+- [UI Framework](capability/ui-framework.md): Orchestrates overlay management, HUD lifecycle, and screen state.
+- [Governance Enforcement](capability/governance-enforcement.md): Automating protocol compliance and landscape audits.
+- [Repository Consumption](capability/repository-consumption.md): Strategies for Greenfield bootstrapping and Brownfield discovery.
+- [Operational Reliability](capability/operational-reliability.md): Orchestrating incident response and restoration.
 
 ## 3. External Boundaries
 *Nuance: Interaction points with 3rd party services and vendor dependencies.*

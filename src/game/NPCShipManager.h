@@ -6,16 +6,13 @@
 #include <type_traits>
 #include <vector>
 
-#include "game/components/GameTypes.h"
+#include "components/FactionDNA.h"
+#include "components/GameTypes.h"
 
 namespace space {
 
-enum class MissionType { Trade, Patrol, Escort, Piracy };
-
 struct Mission {
-  uint32_t id;
-  MissionType type;
-  uint32_t factionId;
+  MissionRecord record;
   std::vector<entt::entity> ships;
   entt::entity origin = entt::null;
   entt::entity destination = entt::null;
@@ -44,6 +41,9 @@ private:
   void spawnMission(entt::registry &registry, MissionType type,
                     uint32_t factionId);
   void processMissions(entt::registry &registry, float dt);
+
+  static void recordCombatDeath(entt::registry &registry, entt::entity victim,
+                                entt::entity attacker);
 
   void spawnAtRandomPlanet(entt::registry &registry);
   void tickAI(entt::registry &registry, float dt);

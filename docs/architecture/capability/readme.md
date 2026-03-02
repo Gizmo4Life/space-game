@@ -45,6 +45,7 @@ graph LR
 - [combat](combat.md): Orchestrates projectile dynamics and damage resolution.
 - [economy](economy.md): Orchestrates resource flow, faction budgets, and trade.
 - [ship-modular-system](ship-modular-system.md): Orchestrates dynamic vessel construction and outfitting.
+- [ui-framework](ui-framework.md): Orchestrates overlay management, HUD lifecycle, and screen state.
 
 ## 3. Governance & Compliance
 *Nuance: Capabilities dedicated to ensuring the repository adheres to its own rules.*
@@ -53,4 +54,5 @@ graph LR
 ## 3. Consumption & Reliability
 *Nuance: Strategic boundary management for external users and production uptime.*
 - [repository-consumption](repository-consumption.md): Governs external adoption strategies (Greenfield/Brownfield).
-- [operational-reliability](operational-reliability.md): Orchestrates incident response, telemetry, and restoration.
+- [operational-reliability](operational-reliability.md): Orchestrates incident response and restoration.
+- [observability](observability.md): Orchestrates telemetry instrumentation, tracing, and metrics.

@@ -1,5 +1,5 @@
 #pragma once
-#include "game/components/GameTypes.h"
+#include "GameTypes.h"
 #include <SFML/System/Vector2.hpp>
 #include <cstdint>
 #include <map>
@@ -8,8 +8,6 @@
 #include <vector>
 
 namespace space {
-
-enum class VisualStyle { Triangle, Square, Circular, Sleek };
 
 struct MountSlot {
   uint8_t id;
@@ -53,15 +51,6 @@ struct HullDef {
         return true;
     return false;
   }
-};
-
-// ─── Vessel class replacing the old VesselType role-based enum
-// ────────────────
-
-// ─── Per-faction hull table
-// ───────────────────────────────────────────────────
-struct FactionHullTable {
-  std::map<Tier, HullDef> hulls;
 };
 
 // ─── Built-in hull builder helpers ───────────────────────────────────────────

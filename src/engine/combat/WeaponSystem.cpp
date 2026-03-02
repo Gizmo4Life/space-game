@@ -89,44 +89,34 @@ void WeaponSystem::handleCollisions(entt::registry &registry) {
         auto &stats = shipView.get<ShipStats>(shipEntity);
         stats.currentHull -= proj.damage;
 
-        // --- Relationship Impact ---
-        if (registry.all_of<Faction>(proj.owner) &&
-            registry.all_of<Faction>(shipEntity)) {
-          uint32_t attackerFaction =
-              registry.get<Faction>(proj.owner).getMajorityFaction();
-          uint32_t victimFaction =
-              registry.get<Faction>(shipEntity).getMajorityFaction();
-
-          if (attackerFaction != victimFaction) {
-            auto &fMgr = FactionManager::instance();
-            // 1. Direct Penalty
-            fMgr.adjustRelationship(attackerFaction, victimFaction, -0.01f);
-
-            // 2. "Enemy of my enemy is my friend"
-            // Find other factions that hate the victim
-            for (auto const &[fId, _] : fMgr.getAllFactions()) {
-              if (fId == attackerFaction || fId == victimFaction)
-                continue;
-              float relVictim = fMgr.getRelationship(fId, victimFaction);
-              if (relVictim <= -0.9f) {
-                // We are attacking their mortal enemy!
-                fMgr.adjustRelationship(attackerFaction, fId, 0.005f);
-              }
-            }
+        if (stats.currentHull <= 0.0f) {
+          // Signal NPCShipManager about the death for mission tracking
+          uint32_t victimFaction = 0;
+          if (registry.all_of<Faction>(shipEntity)) {
+            victimFaction =
+                registry.get<Faction>(shipEntity).getMajorityFaction();
           }
-        }
+          uint32_t attackerFaction = 0;
+          if (registry.all_of<Faction>(proj.owner)) {
+            attackerFaction =
+                registry.get<Faction>(proj.owner).getMajorityFaction();
+          }
 
-        toDestroy.push_back(projEntity);
-        hitCount++;
-        break;
+          // Record combat event
+          // We need a way to pass the victim's outfit hash and the attacker's
+          // info I'll add a static hook to NPCShipManager
+          NPCShipManager::recordCombatDeath(registry, shipEntity, proj.owner);
+
+          toDestroy.push_back(shipEntity);
+        }
       }
     }
-  }
 
-  for (auto e : toDestroy) {
-    if (registry.valid(e)) {
-      b2DestroyBody(registry.get<InertialBody>(e).bodyId);
-      registry.destroy(e);
+    for (auto e : toDestroy) {
+      if (registry.valid(e)) {
+        b2DestroyBody(registry.get<InertialBody>(e).bodyId);
+        registry.destroy(e);
+      }
     }
   }
   span->SetAttribute("combat.hits", hitCount);
@@ -178,8 +168,8 @@ entt::entity WeaponSystem::fire(entt::registry &registry, entt::entity owner,
 
   // Inherit ship velocity
   b2Vec2 shipVel = b2Body_GetLinearVelocity(ownerInertial.bodyId);
-  // visual forward is -Y (rotation 0), so projectile relative vector should be:
-  // x = sin(angle) * speed, y = -cos(angle) * speed
+  // visual forward is -Y (rotation 0), so projectile relative vector should
+  // be: x = sin(angle) * speed, y = -cos(angle) * speed
   b2Vec2 projectileRelativeVel = {rot.s * projSpeed, -rot.c * projSpeed};
 
   b2Vec2 finalVel = {shipVel.x + projectileRelativeVel.x,

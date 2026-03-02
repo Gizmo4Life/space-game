@@ -23,6 +23,13 @@
 #include "game/components/ShipModule.h"
 #include "game/components/TransformComponent.h"
 
+// TODO: Implement persistent storage for procedurally generated hulls to avoid
+// regeneration on reload.
+// TODO: Add more variety to factory construction costs based on planet type or
+// faction tier. Observability Gap: No telemetry spans for factory construction
+// events. Observability Gap: Stockpile levels are only aggregate; per-faction
+// surplus/deficit metrics missing.
+
 namespace space {
 
 void EconomyManager::init() {
@@ -188,7 +195,8 @@ void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
         fEco.stockpile[product] += finalOutput;
         if (fEco.stockpile[product] >= 1.0f) {
           int count = static_cast<int>(fEco.stockpile[product]);
-          fEco.fleetPool[product.tier] += count;
+          // Default to "General" role for mass production
+          fEco.fleetPool[{product.tier, "General"}] += count;
           fEco.stockpile[product] -= static_cast<float>(count);
           std::cout << "[Economy] Produced " << count << " T"
                     << static_cast<int>(product.tier) << " hulls!\n";
@@ -217,29 +225,48 @@ void EconomyManager::tryExpandInfrastructure(FactionEconomy &fEco,
     return;
 
   for (const auto &pk : productionPriority) {
-    // Strategy check: Does this product align with strategy?
-    bool aligns = false;
-    if (fEco.strategy == FactionStrategy::Military) {
-      aligns = (pk.type == ProductType::Module &&
-                (pk.id >= 3 && pk.id <= 8)); // Weapons/Shields
-    } else if (fEco.strategy == FactionStrategy::Industrial) {
-      aligns = (pk.type == ProductType::Module &&
-                (pk.id <= 2 || (pk.id >= 12 && pk.id <= 14))); // Engines/Power
-    } else if (fEco.strategy == FactionStrategy::Trade) {
-      aligns =
-          (pk.type == ProductType::Module && (pk.id >= 9 && pk.id <= 11)) ||
-          (pk.type == ProductType::Resource &&
-           pk.id >= static_cast<uint32_t>(Resource::Food));
+    if (fEco.factories.count(pk) > 0)
+      continue;
+
+    // "Need" check: Is an input for an existing factory missing?
+    bool needed = false;
+    for (auto const &[prod, count] : fEco.factories) {
+      auto recipeIt = recipes.find(prod);
+      if (recipeIt != recipes.end() && recipeIt->second.inputs.count(pk)) {
+        if (fEco.stockpile[pk] < 5.0f) { // Low stockpile for needed input
+          needed = true;
+          break;
+        }
+      }
     }
 
-    if (aligns && fEco.factories.count(pk) == 0) {
+    // Strategy alignment using DNA weights
+    float alignment = 0.0f;
+    if (pk.type == ProductType::Module) {
+      if (pk.id >= 3 && pk.id <= 8)
+        alignment = fEco.dna.aggression; // Weapons/Shields
+      else if (pk.id <= 2 || (pk.id >= 12 && pk.id <= 14))
+        alignment = fEco.dna.industrialism; // Engines/Power
+      else if (pk.id >= 9 && pk.id <= 11)
+        alignment = fEco.dna.commercialism; // Utility/Cargo
+    } else if (pk.type == ProductType::Resource) {
+      if (pk.id >= static_cast<uint32_t>(Resource::Food))
+        alignment = fEco.dna.commercialism;
+      else
+        alignment = fEco.dna.industrialism; // Base resources
+    }
+
+    // Weighted roll for expansion: needed items get a massive boost
+    float chance = (alignment * 0.2f) + (needed ? 0.8f : 0.0f);
+    if ((static_cast<float>(rand() % 100) / 100.0f) < chance) {
       fEco.factories[pk] = 1;
       fEco.credits -= constructionCost;
       fEco.stockpile[mgKey] -= goodsRequired;
       std::cout << "[Economy] Faction built NEW FACTORY for "
                 << (pk.type == ProductType::Module ? "Module " : "Resource ")
-                << pk.id << " (Cost: " << constructionCost << ")\n";
-      return; // One expansion at a time
+                << pk.id << " (Cost: " << constructionCost << " credits + "
+                << goodsRequired << " Mfg Goods)\n";
+      return;
     }
   }
 }
@@ -297,8 +324,9 @@ std::map<Tier, float> EconomyManager::getHullBids(entt::registry &registry,
     return bids;
   auto &eco = registry.get<PlanetEconomy>(planet);
   for (auto const &[fId, fEco] : eco.factionData) {
-    for (auto const &[tier, count] : fEco.fleetPool) {
+    for (auto const &[key, count] : fEco.fleetPool) {
       if (count > 0) {
+        Tier tier = key.first;
         // Hull price logic (simplified)
         float price = 1000.0f * static_cast<float>(tier);
         bids[tier] = std::min(bids.count(tier) ? bids[tier] : price, price);
@@ -315,17 +343,20 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
     return false;
   auto &eco = registry.get<PlanetEconomy>(planet);
   for (auto &[fId, fEco] : eco.factionData) {
-    if (fEco.fleetPool.count(sizeTier) && fEco.fleetPool.at(sizeTier) > 0) {
-      float price = 1000.0f * static_cast<float>(sizeTier);
-      if (registry.get<CreditsComponent>(player).amount >= price) {
-        registry.get<CreditsComponent>(player).amount -= price;
-        fEco.fleetPool[sizeTier]--;
-        fEco.credits += price;
-        // Spawn actual ship for player (replacement logic)
-        auto &trans = registry.get<TransformComponent>(planet);
-        NPCShipManager::instance().spawnShip(registry, fId, trans.position,
-                                             worldId, sizeTier, true);
-        return true;
+    // Look for any ship of this tier
+    for (auto const &[key, count] : fEco.fleetPool) {
+      if (key.first == sizeTier && count > 0) {
+        float price = 1000.0f * static_cast<float>(sizeTier);
+        if (registry.get<CreditsComponent>(player).amount >= price) {
+          registry.get<CreditsComponent>(player).amount -= price;
+          fEco.fleetPool[key]--;
+          fEco.credits += price;
+          // Spawn actual ship for player (replacement logic)
+          auto &trans = registry.get<TransformComponent>(planet);
+          NPCShipManager::instance().spawnShip(registry, fId, trans.position,
+                                               worldId, sizeTier, true);
+          return true;
+        }
       }
     }
   }

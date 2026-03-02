@@ -8,11 +8,12 @@
 → [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
 ## Systems
-- `EconomyManager` — Planet production, dynamic pricing, competitive ship market (`getShipBids`, `buyShip`)
-- `FactionManager` — Faction data, relationship matrix, credit accumulation
-- `NPCShipManager` — NPC spawning, AI state machine, player fleet boids
-- `ShipOutfitter` — Modular vessel composition and outfitting management
-- `WorldLoader` — Procedural star system and player entity generation
+- `EconomyManager` — Planet production, dynamic pricing, DNA-weighted infrastructure expansion
+- `FactionManager` — Faction DNA drift, relationship matrix, credit accumulation, evolutionary "Brain"
+- `NPCShipManager` — NPC spawning, AI state machine, mission success tracking (K/D value ratio)
+- `HullGenerator` — Procedural builder for role-based vessel hulls (Combat, Cargo, General)
+- `ShipOutfitter` — Modular vessel composition and role-based outfitting
+- `WorldLoader` — Procedural star system generation and fleet seeding
 - `TradeManager` — Ship-to-planet resource transactions
 - `components/` — ECS component structs; see [components/readme.md](components/readme.md)
 

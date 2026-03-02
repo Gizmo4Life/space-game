@@ -1,7 +1,12 @@
-# Signpost: Core
+# /src/core/
 
-## Objective
-Placeholder for core system primitives and shared utilities.
+→ [T3 Module: Source Core](/docs/architecture/module/src-core.md)
+→ [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
-## Links
-- [Module: Source Core](/docs/architecture/module/src-core.md) (T3)
+## Systems
+- `SharedPrimitives` — Foundations for data structures and math utilities used across the spatial engine.
+
+## Build
+```bash
+cmake --build build --target SpaceGame
+```

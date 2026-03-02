@@ -1,5 +1,6 @@
 #pragma once
-#include "game/components/GameTypes.h"
+#include "FactionDNA.h"
+#include "GameTypes.h"
 #include <map>
 #include <string>
 #include <type_traits>
@@ -27,14 +28,14 @@ enum class Resource {
   Refinery
 };
 
-enum class FactionStrategy { Industrial, Trade, Military };
-
 struct FactionEconomy {
   float populationCount = 0.0f; // In thousands
   std::map<ProductKey, float> stockpile;
   std::map<ProductKey, int> factories;
-  std::map<Tier, int> fleetPool; // Ready ships by size tier
-  FactionStrategy strategy = FactionStrategy::Industrial;
+  std::map<std::pair<Tier, std::string>, int>
+      fleetPool; // Ready ships by tier and role
+  FactionDNA dna;
+  MissionStats stats;
   float credits = 1000.0f;
   bool isAbandoned = false;
 };

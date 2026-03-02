@@ -77,12 +77,12 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
                                   uint32_t factionId) {
   static uint32_t nextMissionId = 1;
   Mission m;
-  m.id = nextMissionId++;
-  m.type = type;
-  m.factionId = factionId;
+  m.record.missionId = nextMissionId++;
+  m.record.type = type;
+  m.record.factionId = factionId;
   m.riskScore = factionRiskRegistry_[factionId];
 
-  // Pick origin/destination from planets
+  // Pick origin/destination...
   auto planetView = registry.view<PlanetEconomy>();
   std::vector<entt::entity> planets;
   for (auto e : planetView)
@@ -99,24 +99,18 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
   sf::Vector2f pos = oTrans.position +
                      sf::Vector2f((rand() % 100) - 50.f, (rand() % 100) - 50.f);
 
-  // High risk response: Tougher ships (Medium instead of Light) or more of them
   Tier primaryTier = Tier::T1;
   int count = 1;
-
   if (m.riskScore > 5.0f) {
-    primaryTier = Tier::T2; // Tougher ships for high risk
-    count = (type == MissionType::Trade) ? 2 : 3;
+    primaryTier = Tier::T2;
+    count = 2;
   }
 
-  // Final check: Does the faction have the ships in their fleetPool?
   auto &originEco = registry.get<PlanetEconomy>(m.origin);
   if (originEco.factionData.count(factionId) == 0 ||
       originEco.factionData[factionId].fleetPool[primaryTier] < count) {
-    // std::cout << "[NPC] Mission " << m.id << " cancelled: No ships in
-    // fleetPool\n";
     return;
   }
-
   originEco.factionData[factionId].fleetPool[primaryTier] -= count;
 
   for (int i = 0; i < count; ++i) {
@@ -124,21 +118,19 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
     m.ships.push_back(ship);
 
     auto &npc = registry.get<NPCComponent>(ship);
+    npc.missionId = m.record.missionId;
     npc.homePlanet = m.origin;
     npc.targetEntity = m.destination;
     npc.state = AIState::Traveling;
+    npc.belief = (type == MissionType::Trade)
+                     ? AIBelief::Trader
+                     : (type == MissionType::Piracy ? AIBelief::Raider
+                                                    : AIBelief::Escort);
 
-    if (type == MissionType::Trade)
-      npc.belief = AIBelief::Trader;
-    else if (type == MissionType::Piracy)
-      npc.belief = AIBelief::Raider;
-    else
-      npc.belief = AIBelief::Escort;
+    m.record.deployedOutfits.push_back(npc.outfitHash);
   }
 
   activeMissions_.push_back(m);
-  std::cout << "[NPC] Mission " << m.id << " started: " << (int)type
-            << " for Faction " << factionId << "\n";
 }
 
 void NPCShipManager::processMissions(entt::registry &registry, float dt) {
@@ -149,10 +141,8 @@ void NPCShipManager::processMissions(entt::registry &registry, float dt) {
     for (auto ship : it->ships) {
       if (registry.valid(ship)) {
         anyAlive = true;
-        auto &npc = registry.get<NPCComponent>(ship);
         auto &trans = registry.get<TransformComponent>(ship);
         auto &destTrans = registry.get<TransformComponent>(it->destination);
-
         float dist =
             std::sqrt(std::pow(trans.position.x - destTrans.position.x, 2) +
                       std::pow(trans.position.y - destTrans.position.y, 2));
@@ -161,20 +151,29 @@ void NPCShipManager::processMissions(entt::registry &registry, float dt) {
       }
     }
 
-    if (!anyAlive) {
-      // Failure! Higher risk for next time
-      factionRiskRegistry_[it->factionId] += 1.0f;
-      std::cout << "[NPC] Mission " << it->id << " FAILED. Risk for "
-                << it->factionId << " rose to "
-                << factionRiskRegistry_[it->factionId] << "\n";
-      it = activeMissions_.erase(it);
-    } else if (anyArrived) {
-      // Success! Lower risk
-      factionRiskRegistry_[it->factionId] =
-          std::max(0.0f, factionRiskRegistry_[it->factionId] - 0.2f);
-      std::cout << "[NPC] Mission " << it->id << " SUCCESS. Risk for "
-                << it->factionId << " dropped to "
-                << factionRiskRegistry_[it->factionId] << "\n";
+    if (!anyAlive || anyArrived) {
+      it->record.success = anyArrived;
+
+      // Finalize record and move to global stats
+      auto *fData =
+          FactionManager::instance().getFactionPtr(it->record.factionId);
+      if (fData) {
+        fData->stats.history.push_back(it->record);
+
+        // Update global outfit stats from this mission
+        for (auto hash : it->record.lostOutfits) {
+          fData->stats.outfitRegistry[hash].lostCount++;
+        }
+        // Note: kills were already recorded in recordCombatDeath for the
+        // specific outfit
+      }
+
+      if (!anyAlive) {
+        factionRiskRegistry_[it->record.factionId] += 1.0f;
+      } else {
+        factionRiskRegistry_[it->record.factionId] =
+            std::max(0.0f, factionRiskRegistry_[it->record.factionId] - 0.2f);
+      }
       it = activeMissions_.erase(it);
     } else {
       ++it;
@@ -206,6 +205,8 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
       entity,
       hull.className + "-" + std::to_string(static_cast<uint32_t>(entity)));
 
+  npc.outfitHash = outfitter.calculateOutfitHash(registry, entity);
+
   return entity;
 }
 
@@ -223,6 +224,46 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
         trans.position +=
             (dir / mag) * 100.0f * dt; // Simple constant speed travel
       }
+    }
+  }
+}
+
+void NPCShipManager::recordCombatDeath(entt::registry &registry,
+                                       entt::entity victim,
+                                       entt::entity attacker) {
+  if (!registry.all_of<NPCComponent>(victim))
+    return;
+  auto &vNpc = registry.get<NPCComponent>(victim);
+
+  float vValue = ShipOutfitter::instance().calculateShipValue(registry, victim);
+  NPCShipManager &inst = NPCShipManager::instance();
+
+  // 1. Record loss in the victim's mission/faction
+  for (auto &m : inst.activeMissions_) {
+    if (m.record.missionId == vNpc.missionId) {
+      m.record.lostOutfits.push_back(vNpc.outfitHash);
+      m.record.totalValueLost += vValue;
+      break;
+    }
+  }
+
+  // 2. Record kill for the attacker
+  if (registry.all_of<NPCComponent>(attacker)) {
+    auto &aNpc = registry.get<NPCComponent>(attacker);
+    for (auto &m : inst.activeMissions_) {
+      if (m.record.missionId == aNpc.missionId) {
+        m.record.enemyKills[vNpc.outfitHash]++;
+        m.record.totalValueKilled += vValue;
+        break;
+      }
+    }
+
+    auto *aData = FactionManager::instance().getFactionPtr(aNpc.factionId);
+    if (aData) {
+      auto &aPerf = aData->stats.outfitRegistry[aNpc.outfitHash];
+      aPerf.killsCount++;
+      aPerf.totalMonetaryValue += vValue;
+      aPerf.killValueSum += vValue;
     }
   }
 }

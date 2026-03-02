@@ -1,6 +1,6 @@
 #pragma once
-#include "game/components/Economy.h"
-#include "game/components/GameTypes.h"
+#include "components/Economy.h"
+#include "components/GameTypes.h"
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
 #include <map>

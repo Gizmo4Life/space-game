@@ -318,13 +318,33 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
         FactionEconomy fEco;
         fEco.populationCount = totalPop * weight;
 
-        int strategyRoll = rand() % 3;
-        fEco.strategy = static_cast<FactionStrategy>(strategyRoll);
+        const auto &globalData = FactionManager::instance().getFaction(fid);
+        fEco.dna = globalData.dna;
 
-        // Seed initial fleet
-        fEco.fleetPool[Tier::T1] = 3 + (rand() % 6);
+        // Seed initial fleet based on industrial focus
+        float fleetMultiplier = 1.0f + (1.0f - fEco.dna.industrialism);
+
+        auto seedRole = [&](Tier t, const std::string &role, int base) {
+          int count = std::max(1, (int)(base * fleetMultiplier));
+          fEco.fleetPool[{t, role}] = count;
+        };
+
+        seedRole(Tier::T1, "General", 2 + (rand() % 3));
+        if (fEco.dna.aggression > 0.4f)
+          seedRole(Tier::T1, "Combat", 1 + (rand() % 2));
+        if (fEco.dna.commercialism > 0.4f)
+          seedRole(Tier::T1, "Cargo", 1 + (rand() % 2));
+
         if (fEco.populationCount > 15.0f) {
-          fEco.fleetPool[Tier::T2] = 1 + (rand() % 3);
+          seedRole(Tier::T2, "General", 1 + (rand() % 2));
+          if (fEco.dna.aggression > 0.6f)
+            seedRole(Tier::T2, "Combat", 1);
+          if (fEco.dna.commercialism > 0.6f)
+            seedRole(Tier::T2, "Cargo", 1);
+
+          if (fEco.dna.aggression > 0.7f && fEco.populationCount > 30.0f) {
+            seedRole(Tier::T3, "Combat", 1);
+          }
         }
 
         auto rKey = [](Resource r) {
@@ -353,19 +373,19 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
           return ProductKey{ProductType::Module, id, t};
         };
 
-        if (fEco.strategy == FactionStrategy::Military) {
+        if (fEco.dna.aggression > 0.6f) {
           // Weapons (3-5) or Shields (6-8)
           uint32_t baseId = (rand() % 2 == 0) ? 3 : 6;
           fEco.factories[mKey(baseId, Tier::T1)] = 1;
           if (fEco.populationCount > 15.0f)
             fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
-        } else if (fEco.strategy == FactionStrategy::Industrial) {
+        } else if (fEco.dna.industrialism > 0.6f) {
           // Engines (0-2) or Power (12-14)
           uint32_t baseId = (rand() % 2 == 0) ? 0 : 12;
           fEco.factories[mKey(baseId, Tier::T1)] = 1;
           if (fEco.populationCount > 15.0f)
             fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
-        } else if (fEco.strategy == FactionStrategy::Trade) {
+        } else if (fEco.dna.commercialism > 0.6f) {
           // Cargo (9-11) or generic utility
           fEco.factories[mKey(9, Tier::T1)] = 1;
           if (fEco.populationCount > 15.0f)
@@ -380,15 +400,10 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
         fEco.stockpile[rKey(Resource::Metals)] = fEco.populationCount * 100.0f;
         fEco.stockpile[rKey(Resource::Fuel)] = fEco.populationCount * 50.0f;
 
-        if (fEco.strategy == FactionStrategy::Military)
+        if (fEco.dna.aggression > 0.5f || fEco.dna.industrialism < 0.3f)
           fEco.factories[rKey(Resource::Shipyard)] = 1;
-        if (fEco.strategy == FactionStrategy::Industrial)
+        if (fEco.dna.industrialism > 0.5f)
           fEco.factories[rKey(Resource::Refinery)] = 1;
-
-        // Starting fleet by tier
-        fEco.fleetPool[Tier::T1] = 5;
-        fEco.fleetPool[Tier::T2] = 2;
-        fEco.fleetPool[Tier::T3] = 1;
 
         eco.factionData[fid] = fEco;
       }
