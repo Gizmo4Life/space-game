@@ -55,7 +55,7 @@ private:
       factionRiskRegistry_; // factionId -> last known risk
 
   static constexpr int MAX_NPCS = 200;
-  static constexpr float SPAWN_INTERVAL = 10.0f; // Slower spawn, mission-based
+  static constexpr float SPAWN_INTERVAL = 2.0f; // Faster mission attempts
 };
 
 } // namespace space

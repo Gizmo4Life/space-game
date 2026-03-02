@@ -19,6 +19,7 @@ graph TD
         Fac[game-factions]
         NPC[game-npc]
         UI[game-ui]
+        Tel[engine-telemetry]
     end
     subgraph Governance Layer
         Prot[governance-protocols]
@@ -45,7 +46,8 @@ graph TD
 ## 1. Game Engine (C++)
 *Nuance: High-performance modules implementing the spatial simulation and interactive systems.*
 - [physics](physics.md): Box2D-powered Newtonian physics engine.
-- [rendering](src-core.md): SFML rendering pipeline, camera, offscreen indicators.
+- [rendering](engine-rendering.md): SFML rendering pipeline, camera, offscreen indicators.
+- [telemetry](engine-telemetry.md): OpenTelemetry-based instrumentation and tracing.
 - [game-ui](game-ui.md): Planetary landing screen, pause overlay, and ship market.
 - [game-combat](game-combat.md): Ship-to-ship engagement and projectile systems.
 - [game-economy](game-economy.md): Planetary production, dynamic pricing, trade transactions, and ship market.

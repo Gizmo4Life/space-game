@@ -22,7 +22,8 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `EconomyManager::update`
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `EconomyManager`, `TradeManager`
 - [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Resource seeding via `WorldLoader`
-- [economy-resource-chain](/docs/developer/pattern/economy-resource-chain.md) (P) — Two-tier basic/refined production chain
+- [economy-resource-chain](/docs/developer/pattern/economy-resource-chain.md) (P) — Three-tier production chain (Basic -> Refined -> Modular)
+- [economy-infrastructure-expansion](/docs/developer/pattern/economy-infrastructure-expansion.md) (P) — Autonomous factory construction
 - [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P) — `targetStock / currentStock` price formula
 - [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model using `VesselClass` for tiered pricing
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)

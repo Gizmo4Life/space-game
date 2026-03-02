@@ -21,6 +21,7 @@ Ship-to-ship engagement, projectile lifecycles, and damage resolution.
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `WeaponComponent`, `ProjectileComponent`, `ShipStats`
 - [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `WeaponSystem::update`, `WeaponSystem::fire`
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P) — `combat.weapon.fire`, `combat.collision.resolve`
+- [kinematics-newtonian-2d](/docs/developer/pattern/kinematics-newtonian-2d.md) (P) — Projectile launch alignment (-Y forward)
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 
 ## 4. Telemetry & Observability

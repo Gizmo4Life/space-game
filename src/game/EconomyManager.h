@@ -49,6 +49,7 @@ private:
   EconomyManager() = default;
 
   void processProduction(FactionEconomy &fEco, float deltaTime);
+  void tryExpandInfrastructure(FactionEconomy &fEco, float deltaTime);
   float calculatePrice(ProductKey pk, float currentStock, float population,
                        bool isAtWar);
 

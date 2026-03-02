@@ -108,6 +108,17 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
     count = (type == MissionType::Trade) ? 2 : 3;
   }
 
+  // Final check: Does the faction have the ships in their fleetPool?
+  auto &originEco = registry.get<PlanetEconomy>(m.origin);
+  if (originEco.factionData.count(factionId) == 0 ||
+      originEco.factionData[factionId].fleetPool[primaryTier] < count) {
+    // std::cout << "[NPC] Mission " << m.id << " cancelled: No ships in
+    // fleetPool\n";
+    return;
+  }
+
+  originEco.factionData[factionId].fleetPool[primaryTier] -= count;
+
   for (int i = 0; i < count; ++i) {
     auto ship = spawnShip(registry, factionId, pos, worldId_, primaryTier);
     m.ships.push_back(ship);

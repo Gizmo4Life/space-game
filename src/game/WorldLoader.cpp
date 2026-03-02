@@ -321,6 +321,12 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
         int strategyRoll = rand() % 3;
         fEco.strategy = static_cast<FactionStrategy>(strategyRoll);
 
+        // Seed initial fleet
+        fEco.fleetPool[Tier::T1] = 3 + (rand() % 6);
+        if (fEco.populationCount > 15.0f) {
+          fEco.fleetPool[Tier::T2] = 1 + (rand() % 3);
+        }
+
         auto rKey = [](Resource r) {
           return ProductKey{ProductType::Resource, (uint32_t)r, Tier::T1};
         };
@@ -339,10 +345,32 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
           fEco.factories[rKey(Resource::Crops)] = 5;
           fEco.factories[rKey(Resource::Water)] = 2;
         }
-        fEco.factories[rKey(Resource::Food)] =
-            std::max(1, (int)(fEco.populationCount * 3));
         fEco.factories[rKey(Resource::Fuel)] =
             std::max(1, (int)(fEco.populationCount));
+
+        // Seed module factories by strategy
+        auto mKey = [](uint32_t id, Tier t) {
+          return ProductKey{ProductType::Module, id, t};
+        };
+
+        if (fEco.strategy == FactionStrategy::Military) {
+          // Weapons (3-5) or Shields (6-8)
+          uint32_t baseId = (rand() % 2 == 0) ? 3 : 6;
+          fEco.factories[mKey(baseId, Tier::T1)] = 1;
+          if (fEco.populationCount > 15.0f)
+            fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
+        } else if (fEco.strategy == FactionStrategy::Industrial) {
+          // Engines (0-2) or Power (12-14)
+          uint32_t baseId = (rand() % 2 == 0) ? 0 : 12;
+          fEco.factories[mKey(baseId, Tier::T1)] = 1;
+          if (fEco.populationCount > 15.0f)
+            fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
+        } else if (fEco.strategy == FactionStrategy::Trade) {
+          // Cargo (9-11) or generic utility
+          fEco.factories[mKey(9, Tier::T1)] = 1;
+          if (fEco.populationCount > 15.0f)
+            fEco.factories[mKey(10, Tier::T2)] = 1;
+        }
 
         fEco.credits = fEco.populationCount * 100.0f;
 
@@ -379,6 +407,7 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
+  bodyDef.angularDamping = 2.0f;
 
   // Find a populated body to spawn near
   sf::Vector2f spawnPos(900.0f, 900.0f);

@@ -19,10 +19,10 @@ Newtonian kinematics, gravity wells, orbital mechanics, and Box2D world manageme
 - [Capability: Combat](/docs/architecture/capability/combat.md) (T2)
 
 ## 3. Key Systems
-- **PhysicsEngine**: Owns the Box2D `b2WorldId`, steps the simulation each frame.
-- **KinematicsSystem**: Applies thrust/rotation forces and syncs Box2D positions with `TransformComponent`.
+- **PhysicsEngine**: Owns the Box2D `b2WorldId`, steps the simulation each frame. See [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P).
+- **KinematicsSystem**: Applies thrust/rotation forces and syncs Box2D positions with `TransformComponent`. See [kinematics-newtonian-2d](/docs/developer/pattern/kinematics-newtonian-2d.md) (P).
 - **GravitySystem**: Iterates `CelestialBody` × `InertialBody` pairs, applies gravitational pull.
-- **OrbitalSystem**: Updates `TransformComponent` via Kepler ellipse equations for moons/planets.
+- **OrbitalSystem**: Updates `TransformComponent` via Kepler ellipse equations for moons/planets. See [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P).
 - **Dual-Scale System:** Two named coordinate scales in `WorldConfig.h`. See [rendering-dual-scale](/docs/developer/pattern/rendering-dual-scale.md) (P).
 
 ## 4. Pattern Composition

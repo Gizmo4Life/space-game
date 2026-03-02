@@ -174,13 +174,13 @@ entt::entity WeaponSystem::fire(entt::registry &registry, entt::entity owner,
   b2CreateCircleShape(bodyId, &shapeDef, &circle);
 
   b2Rot rot = b2Body_GetRotation(ownerInertial.bodyId);
-  float ownerAngle = std::atan2(rot.s, rot.c);
   float projSpeed = 5000.0f; // Matches WeaponComponent
 
   // Inherit ship velocity
   b2Vec2 shipVel = b2Body_GetLinearVelocity(ownerInertial.bodyId);
-  b2Vec2 projectileRelativeVel = {std::cos(ownerAngle) * projSpeed,
-                                  std::sin(ownerAngle) * projSpeed};
+  // visual forward is -Y (rotation 0), so projectile relative vector should be:
+  // x = sin(angle) * speed, y = -cos(angle) * speed
+  b2Vec2 projectileRelativeVel = {rot.s * projSpeed, -rot.c * projSpeed};
 
   b2Vec2 finalVel = {shipVel.x + projectileRelativeVel.x,
                      shipVel.y + projectileRelativeVel.y};

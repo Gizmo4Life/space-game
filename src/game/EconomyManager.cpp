@@ -88,6 +88,40 @@ void EconomyManager::init() {
       resKey(Resource::Electronics), resKey(Resource::Plastics)};
   productionPriority.insert(productionPriority.begin(), resPriority.begin(),
                             resPriority.end());
+
+  // Hull Production
+  // T1 Sparrow: 5 Metals, 5 Plastics, 1 Engine T1
+  ProductKey t1Hull{ProductType::Hull, 0, Tier::T1};
+  Recipe t1r;
+  t1r.inputs[resKey(Resource::Metals)] = 5.0f;
+  t1r.inputs[resKey(Resource::Plastics)] = 5.0f;
+  t1r.inputs[ProductKey{ProductType::Module, 0, Tier::T1}] = 1.0f;
+  t1r.laborRequired = 2.0f;
+  t1r.baseOutputRate = 0.05f;
+  recipes[t1Hull] = t1r;
+  productionPriority.push_back(t1Hull);
+
+  // T2 Falcon: 15 Metals, 15 Plastics, 2 Engines T2
+  ProductKey t2Hull{ProductType::Hull, 0, Tier::T2};
+  Recipe t2r;
+  t2r.inputs[resKey(Resource::Metals)] = 15.0f;
+  t2r.inputs[resKey(Resource::Plastics)] = 15.0f;
+  t2r.inputs[ProductKey{ProductType::Module, 1, Tier::T2}] = 2.0f;
+  t2r.laborRequired = 5.0f;
+  t2r.baseOutputRate = 0.02f;
+  recipes[t2Hull] = t2r;
+  productionPriority.push_back(t2Hull);
+
+  // T3 Eagle: 40 Metals, 40 Plastics, 4 Engines T3
+  ProductKey t3Hull{ProductType::Hull, 0, Tier::T3};
+  Recipe t3r;
+  t3r.inputs[resKey(Resource::Metals)] = 40.0f;
+  t3r.inputs[resKey(Resource::Plastics)] = 40.0f;
+  t3r.inputs[ProductKey{ProductType::Module, 2, Tier::T3}] = 4.0f;
+  t3r.laborRequired = 15.0f;
+  t3r.baseOutputRate = 0.005f;
+  recipes[t3Hull] = t3r;
+  productionPriority.push_back(t3Hull);
 }
 
 void EconomyManager::update(entt::registry &registry, float deltaTime) {
@@ -115,6 +149,8 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
 }
 
 void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
+  tryExpandInfrastructure(fEco, deltaTime);
+
   float availableLabor = fEco.populationCount * 0.1f;
   for (const auto &product : productionPriority) {
     if (fEco.factories.count(product) == 0 || availableLabor <= 0)
@@ -144,8 +180,66 @@ void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
     if (finalOutput > 0) {
       for (const auto &[input, req] : recipe.inputs)
         fEco.stockpile[input] -= req * finalOutput;
-      fEco.stockpile[product] += finalOutput;
+
+      if (product.type == ProductType::Hull) {
+        // Hulls go directly into the fleet pool as integer units
+        // Final output is fractional, so we accumulate into a hidden stockpile
+        // and add to fleetPool when it reaches >= 1.0f
+        fEco.stockpile[product] += finalOutput;
+        if (fEco.stockpile[product] >= 1.0f) {
+          int count = static_cast<int>(fEco.stockpile[product]);
+          fEco.fleetPool[product.tier] += count;
+          fEco.stockpile[product] -= static_cast<float>(count);
+          std::cout << "[Economy] Produced " << count << " T"
+                    << static_cast<int>(product.tier) << " hulls!\n";
+        }
+      } else {
+        fEco.stockpile[product] += finalOutput;
+      }
+
       availableLabor -= finalOutput * recipe.laborRequired;
+    }
+  }
+}
+
+void EconomyManager::tryExpandInfrastructure(FactionEconomy &fEco,
+                                             float deltaTime) {
+  // Expansion check: Once every simulated time unit (rare)
+  if (rand() % 100 != 0)
+    return;
+
+  float constructionCost = 5000.0f;
+  float goodsRequired = 50.0f;
+  ProductKey mgKey = {ProductType::Resource,
+                      static_cast<uint32_t>(Resource::ManufacturingGoods)};
+
+  if (fEco.credits < constructionCost || fEco.stockpile[mgKey] < goodsRequired)
+    return;
+
+  for (const auto &pk : productionPriority) {
+    // Strategy check: Does this product align with strategy?
+    bool aligns = false;
+    if (fEco.strategy == FactionStrategy::Military) {
+      aligns = (pk.type == ProductType::Module &&
+                (pk.id >= 3 && pk.id <= 8)); // Weapons/Shields
+    } else if (fEco.strategy == FactionStrategy::Industrial) {
+      aligns = (pk.type == ProductType::Module &&
+                (pk.id <= 2 || (pk.id >= 12 && pk.id <= 14))); // Engines/Power
+    } else if (fEco.strategy == FactionStrategy::Trade) {
+      aligns =
+          (pk.type == ProductType::Module && (pk.id >= 9 && pk.id <= 11)) ||
+          (pk.type == ProductType::Resource &&
+           pk.id >= static_cast<uint32_t>(Resource::Food));
+    }
+
+    if (aligns && fEco.factories.count(pk) == 0) {
+      fEco.factories[pk] = 1;
+      fEco.credits -= constructionCost;
+      fEco.stockpile[mgKey] -= goodsRequired;
+      std::cout << "[Economy] Faction built NEW FACTORY for "
+                << (pk.type == ProductType::Module ? "Module " : "Resource ")
+                << pk.id << " (Cost: " << constructionCost << ")\n";
+      return; // One expansion at a time
     }
   }
 }

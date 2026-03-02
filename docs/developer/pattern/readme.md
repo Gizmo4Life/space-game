@@ -106,6 +106,7 @@ graph TD
 - [economy-resource-chain](economy-resource-chain.md)
 - [economy-dynamic-pricing](economy-dynamic-pricing.md)
 - [economy-competitive-market](economy-competitive-market.md)
+- [economy-infrastructure-expansion](economy-infrastructure-expansion.md)
 - [faction-relationship-matrix](faction-relationship-matrix.md)
 - [ship-modular-composition](ship-modular-composition.md)
 

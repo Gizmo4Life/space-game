@@ -41,11 +41,12 @@ void KinematicsSystem::applyThrust(entt::registry &registry,
   auto &inertial = registry.get<InertialBody>(entity);
   if (b2Body_IsValid(inertial.bodyId)) {
     b2Rot rot = b2Body_GetRotation(inertial.bodyId);
-    // Applying thrust along the +X forward axis
-    b2Vec2 force = {rot.c * inertial.thrustForce * power,
-                    rot.s * inertial.thrustForce * power};
+    float force = inertial.thrustForce * power;
+    // visual forward is -Y (rotation 0), so thrust vector should be:
+    // x = sin(angle) * force, y = -cos(angle) * force
+    b2Vec2 thrustVec = {rot.s * force, -rot.c * force};
 
-    b2Body_ApplyForceToCenter(inertial.bodyId, force, true);
+    b2Body_ApplyForceToCenter(inertial.bodyId, thrustVec, true);
   }
 }
 
