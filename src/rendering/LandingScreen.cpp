@@ -424,16 +424,16 @@ void LandingScreen::render(sf::RenderWindow &w, entt::registry &r,
   float panelH = H - 2.f * pad;
   float halfW = (W - 3.f * pad) / 2.f;
 
-  sf::FloatRect screenRect(50.0f, 50.0f, size.x - 100.0f, size.y - 100.0f);
+  sf::FloatRect screenRect({50.0f, 50.0f}, {W - 100.0f, H - 100.0f});
 
   // 1. Draw Tab Bar (Top)
-  sf::FloatRect tabRect(screenRect.left, screenRect.top, screenRect.width,
-                        40.0f);
+  sf::FloatRect tabRect(screenRect.position, {screenRect.size.x, 40.0f});
   drawTabs(w, f, tabRect);
 
   // 2. Content Area
-  sf::FloatRect contentRect(screenRect.left, screenRect.top + 60.0f,
-                            screenRect.width, screenRect.height - 60.0f);
+  sf::FloatRect contentRect(
+      {screenRect.position.x, screenRect.position.y + 60.0f},
+      {screenRect.size.x, screenRect.size.y - 60.0f});
 
   switch (currentTab_) {
   case LandingTab::Info:
@@ -462,7 +462,7 @@ void LandingScreen::render(sf::RenderWindow &w, entt::registry &r,
             "   |   [1-4] Tabs   [Esc] Depart",
         13);
     hint.setFillColor(sf::Color(180, 180, 180));
-    hint.setPosition({50.f, size.y - 30.f});
+    hint.setPosition({50.f, H - 30.f});
     w.draw(hint);
   }
 }
@@ -471,11 +471,11 @@ void LandingScreen::drawTabs(sf::RenderWindow &w, const sf::Font *f,
                              sf::FloatRect rect) {
   std::vector<std::string> tabs = {"1: Info", "2: Shipyard", "3: Outfitter",
                                    "4: Market"};
-  float tabWidth = rect.width / tabs.size();
+  float tabWidth = rect.size.x / tabs.size();
 
   for (size_t i = 0; i < tabs.size(); ++i) {
-    sf::FloatRect singleTab(rect.left + i * tabWidth, rect.top, tabWidth - 5.0f,
-                            rect.height);
+    sf::FloatRect singleTab({rect.position.x + i * tabWidth, rect.position.y},
+                            {tabWidth - 5.0f, rect.size.y});
     bool active = (static_cast<size_t>(currentTab_) == i);
 
     drawPanel(w, singleTab,
@@ -483,11 +483,11 @@ void LandingScreen::drawTabs(sf::RenderWindow &w, const sf::Font *f,
               active ? sf::Color::Cyan : sf::Color(100, 100, 100));
 
     if (f) {
-      sf::Text text(tabs[i], *f, 18);
+      sf::Text text(*f, tabs[i], 18);
       auto b = text.getLocalBounds();
       text.setPosition(
-          {singleTab.left + (singleTab.width - b.size.x) / 2.0f,
-           singleTab.top + (singleTab.height - b.size.y) / 2.0f - 5.0f});
+          {singleTab.position.x + (singleTab.size.x - b.size.x) / 2.0f,
+           singleTab.position.y + (singleTab.size.y - b.size.y) / 2.0f - 5.0f});
       w.draw(text);
     }
   }
@@ -497,14 +497,14 @@ void LandingScreen::drawOutfitter(sf::RenderWindow &w, entt::registry &r,
                                   const sf::Font *f, sf::FloatRect rect) {
   drawPanel(w, rect, sf::Color(30, 20, 40, 230), sf::Color(180, 100, 255, 200));
   if (f) {
-    sf::Text text("Outfitter: Ship Refitting & Modules", *f, 24);
-    text.setPosition({rect.left + 20.0f, rect.top + 20.0f});
+    sf::Text text(*f, "Outfitter: Ship Refitting & Modules", 24);
+    text.setPosition({rect.position.x + 20.0f, rect.position.y + 20.0f});
     w.draw(text);
 
     sf::Text comingSoon(
-        "(Module purchasing and refitting coming in next update)", *f, 18);
+        *f, "(Module purchasing and refitting coming in next update)", 18);
     comingSoon.setFillColor(sf::Color(150, 150, 150));
-    comingSoon.setPosition({rect.left + 20.0f, rect.top + 60.0f});
+    comingSoon.setPosition({rect.position.x + 20.0f, rect.position.y + 60.0f});
     w.draw(comingSoon);
   }
 }
@@ -520,31 +520,32 @@ void LandingScreen::drawMarket(sf::RenderWindow &w, entt::registry &r,
   auto &cargo = r.get<CargoComponent>(playerEntity_);
   auto &credits = r.get<CreditsComponent>(playerEntity_);
 
-  float y = rect.top + 20.0f;
-  float midX = rect.left + rect.width * 0.5f;
+  float y = rect.position.y + 20.0f;
+  float midX = rect.position.x + rect.size.x * 0.5f;
 
-  sf::Text title("Global Commodity Market", *f, 24);
-  title.setPosition({rect.left + 20.0f, y});
+  sf::Text title(*f, "Global Commodity Market", 24);
+  title.setPosition({rect.position.x + 20.0f, y});
   w.draw(title);
 
-  sf::Text balance("Wallet: " + fmt(credits.amount, 0) +
+  sf::Text balance(*f,
+                   "Wallet: " + fmt(credits.amount, 0) +
                        " Cr  |  Cargo: " + fmt(cargo.currentWeight, 1) + "/" +
                        fmt(cargo.maxCapacity, 0),
-                   *f, 18);
+                   18);
   balance.setFillColor(sf::Color::Cyan);
-  balance.setPosition({rect.left + rect.width - 350.f, y + 5.f});
+  balance.setPosition({rect.position.x + rect.size.x - 350.f, y + 5.f});
   w.draw(balance);
 
   y += 50.0f;
 
   // --- Left Side: Market Supply ---
-  sf::Text headerL("Planet Stockpile (Buy)", *f, 18);
+  sf::Text headerL(*f, "Planet Stockpile (Buy)", 18);
   headerL.setFillColor(sf::Color(180, 180, 180));
-  headerL.setPosition({rect.left + 30.0f, y});
+  headerL.setPosition({rect.position.x + 30.0f, y});
   w.draw(headerL);
 
   // --- Right Side: Player Inventory ---
-  sf::Text headerR("Your Cargo (Sell)", *f, 18);
+  sf::Text headerR(*f, "Your Cargo (Sell)", 18);
   headerR.setFillColor(sf::Color(180, 180, 180));
   headerR.setPosition({midX + 30.0f, y});
   w.draw(headerR);
@@ -554,26 +555,25 @@ void LandingScreen::drawMarket(sf::RenderWindow &w, entt::registry &r,
 
   // Render Market List
   for (int i = 0; i <= static_cast<int>(space::Resource::Refinery); ++i) {
-    if (y > rect.top + rect.height - 40.f)
+    if (y > rect.position.y + rect.size.y - 40.f)
       break;
 
     space::Resource res = static_cast<space::Resource>(i);
-    ProductKey pk{ProductType::Commodity, 0, Tier::T1,
-                  static_cast<uint16_t>(i)};
+    ProductKey pk{ProductType::Resource, static_cast<uint32_t>(i), Tier::T1};
 
     std::string name = getResourceName(res);
     float price = eco.currentPrices.count(pk) ? eco.currentPrices[pk] : 0.0f;
     float supply =
         eco.marketStockpile.count(pk) ? eco.marketStockpile[pk] : 0.0f;
 
-    sf::Text row(name + " | " + fmt(price, 1) +
-                     " Cr | Supply: " + fmt(supply, 0),
-                 *f, 16);
+    sf::Text row(
+        *f, name + " | " + fmt(price, 1) + " Cr | Supply: " + fmt(supply, 0),
+        16);
     if (i == selectedMarketIndex_) {
       row.setFillColor(sf::Color::Yellow);
       row.setString("> " + std::string(row.getString()));
     }
-    row.setPosition({rect.left + 40.0f, y});
+    row.setPosition({rect.position.x + 40.0f, y});
     w.draw(row);
     y += 25.0f;
   }
@@ -583,25 +583,26 @@ void LandingScreen::drawMarket(sf::RenderWindow &w, entt::registry &r,
   for (auto const &[res, amount] : cargo.inventory) {
     if (amount <= 0.01f)
       continue;
-    if (y > rect.top + rect.height - 40.f)
+    if (y > rect.position.y + rect.size.y - 40.f)
       break;
 
-    ProductKey pk{ProductType::Commodity, 0, Tier::T1,
-                  static_cast<uint16_t>(res)};
+    ProductKey pk{ProductType::Resource, static_cast<uint32_t>(res), Tier::T1};
     float price = eco.currentPrices.count(pk) ? eco.currentPrices[pk] : 0.0f;
 
-    sf::Text row(getResourceName(res) + " | " + fmt(amount, 1) +
+    sf::Text row(*f,
+                 getResourceName(res) + " | " + fmt(amount, 1) +
                      " units | Value: " + fmt(price, 1),
-                 *f, 16);
+                 16);
     row.setPosition({midX + 40.0f, y});
     w.draw(row);
     y += 25.0f;
   }
 
   // Market Controls Hint
-  sf::Text hint("[W/S] Select   [B] Buy 1   [V] Sell 1", *f, 14);
+  sf::Text hint(*f, "[W/S] Select   [B] Buy 1   [V] Sell 1", 14);
   hint.setFillColor(sf::Color(200, 200, 200));
-  hint.setPosition({rect.left + 20.f, rect.top + rect.height - 30.f});
+  hint.setPosition(
+      {rect.position.x + 20.f, rect.position.y + rect.size.y - 30.f});
   w.draw(hint);
 }
 

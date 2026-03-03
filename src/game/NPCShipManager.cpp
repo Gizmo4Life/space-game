@@ -170,7 +170,7 @@ void NPCShipManager::processMissions(entt::registry &registry, float dt) {
         // specific outfit
       }
 
-      if (!anyAlive) {
+      if (aliveCount == 0) {
         factionRiskRegistry_[it->record.factionId] += 1.0f;
       } else {
         factionRiskRegistry_[it->record.factionId] =

@@ -505,8 +505,7 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
   auto &credits = registry.get<CreditsComponent>(player);
   auto &cargo = registry.get<CargoComponent>(player);
 
-  ProductKey pk{ProductType::Commodity, 0, Tier::T1,
-                static_cast<uint16_t>(res)};
+  ProductKey pk{ProductType::Resource, static_cast<uint32_t>(res), Tier::T1};
   float price = eco.currentPrices.count(pk) ? eco.currentPrices[pk] : 100.0f;
   float totalCost = price * std::abs(delta);
 
