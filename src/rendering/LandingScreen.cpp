@@ -241,6 +241,74 @@ void LandingScreen::drawShipMarket(sf::RenderWindow &w, entt::registry &r,
   text("[ Esc ] Depart", 14, sf::Color(150, 150, 150));
 }
 
+void LandingScreen::drawFactionDNA(sf::RenderWindow &w, entt::registry &r,
+                                   const sf::Font *f, sf::FloatRect rect) {
+  if (!f || !r.valid(planetEntity_))
+    return;
+
+  // Find majority faction
+  if (!r.all_of<Faction>(planetEntity_))
+    return;
+  auto &facComp = r.get<Faction>(planetEntity_);
+  uint32_t fId = facComp.getMajorityFaction();
+  auto &fd = FactionManager::instance().getFaction(fId);
+
+  float x = rect.position.x + 20.f;
+  float y = rect.position.y + rect.size.y - 170.f;
+  float lineH = 20.f;
+
+  auto text = [&](const std::string &s, unsigned sz, sf::Color col) {
+    sf::Text t(*f, s, sz);
+    t.setFillColor(col);
+    t.setPosition({x, y});
+    w.draw(t);
+    y += lineH;
+  };
+
+  text("── Faction Profile: " + fd.name + " ──", 15, sf::Color(140, 200, 255));
+  y += 5.f;
+
+  auto drawAxis = [&](const std::string &label, float val) {
+    sf::Text lbl(*f, label, 13);
+    lbl.setFillColor(sf::Color(200, 200, 200));
+    lbl.setPosition({x, y});
+    w.draw(lbl);
+
+    float barW = 120.f;
+    float barH = 6.f;
+    sf::RectangleShape bg({barW, barH});
+    bg.setPosition({x + 110.f, y + 6.f});
+    bg.setFillColor(sf::Color(40, 40, 60));
+    w.draw(bg);
+
+    sf::RectangleShape bar({barW * val, barH});
+    bar.setPosition({x + 110.f, y + 6.f});
+    bar.setFillColor(fd.color);
+    w.draw(bar);
+    y += lineH;
+  };
+
+  drawAxis("Aggression", fd.dna.aggression);
+  drawAxis("Industrialism", fd.dna.industrialism);
+  drawAxis("Commercialism", fd.dna.commercialism);
+  drawAxis("Cooperation", fd.dna.cooperation);
+
+  y += 5.f;
+  // Relationship with player (faction 0 for now)
+  float rel = FactionManager::instance().getRelationship(0, fId);
+  std::string relStr = "Neutral";
+  sf::Color relCol = sf::Color(200, 200, 200);
+  if (rel > 0.4f) {
+    relStr = "Friendly";
+    relCol = sf::Color(100, 255, 100);
+  } else if (rel < -0.4f) {
+    relStr = "Hostile";
+    relCol = sf::Color(255, 100, 100);
+  }
+
+  text("Relationship: " + relStr + " (" + fmt(rel, 2) + ")", 14, relCol);
+}
+
 void LandingScreen::render(sf::RenderWindow &w, entt::registry &r,
                            const sf::Font *f) {
   if (!open_)
@@ -264,6 +332,7 @@ void LandingScreen::render(sf::RenderWindow &w, entt::registry &r,
   drawPanel(w, leftRect, sf::Color(20, 20, 35, 230),
             sf::Color(80, 120, 200, 200));
   drawPlanetInfo(w, r, f, leftRect);
+  drawFactionDNA(w, r, f, leftRect);
 
   // Right: ship market
   sf::FloatRect rightRect({2.f * pad + halfW, pad}, {halfW, panelH});

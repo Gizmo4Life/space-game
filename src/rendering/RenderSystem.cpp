@@ -9,6 +9,7 @@
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
+#include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
@@ -77,6 +78,111 @@ static void drawHullComponent(sf::RenderWindow &window, VisualStyle style,
   }
 }
 
+static void drawHUD(entt::registry &registry, entt::entity player,
+                    sf::RenderWindow &window, const sf::Font *font) {
+  if (!registry.valid(player) || !font)
+    return;
+
+  sf::Vector2u windowSize = window.getSize();
+  float hudWidth = 280.0f;
+  float hudHeight = 145.0f;
+  float margin = 20.0f;
+  sf::Vector2f hudPos(margin, windowSize.y - hudHeight - margin);
+
+  // Panel background
+  sf::RectangleShape panel({hudWidth, hudHeight});
+  panel.setPosition(hudPos);
+  panel.setFillColor(sf::Color(20, 25, 30, 220));
+  panel.setOutlineColor(sf::Color(100, 150, 200, 180));
+  panel.setOutlineThickness(2.0f);
+  window.draw(panel);
+
+  float x = hudPos.x + 15.0f;
+  float y = hudPos.y + 12.0f;
+  float lineSpacing = 22.0f;
+
+  auto drawText = [&](const std::string &str, unsigned int size,
+                      sf::Color color) {
+    sf::Text text(*font, str, size);
+    text.setFillColor(color);
+    text.setPosition({x, y});
+    window.draw(text);
+    y += lineSpacing;
+  };
+
+  // 1. Vessel Name
+  if (registry.all_of<HullDef>(player)) {
+    auto &hull = registry.get<HullDef>(player);
+    drawText(hull.name, 18, sf::Color(255, 220, 80));
+  } else {
+    drawText("Experimental Craft", 18, sf::Color(255, 220, 80));
+  }
+  y -= 4.0f;
+
+  // 2. Bars
+  if (registry.all_of<ShipStats>(player)) {
+    auto &stats = registry.get<ShipStats>(player);
+
+    auto drawBar = [&](const std::string &label, float current, float max,
+                       sf::Color barCol, sf::Color bgCol) {
+      sf::Text lbl(*font, label, 10);
+      lbl.setFillColor(sf::Color(200, 200, 200));
+      lbl.setPosition({x, y + 2.0f});
+      window.draw(lbl);
+
+      float barWidth = 140.0f;
+      float barHeight = 8.0f;
+      float pct = max > 0 ? std::clamp(current / max, 0.0f, 1.0f) : 0.0f;
+
+      sf::RectangleShape bg({barWidth, barHeight});
+      bg.setPosition({x + 45.0f, y + 4.0f});
+      bg.setFillColor(bgCol);
+      window.draw(bg);
+
+      sf::RectangleShape bar({barWidth * pct, barHeight});
+      bar.setPosition({x + 45.0f, y + 4.0f});
+      bar.setFillColor(barCol);
+      window.draw(bar);
+
+      sf::Text val(
+          *font, std::to_string((int)current) + "/" + std::to_string((int)max),
+          12);
+      val.setFillColor(sf::Color::White);
+      val.setPosition({x + 45.0f + barWidth + 8.0f, y});
+      window.draw(val);
+      y += lineSpacing;
+    };
+
+    drawBar("HULL", stats.currentHull, stats.maxHull, sf::Color(200, 40, 40),
+            sf::Color(60, 20, 20));
+    drawBar("NRG", stats.currentEnergy, stats.energyCapacity,
+            sf::Color(40, 120, 200), sf::Color(20, 40, 60));
+  }
+
+  // 3. Physics Stats
+  if (registry.all_of<InertialBody>(player)) {
+    auto &inertial = registry.get<InertialBody>(player);
+    if (b2Body_IsValid(inertial.bodyId)) {
+      b2Vec2 vel = b2Body_GetLinearVelocity(inertial.bodyId);
+      float speed = std::sqrt(vel.x * vel.x + vel.y * vel.y);
+
+      std::string physStr = "VEL: " + std::to_string((int)speed) + " m/s";
+      if (registry.all_of<ShipStats>(player)) {
+        physStr +=
+            "  MASS: " +
+            std::to_string((int)registry.get<ShipStats>(player).totalMass) +
+            " t";
+      }
+      drawText(physStr, 12, sf::Color(180, 180, 180));
+
+      std::string thrustStr =
+          "THRUST: " + std::to_string((int)(inertial.thrustForce / 1000.0f)) +
+          " kN";
+      drawText(thrustStr, 12, sf::Color(180, 180, 180));
+    }
+  }
+}
+
 void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                           const sf::Font *font) {
   auto span =
@@ -86,9 +192,11 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
   float zoom = WorldConfig::DEFAULT_ZOOM;
 
   // Find Player position for centering
+  entt::entity playerEntity = entt::null;
   sf::Vector2f playerPhysPos(0, 0);
   auto playerView = registry.view<PlayerComponent, InertialBody>();
   for (auto e : playerView) {
+    playerEntity = e;
     auto &inertial = playerView.get<InertialBody>(e);
     if (b2Body_IsValid(inertial.bodyId)) {
       b2Vec2 bPos = b2Body_GetPosition(inertial.bodyId);
@@ -354,6 +462,12 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
       }
       drawIndicator(pixelPos, labelText, color, 8.0f);
     }
+
+    // 4. Render Ship HUD
+    if (playerEntity != entt::null && font) {
+      drawHUD(registry, playerEntity, window, font);
+    }
+
     span->SetAttribute("engine.rendering.indicator.count", indicatorCount);
   }
   span->End();

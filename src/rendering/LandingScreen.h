@@ -46,6 +46,9 @@ private:
 
   void drawShipMarket(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
                       sf::FloatRect rect, b2WorldId worldId);
+
+  void drawFactionDNA(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
+                      sf::FloatRect rect);
 };
 
 } // namespace space
