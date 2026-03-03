@@ -1,4 +1,10 @@
 #include "ShipOutfitter.h"
+#include "game/FactionManager.h"
+#include "game/components/FactionDNA.h"
+#include "game/components/GameTypes.h"
+#include "game/components/HullDef.h"
+#include "game/components/HullGenerator.h"
+#include "game/components/ShipModule.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -36,63 +42,85 @@ void ModuleRegistry::init() {
   auto &gen = ModuleGenerator::instance();
 
   auto genSet = [&](const std::string &name, Tier t,
-                    std::vector<AttributeType> a, float v, float m) {
-    modules.push_back(gen.generate(name, t, a, v, m));
+                    std::vector<AttributeType> a, float v, float m, float p) {
+    auto mod = gen.generate(name, t, a, v, m, 1.0f, p);
+    modules.push_back(mod);
   };
 
   // --- Engines ---
-  genSet(
-      "Standard Light Engine", Tier::T1,
-      {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass},
-      5.0f, 1.0f);
-  genSet(
-      "Heavy Duty Medium Engine", Tier::T2,
-      {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass},
-      15.0f, 3.0f);
-  genSet(
-      "Industrial Heavy Engine", Tier::T3,
-      {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass},
-      40.0f, 10.0f);
+  genSet("Standard Light Engine", Tier::T1,
+         {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass,
+          AttributeType::Volume, AttributeType::Size},
+         5.0f, 1.0f, 0.2f);
+  genSet("Heavy Duty Medium Engine", Tier::T2,
+         {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass,
+          AttributeType::Volume, AttributeType::Size},
+         15.0f, 3.0f, 0.8f);
+  genSet("Industrial Heavy Engine", Tier::T3,
+         {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass,
+          AttributeType::Volume, AttributeType::Size},
+         40.0f, 10.0f, 2.5f);
 
   // --- Weapons ---
   genSet("LC-1 Light Cannon", Tier::T1,
-         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range},
-         3.0f, 2.0f);
+         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range,
+          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
+          AttributeType::Size},
+         3.0f, 2.0f, 0.1f);
   genSet("MC-2 Medium Cannon", Tier::T2,
-         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range},
-         10.0f, 5.0f);
+         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range,
+          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
+          AttributeType::Size},
+         10.0f, 5.0f, 0.4f);
   genSet("HC-3 Heavy Cannon", Tier::T3,
-         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range},
-         30.0f, 15.0f);
+         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range,
+          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
+          AttributeType::Size},
+         30.0f, 15.0f, 1.2f);
 
   // --- Shields ---
   genSet("S-10 Light Shield", Tier::T1,
          {AttributeType::Capacity, AttributeType::Regen,
-          AttributeType::Efficiency},
-         8.0f, 4.0f);
+          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
+          AttributeType::Size},
+         8.0f, 4.0f, 0.3f);
   genSet("S-20 Medium Shield", Tier::T2,
          {AttributeType::Capacity, AttributeType::Regen,
-          AttributeType::Efficiency},
-         25.0f, 12.0f);
+          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
+          AttributeType::Size},
+         25.0f, 12.0f, 1.0f);
   genSet("S-30 Heavy Shield", Tier::T3,
          {AttributeType::Capacity, AttributeType::Regen,
-          AttributeType::Efficiency},
-         70.0f, 35.0f);
+          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
+          AttributeType::Size},
+         70.0f, 35.0f, 3.5f);
 
   // --- Utility ---
   genSet("C-10 Cargo Pod", Tier::T1,
-         {AttributeType::Volume, AttributeType::Mass}, 5.0f, 0.5f);
+         {AttributeType::Volume, AttributeType::Mass, AttributeType::Efficiency,
+          AttributeType::Size},
+         5.0f, 0.5f, 0.01f);
   genSet("C-20 Cargo Pod", Tier::T2,
-         {AttributeType::Volume, AttributeType::Mass}, 15.0f, 1.5f);
+         {AttributeType::Volume, AttributeType::Mass, AttributeType::Efficiency,
+          AttributeType::Size},
+         15.0f, 1.5f, 0.02f);
   genSet("C-30 Cargo Bay", Tier::T3,
-         {AttributeType::Volume, AttributeType::Mass}, 50.0f, 5.0f);
+         {AttributeType::Volume, AttributeType::Mass, AttributeType::Efficiency,
+          AttributeType::Size},
+         50.0f, 5.0f, 0.05f);
 
   genSet("R-1 Reactor", Tier::T1,
-         {AttributeType::Output, AttributeType::Efficiency}, 10.0f, 2.0f);
+         {AttributeType::Output, AttributeType::Efficiency, AttributeType::Mass,
+          AttributeType::Volume, AttributeType::Size},
+         10.0f, 2.0f, -1.5f);
   genSet("R-2 Reactor", Tier::T2,
-         {AttributeType::Output, AttributeType::Efficiency}, 25.0f, 5.0f);
-  genSet("R-3 Fusion Reactor", Tier::T3,
-         {AttributeType::Output, AttributeType::Efficiency}, 60.0f, 12.0f);
+         {AttributeType::Output, AttributeType::Efficiency, AttributeType::Mass,
+          AttributeType::Volume, AttributeType::Size},
+         30.0f, 6.0f, -5.0f);
+  genSet("R-3 Heavy Reactor", Tier::T3,
+         {AttributeType::Output, AttributeType::Efficiency, AttributeType::Mass,
+          AttributeType::Volume, AttributeType::Size},
+         100.0f, 20.0f, -15.0f);
 }
 
 void ShipOutfitter::init() { ModuleRegistry::instance().init(); }
@@ -143,9 +171,19 @@ ShipOutfitter::getBlueprintModules(uint32_t factionId, Tier sizeTier,
   std::vector<ModuleId> allModules;
 
   // 1. Engines
+  bool hasEngine = false;
   for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
-    allModules.push_back(
-        findBestModule(AttributeType::Thrust, hull.engineSlots[i].size));
+    uint32_t engineId =
+        findBestModule(AttributeType::Thrust, hull.engineSlots[i].size);
+    allModules.push_back(engineId);
+    if (engineId != EMPTY_MODULE)
+      hasEngine = true;
+  }
+
+  // Fallback: If no engine was found but ship requires one, pick the absolute
+  // smallest
+  if (!hasEngine && !hull.engineSlots.empty()) {
+    allModules[0] = findBestModule(AttributeType::Thrust, Tier::T1);
   }
 
   // 2. Weapons
@@ -165,25 +203,33 @@ ShipOutfitter::getBlueprintModules(uint32_t factionId, Tier sizeTier,
     }
   }
 
-  // 3. Internals
+  // 3. Internals (PRIORITY: Reactor)
   float availableVolume = hull.internalVolume;
+  float currentPowerBalance = 0.0f; // Simplified balance for blueprint gen
+
   auto tryInstallInternal = [&](uint32_t moduleId) -> bool {
     if (moduleId == EMPTY_MODULE)
       return false;
     const auto &m = ModuleRegistry::instance().getModule(moduleId);
     if (availableVolume >= m.volumeOccupied) {
       availableVolume -= m.volumeOccupied;
+      currentPowerBalance -= m.powerDraw; // Production is negative pwrDraw
       return true;
     }
     return false;
   };
 
+  // Must have at least one reactor
+  uint32_t reactorId = findBestModule(AttributeType::Output, sizeTier);
+  if (tryInstallInternal(reactorId)) {
+    allModules.push_back(reactorId);
+  }
+
   bool wantShields =
       dna.aggression > 0.2f || role == "Combat" || tdna.prefDurability > 0.6f;
   if (wantShields) {
     uint32_t sId = findBestModule(AttributeType::Capacity, sizeTier);
-    int count = 0;
-    while (tryInstallInternal(sId) && count++ < 5) {
+    if (tryInstallInternal(sId)) {
       allModules.push_back(sId);
     }
   }
@@ -198,18 +244,21 @@ ShipOutfitter::getBlueprintModules(uint32_t factionId, Tier sizeTier,
     }
   }
 
+  // Fill remaining volume with more reactors if power is still potentially low
+  // or just extra buffer
   uint32_t pId = findBestModule(AttributeType::Output, sizeTier);
-  int count = 0;
-  while (tryInstallInternal(pId) && count++ < 3) {
+  int rCount = 0;
+  while (tryInstallInternal(pId) && rCount++ < 2) {
     allModules.push_back(pId);
   }
 
   return allModules;
 }
 
-void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
-                                uint32_t factionId, Tier sizeTier,
-                                const std::string &role) const {
+void ShipOutfitter::applyBlueprint(::entt::registry &registry,
+                                   entt::entity entity, uint32_t factionId,
+                                   Tier sizeTier,
+                                   const std::string &role) const {
   auto span =
       space::Telemetry::instance().tracer()->StartSpan("game.core.ship.outfit");
   const HullDef &hull = getHull(factionId, sizeTier, role);
@@ -327,10 +376,10 @@ ShipOutfitHash ShipOutfitter::calculateOutfitHash(entt::registry &registry,
   return hash;
 }
 
-bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
-                                entt::entity planet, ProductKey moduleKey,
-                                int slotIndex) {
-  auto &reg = ModuleRegistry::instance();
+bool ShipOutfitter::refitModule(::entt::registry &registry,
+                                ::entt::entity entity, ::entt::entity planet,
+                                ProductKey moduleKey, int slotIndex) {
+  auto &reg = ::space::ModuleRegistry::instance();
   if (!registry.all_of<Landed>(entity) ||
       registry.get<Landed>(entity).planet != planet)
     return false;
@@ -387,16 +436,15 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
       }
 
       // Installation
-      auto &reg = ModuleRegistry::instance();
       if (mDef.hasAttribute(AttributeType::Thrust)) {
         auto &ie = registry.get_or_emplace<InstalledEngines>(entity);
         if (ie.ids.size() < hull.engineSlots.size())
-          ie.ids.resize(hull.engineSlots.size(), EMPTY_MODULE);
+          ie.ids.resize(hull.engineSlots.size(), ::space::EMPTY_MODULE);
         ie.ids[slotIndex] = moduleKey.id;
       } else if (mDef.hasAttribute(AttributeType::Caliber)) {
         auto &iw = registry.get_or_emplace<InstalledWeapons>(entity);
         if (iw.ids.size() < hull.hardpointSlots.size())
-          iw.ids.resize(hull.hardpointSlots.size(), EMPTY_MODULE);
+          iw.ids.resize(hull.hardpointSlots.size(), ::space::EMPTY_MODULE);
         iw.ids[slotIndex] = moduleKey.id;
       } else if (mDef.hasAttribute(AttributeType::Capacity)) {
         auto &is = registry.get_or_emplace<InstalledShields>(entity);
@@ -411,14 +459,22 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
 
       refreshStats(registry, entity, hull);
       fEco.stockpile[moduleKey] -= 1.0f;
+
+      // Final validation
+      std::string valError;
+      if (!hull.validate(valError)) {
+        std::cout << "[Outfitter] Hull validation failed: " << valError << "\n";
+      }
+
       return true;
     }
   }
+
   return false;
 }
 
-float ShipOutfitter::calculateShipValue(entt::registry &registry,
-                                        entt::entity entity) const {
+float ShipOutfitter::calculateShipValue(::entt::registry &registry,
+                                        ::entt::entity entity) const {
   float total = 0.0f;
   if (registry.all_of<HullDef>(entity)) {
     total += 10000.0f *
@@ -473,8 +529,7 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
       if (id == EMPTY_MODULE)
         continue;
       const auto &m = reg.getModule(id);
-      stats.totalMass +=
-          getTierMult(m.getAttributeTier(AttributeType::Mass)) * 5.0f;
+      stats.totalMass += m.mass;
     }
   };
 
@@ -577,6 +632,16 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
     }
     inertial.thrustForce = thrust;
     inertial.rotationSpeed = rot;
+
+    // Sync mass to Box2D
+    b2MassData massData;
+    massData.mass = stats.totalMass;
+    massData.center = {0.0f, 0.0f};
+    // Rotational inertia: proportional to mass.
+    // Hull base mass is around 1000-5000, modules add more.
+    // I = mass * r^2. For a ship, let's approximate with mass * 2.0
+    massData.rotationalInertia = stats.totalMass * 2.0f;
+    b2Body_SetMassData(inertial.bodyId, massData);
   }
 }
 

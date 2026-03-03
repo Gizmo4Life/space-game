@@ -20,9 +20,9 @@ public:
   const HullDef &getHull(uint32_t factionId, Tier sizeTier,
                          const std::string &role = "General") const;
 
-  void applyOutfit(entt::registry &registry, entt::entity entity,
-                   uint32_t factionId, Tier sizeTier,
-                   const std::string &role = "General") const;
+  void applyBlueprint(::entt::registry &registry, ::entt::entity entity,
+                      uint32_t factionId, Tier sizeTier,
+                      const std::string &role = "General") const;
 
   std::vector<ModuleId>
   getBlueprintModules(uint32_t factionId, Tier sizeTier,

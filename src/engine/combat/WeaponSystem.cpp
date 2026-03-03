@@ -3,19 +3,22 @@
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
 #include "game/components/Faction.h"
+#include "game/components/GameTypes.h"
 #include "game/components/InertialBody.h"
+#include "game/components/InstalledModules.h"
 #include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
 #include <cmath>
+#include <entt/entt.hpp>
 #include <iostream>
 #include <opentelemetry/trace/provider.h>
 #include <vector>
 
 namespace space {
 
-void WeaponSystem::update(entt::registry &registry, float deltaTime) {
+void WeaponSystem::update(::entt::registry &registry, float deltaTime) {
   // 1. Update Cooldowns
   auto weaponView = registry.template view<WeaponComponent>();
   for (auto entity : weaponView) {
@@ -60,7 +63,7 @@ void WeaponSystem::update(entt::registry &registry, float deltaTime) {
   }
 }
 
-void WeaponSystem::handleCollisions(entt::registry &registry) {
+void WeaponSystem::handleCollisions(::entt::registry &registry) {
   auto span =
       Telemetry::instance().tracer()->StartSpan("combat.collision.resolve");
   auto projView = registry.template view<ProjectileComponent, InertialBody>();
@@ -124,11 +127,28 @@ void WeaponSystem::handleCollisions(entt::registry &registry) {
   span->End();
 }
 
-entt::entity WeaponSystem::fire(entt::registry &registry, entt::entity owner,
+entt::entity WeaponSystem::fire(::entt::registry &registry, entt::entity owner,
                                 b2WorldId worldId) {
   if (!registry.all_of<WeaponComponent, TransformComponent, InertialBody>(
           owner))
     return entt::null;
+
+  // Check if any weapons are actually installed
+  if (registry.all_of<InstalledWeapons>(owner)) {
+    auto &iw = registry.get<InstalledWeapons>(owner);
+    bool hasWeapon = false;
+    for (auto id : iw.ids) {
+      if (id != EMPTY_MODULE) {
+        hasWeapon = true;
+        break;
+      }
+    }
+    if (!hasWeapon)
+      return entt::null;
+  } else {
+    // If component is missing, it definitely has no weapons
+    return entt::null;
+  }
 
   auto span = Telemetry::instance().tracer()->StartSpan("combat.weapon.fire");
 

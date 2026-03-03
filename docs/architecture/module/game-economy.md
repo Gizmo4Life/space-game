@@ -25,6 +25,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [economy-resource-chain](/docs/developer/pattern/economy-resource-chain.md) (P) — Three-tier production chain (Basic -> Refined -> Modular)
 - [dna-weighted-infrastructure-expansion](/docs/developer/pattern/dna-weighted-infrastructure-expansion.md) (P) — Faction factory construction based on "Need" and DNA axis bias
 - [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P) — `targetStock / currentStock` price formula
+- [economy-arbitrage-logic](/docs/developer/pattern/economy-arbitrage-logic.md) (P) — AI traders move goods between planets based on price differentials and faction DNA
 - [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model using `Tier` for tiered pricing
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)

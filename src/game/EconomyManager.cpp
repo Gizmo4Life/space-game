@@ -17,9 +17,11 @@
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/GameTypes.h"
+#include "game/components/HullGenerator.h"
 #include "game/components/Landed.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
+#include "game/components/PlayerComponent.h"
 #include "game/components/ShipModule.h"
 #include "game/components/TransformComponent.h"
 
@@ -206,6 +208,8 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
     for (auto &pair : eco.factionData) {
       processProduction(pair.first, pair.second, deltaTime);
       reEvaluateFactionDNA(pair.first, pair.second, deltaTime);
+      reEvaluateTraderLogic(registry, pair.first, pair.second, entity,
+                            deltaTime);
     }
 
     eco.marketStockpile.clear();
@@ -465,7 +469,8 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
 
 bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
                              entt::entity player, const DetailedHullBid &bid,
-                             b2WorldId worldId) {
+                             b2WorldId worldId, bool addToFleet,
+                             bool asFlagship) {
   if (!registry.all_of<PlanetEconomy>(planet))
     return false;
 
@@ -482,15 +487,50 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
       fEco.fleetPool[key]--;
       fEco.credits += bid.price;
 
-      // Spawn actual ship for player (replacement logic)
       auto &trans = registry.get<TransformComponent>(planet);
-      auto ship = NPCShipManager::instance().spawnShip(
-          registry, bid.factionId, trans.position, worldId, bid.tier, true);
-      // NPCShipManager::spawnShip returns the entity, but buyShip was designed
-      // to handle the player replacement.
-      // However, for this simplified demo, we just spawn a new one near the
-      // player or replace player ship?
-      // The old logic called NPCShipManager::spawnShip.
+
+      if (asFlagship) {
+        // 1. Spawn the new ship as the new flagship
+        auto newFlagship = NPCShipManager::instance().spawnShip(
+            registry, bid.factionId, trans.position, worldId, bid.tier, false);
+
+        // 2. The new ship gets Player credentials
+        registry.emplace_or_replace<PlayerComponent>(newFlagship);
+        registry.get<PlayerComponent>(newFlagship).isFlagship = true;
+
+        // Transfer credits to new flagship
+        float currentCredits = registry.get<CreditsComponent>(player).amount;
+        registry.emplace_or_replace<CreditsComponent>(newFlagship,
+                                                      currentCredits);
+
+        // Set name for the new flagship
+        registry.emplace_or_replace<NameComponent>(
+            newFlagship, "Player Ship (" + bid.hull.className + ")");
+
+        // 3. The old ship becomes an escort
+        registry.remove<PlayerComponent>(player);
+        auto &oldNpc = registry.emplace_or_replace<NPCComponent>(player);
+        oldNpc.isPlayerFleet = true;
+        oldNpc.leaderEntity = newFlagship;
+        oldNpc.state = AIState::Traveling;
+
+        // Clean up NPC stats from the new flagship if any (spawnShip adds it)
+        if (registry.all_of<NPCComponent>(newFlagship)) {
+          registry.remove<NPCComponent>(newFlagship);
+        }
+
+        std::cout << "[Economy] FLAGSHIP SWAPPED. Old ship joined the fleet.\n";
+      } else if (addToFleet) {
+        // Spawn as an escort following the current player ship
+        NPCShipManager::instance().spawnShip(registry, bid.factionId,
+                                             trans.position, worldId, bid.tier,
+                                             true, player);
+        std::cout << "[Economy] New escort joined the fleet.\n";
+      } else {
+        // Legacy/Direct replacement (though UI will mostly use B/F now)
+        NPCShipManager::instance().spawnShip(
+            registry, bid.factionId, trans.position, worldId, bid.tier, false);
+      }
       return true;
     }
   }
@@ -615,6 +655,76 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
   }
 
   return true;
+}
+
+void EconomyManager::reEvaluateTraderLogic(entt::registry &registry,
+                                           uint32_t factionId,
+                                           FactionEconomy &fEco,
+                                           entt::entity currentPlanet,
+                                           float deltaTime) {
+  // Only re-evaluate occasionally
+  if (rand() % 200 != 0)
+    return;
+
+  auto &fData = FactionManager::instance().getFaction(factionId);
+  float commerceWeight = fData.dna.commercialism;
+
+  // Find a resource we can buy low here and sell high elsewhere
+  auto &localEco = registry.get<PlanetEconomy>(currentPlanet);
+
+  Resource bestRes = Resource::Water;
+  float bestProfitMargin = 0.0f;
+  entt::entity targetPlanet = entt::null;
+
+  auto planetView = registry.view<PlanetEconomy>();
+  for (auto otherPlanet : planetView) {
+    if (otherPlanet == currentPlanet)
+      continue;
+    auto &otherEco = planetView.get<PlanetEconomy>(otherPlanet);
+
+    for (int r = 0; r < static_cast<int>(Resource::COUNT); ++r) {
+      Resource res = static_cast<Resource>(r);
+      ProductKey pk{ProductType::Resource, static_cast<uint32_t>(res),
+                    Tier::T1};
+
+      if (localEco.currentPrices.count(pk) &&
+          otherEco.currentPrices.count(pk)) {
+        float buyPrice = localEco.currentPrices[pk];
+        float sellPrice = otherEco.currentPrices[pk];
+        float margin = (sellPrice - buyPrice) / buyPrice;
+
+        if (margin > bestProfitMargin) {
+          bestProfitMargin = margin;
+          bestRes = res;
+          targetPlanet = otherPlanet;
+        }
+      }
+    }
+  }
+
+  // If we found a profitable route, "dispatch" a trader if commerce is high
+  // enough
+  if (targetPlanet != entt::null &&
+      bestProfitMargin > (0.2f - commerceWeight * 0.15f)) {
+    // Logic to spawn or redirect an NPC trader
+    // For now, we simulate the "equilibrium" effect by shifting stockpiles
+    float tradeAmount = 5.0f * commerceWeight;
+    ProductKey pk{ProductType::Resource, static_cast<uint32_t>(bestRes),
+                  Tier::T1};
+
+    if (localEco.marketStockpile[pk] >= tradeAmount) {
+      localEco.marketStockpile[pk] -= tradeAmount;
+      registry.get<PlanetEconomy>(targetPlanet).marketStockpile[pk] +=
+          tradeAmount;
+
+      if (factionId == 0) { // Civilian focus
+        std::cout << "[Economy] Civilian Traders moving " << tradeAmount
+                  << " units of " << static_cast<int>(bestRes)
+                  << " to balance markets (Margin: "
+                  << (bestProfitMargin * 100.f) << "%)\n";
+      }
+    }
+  }
 }
 
 } // namespace space

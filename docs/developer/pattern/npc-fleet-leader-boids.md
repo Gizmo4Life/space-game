@@ -34,7 +34,8 @@ neighborCount += weight;
 // Aggressive follow-back when far from leader:
 if (npc.isPlayerFleet && ldSq > 200.0f * 200.0f) {
   float tf = inertial.thrustForce;
-  b2Body_ApplyForceToCenter(bodyId, {ldx/ld * tf * 3.0f, ldy/ld * tf * 3.0f}, true);
+  b2Vec2 force = {ldx/ld * tf * 3.0f, ldy/ld * tf * 3.0f};
+  b2Body_ApplyForceToCenter(inertial.bodyId, force, true);
 }
 ```
 

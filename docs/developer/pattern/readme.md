@@ -65,6 +65,9 @@ graph TD
 - [test-case-duality](test-case-duality.md)
 - [padu-evaluation](padu-evaluation.md)
 - [trade-static-interface](trade-static-interface.md)
+- [cpp-header-hygiene](cpp-header-hygiene.md)
+- [cpp-explicit-namespace-resolution](cpp-explicit-namespace-resolution.md)
+- [cpp-component-aggregation](cpp-component-aggregation.md)
 
 ## 4. CI/CD & Infrastructure
 *Nuance: Patterns governing the automated deployment and verification pipeline.*

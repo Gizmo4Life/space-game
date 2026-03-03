@@ -40,7 +40,13 @@ int main() {
   // --- Font Loading ---
   sf::Font gameFont;
   bool fontLoaded = false;
-  if (gameFont.openFromFile("/System/Library/Fonts/Helvetica.ttc") ||
+  // Prioritize Arial Unicode for glyph coverage, then Menlo for technical look,
+  // then standard fallbacks
+  if (gameFont.openFromFile(
+          "/System/Library/Fonts/Supplemental/Arial Unicode.ttf") ||
+      gameFont.openFromFile("/Library/Fonts/Arial Unicode.ttf") ||
+      gameFont.openFromFile("/System/Library/Fonts/Menlo.ttc") ||
+      gameFont.openFromFile("/System/Library/Fonts/Helvetica.ttc") ||
       gameFont.openFromFile("/System/Library/Fonts/Supplemental/Arial.ttf") ||
       gameFont.openFromFile("/Library/Fonts/Arial.ttf")) {
     fontLoaded = true;

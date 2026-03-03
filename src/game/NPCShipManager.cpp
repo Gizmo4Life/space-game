@@ -7,17 +7,24 @@
 #include "game/components/CelestialBody.h"
 #include "game/components/Economy.h"
 #include "game/components/Faction.h"
+#include "game/components/HullGenerator.h"
 #include "game/components/InertialBody.h"
+#include "game/components/InstalledModules.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
+#include "game/components/PlayerComponent.h"
+#include "game/components/ShipModule.h"
 #include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
 #include "game/components/WorldConfig.h"
+#include <box2d/box2d.h>
+#include <entt/entt.hpp>
 
 #include <SFML/Graphics.hpp>
 #include <algorithm>
+#include <box2d/box2d.h>
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -200,7 +207,7 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
   npc.leaderEntity = leaderEntity;
 
   auto &outfitter = ShipOutfitter::instance();
-  outfitter.applyOutfit(registry, entity, factionId, sizeTier);
+  outfitter.applyBlueprint(registry, entity, factionId, sizeTier);
 
   const auto &hull = outfitter.getHull(factionId, sizeTier);
   registry.emplace<NameComponent>(
@@ -213,18 +220,92 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
 }
 
 void NPCShipManager::tickAI(entt::registry &registry, float dt) {
-  auto view = registry.view<NPCComponent, TransformComponent>();
+  auto view = registry.view<NPCComponent, TransformComponent, InertialBody>();
+
   for (auto entity : view) {
     auto &npc = view.get<NPCComponent>(entity);
     auto &trans = view.get<TransformComponent>(entity);
+    auto &inertial = view.get<InertialBody>(entity);
 
-    if (npc.state == AIState::Traveling && registry.valid(npc.targetEntity)) {
+    if (inertial.bodyId.index1 == 0)
+      continue; // Invalid body
+
+    sf::Vector2f steeringForce(0, 0);
+    entt::entity leader = npc.leaderEntity;
+
+    // Determine target/leader for mission-based NPCs
+    if (leader == entt::null && npc.missionId != 0) {
+      for (const auto &m : activeMissions_) {
+        if (m.record.missionId == npc.missionId && !m.ships.empty()) {
+          leader = m.ships[0];
+          break;
+        }
+      }
+    }
+
+    if (leader != entt::null && registry.valid(leader) && leader != entity) {
+      auto &leaderTrans = registry.get<TransformComponent>(leader);
+      sf::Vector2f toLeader = leaderTrans.position - trans.position;
+      float distToLeader =
+          std::sqrt(toLeader.x * toLeader.x + toLeader.y * toLeader.y);
+
+      // --- Boids Logic (Physics-Based) ---
+
+      // A. Cohesion: Attractive force towards leader
+      float idealDist = 50.0f;
+      if (distToLeader > idealDist) {
+        sf::Vector2f cohesionDir = toLeader / distToLeader;
+        steeringForce += cohesionDir * 0.8f;
+      }
+
+      // B. Alignment: Match leader's target direction
+      if (registry.all_of<NPCComponent>(leader)) {
+        auto &leaderNpc = registry.get<NPCComponent>(leader);
+        if (registry.valid(leaderNpc.targetEntity)) {
+          auto &destTrans =
+              registry.get<TransformComponent>(leaderNpc.targetEntity);
+          sf::Vector2f dir = destTrans.position - trans.position;
+          float mag = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+          if (mag > 0)
+            steeringForce += (dir / mag) * 0.4f;
+        }
+      }
+
+      // C. Separation: Repulsive force from nearby peers
+      for (auto other : view) {
+        if (other == entity)
+          continue;
+        auto &otherNpc = view.get<NPCComponent>(other);
+        if (otherNpc.missionId == npc.missionId ||
+            otherNpc.leaderEntity == npc.leaderEntity) {
+          auto &otherTrans = view.get<TransformComponent>(other);
+          sf::Vector2f diff = trans.position - otherTrans.position;
+          float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+          if (dist < 30.0f && dist > 0) {
+            steeringForce += (diff / dist) * (40.0f / dist);
+          }
+        }
+      }
+
+      // Apply the steering force as a Box2D force
+      float thrustMultiplier = inertial.thrustForce;
+      if (distToLeader > 250.0f)
+        thrustMultiplier *= 2.0f; // Catch up!
+
+      b2Vec2 force = {steeringForce.x * thrustMultiplier,
+                      steeringForce.y * thrustMultiplier};
+      b2Body_ApplyForceToCenter(inertial.bodyId, force, true);
+
+    } else if (npc.state == AIState::Traveling &&
+               registry.valid(npc.targetEntity)) {
+      // Standard lone traveler physics logic
       auto &destTrans = registry.get<TransformComponent>(npc.targetEntity);
       sf::Vector2f dir = destTrans.position - trans.position;
       float mag = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-      if (mag > 10.0f) {
-        trans.position +=
-            (dir / mag) * 100.0f * dt; // Simple constant speed travel
+      if (mag > 15.0f) {
+        b2Vec2 force = {(dir.x / mag) * inertial.thrustForce,
+                        (dir.y / mag) * inertial.thrustForce};
+        b2Body_ApplyForceToCenter(inertial.bodyId, force, true);
       }
     }
   }

@@ -16,7 +16,8 @@ public:
   /// Variability introduces a chance for attributes to be +/- 1 tier.
   ModuleDef generate(const std::string &baseName, Tier baseTier,
                      const std::vector<AttributeType> &requiredAttrs,
-                     float baseVolume, float baseMaint);
+                     float baseVolume, float baseMass, float baseMaint,
+                     float basePower);
 
 private:
   ModuleGenerator() = default;

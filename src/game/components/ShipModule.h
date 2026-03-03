@@ -1,5 +1,5 @@
 #pragma once
-#include "game/components/GameTypes.h"
+#include "GameTypes.h"
 #include <string>
 #include <vector>
 
@@ -12,7 +12,9 @@ struct ModuleDef {
   std::string name;
   std::vector<ModuleAttribute> attributes;
   float volumeOccupied;
+  float mass;
   float maintenanceCost;
+  float powerDraw; // Gigawatts (GW). Negative for reactors (generation).
 
   // Helper to find a specific attribute
   bool hasAttribute(AttributeType type) const {

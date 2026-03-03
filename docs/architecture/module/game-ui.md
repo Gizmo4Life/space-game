@@ -7,7 +7,13 @@ pillar: architecture
 
 # Module: Game UI
 
-Full-screen landing overlay providing planet information and the competitive ship market to the player.
+Full-screen landing overlay providing planet information, tiered ship technicals (Power GW, Weight, Volume), and attribute star-ratings for modular outfitting. 
+
+**Technical Constraints:**
+- Ships must have at least one Reactor (Power Producing module).
+- Ships cannot exceed their `internalVolume` capacity.
+- Ships must maintain a non-negative `PowerBalance` (Total GW >= 0).
+- UI summarizes available hard points and engine mounts by tier (Small/Medium/Large).
 
 ## 1. Physical Scope
 - **Path:** `/src/rendering/` — `LandingScreen.h/.cpp`, `MarketPanel.h/.cpp`, `ShipyardPanel.h/.cpp`, `OutfitterPanel.h/.cpp`
@@ -22,6 +28,7 @@ Full-screen landing overlay providing planet information and the competitive shi
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `NPCComponent::isPlayerFleet`, `NPCComponent::leaderEntity`
 - [rendering-pause-overlay](/docs/developer/pattern/rendering-pause-overlay.md) (P) — game-loop suspension + full-screen overlay
 - [rendering-spatial-bridge](/docs/developer/pattern/rendering-spatial-bridge.md) (P) — `window.setView(defaultView)` for overlay rendering
+- [rendering-schematic-visuals](/docs/developer/pattern/rendering-schematic-visuals.md) (P) — Blueprint outlines moving away from faction color schemes.
 - [rendering-scrollable-subpanel](/docs/developer/pattern/rendering-scrollable-subpanel.md) (P) — `ShipyardPanel` module detail scrolling via `PageUp/PageDown`
 - [ui-component-guard](/docs/developer/pattern/ui-component-guard.md) (P) — Resilient `try_get` access for `CargoComponent` and `CreditsComponent`
 

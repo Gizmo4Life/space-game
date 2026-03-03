@@ -25,7 +25,8 @@ enum class Resource {
   Weapons,
   // Infrastructure
   Shipyard,
-  Refinery
+  Refinery,
+  COUNT
 };
 
 struct FactionEconomy {
@@ -89,6 +90,8 @@ inline std::string getResourceName(Resource res) {
     return "Shipyard";
   case Resource::Refinery:
     return "Refinery";
+  case Resource::COUNT:
+    break;
   }
   return "Unknown";
 }
@@ -125,6 +128,8 @@ inline std::string getResourceInitial(Resource res) {
     return "Sy";
   case Resource::Refinery:
     return "Rf";
+  case Resource::COUNT:
+    break;
   }
   return "?";
 }

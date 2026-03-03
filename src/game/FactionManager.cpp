@@ -26,9 +26,9 @@ void FactionManager::init() {
   civ.name = "Civilian";
   civ.color = sf::Color(150, 150, 150);
   civ.dna.aggression = 0.05f;
-  civ.dna.industrialism = 0.3f;
-  civ.dna.commercialism = 0.8f;
-  civ.dna.cooperation = 0.9f; // High cooperation for civilians
+  civ.dna.industrialism = 1.0f;
+  civ.dna.commercialism = 1.0f;
+  civ.dna.cooperation = 1.0f; // Max cooperation for civilians
   for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
     TierDNA &tdna = civ.dna.tierDNA[t];
     tdna.fleetScale = (t == Tier::T1) ? 0.8f : 0.2f;

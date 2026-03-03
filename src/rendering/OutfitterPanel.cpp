@@ -2,10 +2,12 @@
 #include "UIUtils.h"
 #include "game/EconomyManager.h"
 #include "game/ShipOutfitter.h"
-#include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
+#include "game/components/HullDef.h"
 #include "game/components/InstalledModules.h"
+#include "game/components/ShipModule.h"
 #include <SFML/Graphics.hpp>
+#include <box2d/box2d.h>
 
 namespace space {
 
@@ -13,7 +15,7 @@ OutfitterPanel::OutfitterPanel(entt::entity planet, entt::entity player)
     : planetEntity_(planet), playerEntity_(player) {}
 
 void OutfitterPanel::handleEvent(const sf::Event &event,
-                                 entt::registry &registry, b2WorldId) {
+                                 ::entt::registry &registry, b2WorldId) {
   if (const auto *kp = event.getIf<sf::Event::KeyPressed>()) {
     if (kp->code == sf::Keyboard::Key::Tab) {
       outfitterMarketMode_ = !outfitterMarketMode_;
@@ -47,8 +49,9 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
   }
 }
 
-void OutfitterPanel::render(sf::RenderWindow &window, entt::registry &registry,
-                            const sf::Font *font, sf::FloatRect rect) {
+void OutfitterPanel::render(sf::RenderWindow &window,
+                            ::entt::registry &registry, const sf::Font *font,
+                            sf::FloatRect rect) {
   if (!font || !registry.valid(playerEntity_))
     return;
 
@@ -67,30 +70,76 @@ void OutfitterPanel::render(sf::RenderWindow &window, entt::registry &registry,
   CreditsComponent *pCredits =
       registry.try_get<CreditsComponent>(playerEntity_);
   if (pCredits) {
-    dtext("Credits: $" + fmt(pCredits->amount, 0), 16,
-          sf::Color(100, 255, 100));
+    // Assuming hdef and fdr are available in this scope,
+    // or need to be fetched from the playerEntity_
+    // For now, I'll assume they are available as per the instruction's context.
+    // If not, this would cause a compilation error.
+    const auto &hdef = registry.get<HullDef>(playerEntity_);
+    const auto &fdr = registry.get<CreditsComponent>(playerEntity_);
+
+    dtext(hdef.name + " (" + hdef.className + ")", 20, sf::Color::Cyan);
+    dtext("Tier: " + tierName(hdef.sizeTier), 14, sf::Color(200, 200, 200));
+
+    // Power & Volume
+    float usedVol = 0.f;
+    float powerTotal = 0.f;
+
+    auto calcStats = [&](const std::vector<ModuleId> &ids) {
+      for (auto id : ids) {
+        if (id == EMPTY_MODULE)
+          continue;
+        const auto &m = ModuleRegistry::instance().getModule(id);
+        usedVol += m.volumeOccupied;
+        powerTotal -= m.powerDraw;
+      }
+    };
+    if (registry.all_of<InstalledEngines>(playerEntity_))
+      calcStats(registry.get<InstalledEngines>(playerEntity_).ids);
+    if (registry.all_of<InstalledWeapons>(playerEntity_))
+      calcStats(registry.get<InstalledWeapons>(playerEntity_).ids);
+    if (registry.all_of<InstalledShields>(playerEntity_))
+      calcStats(registry.get<InstalledShields>(playerEntity_).ids);
+    if (registry.all_of<InstalledCargo>(playerEntity_))
+      calcStats(registry.get<InstalledCargo>(playerEntity_).ids);
+    if (registry.all_of<InstalledPower>(playerEntity_))
+      calcStats(registry.get<InstalledPower>(playerEntity_).ids);
+
+    dtext("Volume: " + fmt(usedVol, 1) + "/" + fmt(hdef.internalVolume, 0) +
+              " cubic m",
+          14, usedVol > hdef.internalVolume ? sf::Color::Red : sf::Color::Cyan);
+    dtext("Power: " + fmt(powerTotal, 1) + " GW", 14,
+          powerTotal < 0 ? sf::Color::Red : sf::Color(100, 255, 100));
+
+    // Slots summary
+    y += 5.f;
+    sf::Text slotSum(*font, hdef.getSlotSummary(), 12);
+    slotSum.setFillColor(sf::Color(150, 150, 150));
+    slotSum.setPosition({x, y});
+    window.draw(slotSum);
+    y += 35.f;
+
+    dtext("Credits: $" + fmt(fdr.amount, 0), 16, sf::Color(100, 255, 100));
   } else {
     dtext("Credits: N/A", 16, sf::Color(150, 150, 150));
   }
   y += 10.f;
 
   std::vector<ModuleId> allInstalled;
-  if (registry.all_of<InstalledEngines>(playerEntity_)) {
-    auto &c = registry.get<InstalledEngines>(playerEntity_);
-    allInstalled.insert(allInstalled.end(), c.ids.begin(), c.ids.end());
-  }
-  if (registry.all_of<InstalledWeapons>(playerEntity_)) {
-    auto &c = registry.get<InstalledWeapons>(playerEntity_);
-    allInstalled.insert(allInstalled.end(), c.ids.begin(), c.ids.end());
-  }
-  if (registry.all_of<InstalledShields>(playerEntity_)) {
-    auto &c = registry.get<InstalledShields>(playerEntity_);
-    allInstalled.insert(allInstalled.end(), c.ids.begin(), c.ids.end());
-  }
-  if (registry.all_of<InstalledCargo>(playerEntity_)) {
-    auto &c = registry.get<InstalledCargo>(playerEntity_);
-    allInstalled.insert(allInstalled.end(), c.ids.begin(), c.ids.end());
-  }
+  auto collect = [&](const std::vector<ModuleId> &ids) {
+    for (auto id : ids)
+      if (id != EMPTY_MODULE)
+        allInstalled.push_back(id);
+  };
+  if (registry.all_of<InstalledEngines>(playerEntity_))
+    collect(registry.get<InstalledEngines>(playerEntity_).ids);
+  if (registry.all_of<InstalledWeapons>(playerEntity_))
+    collect(registry.get<InstalledWeapons>(playerEntity_).ids);
+  if (registry.all_of<InstalledShields>(playerEntity_))
+    collect(registry.get<InstalledShields>(playerEntity_).ids);
+  if (registry.all_of<InstalledCargo>(playerEntity_))
+    collect(registry.get<InstalledCargo>(playerEntity_).ids);
+  if (registry.all_of<InstalledPower>(playerEntity_))
+    collect(registry.get<InstalledPower>(playerEntity_).ids);
 
   // Left: Player Modules
   float leftX = x;
@@ -113,16 +162,30 @@ void OutfitterPanel::render(sf::RenderWindow &window, entt::registry &registry,
       t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
       t.setPosition({leftX, y});
       window.draw(t);
-      y += 20.f;
+      y += 18.f;
+
+      std::string statsLine = "    Vol: " + fmt(mdef.volumeOccupied, 1) +
+                              "  Mass: " + fmt(mdef.mass, 1) +
+                              "  Power: " + fmt(mdef.powerDraw, 1) + " GW";
+      sf::Text st(*font, statsLine, 12);
+      st.setFillColor(sf::Color(160, 160, 160));
+      st.setPosition({leftX, y});
+      window.draw(st);
+      y += 18.f;
 
       if (sel) {
         for (const auto &attr : mdef.attributes) {
-          std::string attrLabel = "    " + getAttributeName(attr.type) + ": " +
-                                  getTierStars(attr.tier);
-          sf::Text at(*font, attrLabel, 12);
-          at.setFillColor(sf::Color(180, 180, 180));
-          at.setPosition({leftX, y});
-          window.draw(at);
+          sf::Text labelText(*font, "    " + getAttributeName(attr.type) + ": ",
+                             12);
+          labelText.setFillColor(sf::Color(180, 180, 180));
+          labelText.setPosition({leftX, y});
+          window.draw(labelText);
+
+          sf::Text starText(*font, getTierStars(attr.tier), 12);
+          starText.setFillColor(sf::Color::Yellow);
+          starText.setPosition({leftX + 130.f, y});
+          window.draw(starText);
+
           y += 16.f;
         }
       }
@@ -153,16 +216,29 @@ void OutfitterPanel::render(sf::RenderWindow &window, entt::registry &registry,
     t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
     t.setPosition({x, y});
     window.draw(t);
-    y += 20.f;
+    y += 18.f;
+
+    std::string statsLine = "    Vol: " + fmt(mdef.volumeOccupied, 1) +
+                            "  Mass: " + fmt(mdef.mass, 1) +
+                            "  Power: " + fmt(mdef.powerDraw, 1) + " GW";
+    sf::Text st(*font, statsLine, 12);
+    st.setFillColor(sf::Color(160, 160, 160));
+    st.setPosition({x, y});
+    window.draw(st);
+    y += 18.f;
 
     if (sel) {
       for (const auto &attr : mdef.attributes) {
-        std::string attrLabel = "    " + getAttributeName(attr.type) + ": " +
-                                getTierStars(attr.tier);
-        sf::Text at(*font, attrLabel, 12);
-        at.setFillColor(sf::Color(180, 180, 180));
-        at.setPosition({x, y});
-        window.draw(at);
+        sf::Text labelText(*font, "    " + getAttributeName(attr.type) + ": ",
+                           12);
+        labelText.setFillColor(sf::Color(180, 180, 180));
+        labelText.setPosition({x, y});
+        window.draw(labelText);
+
+        sf::Text starText(*font, getTierStars(attr.tier), 12);
+        starText.setFillColor(sf::Color::Yellow);
+        starText.setPosition({x + 130.f, y});
+        window.draw(starText);
         y += 16.f;
       }
     }

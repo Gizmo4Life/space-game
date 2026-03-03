@@ -2,6 +2,11 @@
 
 PADU matrices rating patterns for operational fitness.
 
+## Operational Stability
+| Pattern | Purpose | AD | AS | AU | AP |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| [operational-stability-standard](operational-stability-standard.md) | Enforce header hygiene and explicit namespaces. | 1 | 1 | 5 | 5 |
+
 ## Project Construction & Build
 | Pattern | Purpose | AD | AS | AU | AP |
 | :--- | :--- | :--- | :--- | :--- | :--- |

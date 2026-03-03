@@ -1,5 +1,11 @@
 #include "UIUtils.h"
+#include "game/components/CelestialBody.h"
+#include "game/components/GameTypes.h"
+#include <SFML/Graphics/Text.hpp>
 #include <cmath>
+#include <entt/entt.hpp>
+#include <sstream>
+#include <string>
 
 namespace space {
 
@@ -70,17 +76,11 @@ std::string getAttributeName(AttributeType type) {
 }
 
 std::string getTierStars(Tier tier) {
-  switch (tier) {
-  case Tier::T1:
-    return "*";
-  case Tier::T2:
-    return "**";
-  case Tier::T3:
-    return "***";
-  case Tier::T4:
-    return "****";
+  std::string res = "";
+  for (int i = 0; i < 3; ++i) {
+    res += (i < static_cast<int>(tier)) ? "*" : ".";
   }
-  return "";
+  return res;
 }
 
 void drawPanel(sf::RenderWindow &w, sf::FloatRect rect, sf::Color bg,

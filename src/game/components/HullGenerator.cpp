@@ -1,6 +1,11 @@
 #include "HullGenerator.h"
+#include "game/components/FactionDNA.h"
+#include "game/components/GameTypes.h"
+#include "game/components/HullDef.h"
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include <vector>
 
 namespace space {
 
@@ -56,6 +61,13 @@ float HullGenerator::calculateHP(const TierDNA &tdna, Tier tier) {
 float HullGenerator::calculateVolume(const TierDNA &tdna, Tier tier) {
   float base = static_cast<float>(tier) * 50.0f;
   base *= (0.5f + tdna.prefVolume);
+
+  // Civilian DNA bias: High commercialism + High prefVolume = Massive Transport
+  // Boost
+  if (tdna.prefVolume > 0.6f) {
+    base *= 2.5f;
+  }
+
   return base;
 }
 
@@ -66,6 +78,8 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
     float density = pair.second;
     int count =
         static_cast<int>(density * 4.0f * static_cast<float>(hull.sizeTier));
+    if (count == 0 && hull.hardpointSlots.empty())
+      count = 1; // Mandatory 1 hardpoint
 
     for (int i = 0; i < count; ++i) {
       MountSlot slot;
@@ -73,18 +87,33 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
       slot.size = size;
       slot.style = hull.visual.bodyStyle;
 
+      sf::Vector2f pos;
       if (hull.visual.layoutPattern == LayoutPattern::Radial) {
         float angle = (2.0f * 3.14159f * i) / count;
-        slot.localPos =
-            sf::Vector2f(std::cos(angle) * 25.0f, std::sin(angle) * 25.0f);
+        pos = sf::Vector2f(std::cos(angle) * 25.0f, std::sin(angle) * 25.0f);
       } else if (hull.visual.layoutPattern == LayoutPattern::Asymmetrical) {
-        slot.localPos = sf::Vector2f((i % 3 - 1) * 15.0f, -15.0f * i);
+        pos = sf::Vector2f((i % 3 - 1) * 15.0f, -15.0f * i);
       } else {
         // Symmetrical
         float side = (i % 2 == 0) ? 1.0f : -1.0f;
-        slot.localPos = sf::Vector2f(side * 20.0f, -10.0f * (i / 2));
+        pos = sf::Vector2f(side * 20.0f, -10.0f * (i / 2));
       }
-      hull.hardpointSlots.push_back(slot);
+
+      // Check overlap before adding
+      bool overlap = false;
+      for (const auto &existing : hull.hardpointSlots) {
+        float dx = existing.localPos.x - pos.x;
+        float dy = existing.localPos.y - pos.y;
+        if (std::sqrt(dx * dx + dy * dy) < 6.0f) {
+          overlap = true;
+          break;
+        }
+      }
+
+      if (!overlap) {
+        slot.localPos = pos;
+        hull.hardpointSlots.push_back(slot);
+      }
     }
   }
 
@@ -103,12 +132,12 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
 
       if (hull.visual.layoutPattern == LayoutPattern::Radial) {
         float angle = (2.0f * 3.14159f * i) / count;
-        slot.localPos = sf::Vector2f(std::cos(angle) * 15.0f, 20.0f);
+        slot.localPos = sf::Vector2f(std::cos(angle) * 15.0f, 25.0f);
       } else {
         float side = (i % 2 == 0) ? 1.0f : -1.0f;
         if (count == 1)
           side = 0;
-        slot.localPos = sf::Vector2f(side * 15.0f, 30.0f);
+        slot.localPos = sf::Vector2f(side * 15.0f, 30.0f + (i / 2) * 5.0f);
       }
       hull.engineSlots.push_back(slot);
     }

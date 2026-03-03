@@ -281,9 +281,10 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
     sc.sprite->setOrigin({radius, radius});
     registry.emplace<SpriteComponent>(planet, sc);
 
-    bool habitable = !isDwarf && type != CelestialType::GasGiant;
+    bool habitable = type != CelestialType::GasGiant;
     if (habitable) {
-      seedEconomy(registry, planet, type, 1.0f);
+      float popScale = isDwarf ? 0.4f : 1.0f;
+      seedEconomy(registry, planet, type, popScale);
     }
 
     // Moon system for all non-dwarf planets
@@ -330,7 +331,7 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 
   Tier startTier = Tier::T2;
-  ShipOutfitter::instance().applyOutfit(registry, ship, 1, startTier);
+  ShipOutfitter::instance().applyBlueprint(registry, ship, 1, startTier);
   const HullDef &hull = ShipOutfitter::instance().getHull(1, startTier);
 
   registry.emplace_or_replace<InertialBody>(ship, bodyId, 500.0f, 0.05f, 20.0f);

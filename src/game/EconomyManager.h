@@ -18,7 +18,7 @@ struct Recipe {
 };
 
 struct ShipOffer {
-  entt::entity shipEntity;
+  ::entt::entity shipEntity;
   uint32_t factionId;
   float price;
 };
@@ -41,7 +41,7 @@ public:
   }
 
   void init();
-  void update(entt::registry &registry, float deltaTime);
+  void update(::entt::registry &registry, float deltaTime);
 
   std::vector<ShipOffer> getShipOffers(entt::registry &registry,
                                        entt::entity planet);
@@ -52,7 +52,8 @@ public:
 
   bool buyShip(entt::registry &registry, entt::entity planet,
                entt::entity player, const DetailedHullBid &bid,
-               b2WorldId worldId);
+               b2WorldId worldId, bool addToFleet = false,
+               bool asFlagship = false);
 
   bool buyModularShip(entt::registry &registry, entt::entity shipEntity,
                       entt::entity player);
@@ -77,6 +78,9 @@ private:
                                float deltaTime);
   void reEvaluateFactionDNA(uint32_t factionId, FactionEconomy &fEco,
                             float deltaTime);
+  void reEvaluateTraderLogic(::entt::registry &registry, uint32_t factionId,
+                             FactionEconomy &fEco, ::entt::entity currentPlanet,
+                             float deltaTime);
 
   std::map<ProductKey, Recipe> recipes;
   std::vector<ProductKey> productionPriority;

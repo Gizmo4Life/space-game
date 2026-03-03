@@ -1,10 +1,20 @@
 #include "ShipyardPanel.h"
-#include "UIUtils.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/EconomyManager.h"
 #include "game/FactionManager.h"
+#include "game/components/GameTypes.h"
+#include "game/components/HullDef.h"
 #include "game/components/HullGenerator.h"
+#include "game/components/InstalledModules.h"
+#include "game/components/PlayerComponent.h"
+#include "game/components/ShipModule.h"
+#include "rendering/UIUtils.h"
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <algorithm>
+#include <cmath>
+#include <entt/entt.hpp>
 #include <opentelemetry/trace/provider.h>
+#include <vector>
 
 namespace space {
 
@@ -37,18 +47,67 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
       moduleScrollY_ += 60.f;
     }
 
-    // Buy
-    if ((kp->code == sf::Keyboard::Key::Enter ||
-         kp->code == sf::Keyboard::Key::B) &&
-        !currentBids_.empty()) {
+    // Purchase Logic
+    bool buyToFleet = (kp->code == sf::Keyboard::Key::B);
+    bool buyAsFlagship = (kp->code == sf::Keyboard::Key::F);
+
+    if ((buyToFleet || buyAsFlagship) && !currentBids_.empty()) {
       auto span =
           Telemetry::instance().tracer()->StartSpan("game.ui.ship.purchase");
       const auto &bid = currentBids_[selectedBidIndex_];
-      span->SetAttribute("vessel.tier", tierName(bid.tier));
-      if (EconomyManager::instance().buyShip(registry, planetEntity_,
-                                             playerEntity_, bid, worldId)) {
-        currentBids_ =
-            EconomyManager::instance().getHullBids(registry, planetEntity_);
+
+      // Technical validation
+      float usedVol = 0.f;
+      float powerTotal = 0.f;
+      bool hasReactor = false;
+      for (auto modId : bid.modules) {
+        if (modId == EMPTY_MODULE)
+          continue;
+        const auto &m = ModuleRegistry::instance().getModule(modId);
+        usedVol += m.volumeOccupied;
+        powerTotal -= m.powerDraw;
+        if (m.powerDraw < 0)
+          hasReactor = true;
+      }
+
+      bool hasEngine = false;
+      if (bid.modules.size() >= bid.hull.engineSlots.size()) {
+        for (size_t i = 0; i < bid.hull.engineSlots.size(); ++i) {
+          if (bid.modules[i] != ::space::EMPTY_MODULE) {
+            hasEngine = true;
+            break;
+          }
+        }
+      }
+
+      bool canBuy = (usedVol <= bid.hull.internalVolume) && (powerTotal >= 0) &&
+                    hasReactor && hasEngine;
+
+      if (canBuy) {
+        // Find existing entities to help updating refs
+        entt::entity originalPlayer = playerEntity_;
+
+        if (EconomyManager::instance().buyShip(registry, planetEntity_,
+                                               playerEntity_, bid, worldId,
+                                               buyToFleet, buyAsFlagship)) {
+
+          if (buyAsFlagship) {
+            // Find the NEW flagship to update playerEntity_
+            auto playerView = registry.view<PlayerComponent>();
+            for (auto entity : playerView) {
+              if (playerView.get<PlayerComponent>(entity).isFlagship) {
+                playerEntity_ = entity;
+                break;
+              }
+            }
+          }
+
+          currentBids_ =
+              EconomyManager::instance().getHullBids(registry, planetEntity_);
+          span->SetAttribute("purchase.success", true);
+        }
+      } else {
+        span->SetAttribute("purchase.denied", "Technical constraints violated");
       }
       span->End();
     }
@@ -66,7 +125,7 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
   }
 }
 
-void ShipyardPanel::render(sf::RenderWindow &window, entt::registry &registry,
+void ShipyardPanel::render(sf::RenderWindow &window, ::entt::registry &registry,
                            const sf::Font *font, sf::FloatRect rect) {
   if (!font)
     return;
@@ -126,11 +185,53 @@ void ShipyardPanel::render(sf::RenderWindow &window, entt::registry &registry,
     dtext(dx, dy, "Price: $" + fmt(bid.price, 0), 18, sf::Color(100, 255, 100));
     dy += 10.f;
 
-    // Preview rendering
+    // Preview rendering & Technicals
     sf::Vector2f previewPos = {dx + 120.f, dy + 100.f};
-    sf::Color factionColor =
-        FactionManager::instance().getFaction(bid.factionId).color;
-    drawShipBlueprint(window, bid.hull, previewPos, 4.5f, factionColor);
+    const auto &faction = FactionManager::instance().getFaction(bid.factionId);
+    drawShipBlueprint(window, bid.hull, previewPos, 4.5f, faction);
+
+    // Calc totals
+    float usedVol = 0.f;
+    float powerProduction = 0.f;
+    float powerLoad = 0.f;
+    float totalMass = bid.hull.baseMass * bid.hull.massMultiplier;
+    for (auto modId : bid.modules) {
+      if (modId == EMPTY_MODULE)
+        continue;
+      const auto &m = ModuleRegistry::instance().getModule(modId);
+      usedVol += m.volumeOccupied;
+      totalMass += m.mass;
+      if (m.powerDraw < 0)
+        powerProduction -= m.powerDraw; // Production is positive here
+      else
+        powerLoad += m.powerDraw;
+    }
+
+    float ty = dy + 180.f;
+    auto dtech = [&](const std::string &lab, float val, const std::string &unit,
+                     sf::Color c) {
+      sf::Text t(*font, lab + ": " + fmt(val, 1) + " " + unit, 14);
+      t.setFillColor(c);
+      t.setPosition({dx, ty});
+      window.draw(t);
+      ty += 18.f;
+    };
+
+    dtech("Volume", usedVol, "/" + fmt(bid.hull.internalVolume, 0) + " cubic m",
+          usedVol > bid.hull.internalVolume ? sf::Color::Red : sf::Color::Cyan);
+    dtech("Power", powerProduction - powerLoad, "GW",
+          (powerProduction < powerLoad) ? sf::Color::Red
+                                        : sf::Color(100, 255, 100));
+    dtech("Mass", totalMass, "t", sf::Color::White);
+
+    // Slots Summary
+    ty += 5.f;
+    sf::Text slotsText(*font, bid.hull.getSlotSummary(), 13);
+    slotsText.setFillColor(sf::Color(180, 180, 180));
+    slotsText.setPosition({dx, ty});
+    window.draw(slotsText);
+
+    dy = ty + 40.f;
 
     // Modules list on the far right
     float mx = rect.position.x + 750.f;
@@ -160,26 +261,51 @@ void ShipyardPanel::render(sf::RenderWindow &window, entt::registry &registry,
         mt.setPosition({mx, my});
         window.draw(mt);
       }
-      my += 20.f;
+      my += 18.f;
 
       if (exp) {
-        for (const auto &attr : mod.attributes) {
-          if (my >= listStart && my < scrollLimitY) {
-            std::string attrLabel = "    " + getAttributeName(attr.type) +
-                                    ": " + getTierStars(attr.tier);
-            sf::Text at(*font, attrLabel, 12);
-            at.setFillColor(sf::Color(180, 180, 180));
-            at.setPosition({mx, my});
-            window.draw(at);
+        auto dattr = [&](const std::string &lt, int stars, sf::Color c) {
+          if (my < listStart || my >= scrollLimitY) {
+            my += 14.f;
+            return;
           }
-          my += 16.f;
+          sf::Text labelText(*font, "  " + lt + " ", 11);
+          labelText.setFillColor(c);
+          labelText.setPosition({mx, my});
+          window.draw(labelText);
+
+          sf::Text starText(*font, getTierStars(static_cast<Tier>(stars)), 11);
+          starText.setFillColor(sf::Color::Yellow);
+          starText.setPosition({mx + 110.f, my});
+          window.draw(starText);
+
+          my += 14.f;
+        };
+
+        dattr("Vol: " + fmt(mod.volumeOccupied, 1) + " cubic m", 0,
+              sf::Color(180, 180, 180));
+        dattr("Pwr: " + fmt(mod.powerDraw, 1) + "GW", 0,
+              sf::Color(180, 180, 180));
+
+        for (const auto &attr : mod.attributes) {
+          int starCount = 0;
+          if (attr.tier == Tier::T1)
+            starCount = 1;
+          else if (attr.tier == Tier::T2)
+            starCount = 2;
+          else if (attr.tier >= Tier::T3)
+            starCount = 3;
+          dattr(getAttributeName(attr.type), starCount,
+                sf::Color(140, 200, 255));
         }
       }
     }
 
     float helpY = rect.position.y + rect.size.y - 40.f;
     sf::Text help(*font,
-                  "[Enter/B] Purchase  [X] Toggle All  [PgUp/PgDn] Scroll", 13);
+                  "[B] Buy to Fleet  [F] Buy as Flagship  [X] Toggle Details  "
+                  "[PgUp/PgDn] Scroll",
+                  13);
     help.setFillColor(sf::Color(150, 150, 150));
     help.setPosition({rect.position.x + 400.f, helpY});
     window.draw(help);
@@ -189,33 +315,37 @@ void ShipyardPanel::render(sf::RenderWindow &window, entt::registry &registry,
 static void drawHullComp(sf::RenderWindow &window, VisualStyle style,
                          sf::Vector2f pos, float rotation, sf::Color color,
                          float scale) {
+  sf::Color outlineColor = color;
+  sf::Color fillColor =
+      sf::Color(color.r, color.g, color.b, 40); // Translucent schematic fill
+
   if (style == VisualStyle::Triangle) {
     sf::ConvexShape triangle(3);
     triangle.setPoint(0, {0, -12 * scale});
     triangle.setPoint(1, {-10 * scale, 10 * scale});
     triangle.setPoint(2, {10 * scale, 10 * scale});
     triangle.setOrigin({0, 0});
-    triangle.setFillColor(color);
-    triangle.setOutlineThickness(1.0f);
-    triangle.setOutlineColor(sf::Color(50, 50, 50));
+    triangle.setFillColor(fillColor);
+    triangle.setOutlineThickness(1.2f);
+    triangle.setOutlineColor(outlineColor);
     triangle.setPosition(pos);
     triangle.setRotation(sf::degrees(rotation));
     window.draw(triangle);
   } else if (style == VisualStyle::Square) {
     sf::RectangleShape rect({20 * scale, 20 * scale});
     rect.setOrigin({10 * scale, 10 * scale});
-    rect.setFillColor(color);
-    rect.setOutlineThickness(1.0f);
-    rect.setOutlineColor(sf::Color(50, 50, 50));
+    rect.setFillColor(fillColor);
+    rect.setOutlineThickness(1.2f);
+    rect.setOutlineColor(outlineColor);
     rect.setPosition(pos);
     rect.setRotation(sf::degrees(rotation));
     window.draw(rect);
   } else if (style == VisualStyle::Circular) {
     sf::CircleShape circle(10 * scale);
     circle.setOrigin({10 * scale, 10 * scale});
-    circle.setFillColor(color);
-    circle.setOutlineThickness(1.0f);
-    circle.setOutlineColor(sf::Color(50, 50, 50));
+    circle.setFillColor(fillColor);
+    circle.setOutlineThickness(1.2f);
+    circle.setOutlineColor(outlineColor);
     circle.setPosition(pos);
     circle.setRotation(sf::degrees(rotation));
     window.draw(circle);
@@ -226,9 +356,9 @@ static void drawHullComp(sf::RenderWindow &window, VisualStyle style,
     sleek.setPoint(2, {0, 10 * scale});
     sleek.setPoint(3, {8 * scale, 5 * scale});
     sleek.setOrigin({0, 0});
-    sleek.setFillColor(color);
-    sleek.setOutlineThickness(1.0f);
-    sleek.setOutlineColor(sf::Color(50, 50, 50));
+    sleek.setFillColor(fillColor);
+    sleek.setOutlineThickness(1.2f);
+    sleek.setOutlineColor(outlineColor);
     sleek.setPosition(pos);
     sleek.setRotation(sf::degrees(rotation));
     window.draw(sleek);
@@ -237,9 +367,20 @@ static void drawHullComp(sf::RenderWindow &window, VisualStyle style,
 
 void ShipyardPanel::drawShipBlueprint(sf::RenderWindow &w, const HullDef &hull,
                                       sf::Vector2f pos, float scale,
-                                      sf::Color color) {
+                                      const FactionData &faction) {
+  NacelleStyle nacelleStyle = faction.dna.visual.nacelleStyle;
+  HullConnectivity connectivity = faction.dna.visual.hullConnectivity;
+
+  // Use a neutral blueprint cyan for schematic outlines
+  sf::Color schematicColor = sf::Color(100, 220, 255);
+  schematicColor.a = 255;
+
+  // Subtle connectors for schematic look
+  sf::Color connectorColor =
+      sf::Color(schematicColor.r, schematicColor.g, schematicColor.b, 120);
+
   auto drawConnectors = [&](const std::vector<MountSlot> &slots) {
-    if (hull.visual.nacelleStyle == NacelleStyle::Integrated)
+    if (nacelleStyle == NacelleStyle::Integrated)
       return;
 
     for (const auto &slot : slots) {
@@ -249,20 +390,22 @@ void ShipyardPanel::drawShipBlueprint(sf::RenderWindow &w, const HullDef &hull,
       sf::Vector2f endPos =
           pos + rotateVector(slot.localPos * scale * 12.0f, 0.f);
 
-      if (hull.visual.nacelleStyle == NacelleStyle::Ring) {
+      if (nacelleStyle == NacelleStyle::Ring) {
         sf::CircleShape ring(std::sqrt(slot.localPos.x * slot.localPos.x +
                                        slot.localPos.y * slot.localPos.y) *
                              scale * 12.0f);
         ring.setOrigin({ring.getRadius(), ring.getRadius()});
         ring.setPosition(pos);
         ring.setFillColor(sf::Color::Transparent);
-        ring.setOutlineThickness(1.0f);
-        ring.setOutlineColor(sf::Color(60, 60, 60));
+        ring.setOutlineThickness(0.8f);
+        ring.setOutlineColor(connectorColor);
         w.draw(ring);
       } else {
-        // Outriggers or Pods (thick line for pods)
-        float thick =
-            (hull.visual.nacelleStyle == NacelleStyle::Pods) ? 2.f : 1.f;
+        // Schematic lines for outriggers/pods
+        float thick = (nacelleStyle == NacelleStyle::Pods) ? 2.0f : 1.0f;
+        if (connectivity == HullConnectivity::Skeletal)
+          thick *= 0.5f;
+
         sf::RectangleShape line;
         sf::Vector2f diff = endPos - pos;
         float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
@@ -271,7 +414,7 @@ void ShipyardPanel::drawShipBlueprint(sf::RenderWindow &w, const HullDef &hull,
         line.setPosition(pos);
         line.setRotation(
             sf::degrees(std::atan2(diff.y, diff.x) * 180.f / 3.14159f));
-        line.setFillColor(sf::Color(80, 80, 80));
+        line.setFillColor(connectorColor);
         w.draw(line);
       }
     }
@@ -280,16 +423,21 @@ void ShipyardPanel::drawShipBlueprint(sf::RenderWindow &w, const HullDef &hull,
   drawConnectors(hull.engineSlots);
   drawConnectors(hull.hardpointSlots);
 
-  drawHullComp(w, hull.visual.bodyStyle, pos, 0.f, color, scale);
+  // Main body
+  drawHullComp(w, hull.visual.bodyStyle, pos, 0.f, schematicColor, scale);
 
+  // Engine nacelles / pods
   for (const auto &slot : hull.engineSlots) {
     sf::Vector2f offset = rotateVector(slot.localPos * scale * 12.0f, 0.f);
-    drawHullComp(w, slot.style, pos + offset, 0.f, color, scale * 0.7f);
+    drawHullComp(w, slot.style, pos + offset, 0.f, schematicColor,
+                 scale * 0.7f);
   }
 
+  // Weapons / Hardpoints
   for (const auto &slot : hull.hardpointSlots) {
     sf::Vector2f offset = rotateVector(slot.localPos * scale * 12.0f, 0.f);
-    drawHullComp(w, slot.style, pos + offset, 0.f, color, scale * 0.5f);
+    drawHullComp(w, slot.style, pos + offset, 0.f, schematicColor,
+                 scale * 0.5f);
   }
 }
 
