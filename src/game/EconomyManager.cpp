@@ -26,6 +26,8 @@
 // Observability Gap: Stockpile levels are only aggregate; per-faction
 // surplus/deficit metrics missing.
 
+#include "game/NPCShipManager.h"
+
 namespace space {
 
 void EconomyManager::init() {
@@ -125,15 +127,15 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
 
   for (auto entity : view) {
     auto &eco = view.get<PlanetEconomy>(entity);
-    for (auto &[factionId, fEco] : eco.factionData) {
-      processProduction(fEco, deltaTime);
-      reEvaluateFactionDNA(fEco, deltaTime);
+    for (auto &pair : eco.factionData) {
+      processProduction(pair.first, pair.second, deltaTime);
+      reEvaluateFactionDNA(pair.first, pair.second, deltaTime);
     }
 
     eco.marketStockpile.clear();
-    for (auto const &[fId, fEco] : eco.factionData) {
-      for (auto const &[prod, amount] : fEco.stockpile)
-        eco.marketStockpile[prod] += amount;
+    for (auto const &pair : eco.factionData) {
+      for (auto const &stockPair : pair.second.stockpile)
+        eco.marketStockpile[stockPair.first] += stockPair.second;
     }
 
     for (auto &[product, amount] : eco.marketStockpile) {
@@ -144,8 +146,9 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
   span->End();
 }
 
-void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
-  tryExpandInfrastructure(fEco, deltaTime);
+void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
+                                       float deltaTime) {
+  tryExpandInfrastructure(factionId, fEco, deltaTime);
 
   float availableLabor = fEco.populationCount * 0.1f;
   for (const auto &product : productionPriority) {
@@ -158,7 +161,9 @@ void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
     float potentialOutput =
         fEco.factories.at(product) * recipe.baseOutputRate * deltaTime;
     float inputScale = 1.0f;
-    for (const auto &[input, req] : recipe.inputs) {
+    for (const auto &pair : recipe.inputs) {
+      const ProductKey &input = pair.first;
+      float req = pair.second;
       if (fEco.stockpile[input] < req * potentialOutput) {
         if (req * potentialOutput > 0)
           inputScale = std::min(inputScale, fEco.stockpile[input] /
@@ -178,7 +183,7 @@ void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
       auto deltaSpan = space::Telemetry::instance().tracer()->StartSpan(
           "game.economy.stockpile.delta");
       deltaSpan->SetAttribute("economy.faction_id",
-                              static_cast<int>(fEco.factionId));
+                              static_cast<int>(factionId));
       deltaSpan->SetAttribute("economy.product_type",
                               static_cast<int>(product.type));
       deltaSpan->SetAttribute("economy.product_id",
@@ -187,8 +192,11 @@ void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
                               static_cast<int>(product.tier));
       deltaSpan->SetAttribute("economy.delta", finalOutput);
 
-      for (const auto &[input, req] : recipe.inputs)
+      for (const auto &pair : recipe.inputs) {
+        const ProductKey &input = pair.first;
+        float req = pair.second;
         fEco.stockpile[input] -= req * finalOutput;
+      }
 
       if (product.type == ProductType::Hull) {
         // Hulls go directly into the fleet pool as integer units
@@ -213,7 +221,8 @@ void EconomyManager::processProduction(FactionEconomy &fEco, float deltaTime) {
   }
 }
 
-void EconomyManager::tryExpandInfrastructure(FactionEconomy &fEco,
+void EconomyManager::tryExpandInfrastructure(uint32_t factionId,
+                                             FactionEconomy &fEco,
                                              float deltaTime) {
   // Expansion check: Once every simulated time unit (rare)
   if (rand() % 100 != 0)
@@ -243,7 +252,9 @@ void EconomyManager::tryExpandInfrastructure(FactionEconomy &fEco,
 
     // "Need" check: Is an input for an existing factory missing?
     bool needed = false;
-    for (auto const &[prod, count] : fEco.factories) {
+    for (auto const &pair : fEco.factories) {
+      const ProductKey &prod = pair.first;
+      int count = pair.second;
       auto recipeIt = recipes.find(prod);
       if (recipeIt != recipes.end() && recipeIt->second.inputs.count(pk)) {
         if (fEco.stockpile[pk] < 5.0f) { // Low stockpile for needed input
@@ -418,7 +429,8 @@ bool EconomyManager::buyModularShip(entt::registry &registry,
   return true;
 }
 
-void EconomyManager::reEvaluateFactionDNA(FactionEconomy &fEco,
+void EconomyManager::reEvaluateFactionDNA(uint32_t factionId,
+                                          FactionEconomy &fEco,
                                           float deltaTime) {
   // Drift check: Rare event (every ~10,000 simulated ticks)
   if (rand() % 10000 != 0)
@@ -428,9 +440,7 @@ void EconomyManager::reEvaluateFactionDNA(FactionEconomy &fEco,
   auto &stats = fEco.stats;
 
   // Calculate Value K/D ratio
-  float totalLost = stats.totalValueLost;
-  float totalKilled = stats.totalValueKilled;
-  float ratio = (totalLost > 0) ? (totalKilled / totalLost) : 2.0f;
+  float ratio = stats.getGlobalKillDeathValueRatio();
 
   float driftAmount = 0.05f;
   std::string axis = "";
@@ -461,15 +471,15 @@ void EconomyManager::reEvaluateFactionDNA(FactionEconomy &fEco,
   if (!axis.empty() && oldValue != newValue) {
     auto span = space::Telemetry::instance().tracer()->StartSpan(
         "game.faction.dna.drift");
-    span->SetAttribute("faction.id", static_cast<int>(fEco.factionId));
+    span->SetAttribute("faction.id", static_cast<int>(factionId));
     span->SetAttribute("faction.dna.axis", axis);
     span->SetAttribute("faction.dna.old_value", oldValue);
     span->SetAttribute("faction.dna.new_value", newValue);
     span->SetAttribute("faction.performance.ratio", ratio);
 
-    std::cout << "[Economy] DNA DRIFT for Faction " << fEco.factionId << ": "
-              << axis << " " << oldValue << " -> " << newValue
-              << " (Ratio: " << ratio << ")\n";
+    std::cout << "[Economy] DNA DRIFT for Faction " << factionId << ": " << axis
+              << " " << oldValue << " -> " << newValue << " (Ratio: " << ratio
+              << ")\n";
     span->End();
   }
 }

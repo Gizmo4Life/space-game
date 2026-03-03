@@ -314,7 +314,9 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
       if (type == CelestialType::Earthlike)
         totalPop *= 3.0f;
 
-      for (auto const &[fid, weight] : f.allegiances) {
+      for (auto const &pair : f.allegiances) {
+        uint32_t fid = pair.first;
+        float weight = pair.second;
         FactionEconomy fEco;
         fEco.populationCount = totalPop * weight;
 

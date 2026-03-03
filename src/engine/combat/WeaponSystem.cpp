@@ -1,6 +1,7 @@
 #include "WeaponSystem.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
+#include "game/NPCShipManager.h"
 #include "game/components/Faction.h"
 #include "game/components/InertialBody.h"
 #include "game/components/ShipStats.h"

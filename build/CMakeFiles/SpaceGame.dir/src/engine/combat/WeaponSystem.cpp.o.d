@@ -87,7 +87,6 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_header_macro.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_ptrdiff_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_size_t.h \
-  /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_rsize_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_wchar_t.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_null.h \
   /Library/Developer/CommandLineTools/usr/lib/clang/17/include/__stddef_nullptr_t.h \
@@ -349,8 +348,6 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/string.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_string.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_rsize_t.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_errno_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_ssize_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/_strings.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/mem_fn.h \
@@ -899,6 +896,8 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_nlink_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_useconds_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_suseconds_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_rsize_t.h \
+  /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_errno_t.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_setsize.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_set.h \
@@ -1220,9 +1219,17 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /usr/local/include/opentelemetry/context/runtime_context.h \
   /usr/local/include/opentelemetry/trace/span_startoptions.h \
   /Users/Dan/Documents/repos/space-game/src/game/FactionManager.h \
+  /Users/Dan/Documents/repos/space-game/src/game/components/FactionDNA.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/GameTypes.h \
   /usr/local/include/SFML/Graphics/Color.hpp \
   /usr/local/include/SFML/Graphics/Color.inl \
+  /Users/Dan/Documents/repos/space-game/src/game/NPCShipManager.h \
+  /usr/local/include/SFML/System/Vector2.hpp \
+  /usr/local/include/SFML/System/Export.hpp \
+  /usr/local/include/SFML/Config.hpp \
+  /usr/local/include/SFML/System/Angle.hpp \
+  /usr/local/include/SFML/System/Angle.inl \
+  /usr/local/include/SFML/System/Vector2.inl \
   /Users/Dan/Documents/repos/space-game/src/game/components/Faction.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/InertialBody.h \
   /Users/Dan/Documents/repos/space-game/src/game/components/ShipStats.h \
@@ -1230,17 +1237,11 @@ CMakeFiles/SpaceGame.dir/src/engine/combat/WeaponSystem.cpp.o: \
   /usr/local/include/SFML/Graphics.hpp \
   /usr/local/include/SFML/Graphics/BlendMode.hpp \
   /usr/local/include/SFML/Graphics/Export.hpp \
-  /usr/local/include/SFML/Config.hpp \
   /usr/local/include/SFML/Graphics/CircleShape.hpp \
   /usr/local/include/SFML/Graphics/Shape.hpp \
   /usr/local/include/SFML/Graphics/Drawable.hpp \
   /usr/local/include/SFML/Graphics/PrimitiveType.hpp \
   /usr/local/include/SFML/Graphics/Rect.hpp \
-  /usr/local/include/SFML/System/Vector2.hpp \
-  /usr/local/include/SFML/System/Export.hpp \
-  /usr/local/include/SFML/System/Angle.hpp \
-  /usr/local/include/SFML/System/Angle.inl \
-  /usr/local/include/SFML/System/Vector2.inl \
   /usr/local/include/SFML/Graphics/Rect.inl \
   /usr/local/include/SFML/Graphics/RenderStates.hpp \
   /usr/local/include/SFML/Graphics/CoordinateType.hpp \

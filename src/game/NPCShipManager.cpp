@@ -78,7 +78,7 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
   static uint32_t nextMissionId = 1;
   Mission m;
   m.record.missionId = nextMissionId++;
-  m.record.type = type;
+  m.record.type = static_cast<uint32_t>(type);
   m.record.factionId = factionId;
   m.riskScore = factionRiskRegistry_[factionId];
 
@@ -107,11 +107,12 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
   }
 
   auto &originEco = registry.get<PlanetEconomy>(m.origin);
+  std::pair<Tier, std::string> fleetKey = {primaryTier, "General"};
   if (originEco.factionData.count(factionId) == 0 ||
-      originEco.factionData[factionId].fleetPool[primaryTier] < count) {
+      originEco.factionData[factionId].fleetPool[fleetKey] < count) {
     return;
   }
-  originEco.factionData[factionId].fleetPool[primaryTier] -= count;
+  originEco.factionData[factionId].fleetPool[fleetKey] -= count;
 
   for (int i = 0; i < count; ++i) {
     auto ship = spawnShip(registry, factionId, pos, worldId_, primaryTier);

@@ -50,8 +50,8 @@ struct PlanetEconomy {
 
   float getTotalPopulation() const {
     float total = 0.0f;
-    for (auto const &[id, fEco] : factionData) {
-      total += fEco.populationCount;
+    for (auto const &pair : factionData) {
+      total += pair.second.populationCount;
     }
     return total;
   }

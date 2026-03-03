@@ -1,4 +1,5 @@
 #include "game/ShipOutfitter.h"
+#include "game/components/ShipModule.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -16,7 +17,9 @@
 #include "game/FactionManager.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
+#include "game/components/FactionDNA.h"
 #include "game/components/HullGenerator.h"
+#include "game/components/InertialBody.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
 #include "game/components/NameComponent.h"
@@ -175,7 +178,7 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
   // Helper: Find best module based on DNA and constraints
   auto findBestModule = [&](AttributeType attr, Tier maxTier,
                             bool prioritized) -> uint32_t {
-    const auto &modReg = ModuleRegistry::instance().getModules();
+    const auto &modReg = ModuleRegistry::instance().modules;
     uint32_t bestIdx = EMPTY_MODULE;
     Tier bestTier = Tier::T1;
 
@@ -223,17 +226,30 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
   }
   registry.emplace_or_replace<InstalledWeapons>(entity, iw);
 
-  // 3. Utility - Dynamic slot count based on internalVolume and TierDNA
-  int slotCount = std::max(1, static_cast<int>(hull.internalVolume / 100.0f));
+  // 3. Internal Modules - Managed by volume, not slots
+  float availableVolume = hull.internalVolume;
+
+  auto tryInstallInternal = [&](uint32_t moduleId) -> bool {
+    if (moduleId == EMPTY_MODULE)
+      return false;
+    const auto &m = ModuleRegistry::instance().getModule(moduleId);
+    if (availableVolume >= m.volumeOccupied) {
+      availableVolume -= m.volumeOccupied;
+      return true;
+    }
+    return false;
+  };
 
   InstalledShields is;
   bool wantShields =
       dna.aggression > 0.2f || role == "Combat" || tdna.prefDurability > 0.6f;
   if (wantShields) {
-    int shieldSlots = std::max(
-        1, static_cast<int>(slotCount * (0.2f + tdna.prefDurability * 0.4f)));
-    is.ids.assign(shieldSlots,
-                  findBestModule(AttributeType::Capacity, sizeTier, true));
+    uint32_t sId = findBestModule(AttributeType::Capacity, sizeTier, true);
+    while (tryInstallInternal(sId)) {
+      is.ids.push_back(sId);
+      if (is.ids.size() > 5)
+        break; // Safety cap
+    }
   }
   registry.emplace_or_replace<InstalledShields>(entity, is);
 
@@ -241,18 +257,22 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
   bool wantCargo = dna.commercialism > 0.4f || role == "Cargo" ||
                    role == "Freight" || tdna.prefVolume > 0.6f;
   if (wantCargo) {
-    int baseCargo = (role == "Cargo" || role == "Freight") ? (slotCount / 2)
-                                                           : (slotCount / 4);
-    int cargoSlots =
-        std::max(1, static_cast<int>(baseCargo * (0.5f + tdna.prefVolume)));
-    ic.ids.assign(cargoSlots,
-                  findBestModule(AttributeType::Volume, sizeTier, true));
+    uint32_t cId = findBestModule(AttributeType::Volume, sizeTier, true);
+    while (tryInstallInternal(cId)) {
+      ic.ids.push_back(cId);
+      if (ic.ids.size() > 10)
+        break; // Safety cap
+    }
   }
   registry.emplace_or_replace<InstalledCargo>(entity, ic);
 
   InstalledPower ip;
-  ip.ids.assign(std::max(1, slotCount / 3),
-                findBestModule(AttributeType::Output, sizeTier, true));
+  uint32_t pId = findBestModule(AttributeType::Output, sizeTier, true);
+  while (tryInstallInternal(pId)) {
+    ip.ids.push_back(pId);
+    if (ip.ids.size() > 3)
+      break; // Safety cap
+  }
   registry.emplace_or_replace<InstalledPower>(entity, ip);
 
   registry.emplace_or_replace<HullDef>(entity, hull);
@@ -266,7 +286,7 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
 
   // Granular module metadata
   auto addModuleAttributes = [&](const std::string &prefix,
-                                 const std::vector<uint32_t> &ids) {
+                                 const std::vector<ModuleId> &ids) {
     for (size_t i = 0; i < ids.size(); ++i) {
       if (ids[i] != EMPTY_MODULE) {
         span->SetAttribute("vessel.module." + prefix + "." + std::to_string(i),
@@ -329,7 +349,9 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
     return false;
 
   auto &eco = registry.get<PlanetEconomy>(planet);
-  for (auto &[fId, fEco] : eco.factionData) {
+  for (auto &pair : eco.factionData) {
+    uint32_t fId = pair.first;
+    FactionEconomy &fEco = pair.second;
     if (fEco.stockpile.count(moduleKey) &&
         fEco.stockpile.at(moduleKey) >= 1.0f) {
 
@@ -398,7 +420,7 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
              (static_cast<int>(registry.get<HullDef>(entity).sizeTier) + 1);
   }
 
-  auto addModuleValue = [&](const std::vector<uint32_t> &ids) {
+  auto addModuleValue = [&](const std::vector<ModuleId> &ids) {
     for (auto id : ids) {
       if (id != EMPTY_MODULE)
         total += 5000.0f; // Simplified flat cost
@@ -537,6 +559,21 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   }
 
   registry.emplace_or_replace<ShipStats>(entity, stats);
+
+  if (registry.all_of<InertialBody>(entity)) {
+    auto &inertial = registry.get<InertialBody>(entity);
+    float thrust = 100.0f;
+    float rot = 10.0f;
+    if (registry.all_of<InstalledEngines>(entity)) {
+      const auto &ie = registry.get<InstalledEngines>(entity);
+      thrust = ie.totalThrust;
+      rot = ie.totalRotSpeed;
+    }
+    inertial.thrustForce = thrust;
+    inertial.rotationSpeed = rot;
+    // Scale max velocity with tier to improve world-space travel feel
+    inertial.maxLinearVelocity = 200.0f * (static_cast<int>(hull.sizeTier) + 1);
+  }
 }
 
 void ShipOutfitter::saveProceduralHulls() const {
@@ -547,7 +584,9 @@ void ShipOutfitter::saveProceduralHulls() const {
   uint32_t count = static_cast<uint32_t>(proceduralHulls_.size());
   ofs.write(reinterpret_cast<const char *>(&count), sizeof(count));
 
-  for (auto const &[key, hull] : proceduralHulls_) {
+  for (auto const &pair : proceduralHulls_) {
+    const auto &key = pair.first;
+    const HullDef &hull = pair.second;
     // Key: tuple<uint32_t, Tier, string>
     uint32_t fId = std::get<0>(key);
     Tier tier = std::get<1>(key);

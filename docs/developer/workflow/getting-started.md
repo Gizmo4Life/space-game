@@ -9,20 +9,36 @@ tags: [onboarding, setup]
 To initialize a local development environment that passes the [Discovery Protocol](/docs/governance/protocol/discovery.md).
 
 ## 2. Prerequisites
-- Docker Desktop > 4.0
-- Node.js > 20 LTS
+- **Compiler:** Clang or GCC supporting C++20.
+- **Build System:** CMake >= 3.24.
+- **Dependencies:** 
+  - SFML >= 3.0
+  - Box2D
+  - EnTT
+  - OpenTelemetry C++ SDK
 
 ## 3. Procedure
-1. **Clone & Signpost:**
-   - Run `git clone ...`
-   - Verify `readme.md` exists in root.
-2. **Install Dependencies:**
-   - Run `npm install`
-3. **Hydrate Architecture:**
-   - Run `npm run doc:generate` to build the T3 Module map.
-4. **Verify Compliance:**
-   - Run `npm run audit` to check for Governance violations.
+1.  **Install Dependencies (macOS):**
+    ```bash
+    brew install sfml box2d entt opentelemetry-cpp
+    ```
+2.  **Initialize Build Directory:**
+    ```bash
+    mkdir build && cd build
+    ```
+3.  **Configure & Build:**
+    ```bash
+    cmake ..
+    make -j$(sysctl -n hw.ncpu)
+    ```
+4.  **Run the Application:**
+    ```bash
+    ./SpaceGame
+    ```
+5.  **Observability (Optional):**
+    - Run `scripts/jaeger.sh` to start a local Jaeger instance for telemetry.
 
 ## 4. Definition of Done
-- `npm test` passes.
-- No "Unacceptable" patterns detected in local scan.
+- `./SpaceGame` launches successfully.
+- Telemetry spans are visible in Jaeger (if running).
+- Documentation adheres to the [Discovery Protocol](/docs/governance/protocol/discovery.md).

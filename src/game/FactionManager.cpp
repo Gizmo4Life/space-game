@@ -97,7 +97,9 @@ void FactionManager::init() {
 
   // Initialize relationships: alignment-based fuzzy logic
   for (auto const &[idA, dataA] : factions) {
-    for (auto const &[idB, dataB] : factions) {
+    for (auto const &pairB : factions) {
+      uint32_t idB = pairB.first;
+      const FactionData &dataB = pairB.second;
       if (idA >= idB)
         continue;
 
@@ -131,7 +133,9 @@ void FactionManager::update(entt::registry &registry, float deltaTime) {
   if (evalTimer <= 0) {
     evalTimer = 30.0f; // Re-evaluate every 30s
 
-    for (auto &[id, data] : factions) {
+    for (auto &pair : factions) {
+      uint32_t id = pair.first;
+      FactionData &data = pair.second;
       if (id == 0)
         continue; // Skip Civilian?
 
@@ -171,7 +175,9 @@ void FactionManager::update(entt::registry &registry, float deltaTime) {
     auto &eco = view.get<PlanetEconomy>(entity);
     auto &factionComp = view.get<Faction>(entity);
 
-    for (auto const &[factionId, fEco] : eco.factionData) {
+    for (auto const &pair : eco.factionData) {
+      uint32_t factionId = pair.first;
+      const FactionEconomy &fEco = pair.second;
       if (factions.count(factionId)) {
         // Factions get credits based on their specific population on the planet
         float earnings = (fEco.populationCount * 0.01f) * deltaTime;
@@ -184,7 +190,9 @@ void FactionManager::update(entt::registry &registry, float deltaTime) {
 
   // Recalculate total holdings for telemetry
   totalCredits = 0;
-  for (auto const &[id, data] : factions) {
+  for (auto const &pair : factions) {
+    uint32_t id = pair.first;
+    const FactionData &data = pair.second;
     totalCredits += data.credits;
   }
 
@@ -193,7 +201,8 @@ void FactionManager::update(entt::registry &registry, float deltaTime) {
 
   // 2. Relationship Decay (moves towards 0)
   float decayRate = 0.005f; // Very slow decay
-  for (auto &[pair, rel] : relationships) {
+  for (auto &pair : relationships) {
+    float &rel = pair.second;
     float oldRel = rel;
     if (rel > 0.01f) {
       rel = std::max(0.0f, rel - decayRate * deltaTime);
@@ -207,8 +216,8 @@ void FactionManager::update(entt::registry &registry, float deltaTime) {
     static float logTimer = 0.0f;
     logTimer += deltaTime;
     if (logTimer > 20.0f && std::abs(oldRel - rel) > 0.0001f) {
-      std::cout << "[Faction] Relationship decay: (" << pair.first << ","
-                << pair.second << ") " << oldRel << " -> " << rel << "\n";
+      std::cout << "[Faction] Relationship decay: (" << pair.first.first << ","
+                << pair.first.second << ") " << oldRel << " -> " << rel << "\n";
       logTimer = 0.0f;
     }
   }

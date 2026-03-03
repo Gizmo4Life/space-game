@@ -48,9 +48,12 @@ public:
 private:
   EconomyManager() = default;
 
-  void processProduction(FactionEconomy &fEco, float deltaTime);
-  void tryExpandInfrastructure(FactionEconomy &fEco, float deltaTime);
-  void reEvaluateFactionDNA(FactionEconomy &fEco, float deltaTime);
+  void processProduction(uint32_t factionId, FactionEconomy &fEco,
+                         float deltaTime);
+  void tryExpandInfrastructure(uint32_t factionId, FactionEconomy &fEco,
+                               float deltaTime);
+  void reEvaluateFactionDNA(uint32_t factionId, FactionEconomy &fEco,
+                            float deltaTime);
   float calculatePrice(ProductKey pk, float currentStock, float population,
                        bool isAtWar);
 

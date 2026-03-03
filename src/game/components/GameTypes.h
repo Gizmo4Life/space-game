@@ -60,4 +60,8 @@ static inline std::string tierName(Tier t) {
   return "Unknown";
 }
 
+enum class MissionType { Patrol, Trade, Combat, Expansion, Escort, Piracy };
+
+using ShipOutfitHash = uint64_t;
+
 } // namespace space

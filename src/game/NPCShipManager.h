@@ -35,16 +35,15 @@ public:
                          Tier sizeTier = Tier::T1, bool isPlayerFleet = false,
                          entt::entity leaderEntity = entt::null);
 
+  static void recordCombatDeath(entt::registry &registry, entt::entity victim,
+                                entt::entity attacker);
+
 private:
   NPCShipManager() = default;
 
   void spawnMission(entt::registry &registry, MissionType type,
                     uint32_t factionId);
   void processMissions(entt::registry &registry, float dt);
-
-  static void recordCombatDeath(entt::registry &registry, entt::entity victim,
-                                entt::entity attacker);
-
   void spawnAtRandomPlanet(entt::registry &registry);
   void tickAI(entt::registry &registry, float dt);
 

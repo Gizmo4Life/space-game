@@ -23,6 +23,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/SpaceGame.dir/src/game/ShipOutfitter.cpp.o.d"
   "CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o"
   "CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.o.d"
+  "CMakeFiles/SpaceGame.dir/src/game/components/HullGenerator.cpp.o"
+  "CMakeFiles/SpaceGame.dir/src/game/components/HullGenerator.cpp.o.d"
   "CMakeFiles/SpaceGame.dir/src/main.cpp.o"
   "CMakeFiles/SpaceGame.dir/src/main.cpp.o.d"
   "CMakeFiles/SpaceGame.dir/src/rendering/LandingScreen.cpp.o"

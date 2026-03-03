@@ -11,7 +11,7 @@ const ModuleId EMPTY_MODULE = 0xFFFF;
 struct ModuleDef {
   std::string name;
   std::vector<ModuleAttribute> attributes;
-  float volumeCost;
+  float volumeOccupied;
   float maintenanceCost;
 
   // Helper to find a specific attribute

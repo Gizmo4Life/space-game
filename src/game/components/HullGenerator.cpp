@@ -63,7 +63,9 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna,
                                     const VisualDNA &vdna) {
   // Symmetrical distribution example
   int weaponCount = 0;
-  for (auto const &[size, density] : tdna.hardpointDensities) {
+  for (auto const &pair : tdna.hardpointDensities) {
+    Tier size = pair.first;
+    float density = pair.second;
     int count =
         static_cast<int>(density * 4.0f * static_cast<float>(hull.sizeTier));
     for (int i = 0; i < count; ++i) {
@@ -78,7 +80,9 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna,
   }
 
   int engineCount = 0;
-  for (auto const &[size, density] : tdna.mountDensities) {
+  for (auto const &pair : tdna.mountDensities) {
+    Tier size = pair.first;
+    float density = pair.second;
     int count =
         std::max(1, static_cast<int>(density * 2.0f *
                                      static_cast<float>(hull.sizeTier)));

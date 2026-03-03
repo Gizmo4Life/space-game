@@ -1,3 +1,4 @@
+#pragma once
 #include "GameTypes.h"
 #include <map>
 #include <string>
@@ -36,8 +37,6 @@ struct FactionDNA {
   // Visual Aesthetic "Style"
   VisualDNA visual;
 };
-
-using ShipOutfitHash = uint64_t;
 
 struct OutfitPerformance {
   float totalMonetaryValue = 0.0f;

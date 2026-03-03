@@ -417,6 +417,30 @@ src/game/WorldLoader.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/game/WorldLoader.cpp.s
 .PHONY : src/game/WorldLoader.cpp.s
 
+src/game/components/HullGenerator.o: src/game/components/HullGenerator.cpp.o
+.PHONY : src/game/components/HullGenerator.o
+
+# target to build an object file
+src/game/components/HullGenerator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/game/components/HullGenerator.cpp.o
+.PHONY : src/game/components/HullGenerator.cpp.o
+
+src/game/components/HullGenerator.i: src/game/components/HullGenerator.cpp.i
+.PHONY : src/game/components/HullGenerator.i
+
+# target to preprocess a source file
+src/game/components/HullGenerator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/game/components/HullGenerator.cpp.i
+.PHONY : src/game/components/HullGenerator.cpp.i
+
+src/game/components/HullGenerator.s: src/game/components/HullGenerator.cpp.s
+.PHONY : src/game/components/HullGenerator.s
+
+# target to generate assembly for a file
+src/game/components/HullGenerator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SpaceGame.dir/build.make CMakeFiles/SpaceGame.dir/src/game/components/HullGenerator.cpp.s
+.PHONY : src/game/components/HullGenerator.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -558,6 +582,9 @@ help:
 	@echo "... src/game/WorldLoader.o"
 	@echo "... src/game/WorldLoader.i"
 	@echo "... src/game/WorldLoader.s"
+	@echo "... src/game/components/HullGenerator.o"
+	@echo "... src/game/components/HullGenerator.i"
+	@echo "... src/game/components/HullGenerator.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
