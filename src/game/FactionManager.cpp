@@ -66,9 +66,10 @@ void FactionManager::init() {
     data.dna.commercialism = (rand() % 100) * 0.01f;
     data.dna.cooperation = (rand() % 100) * 0.01f;
 
-    data.dna.visual.layoutPattern = rand() % 4;
-    data.dna.visual.nacelleStyle = rand() % 4;
-    data.dna.visual.hullConnectivity = rand() % 3;
+    data.dna.visual.layoutPattern = static_cast<LayoutPattern>(rand() % 4);
+    data.dna.visual.nacelleStyle = static_cast<NacelleStyle>(rand() % 4);
+    data.dna.visual.hullConnectivity =
+        static_cast<HullConnectivity>(rand() % 3);
     data.dna.visual.bodyStyle = static_cast<VisualStyle>(rand() % 4);
 
     for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {

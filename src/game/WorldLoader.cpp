@@ -87,7 +87,7 @@ void WorldLoader::loadStars(entt::registry &registry, int count) {
     auto star = registry.create();
     auto texture = std::make_shared<sf::Texture>();
     sf::Image img({2, 2}, sf::Color(150, 150, 200));
-    texture->loadFromImage(img);
+    (void)texture->loadFromImage(img);
 
     SpriteComponent sc;
     sc.texture = texture;
@@ -127,7 +127,7 @@ void WorldLoader::generateStarSystem(entt::registry &registry,
         }
       }
     }
-    texture->loadFromImage(img);
+    (void)texture->loadFromImage(img);
 
     SpriteComponent sc;
     sc.texture = texture;
@@ -203,7 +203,7 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
           if (dx * dx + dy * dy <= radius * radius)
             img.setPixel({px, py}, pColor);
         }
-      texture->loadFromImage(img);
+      (void)texture->loadFromImage(img);
       SpriteComponent sc;
       sc.texture = texture;
       sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
@@ -274,7 +274,7 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
         if (dx * dx + dy * dy <= radius * radius)
           img.setPixel({px, py}, pColor);
       }
-    texture->loadFromImage(img);
+    (void)texture->loadFromImage(img);
     SpriteComponent sc;
     sc.texture = texture;
     sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
@@ -349,7 +349,7 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   SpriteComponent sc;
   auto texture = std::make_shared<sf::Texture>();
   sf::Image img({2, 2}, sf::Color::Transparent);
-  texture->loadFromImage(img);
+  (void)texture->loadFromImage(img);
   sc.texture = texture;
   sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
   registry.emplace_or_replace<SpriteComponent>(ship, sc);
@@ -383,36 +383,37 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     const auto &globalData = FactionManager::instance().getFaction(fid);
     fEco.dna = globalData.dna;
 
-    float fleetMultiplier = 1.5f + (1.0f - fEco.dna.industrialism); // Boosted
-    auto seedRole = [&](Tier t, const std::string &role, int base) {
-      if (base <= 0)
+    auto seedRole = [&](Tier t, const std::string &role, int count) {
+      if (count <= 0)
         return;
-      int count = std::max(2, (int)(base * fleetMultiplier)); // Min 2 ships
-      fEco.fleetPool[{t, role}] = count;
+      fEco.fleetPool[{t, role}] += count;
     };
-
-    seedRole(Tier::T1, "General",
-             (int)((2 + (rand() % 3)) * populationScale + 0.5f));
-    if (fEco.dna.aggression > 0.4f)
-      seedRole(Tier::T1, "Combat",
-               (int)((1 + (rand() % 2)) * populationScale + 0.5f));
-    if (fEco.dna.commercialism > 0.4f)
-      seedRole(Tier::T1, "Cargo",
-               (int)((1 + (rand() % 2)) * populationScale + 0.5f));
-
-    if (fEco.populationCount > 15.0f) {
-      seedRole(Tier::T2, "General", 1 + (rand() % 2));
-      if (fEco.dna.aggression > 0.6f)
-        seedRole(Tier::T2, "Combat", 1);
-      if (fEco.dna.commercialism > 0.6f)
-        seedRole(Tier::T2, "Cargo", 1);
-      if (fEco.dna.aggression > 0.7f && fEco.populationCount > 30.0f)
-        seedRole(Tier::T3, "Combat", 1);
-    }
 
     auto rKey = [](Resource r) {
       return ProductKey{ProductType::Resource, (uint32_t)r, Tier::T1};
     };
+
+    // --- Vibrant Fleet Seeding (8-15 ships per outpost) ---
+    seedRole(Tier::T1, "General", 6 + (rand() % 6));
+    seedRole(Tier::T1, "Combat", 2 + (rand() % 3));
+    seedRole(Tier::T1, "Cargo", 2 + (rand() % 3));
+    if (fEco.populationCount > 10.0f) {
+      seedRole(Tier::T2, "General", 2 + (rand() % 3));
+      seedRole(Tier::T2, "Combat", 1 + (rand() % 2));
+      seedRole(Tier::T2, "Cargo", 1);
+    }
+    if (fEco.populationCount > 40.0f) {
+      seedRole(Tier::T3, "General", 1);
+      seedRole(Tier::T3, "Combat", 1);
+    }
+
+    // --- Global Infrastructure Coverage ---
+    // Every outpost gets baseline essential industrial capacity
+    fEco.factories[rKey(Resource::Electronics)] = 2;
+    fEco.factories[rKey(Resource::ManufacturingGoods)] = 2;
+    fEco.factories[rKey(Resource::Plastics)] = 2;
+    fEco.factories[rKey(Resource::Powercells)] = 1;
+
     if (type == CelestialType::Rocky) {
       fEco.factories[rKey(Resource::Metals)] = 5;
       fEco.factories[rKey(Resource::RareMetals)] = 2;
@@ -428,37 +429,41 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     }
 
     fEco.factories[rKey(Resource::Fuel)] =
-        std::max(1, (int)(fEco.populationCount));
+        std::max(2, (int)(fEco.populationCount * 0.5f));
 
     auto mKey = [](uint32_t id, Tier t) {
       return ProductKey{ProductType::Module, id, t};
     };
-    if (fEco.dna.aggression > 0.6f) {
-      uint32_t baseId = (rand() % 2 == 0) ? 3 : 6;
-      fEco.factories[mKey(baseId, Tier::T1)] = 1;
-      if (fEco.populationCount > 15.0f)
-        fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
-    } else if (fEco.dna.industrialism > 0.6f) {
-      uint32_t baseId = (rand() % 2 == 0) ? 0 : 12;
-      fEco.factories[mKey(baseId, Tier::T1)] = 1;
-      if (fEco.populationCount > 15.0f)
-        fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
-    } else if (fEco.dna.commercialism > 0.6f) {
-      fEco.factories[mKey(9, Tier::T1)] = 1;
-      if (fEco.populationCount > 15.0f)
-        fEco.factories[mKey(10, Tier::T2)] = 1;
+
+    // Ensure variety in module production across the galaxy
+    // Each faction on each planet picks 5 random modules to specialize in
+    auto &modReg = ModuleRegistry::instance();
+    if (!modReg.modules.empty()) {
+      for (int i = 0; i < 5; ++i) {
+        uint32_t mid = rand() % modReg.modules.size();
+        fEco.factories[mKey(mid, Tier::T1)] += 1;
+        if (fEco.populationCount > 15.0f)
+          fEco.factories[mKey(mid, Tier::T2)] += 1;
+      }
     }
 
-    fEco.credits = fEco.populationCount * 100.0f;
-    fEco.stockpile[rKey(Resource::Food)] = fEco.populationCount * 50.0f;
-    fEco.stockpile[rKey(Resource::Water)] = fEco.populationCount * 50.0f;
-    fEco.stockpile[rKey(Resource::Metals)] = fEco.populationCount * 100.0f;
-    fEco.stockpile[rKey(Resource::Fuel)] = fEco.populationCount * 50.0f;
+    // --- Stockpile Boost (Logistics Jumpstart) ---
+    fEco.credits = fEco.populationCount * 500.0f;
+    fEco.stockpile[rKey(Resource::Food)] = fEco.populationCount * 100.0f;
+    fEco.stockpile[rKey(Resource::Water)] = fEco.populationCount * 100.0f;
+    fEco.stockpile[rKey(Resource::Metals)] = fEco.populationCount * 200.0f;
+    fEco.stockpile[rKey(Resource::RareMetals)] = 100.0f;
+    fEco.stockpile[rKey(Resource::Fuel)] = 1000.0f;
+    fEco.stockpile[rKey(Resource::Electronics)] = 250.0f;
+    fEco.stockpile[rKey(Resource::ManufacturingGoods)] = 250.0f;
 
-    if (fEco.dna.aggression > 0.5f || fEco.dna.industrialism < 0.3f)
-      fEco.factories[rKey(Resource::Shipyard)] = 1;
-    if (fEco.dna.industrialism > 0.5f)
+    // Faction always has capacity to rebuild its fleet locally
+    fEco.factories[rKey(Resource::Shipyard)] = 1;
+    fEco.factories[ProductKey{ProductType::Hull, 0, Tier::T1}] = 1;
+    if (fEco.populationCount > 20.0f) {
+      fEco.factories[ProductKey{ProductType::Hull, 0, Tier::T2}] = 1;
       fEco.factories[rKey(Resource::Refinery)] = 1;
+    }
 
     eco.factionData[fid] = fEco;
   }

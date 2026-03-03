@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "game/components/FactionDNA.h"
+
 namespace space {
 
 struct MountSlot {
@@ -29,7 +31,7 @@ struct HullDef {
   float baseHitpoints;
   float internalVolume; // total m³ for internal modules
 
-  VisualStyle bodyStyle = VisualStyle::Sleek;
+  VisualDNA visual;
 
   // Per-faction stat multipliers (cost escalates per buff)
   float hpMultiplier = 1.0f;
@@ -68,7 +70,7 @@ inline HullDef makeBasicHull(const std::string &name,
   h.baseMass = mass;
   h.baseHitpoints = hp;
   h.internalVolume = volume;
-  h.bodyStyle = body;
+  h.visual.bodyStyle = body;
   h.engineSlots = engines;
   h.hardpointSlots = weapons;
   return h;

@@ -2,6 +2,7 @@
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/GameTypes.h"
+#include "game/components/HullDef.h"
 #include "game/components/ShipModule.h"
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
@@ -28,6 +29,8 @@ struct DetailedHullBid {
   std::string role;
   float price;
   std::vector<ModuleId> modules;
+  HullDef hull;
+  std::string hullName;
 };
 
 class EconomyManager {
@@ -60,6 +63,9 @@ public:
   bool executeTrade(entt::registry &registry, entt::entity planet,
                     entt::entity player, Resource res, float delta);
 
+  float calculatePrice(ProductKey pk, float currentStock, float population,
+                       bool isAtWar);
+
   const Recipe &getRecipe(ProductKey pk) const { return recipes.at(pk); }
 
 private:
@@ -71,8 +77,6 @@ private:
                                float deltaTime);
   void reEvaluateFactionDNA(uint32_t factionId, FactionEconomy &fEco,
                             float deltaTime);
-  float calculatePrice(ProductKey pk, float currentStock, float population,
-                       bool isAtWar);
 
   std::map<ProductKey, Recipe> recipes;
   std::vector<ProductKey> productionPriority;

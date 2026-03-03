@@ -1,11 +1,10 @@
 #pragma once
-#include "game/EconomyManager.h"
-#include "game/FactionManager.h"
-#include "game/components/Economy.h"
-#include "game/components/GameTypes.h"
+#include "LandingPanel.h"
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
+#include <map>
+#include <memory>
 
 namespace space {
 
@@ -35,33 +34,14 @@ private:
   entt::entity planetEntity_ = entt::null;
   entt::entity playerEntity_ = entt::null;
 
-  // Selection state for the ship market
-  std::vector<DetailedHullBid> currentBids_;
-  int selectedBidIndex_ = 0;
-  int selectedMarketIndex_ = 0;
-
   enum class LandingTab { Info, Shipyard, Outfitter, Market };
   LandingTab currentTab_ = LandingTab::Info;
 
-  void drawPanel(sf::RenderWindow &w, sf::FloatRect rect, sf::Color bg,
-                 sf::Color border);
+  std::map<LandingTab, std::unique_ptr<LandingPanel>> panels_;
+
+  void updatePanels();
 
   void drawTabs(sf::RenderWindow &w, const sf::Font *f, sf::FloatRect rect);
-
-  void drawPlanetInfo(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
-                      sf::FloatRect rect);
-
-  void drawShipyard(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
-                    sf::FloatRect rect, b2WorldId worldId);
-
-  void drawOutfitter(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
-                     sf::FloatRect rect);
-
-  void drawMarket(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
-                  sf::FloatRect rect);
-
-  void drawFactionDNA(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
-                      sf::FloatRect rect);
 };
 
 } // namespace space

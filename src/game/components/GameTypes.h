@@ -25,6 +25,10 @@ enum class AttributeType {
   Maintenance
 };
 
+enum class LayoutPattern { Symmetrical, Radial, Asymmetrical, Alternating };
+enum class NacelleStyle { Outriggers, Integrated, Ring, Pods };
+enum class HullConnectivity { Monolithic, Skeletal, Modular };
+
 struct ModuleAttribute {
   AttributeType type;
   Tier tier;

@@ -41,7 +41,13 @@ public:
 
   void init(); // populate standard catalogue
 
-  const ModuleDef &getModule(ModuleId id) const { return modules[id]; }
+  const ModuleDef &getModule(ModuleId id) const {
+    if (id == EMPTY_MODULE || id >= (ModuleId)modules.size()) {
+      static ModuleDef empty{"Empty Slot", {}, 0.f, 0.f};
+      return empty;
+    }
+    return modules[id];
+  }
 
   std::vector<ModuleDef> modules;
 

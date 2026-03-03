@@ -1,11 +1,11 @@
 #include "ShipOutfitter.h"
-#include "game/components/ShipModule.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <random>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <vector>
@@ -14,6 +14,7 @@
 #include <opentelemetry/trace/provider.h>
 
 #include "engine/telemetry/Telemetry.h"
+#include "game/EconomyManager.h"
 #include "game/FactionManager.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
@@ -22,6 +23,7 @@
 #include "game/components/InertialBody.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
+#include "game/components/ModuleGenerator.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
 #include "game/components/ShipModule.h"
@@ -31,122 +33,66 @@ namespace space {
 
 void ModuleRegistry::init() {
   modules.clear();
+  auto &gen = ModuleGenerator::instance();
 
-  auto attrs = [](std::vector<std::pair<AttributeType, Tier>> pairList) {
-    std::vector<ModuleAttribute> res;
-    for (auto &p : pairList)
-      res.push_back({p.first, p.second});
-    return res;
+  auto genSet = [&](const std::string &name, Tier t,
+                    std::vector<AttributeType> a, float v, float m) {
+    modules.push_back(gen.generate(name, t, a, v, m));
   };
 
   // --- Engines ---
-  // T1: Light (ID 0)
-  modules.push_back({"E-100 Light Engine",
-                     attrs({{AttributeType::Size, Tier::T1},
-                            {AttributeType::Mass, Tier::T1},
-                            {AttributeType::Thrust, Tier::T1},
-                            {AttributeType::Efficiency, Tier::T1}}),
-                     5.0f, 1.0f});
-  // T2: Medium (ID 1)
-  modules.push_back({"E-200 Medium Engine",
-                     attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Mass, Tier::T2},
-                            {AttributeType::Thrust, Tier::T2},
-                            {AttributeType::Efficiency, Tier::T2}}),
-                     15.0f, 3.0f});
-  // T3: Heavy (ID 2)
-  modules.push_back({"E-300 Heavy Engine",
-                     attrs({{AttributeType::Size, Tier::T3},
-                            {AttributeType::Mass, Tier::T3},
-                            {AttributeType::Thrust, Tier::T3},
-                            {AttributeType::Efficiency, Tier::T3}}),
-                     40.0f, 10.0f});
+  genSet(
+      "Standard Light Engine", Tier::T1,
+      {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass},
+      5.0f, 1.0f);
+  genSet(
+      "Heavy Duty Medium Engine", Tier::T2,
+      {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass},
+      15.0f, 3.0f);
+  genSet(
+      "Industrial Heavy Engine", Tier::T3,
+      {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass},
+      40.0f, 10.0f);
 
   // --- Weapons ---
-  // T1: Light Cannon (ID 3)
-  modules.push_back({"LC-1 Light Cannon",
-                     attrs({{AttributeType::Size, Tier::T1},
-                            {AttributeType::Mass, Tier::T1},
-                            {AttributeType::Caliber, Tier::T1},
-                            {AttributeType::ROF, Tier::T2}}),
-                     3.0f, 2.0f});
-  // T2: Medium Cannon (ID 4)
-  modules.push_back({"MC-2 Medium Cannon",
-                     attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Mass, Tier::T2},
-                            {AttributeType::Caliber, Tier::T2},
-                            {AttributeType::ROF, Tier::T2}}),
-                     10.0f, 5.0f});
-  // T3: Heavy Cannon (ID 5)
-  modules.push_back({"HC-3 Heavy Cannon",
-                     attrs({{AttributeType::Size, Tier::T3},
-                            {AttributeType::Mass, Tier::T3},
-                            {AttributeType::Caliber, Tier::T3},
-                            {AttributeType::ROF, Tier::T2}}),
-                     30.0f, 15.0f});
+  genSet("LC-1 Light Cannon", Tier::T1,
+         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range},
+         3.0f, 2.0f);
+  genSet("MC-2 Medium Cannon", Tier::T2,
+         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range},
+         10.0f, 5.0f);
+  genSet("HC-3 Heavy Cannon", Tier::T3,
+         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range},
+         30.0f, 15.0f);
 
   // --- Shields ---
-  // T1: Light Projector (ID 6)
-  modules.push_back({"S-10 Light Shield",
-                     attrs({{AttributeType::Size, Tier::T1},
-                            {AttributeType::Mass, Tier::T1},
-                            {AttributeType::Capacity, Tier::T1},
-                            {AttributeType::Regen, Tier::T1}}),
-                     8.0f, 4.0f});
-  // T2: Medium Projector (ID 7)
-  modules.push_back({"S-20 Medium Shield",
-                     attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Mass, Tier::T2},
-                            {AttributeType::Capacity, Tier::T2},
-                            {AttributeType::Regen, Tier::T2}}),
-                     25.0f, 12.0f});
-  // T3: Heavy Projector (ID 8)
-  modules.push_back({"S-30 Heavy Shield",
-                     attrs({{AttributeType::Size, Tier::T3},
-                            {AttributeType::Mass, Tier::T3},
-                            {AttributeType::Capacity, Tier::T3},
-                            {AttributeType::Regen, Tier::T3}}),
-                     70.0f, 35.0f});
+  genSet("S-10 Light Shield", Tier::T1,
+         {AttributeType::Capacity, AttributeType::Regen,
+          AttributeType::Efficiency},
+         8.0f, 4.0f);
+  genSet("S-20 Medium Shield", Tier::T2,
+         {AttributeType::Capacity, AttributeType::Regen,
+          AttributeType::Efficiency},
+         25.0f, 12.0f);
+  genSet("S-30 Heavy Shield", Tier::T3,
+         {AttributeType::Capacity, AttributeType::Regen,
+          AttributeType::Efficiency},
+         70.0f, 35.0f);
 
   // --- Utility ---
-  // T1: Small Cargo Pod (ID 9)
-  modules.push_back({"C-10 Cargo Pod",
-                     attrs({{AttributeType::Size, Tier::T1},
-                            {AttributeType::Mass, Tier::T1},
-                            {AttributeType::Volume, Tier::T1}}),
-                     5.0f, 0.5f});
-  // T2: Medium Cargo Pod (ID 10)
-  modules.push_back({"C-20 Cargo Pod",
-                     attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Mass, Tier::T2},
-                            {AttributeType::Volume, Tier::T2}}),
-                     15.0f, 1.5f});
-  // T3: Large Cargo Bay (ID 11)
-  modules.push_back({"C-30 Cargo Bay",
-                     attrs({{AttributeType::Size, Tier::T3},
-                            {AttributeType::Mass, Tier::T3},
-                            {AttributeType::Volume, Tier::T3}}),
-                     50.0f, 5.0f});
+  genSet("C-10 Cargo Pod", Tier::T1,
+         {AttributeType::Volume, AttributeType::Mass}, 5.0f, 0.5f);
+  genSet("C-20 Cargo Pod", Tier::T2,
+         {AttributeType::Volume, AttributeType::Mass}, 15.0f, 1.5f);
+  genSet("C-30 Cargo Bay", Tier::T3,
+         {AttributeType::Volume, AttributeType::Mass}, 50.0f, 5.0f);
 
-  // T1: Basic Reactor (ID 12)
-  modules.push_back({"R-1 Reactor",
-                     attrs({{AttributeType::Size, Tier::T1},
-                            {AttributeType::Mass, Tier::T1},
-                            {AttributeType::Output, Tier::T1}}),
-                     10.0f, 2.0f});
-  // T2: Advanced Reactor (ID 13)
-  modules.push_back({"R-2 Reactor",
-                     attrs({{AttributeType::Size, Tier::T2},
-                            {AttributeType::Mass, Tier::T2},
-                            {AttributeType::Output, Tier::T2}}),
-                     25.0f, 5.0f});
-
-  // T3: Fusion Reactor (ID 14)
-  modules.push_back({"R-3 Fusion Reactor",
-                     attrs({{AttributeType::Size, Tier::T3},
-                            {AttributeType::Mass, Tier::T3},
-                            {AttributeType::Output, Tier::T3}}),
-                     60.0f, 12.0f});
+  genSet("R-1 Reactor", Tier::T1,
+         {AttributeType::Output, AttributeType::Efficiency}, 10.0f, 2.0f);
+  genSet("R-2 Reactor", Tier::T2,
+         {AttributeType::Output, AttributeType::Efficiency}, 25.0f, 5.0f);
+  genSet("R-3 Fusion Reactor", Tier::T3,
+         {AttributeType::Output, AttributeType::Efficiency}, 60.0f, 12.0f);
 }
 
 void ShipOutfitter::init() { ModuleRegistry::instance().init(); }
@@ -311,6 +257,10 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
   registry.emplace_or_replace<InstalledShields>(entity, is);
   registry.emplace_or_replace<InstalledCargo>(entity, ic);
   registry.emplace_or_replace<InstalledPower>(entity, ip);
+  registry.emplace_or_replace<CargoComponent>(entity);
+  if (!registry.all_of<CreditsComponent>(entity)) {
+    registry.emplace<CreditsComponent>(entity, 0.0f);
+  }
 
   registry.emplace_or_replace<HullDef>(entity, hull);
   refreshStats(registry, entity, hull);
@@ -416,15 +366,24 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
       }
 
       if (registry.all_of<PlayerComponent>(entity)) {
-        if (!registry.all_of<CreditsComponent>(entity) ||
-            registry.get<CreditsComponent>(entity).amount < 50.0f) {
-          std::cout << "[Outfitter] Insufficient credits for refit fee (50C)\n";
+        if (!registry.all_of<CreditsComponent>(entity))
+          return false;
+        auto &credits = registry.get<CreditsComponent>(entity);
+
+        float modulePrice = EconomyManager::instance().calculatePrice(
+            moduleKey, eco.marketStockpile[moduleKey], eco.getTotalPopulation(),
+            false);
+        float totalCost = modulePrice + 50.0f;
+
+        if (credits.amount < totalCost) {
+          std::cout << "[Outfitter] Insufficient credits (" << totalCost
+                    << "C required)\n";
           return false;
         }
-        registry.get<CreditsComponent>(entity).amount -= 50.0f;
-        fEco.credits += 50.0f;
-        std::cout << "[Outfitter] Charged 50C installation fee to faction "
-                  << fId << "\n";
+        credits.amount -= totalCost;
+        fEco.credits += totalCost;
+        std::cout << "[Outfitter] Purchased module for " << modulePrice
+                  << "C + 50C fee\n";
       }
 
       // Installation
@@ -439,6 +398,15 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
         if (iw.ids.size() < hull.hardpointSlots.size())
           iw.ids.resize(hull.hardpointSlots.size(), EMPTY_MODULE);
         iw.ids[slotIndex] = moduleKey.id;
+      } else if (mDef.hasAttribute(AttributeType::Capacity)) {
+        auto &is = registry.get_or_emplace<InstalledShields>(entity);
+        is.ids.push_back(moduleKey.id);
+      } else if (mDef.hasAttribute(AttributeType::Volume)) {
+        auto &ic = registry.get_or_emplace<InstalledCargo>(entity);
+        ic.ids.push_back(moduleKey.id);
+      } else if (mDef.hasAttribute(AttributeType::Output)) {
+        auto &ip = registry.get_or_emplace<InstalledPower>(entity);
+        ip.ids.push_back(moduleKey.id);
       }
 
       refreshStats(registry, entity, hull);
@@ -670,8 +638,8 @@ void ShipOutfitter::saveProceduralHulls() const {
               sizeof(hull.baseHitpoints));
     ofs.write(reinterpret_cast<const char *>(&hull.internalVolume),
               sizeof(hull.internalVolume));
-    ofs.write(reinterpret_cast<const char *>(&hull.bodyStyle),
-              sizeof(hull.bodyStyle));
+    ofs.write(reinterpret_cast<const char *>(&hull.visual),
+              sizeof(hull.visual));
     ofs.write(reinterpret_cast<const char *>(&hull.hpMultiplier),
               sizeof(hull.hpMultiplier));
     ofs.write(reinterpret_cast<const char *>(&hull.massMultiplier),
@@ -733,7 +701,7 @@ void ShipOutfitter::loadProceduralHulls() {
              sizeof(hull.baseHitpoints));
     ifs.read(reinterpret_cast<char *>(&hull.internalVolume),
              sizeof(hull.internalVolume));
-    ifs.read(reinterpret_cast<char *>(&hull.bodyStyle), sizeof(hull.bodyStyle));
+    ifs.read(reinterpret_cast<char *>(&hull.visual), sizeof(hull.visual));
     ifs.read(reinterpret_cast<char *>(&hull.hpMultiplier),
              sizeof(hull.hpMultiplier));
     ifs.read(reinterpret_cast<char *>(&hull.massMultiplier),

@@ -70,18 +70,95 @@ void EconomyManager::init() {
                     : Tier::T1;
     ProductKey pk{ProductType::Module, (uint32_t)i, tier};
 
-    // Tiered input costs: T1=1x, T2=3x, T3=8x
-    float scale = 1.0f;
-    if (tier == Tier::T2)
-      scale = 3.0f;
-    if (tier == Tier::T3)
-      scale = 8.0f;
-
     Recipe r;
-    r.inputs[resKey(Resource::Metals)] = 2.0f * scale;
-    r.inputs[resKey(Resource::Electronics)] = 1.0f * scale;
-    r.laborRequired = 0.5f * scale;
-    r.baseOutputRate = 0.1f; // Slow production
+    // ADR: Attribute-Differentiated Recipes
+    float baseMetals = 2.0f;
+    float baseElectronics = 1.0f;
+
+    r.inputs[resKey(Resource::Metals)] = baseMetals;
+    r.inputs[resKey(Resource::Electronics)] = baseElectronics;
+
+    int totalStars = 0;
+    std::vector<Resource> usedResources = {Resource::Metals,
+                                           Resource::Electronics};
+
+    auto addInput = [&](Resource res, float amount) {
+      r.inputs[resKey(res)] += amount;
+      if (std::find(usedResources.begin(), usedResources.end(), res) ==
+          usedResources.end()) {
+        usedResources.push_back(res);
+      }
+    };
+
+    for (const auto &attr : m.attributes) {
+      int stars = static_cast<int>(attr.tier);
+      totalStars += stars;
+      float attrRes = (stars == 1) ? 3.0f : (stars == 2 ? 5.0f : 8.0f);
+
+      switch (attr.type) {
+      case AttributeType::Thrust:
+        addInput(Resource::Metals, attrRes * 0.6f);
+        addInput(Resource::RareMetals, attrRes * 0.4f);
+        break;
+      case AttributeType::Efficiency:
+        addInput(Resource::Isotopes, attrRes * 0.5f);
+        addInput(Resource::Fuel, attrRes * 0.5f);
+        break;
+      case AttributeType::Mass:
+        addInput(Resource::Plastics, attrRes * 0.7f);
+        addInput(Resource::RareMetals, attrRes * 0.3f);
+        break;
+      case AttributeType::Caliber:
+      case AttributeType::Warhead:
+        addInput(Resource::Weapons, attrRes * 0.6f);
+        addInput(Resource::Electronics, attrRes * 0.4f);
+        break;
+      case AttributeType::ROF:
+        addInput(Resource::Electronics, attrRes * 0.5f);
+        addInput(Resource::Plastics, attrRes * 0.5f);
+        break;
+      case AttributeType::Range:
+      case AttributeType::Accuracy:
+        addInput(Resource::Electronics, attrRes * 0.6f);
+        addInput(Resource::RareMetals, attrRes * 0.4f);
+        break;
+      case AttributeType::Capacity:
+        addInput(Resource::Plastics, attrRes * 0.6f);
+        addInput(Resource::Metals, attrRes * 0.4f);
+        break;
+      case AttributeType::Output:
+      case AttributeType::Regen:
+        addInput(Resource::Powercells, attrRes * 0.7f);
+        addInput(Resource::Electronics, attrRes * 0.3f);
+        break;
+      case AttributeType::Maintenance:
+        addInput(Resource::Electronics, attrRes * 0.6f);
+        addInput(Resource::Isotopes, attrRes * 0.4f);
+        break;
+      case AttributeType::Volume:
+        addInput(Resource::Metals, attrRes * 0.5f);
+        addInput(Resource::Plastics, attrRes * 0.5f);
+        break;
+      default:
+        break;
+      }
+    }
+
+    // Total Star Modifier: +1 of each used resource per 4 stars
+    float starBonus = static_cast<float>(totalStars / 4);
+    for (Resource res : usedResources) {
+      r.inputs[resKey(res)] += starBonus;
+    }
+
+    // Size Tier Scaling
+    float sizeScale =
+        (tier == Tier::T1) ? 1.0f : (tier == Tier::T2 ? 3.0f : 8.0f);
+    for (auto &pair : r.inputs) {
+      pair.second *= sizeScale;
+    }
+
+    r.laborRequired = 0.5f * sizeScale;
+    r.baseOutputRate = 0.1f;
     recipes[pk] = r;
     productionPriority.push_back(pk);
   }

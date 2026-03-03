@@ -18,9 +18,9 @@ struct TierDNA {
 };
 
 struct VisualDNA {
-  uint8_t layoutPattern = 0; // Symmetrical, Radial, Asymmetrical, Alternating
-  uint8_t nacelleStyle = 0;  // Outriggers, Integrated, Ring, Pods
-  uint8_t hullConnectivity = 0; // Monolithic, Skeletal, Modular
+  LayoutPattern layoutPattern = LayoutPattern::Symmetrical;
+  NacelleStyle nacelleStyle = NacelleStyle::Outriggers;
+  HullConnectivity hullConnectivity = HullConnectivity::Monolithic;
   VisualStyle bodyStyle = VisualStyle::Sleek;
 };
 

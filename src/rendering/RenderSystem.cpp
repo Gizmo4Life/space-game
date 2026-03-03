@@ -310,25 +310,52 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                             .color;
           }
 
-          // 1. Draw Outriggers (Connections)
-          auto drawOutriggers = [&](const std::vector<MountSlot> &slots) {
+          // 1. Draw Connectors (Connections)
+          auto drawConnectors = [&](const std::vector<MountSlot> &slots) {
+            if (hull.visual.nacelleStyle == NacelleStyle::Integrated)
+              return;
+
             for (const auto &slot : slots) {
               if (slot.localPos.x == 0 && slot.localPos.y == 0)
                 continue;
               sf::Vector2f startPos = pixelPos;
               sf::Vector2f endPos =
                   pixelPos + rotateVector(slot.localPos * 12.0f, angleDegrees);
-              sf::Vertex line[] = {sf::Vertex(startPos, sf::Color(80, 80, 80)),
-                                   sf::Vertex(endPos, sf::Color(80, 80, 80))};
-              window.draw(line, 2, sf::PrimitiveType::Lines);
+
+              if (hull.visual.nacelleStyle == NacelleStyle::Ring) {
+                sf::CircleShape ring(
+                    std::sqrt(slot.localPos.x * slot.localPos.x +
+                              slot.localPos.y * slot.localPos.y) *
+                    12.0f);
+                ring.setOrigin({ring.getRadius(), ring.getRadius()});
+                ring.setPosition(pixelPos);
+                ring.setFillColor(sf::Color::Transparent);
+                ring.setOutlineThickness(1.0f);
+                ring.setOutlineColor(sf::Color(60, 60, 60));
+                window.draw(ring);
+              } else {
+                float thick = (hull.visual.nacelleStyle == NacelleStyle::Pods)
+                                  ? 2.f
+                                  : 1.f;
+                sf::RectangleShape line;
+                sf::Vector2f diff = endPos - pixelPos;
+                float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
+                line.setSize({dist, thick});
+                line.setOrigin({0, thick / 2.f});
+                line.setPosition(pixelPos);
+                line.setRotation(
+                    sf::degrees(std::atan2(diff.y, diff.x) * 180.f / 3.14159f));
+                line.setFillColor(sf::Color(80, 80, 80));
+                window.draw(line);
+              }
             }
           };
-          drawOutriggers(hull.engineSlots);
-          drawOutriggers(hull.hardpointSlots);
+          drawConnectors(hull.engineSlots);
+          drawConnectors(hull.hardpointSlots);
 
           // 2. Draw Main Body
-          drawHullComponent(window, hull.bodyStyle, pixelPos, angleDegrees,
-                            shipColor, 1.0f);
+          drawHullComponent(window, hull.visual.bodyStyle, pixelPos,
+                            angleDegrees, shipColor, 1.0f);
 
           // 3. Draw Engine Nacelles
           for (const auto &slot : hull.engineSlots) {

@@ -1,0 +1,32 @@
+#pragma once
+#include "LandingPanel.h"
+#include "game/EconomyManager.h"
+#include "game/components/HullDef.h"
+#include <set>
+#include <vector>
+
+namespace space {
+
+class ShipyardPanel : public LandingPanel {
+public:
+  ShipyardPanel(entt::entity planet, entt::entity player);
+  virtual ~ShipyardPanel() = default;
+
+  void handleEvent(const sf::Event &event, entt::registry &registry,
+                   b2WorldId worldId) override;
+  void render(sf::RenderWindow &window, entt::registry &registry,
+              const sf::Font *font, sf::FloatRect rect) override;
+
+private:
+  entt::entity planetEntity_;
+  entt::entity playerEntity_;
+  std::vector<DetailedHullBid> currentBids_;
+  int selectedBidIndex_ = 0;
+  std::set<size_t> expandedModules_;
+  float moduleScrollY_ = 0.f;
+
+  void drawShipBlueprint(sf::RenderWindow &w, const HullDef &hull,
+                         sf::Vector2f pos, float scale, sf::Color color);
+};
+
+} // namespace space

@@ -33,12 +33,18 @@ add_executable(SpaceGame
     src/rendering/MainRenderer.cpp
     src/rendering/RenderSystem.cpp
     src/rendering/LandingScreen.cpp
+    src/rendering/UIUtils.cpp
+    src/rendering/InfoPanel.cpp
+    src/rendering/ShipyardPanel.cpp
+    src/rendering/OutfitterPanel.cpp
+    src/rendering/MarketPanel.cpp
     src/game/WorldLoader.cpp
     src/game/FactionManager.cpp
     src/game/EconomyManager.cpp
     src/game/NPCShipManager.cpp
     src/game/ShipOutfitter.cpp
     src/game/components/HullGenerator.cpp
+    src/game/components/ModuleGenerator.cpp
 )
 
 target_include_directories(SpaceGame PRIVATE src)
