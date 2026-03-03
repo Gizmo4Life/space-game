@@ -6,8 +6,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "components/FactionDNA.h"
-#include "components/GameTypes.h"
+#include "game/components/FactionDNA.h"
+#include "game/components/GameTypes.h"
 
 namespace space {
 
@@ -53,8 +53,8 @@ private:
   std::map<uint32_t, float>
       factionRiskRegistry_; // factionId -> last known risk
 
-  static constexpr int MAX_NPCS = 200;
-  static constexpr float SPAWN_INTERVAL = 2.0f; // Faster mission attempts
+  static constexpr int MAX_NPCS = 500;
+  static constexpr float SPAWN_INTERVAL = 1.0f; // Faster mission attempts
 };
 
 } // namespace space

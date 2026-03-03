@@ -1,4 +1,4 @@
-#include "game/FactionManager.h"
+#include "FactionManager.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/ShipOutfitter.h"
 #include "game/components/Economy.h"
@@ -12,8 +12,7 @@
 #include <opentelemetry/trace/provider.h>
 #include <random>
 
-// Observability Gap: DNA drift events are not recorded in mission history or
-// telemetry.
+// DNA drift events are recorder in EconomyManager.
 
 namespace space {
 

@@ -136,24 +136,25 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
 
 void NPCShipManager::processMissions(entt::registry &registry, float dt) {
   for (auto it = activeMissions_.begin(); it != activeMissions_.end();) {
-    bool anyAlive = false;
-    bool anyArrived = false;
+    bool allArrived = !it->ships.empty();
+    bool allDead = it->ships.empty();
+    int aliveCount = 0;
 
     for (auto ship : it->ships) {
       if (registry.valid(ship)) {
-        anyAlive = true;
+        aliveCount++;
         auto &trans = registry.get<TransformComponent>(ship);
         auto &destTrans = registry.get<TransformComponent>(it->destination);
         float dist =
             std::sqrt(std::pow(trans.position.x - destTrans.position.x, 2) +
                       std::pow(trans.position.y - destTrans.position.y, 2));
-        if (dist < 100.0f)
-          anyArrived = true;
+        if (dist >= 100.0f)
+          allArrived = false;
       }
     }
 
-    if (!anyAlive || anyArrived) {
-      it->record.success = anyArrived;
+    if (aliveCount == 0 || allArrived) {
+      it->record.success = allArrived;
 
       // Finalize record and move to global stats
       auto *fData =

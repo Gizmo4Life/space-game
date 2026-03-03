@@ -1,4 +1,5 @@
 #pragma once
+#include "game/components/CelestialBody.h"
 #include "game/components/GameTypes.h"
 #include "game/components/HullDef.h"
 #include <box2d/box2d.h>
@@ -19,6 +20,9 @@ public:
 
   static entt::entity spawnPlayer(entt::registry &registry, b2WorldId worldId,
                                   Tier sizeTier);
+
+  static void seedEconomy(entt::registry &registry, entt::entity body,
+                          CelestialType type, float populationScale);
 };
 
 } // namespace space

@@ -11,7 +11,7 @@ Procedural faction generation, bilateral relationship tracking, and per-faction 
 
 ## 1. Physical Scope
 - **Path:** `/src/game/` — `FactionManager.h/.cpp`, `components/HullGenerator.h/.cpp`
-- **Components:** `components/Faction.h`, `components/FactionDNA.h`
+- **Components:** `components/Faction.h`, `components/FactionDNA.h`, `components/InstalledModules.h`, `components/AsteroidBelt.h`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment

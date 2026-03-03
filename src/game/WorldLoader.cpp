@@ -140,8 +140,6 @@ void WorldLoader::generateStarSystem(entt::registry &registry,
       registry.emplace<OrbitalComponent>(star, barycenter, 200.0f, 200.0f,
                                          400.0f, (i == 0 ? 0.0f : 3.1415f),
                                          0.0f);
-      // Binary stars are handled by OrbitalComponent, will be updated in next
-      // block
       tc.position = {0, 0};
     } else {
       tc.position = {0, 0};
@@ -162,14 +160,13 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
                                         b2WorldId worldId, entt::entity parent,
                                         float totalMass, float minSMA,
                                         float maxSMA, bool isMoonSystem) {
-  // Moon systems: up to 4 moons, random rocky/icy
   if (isMoonSystem) {
-    int numMoons = 2 + (rand() % 3); // 2-4 moons
+    int numMoons = 2 + (rand() % 3);
     float binWidth = (maxSMA - minSMA) / numMoons;
     for (int i = 0; i < numMoons; ++i) {
       float binMin = minSMA + i * binWidth;
       float binSMA = binMin + (rand() % 100) * 0.01f * binWidth;
-      float moonMass = (100.0f + rand() % 200); // small
+      float moonMass = (100.0f + rand() % 200);
       CelestialType type =
           (rand() % 2 == 0) ? CelestialType::Rocky : CelestialType::Icy;
       float radius = 8.0f + moonMass / 50.0f;
@@ -183,7 +180,6 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
       registry.emplace<OrbitalComponent>(moon, parent, binSMA, binSMA, period,
                                          (rand() % 628) * 0.01f, 0.0f);
 
-      // Initial position pre-calc
       auto &orb = registry.get<OrbitalComponent>(moon);
       sf::Vector2f parentPos(0, 0);
       if (registry.valid(parent) &&
@@ -194,7 +190,6 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
       float y = orb.semiMinorAxis * sinf(orb.currentPhase);
       registry.emplace<TransformComponent>(moon,
                                            parentPos + sf::Vector2f(x, y));
-      // Visuals
       sf::Color pColor = getPlanetColor(type);
       unsigned int iSize = (unsigned int)radius * 2;
       if (iSize < 1)
@@ -214,23 +209,17 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
       sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
       sc.sprite->setOrigin({radius, radius});
       registry.emplace<SpriteComponent>(moon, sc);
+
+      seedEconomy(registry, moon, type, 0.2f);
     }
     return;
   }
 
-  // Main star system: 6 deterministic typed orbital slots
-  // Slot 0: Dwarf Planet | 1: Rocky | 2: Lava | 3: Earthlike | 4: Icy | 5: Gas
-  // Giant
   const int numBins = 6;
   float binWidth = (maxSMA - minSMA) / numBins;
-
   static const CelestialType binTypes[numBins] = {
-      CelestialType::Rocky,     // slot 0 — dwarf planet (small mass)
-      CelestialType::Rocky,     // slot 1
-      CelestialType::Lava,      // slot 2
-      CelestialType::Earthlike, // slot 3
-      CelestialType::Icy,       // slot 4
-      CelestialType::GasGiant,  // slot 5
+      CelestialType::Rocky,     CelestialType::Rocky, CelestialType::Lava,
+      CelestialType::Earthlike, CelestialType::Icy,   CelestialType::GasGiant,
   };
   static const bool binIsDwarf[numBins] = {true,  false, false,
                                            false, false, false};
@@ -243,9 +232,7 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
 
     float radius;
     float mass;
-
     if (isDwarf || type == CelestialType::GasGiant) {
-      // Dwarf: small rocky body with thin belt; Gas Giant: large, no population
       mass = isDwarf ? (500.0f + rand() % 300) : (8000.0f + rand() % 4000);
       radius = isDwarf ? (12.0f + mass / 200.0f) : (50.0f + mass / 400.0f);
     } else {
@@ -264,7 +251,6 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
     registry.emplace<OrbitalComponent>(planet, parent, binSMA, binSMA, period,
                                        (rand() % 628) * 0.01f, 0.0f);
 
-    // Initial position pre-calc
     auto &orb = registry.get<OrbitalComponent>(planet);
     sf::Vector2f parentPos(0, 0);
     if (registry.valid(parent) && registry.all_of<TransformComponent>(parent)) {
@@ -275,7 +261,6 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
     registry.emplace<TransformComponent>(planet,
                                          parentPos + sf::Vector2f(x, y));
 
-    // Visuals
     sf::Color pColor = getPlanetColor(type);
     unsigned int iSize = (unsigned int)radius * 2;
     if (iSize < 1)
@@ -296,122 +281,13 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
     sc.sprite->setOrigin({radius, radius});
     registry.emplace<SpriteComponent>(planet, sc);
 
-    // Economy for habitable planet types only (not Dwarf or GasGiant)
     bool habitable = !isDwarf && type != CelestialType::GasGiant;
     if (habitable) {
-      Faction f;
-      uint32_t mainFact = FactionManager::instance().getRandomFactionId();
-      if (mainFact == 0)
-        mainFact = 2; // avoid faction 0 (Civilian) as owner
-      float mainAllegiance = 0.7f + (rand() % 20) * 0.01f;
-      f.allegiances[mainFact] = mainAllegiance;
-      f.allegiances[0] = 0.05f + (rand() % 5) * 0.01f;
-      registry.emplace<Faction>(planet, f);
+      seedEconomy(registry, planet, type, 1.0f);
+    }
 
-      PlanetEconomy eco;
-      // Modest population: 5-25k, Earthlike 3×, in thousands
-      float totalPop = 5.0f + (rand() % 21);
-      if (type == CelestialType::Earthlike)
-        totalPop *= 3.0f;
-
-      for (auto const &pair : f.allegiances) {
-        uint32_t fid = pair.first;
-        float weight = pair.second;
-        FactionEconomy fEco;
-        fEco.populationCount = totalPop * weight;
-
-        const auto &globalData = FactionManager::instance().getFaction(fid);
-        fEco.dna = globalData.dna;
-
-        // Seed initial fleet based on industrial focus
-        float fleetMultiplier = 1.0f + (1.0f - fEco.dna.industrialism);
-
-        auto seedRole = [&](Tier t, const std::string &role, int base) {
-          int count = std::max(1, (int)(base * fleetMultiplier));
-          fEco.fleetPool[{t, role}] = count;
-        };
-
-        seedRole(Tier::T1, "General", 2 + (rand() % 3));
-        if (fEco.dna.aggression > 0.4f)
-          seedRole(Tier::T1, "Combat", 1 + (rand() % 2));
-        if (fEco.dna.commercialism > 0.4f)
-          seedRole(Tier::T1, "Cargo", 1 + (rand() % 2));
-
-        if (fEco.populationCount > 15.0f) {
-          seedRole(Tier::T2, "General", 1 + (rand() % 2));
-          if (fEco.dna.aggression > 0.6f)
-            seedRole(Tier::T2, "Combat", 1);
-          if (fEco.dna.commercialism > 0.6f)
-            seedRole(Tier::T2, "Cargo", 1);
-
-          if (fEco.dna.aggression > 0.7f && fEco.populationCount > 30.0f) {
-            seedRole(Tier::T3, "Combat", 1);
-          }
-        }
-
-        auto rKey = [](Resource r) {
-          return ProductKey{ProductType::Resource, (uint32_t)r, Tier::T1};
-        };
-
-        // Seed factories by planet type
-        if (type == CelestialType::Rocky) {
-          fEco.factories[rKey(Resource::Metals)] = 5;
-          fEco.factories[rKey(Resource::RareMetals)] = 2;
-        } else if (type == CelestialType::Lava) {
-          fEco.factories[rKey(Resource::Metals)] = 3;
-          fEco.factories[rKey(Resource::Hydrocarbons)] = 2;
-        } else if (type == CelestialType::Icy) {
-          fEco.factories[rKey(Resource::Water)] = 5;
-          fEco.factories[rKey(Resource::Isotopes)] = 2;
-        } else if (type == CelestialType::Earthlike) {
-          fEco.factories[rKey(Resource::Crops)] = 5;
-          fEco.factories[rKey(Resource::Water)] = 2;
-        }
-        fEco.factories[rKey(Resource::Fuel)] =
-            std::max(1, (int)(fEco.populationCount));
-
-        // Seed module factories by strategy
-        auto mKey = [](uint32_t id, Tier t) {
-          return ProductKey{ProductType::Module, id, t};
-        };
-
-        if (fEco.dna.aggression > 0.6f) {
-          // Weapons (3-5) or Shields (6-8)
-          uint32_t baseId = (rand() % 2 == 0) ? 3 : 6;
-          fEco.factories[mKey(baseId, Tier::T1)] = 1;
-          if (fEco.populationCount > 15.0f)
-            fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
-        } else if (fEco.dna.industrialism > 0.6f) {
-          // Engines (0-2) or Power (12-14)
-          uint32_t baseId = (rand() % 2 == 0) ? 0 : 12;
-          fEco.factories[mKey(baseId, Tier::T1)] = 1;
-          if (fEco.populationCount > 15.0f)
-            fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
-        } else if (fEco.dna.commercialism > 0.6f) {
-          // Cargo (9-11) or generic utility
-          fEco.factories[mKey(9, Tier::T1)] = 1;
-          if (fEco.populationCount > 15.0f)
-            fEco.factories[mKey(10, Tier::T2)] = 1;
-        }
-
-        fEco.credits = fEco.populationCount * 100.0f;
-
-        // Initial stockpiles
-        fEco.stockpile[rKey(Resource::Food)] = fEco.populationCount * 50.0f;
-        fEco.stockpile[rKey(Resource::Water)] = fEco.populationCount * 50.0f;
-        fEco.stockpile[rKey(Resource::Metals)] = fEco.populationCount * 100.0f;
-        fEco.stockpile[rKey(Resource::Fuel)] = fEco.populationCount * 50.0f;
-
-        if (fEco.dna.aggression > 0.5f || fEco.dna.industrialism < 0.3f)
-          fEco.factories[rKey(Resource::Shipyard)] = 1;
-        if (fEco.dna.industrialism > 0.5f)
-          fEco.factories[rKey(Resource::Refinery)] = 1;
-
-        eco.factionData[fid] = fEco;
-      }
-      registry.emplace<PlanetEconomy>(planet, eco);
-
-      // Moon system for all non-dwarf planets
+    // Moon system for all non-dwarf planets
+    if (!isDwarf) {
       generateOrbitalSystem(registry, worldId, planet, mass * 0.1f,
                             radius * 3.0f, radius * 12.0f, true);
     }
@@ -424,9 +300,9 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
+  bodyDef.linearDamping = 0.0f;
   bodyDef.angularDamping = 2.0f;
 
-  // Find a populated body to spawn near
   sf::Vector2f spawnPos(900.0f, 900.0f);
   auto view = registry.view<PlanetEconomy, TransformComponent>();
   std::vector<entt::entity> populatedBodies;
@@ -437,17 +313,9 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   if (!populatedBodies.empty()) {
     entt::entity targetBody = populatedBodies[rand() % populatedBodies.size()];
     auto &bodyTrans = registry.get<TransformComponent>(targetBody);
-
-    // Spawn at a slight offset (e.g., 400 units) to avoid immediate collision
     float angle = (rand() % 628) * 0.01f;
     spawnPos = bodyTrans.position +
                sf::Vector2f(std::cos(angle) * 400.0f, std::sin(angle) * 400.0f);
-
-    std::cout << "[World] Player spawning near populated body at " << spawnPos.x
-              << ", " << spawnPos.y << "\n";
-  } else {
-    std::cout << "[World] No populated bodies found for player spawn, using "
-                 "default.\n";
   }
 
   bodyDef.position = {spawnPos.x / WorldConfig::WORLD_SCALE,
@@ -458,14 +326,11 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   b2Polygon dynamicBox = b2MakeBox(0.6f, 0.4f);
   b2ShapeDef shapeDef = b2DefaultShapeDef();
   shapeDef.density = 1.0f;
-  shapeDef.filter.maskBits = 0; // Disable physical collisions
+  shapeDef.filter.maskBits = 0;
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 
-  // Apply modular outfit (handles Hull, Engines, Weapons, Stats, etc.)
-  // Player starts in a Medium "jack of all trades" Falcon (M1)
   Tier startTier = Tier::T2;
   ShipOutfitter::instance().applyOutfit(registry, ship, 1, startTier);
-
   const HullDef &hull = ShipOutfitter::instance().getHull(1, startTier);
 
   registry.emplace_or_replace<InertialBody>(ship, bodyId, 500.0f, 0.05f, 20.0f);
@@ -478,11 +343,9 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
                                                 WorldConfig::STARTING_CREDITS);
 
   Faction f;
-  f.allegiances[1] = 1.0f; // Player is always Faction 1
+  f.allegiances[1] = 1.0f;
   registry.emplace_or_replace<Faction>(ship, f);
 
-  // Procedural rendering is now handled by RenderSystem (HullDef component)
-  // SpriteComponent is only a fallback or for specialized non-hull ships.
   SpriteComponent sc;
   auto texture = std::make_shared<sf::Texture>();
   sf::Image img({2, 2}, sf::Color::Transparent);
@@ -492,6 +355,114 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   registry.emplace_or_replace<SpriteComponent>(ship, sc);
 
   return ship;
+}
+
+void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
+                              CelestialType type, float populationScale) {
+  uint32_t mainFact = FactionManager::instance().getRandomFactionId();
+  if (mainFact == 0)
+    mainFact = 2;
+
+  Faction f;
+  float mainAllegiance = 0.7f + (rand() % 20) * 0.01f;
+  f.allegiances[mainFact] = mainAllegiance;
+  f.allegiances[0] = 0.05f + (rand() % 5) * 0.01f;
+  registry.emplace<Faction>(body, f);
+
+  PlanetEconomy eco;
+  float totalPop = (5.0f + (rand() % 21)) * populationScale;
+  if (type == CelestialType::Earthlike)
+    totalPop *= 3.0f;
+
+  for (auto const &pair : f.allegiances) {
+    uint32_t fid = pair.first;
+    float weight = pair.second;
+    FactionEconomy fEco;
+    fEco.populationCount = totalPop * weight;
+
+    const auto &globalData = FactionManager::instance().getFaction(fid);
+    fEco.dna = globalData.dna;
+
+    float fleetMultiplier = 1.5f + (1.0f - fEco.dna.industrialism); // Boosted
+    auto seedRole = [&](Tier t, const std::string &role, int base) {
+      if (base <= 0)
+        return;
+      int count = std::max(2, (int)(base * fleetMultiplier)); // Min 2 ships
+      fEco.fleetPool[{t, role}] = count;
+    };
+
+    seedRole(Tier::T1, "General",
+             (int)((2 + (rand() % 3)) * populationScale + 0.5f));
+    if (fEco.dna.aggression > 0.4f)
+      seedRole(Tier::T1, "Combat",
+               (int)((1 + (rand() % 2)) * populationScale + 0.5f));
+    if (fEco.dna.commercialism > 0.4f)
+      seedRole(Tier::T1, "Cargo",
+               (int)((1 + (rand() % 2)) * populationScale + 0.5f));
+
+    if (fEco.populationCount > 15.0f) {
+      seedRole(Tier::T2, "General", 1 + (rand() % 2));
+      if (fEco.dna.aggression > 0.6f)
+        seedRole(Tier::T2, "Combat", 1);
+      if (fEco.dna.commercialism > 0.6f)
+        seedRole(Tier::T2, "Cargo", 1);
+      if (fEco.dna.aggression > 0.7f && fEco.populationCount > 30.0f)
+        seedRole(Tier::T3, "Combat", 1);
+    }
+
+    auto rKey = [](Resource r) {
+      return ProductKey{ProductType::Resource, (uint32_t)r, Tier::T1};
+    };
+    if (type == CelestialType::Rocky) {
+      fEco.factories[rKey(Resource::Metals)] = 5;
+      fEco.factories[rKey(Resource::RareMetals)] = 2;
+    } else if (type == CelestialType::Lava) {
+      fEco.factories[rKey(Resource::Metals)] = 3;
+      fEco.factories[rKey(Resource::Hydrocarbons)] = 2;
+    } else if (type == CelestialType::Icy) {
+      fEco.factories[rKey(Resource::Water)] = 5;
+      fEco.factories[rKey(Resource::Isotopes)] = 2;
+    } else if (type == CelestialType::Earthlike) {
+      fEco.factories[rKey(Resource::Crops)] = 5;
+      fEco.factories[rKey(Resource::Water)] = 2;
+    }
+
+    fEco.factories[rKey(Resource::Fuel)] =
+        std::max(1, (int)(fEco.populationCount));
+
+    auto mKey = [](uint32_t id, Tier t) {
+      return ProductKey{ProductType::Module, id, t};
+    };
+    if (fEco.dna.aggression > 0.6f) {
+      uint32_t baseId = (rand() % 2 == 0) ? 3 : 6;
+      fEco.factories[mKey(baseId, Tier::T1)] = 1;
+      if (fEco.populationCount > 15.0f)
+        fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
+    } else if (fEco.dna.industrialism > 0.6f) {
+      uint32_t baseId = (rand() % 2 == 0) ? 0 : 12;
+      fEco.factories[mKey(baseId, Tier::T1)] = 1;
+      if (fEco.populationCount > 15.0f)
+        fEco.factories[mKey(baseId + 1, Tier::T2)] = 1;
+    } else if (fEco.dna.commercialism > 0.6f) {
+      fEco.factories[mKey(9, Tier::T1)] = 1;
+      if (fEco.populationCount > 15.0f)
+        fEco.factories[mKey(10, Tier::T2)] = 1;
+    }
+
+    fEco.credits = fEco.populationCount * 100.0f;
+    fEco.stockpile[rKey(Resource::Food)] = fEco.populationCount * 50.0f;
+    fEco.stockpile[rKey(Resource::Water)] = fEco.populationCount * 50.0f;
+    fEco.stockpile[rKey(Resource::Metals)] = fEco.populationCount * 100.0f;
+    fEco.stockpile[rKey(Resource::Fuel)] = fEco.populationCount * 50.0f;
+
+    if (fEco.dna.aggression > 0.5f || fEco.dna.industrialism < 0.3f)
+      fEco.factories[rKey(Resource::Shipyard)] = 1;
+    if (fEco.dna.industrialism > 0.5f)
+      fEco.factories[rKey(Resource::Refinery)] = 1;
+
+    eco.factionData[fid] = fEco;
+  }
+  registry.emplace<PlanetEconomy>(body, eco);
 }
 
 } // namespace space

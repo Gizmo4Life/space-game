@@ -1,4 +1,4 @@
-#include "game/ShipOutfitter.h"
+#include "ShipOutfitter.h"
 #include "game/components/ShipModule.h"
 #include <algorithm>
 #include <cmath>
@@ -165,19 +165,15 @@ const HullDef &ShipOutfitter::getHull(uint32_t factionId, Tier sizeTier,
   return proceduralHulls_[key];
 }
 
-void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
-                                uint32_t factionId, Tier sizeTier,
-                                const std::string &role) const {
-  auto span =
-      space::Telemetry::instance().tracer()->StartSpan("game.core.ship.outfit");
+std::vector<ModuleId>
+ShipOutfitter::getBlueprintModules(uint32_t factionId, Tier sizeTier,
+                                   const std::string &role) const {
   const HullDef &hull = getHull(factionId, sizeTier, role);
   const auto &fData = FactionManager::instance().getFaction(factionId);
   const FactionDNA &dna = fData.dna;
   const TierDNA &tdna = dna.tierDNA.at(sizeTier);
 
-  // Helper: Find best module based on DNA and constraints
-  auto findBestModule = [&](AttributeType attr, Tier maxTier,
-                            bool prioritized) -> uint32_t {
+  auto findBestModule = [&](AttributeType attr, Tier maxTier) -> uint32_t {
     const auto &modReg = ModuleRegistry::instance().modules;
     uint32_t bestIdx = EMPTY_MODULE;
     Tier bestTier = Tier::T1;
@@ -190,7 +186,6 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
       if (mSize > maxTier)
         continue;
 
-      // Match highest tier possible for the slot
       if (bestIdx == EMPTY_MODULE || mSize > bestTier) {
         bestIdx = static_cast<uint32_t>(i);
         bestTier = mSize;
@@ -199,36 +194,33 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
     return bestIdx;
   };
 
-  // 1. Engines
-  InstalledEngines ie;
-  ie.ids.assign(hull.engineSlots.size(), EMPTY_MODULE);
-  for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
-    ie.ids[i] =
-        findBestModule(AttributeType::Thrust, hull.engineSlots[i].size, true);
-  }
-  registry.emplace_or_replace<InstalledEngines>(entity, ie);
+  std::vector<ModuleId> allModules;
 
-  // 2. Weapons - Apply exclusions for non-combat roles
-  InstalledWeapons iw;
-  iw.ids.assign(hull.hardpointSlots.size(), EMPTY_MODULE);
+  // 1. Engines
+  for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
+    allModules.push_back(
+        findBestModule(AttributeType::Thrust, hull.engineSlots[i].size));
+  }
+
+  // 2. Weapons
   bool canHaveWeapons =
       (role != "Cargo" && role != "Freight") || dna.aggression > 0.7f;
   if (canHaveWeapons) {
     for (size_t i = 0; i < hull.hardpointSlots.size(); ++i) {
-      // Light hulls (T1) cannot have T3 weapons even if slot allows
       Tier maxWeaponTier = hull.hardpointSlots[i].size;
       if (sizeTier == Tier::T1 && maxWeaponTier > Tier::T2)
         maxWeaponTier = Tier::T2;
-
-      iw.ids[i] = findBestModule(AttributeType::Caliber, maxWeaponTier,
-                                 role == "Combat");
+      allModules.push_back(
+          findBestModule(AttributeType::Caliber, maxWeaponTier));
+    }
+  } else {
+    for (size_t i = 0; i < hull.hardpointSlots.size(); ++i) {
+      allModules.push_back(EMPTY_MODULE);
     }
   }
-  registry.emplace_or_replace<InstalledWeapons>(entity, iw);
 
-  // 3. Internal Modules - Managed by volume, not slots
+  // 3. Internals
   float availableVolume = hull.internalVolume;
-
   auto tryInstallInternal = [&](uint32_t moduleId) -> bool {
     if (moduleId == EMPTY_MODULE)
       return false;
@@ -240,39 +232,84 @@ void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
     return false;
   };
 
-  InstalledShields is;
   bool wantShields =
       dna.aggression > 0.2f || role == "Combat" || tdna.prefDurability > 0.6f;
   if (wantShields) {
-    uint32_t sId = findBestModule(AttributeType::Capacity, sizeTier, true);
-    while (tryInstallInternal(sId)) {
-      is.ids.push_back(sId);
-      if (is.ids.size() > 5)
-        break; // Safety cap
+    uint32_t sId = findBestModule(AttributeType::Capacity, sizeTier);
+    int count = 0;
+    while (tryInstallInternal(sId) && count++ < 5) {
+      allModules.push_back(sId);
     }
   }
-  registry.emplace_or_replace<InstalledShields>(entity, is);
 
-  InstalledCargo ic;
   bool wantCargo = dna.commercialism > 0.4f || role == "Cargo" ||
                    role == "Freight" || tdna.prefVolume > 0.6f;
   if (wantCargo) {
-    uint32_t cId = findBestModule(AttributeType::Volume, sizeTier, true);
-    while (tryInstallInternal(cId)) {
-      ic.ids.push_back(cId);
-      if (ic.ids.size() > 10)
-        break; // Safety cap
+    uint32_t cId = findBestModule(AttributeType::Volume, sizeTier);
+    int count = 0;
+    while (tryInstallInternal(cId) && count++ < 10) {
+      allModules.push_back(cId);
     }
   }
-  registry.emplace_or_replace<InstalledCargo>(entity, ic);
 
-  InstalledPower ip;
-  uint32_t pId = findBestModule(AttributeType::Output, sizeTier, true);
-  while (tryInstallInternal(pId)) {
-    ip.ids.push_back(pId);
-    if (ip.ids.size() > 3)
-      break; // Safety cap
+  uint32_t pId = findBestModule(AttributeType::Output, sizeTier);
+  int count = 0;
+  while (tryInstallInternal(pId) && count++ < 3) {
+    allModules.push_back(pId);
   }
+
+  return allModules;
+}
+
+void ShipOutfitter::applyOutfit(entt::registry &registry, entt::entity entity,
+                                uint32_t factionId, Tier sizeTier,
+                                const std::string &role) const {
+  auto span =
+      space::Telemetry::instance().tracer()->StartSpan("game.core.ship.outfit");
+  const HullDef &hull = getHull(factionId, sizeTier, role);
+  const auto &fData = FactionManager::instance().getFaction(factionId);
+  const TierDNA &tdna = fData.dna.tierDNA.at(sizeTier);
+
+  std::vector<ModuleId> modules =
+      getBlueprintModules(factionId, sizeTier, role);
+  size_t idx = 0;
+
+  // 1. Engines
+  InstalledEngines ie;
+  ie.ids.resize(hull.engineSlots.size());
+  for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
+    ie.ids[i] = modules[idx++];
+  }
+  registry.emplace_or_replace<InstalledEngines>(entity, ie);
+
+  // 2. Weapons
+  InstalledWeapons iw;
+  iw.ids.resize(hull.hardpointSlots.size());
+  for (size_t i = 0; i < hull.hardpointSlots.size(); ++i) {
+    iw.ids[i] = modules[idx++];
+  }
+  registry.emplace_or_replace<InstalledWeapons>(entity, iw);
+
+  // 3. Internals (remaining)
+  InstalledShields is;
+  InstalledCargo ic;
+  InstalledPower ip;
+
+  while (idx < modules.size()) {
+    ModuleId mId = modules[idx++];
+    if (mId == EMPTY_MODULE)
+      continue;
+    const auto &m = ModuleRegistry::instance().getModule(mId);
+    if (m.hasAttribute(AttributeType::Capacity))
+      is.ids.push_back(mId);
+    else if (m.hasAttribute(AttributeType::Volume))
+      ic.ids.push_back(mId);
+    else if (m.hasAttribute(AttributeType::Output))
+      ip.ids.push_back(mId);
+  }
+
+  registry.emplace_or_replace<InstalledShields>(entity, is);
+  registry.emplace_or_replace<InstalledCargo>(entity, ic);
   registry.emplace_or_replace<InstalledPower>(entity, ip);
 
   registry.emplace_or_replace<HullDef>(entity, hull);
@@ -485,7 +522,8 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
       const auto &m = reg.getModule(id);
       if (m.hasAttribute(AttributeType::Thrust))
         ie.totalThrust +=
-            getTierMult(m.getAttributeTier(AttributeType::Thrust)) * 2500000.0f;
+            getTierMult(m.getAttributeTier(AttributeType::Thrust)) *
+            12500000.0f;
       ie.totalRotSpeed += 1.0f;
     }
   }
@@ -571,8 +609,6 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
     }
     inertial.thrustForce = thrust;
     inertial.rotationSpeed = rot;
-    // Scale max velocity with tier to improve world-space travel feel
-    inertial.maxLinearVelocity = 200.0f * (static_cast<int>(hull.sizeTier) + 1);
   }
 }
 

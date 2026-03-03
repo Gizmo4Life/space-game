@@ -19,16 +19,6 @@ void KinematicsSystem::update(entt::registry &registry, float deltaTime) {
       b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
       b2Rot rot = b2Body_GetRotation(inertial.bodyId);
 
-      // --- Velocity Clamping ---
-      b2Vec2 vel = b2Body_GetLinearVelocity(inertial.bodyId);
-      float speedSq = vel.x * vel.x + vel.y * vel.y;
-      if (speedSq > inertial.maxLinearVelocity * inertial.maxLinearVelocity) {
-        float speed = std::sqrt(speedSq);
-        vel.x = (vel.x / speed) * inertial.maxLinearVelocity;
-        vel.y = (vel.y / speed) * inertial.maxLinearVelocity;
-        b2Body_SetLinearVelocity(inertial.bodyId, vel);
-      }
-
       transform.position.x = pos.x * WorldConfig::WORLD_SCALE;
       transform.position.y = pos.y * WorldConfig::WORLD_SCALE;
       transform.rotation = atan2f(rot.s, rot.c) * 180.0f / 3.14159f;

@@ -1,5 +1,5 @@
 #pragma once
-#include "GameTypes.h"
+#include "game/components/GameTypes.h"
 #include <map>
 #include <string>
 #include <vector>

@@ -11,7 +11,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 
 ## 1. Physical Scope
 - **Path:** `/src/game/` — `EconomyManager.h/.cpp`, `TradeManager.h/.cpp`, `WorldLoader.h/.cpp`
-- **Components:** `components/Economy.h`, `components/CargoComponent.h`
+- **Components:** `components/Economy.h`, `components/CargoComponent.h`, `components/InertialBody.h`, `components/ShipStats.h`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment

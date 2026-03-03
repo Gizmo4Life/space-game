@@ -36,16 +36,29 @@ private:
   entt::entity playerEntity_ = entt::null;
 
   // Selection state for the ship market
-  Tier selectedTier_ = Tier::T1;
+  std::vector<DetailedHullBid> currentBids_;
+  int selectedBidIndex_ = 0;
+  int selectedMarketIndex_ = 0;
+
+  enum class LandingTab { Info, Shipyard, Outfitter, Market };
+  LandingTab currentTab_ = LandingTab::Info;
 
   void drawPanel(sf::RenderWindow &w, sf::FloatRect rect, sf::Color bg,
                  sf::Color border);
 
+  void drawTabs(sf::RenderWindow &w, const sf::Font *f, sf::FloatRect rect);
+
   void drawPlanetInfo(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
                       sf::FloatRect rect);
 
-  void drawShipMarket(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
-                      sf::FloatRect rect, b2WorldId worldId);
+  void drawShipyard(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
+                    sf::FloatRect rect, b2WorldId worldId);
+
+  void drawOutfitter(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
+                     sf::FloatRect rect);
+
+  void drawMarket(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
+                  sf::FloatRect rect);
 
   void drawFactionDNA(sf::RenderWindow &w, entt::registry &r, const sf::Font *f,
                       sf::FloatRect rect);

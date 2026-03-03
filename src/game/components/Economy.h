@@ -1,6 +1,6 @@
 #pragma once
-#include "FactionDNA.h"
-#include "GameTypes.h"
+#include "game/components/FactionDNA.h"
+#include "game/components/GameTypes.h"
 #include <map>
 #include <string>
 #include <type_traits>

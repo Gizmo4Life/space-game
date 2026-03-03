@@ -1,6 +1,6 @@
 #pragma once
-#include "FactionDNA.h"
-#include "HullDef.h"
+#include "game/components/FactionDNA.h"
+#include "game/components/HullDef.h"
 #include <string>
 
 namespace space {

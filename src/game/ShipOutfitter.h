@@ -1,7 +1,7 @@
 #pragma once
-#include "components/GameTypes.h"
-#include "components/HullDef.h"
-#include "components/ShipModule.h"
+#include "game/components/GameTypes.h"
+#include "game/components/HullDef.h"
+#include "game/components/ShipModule.h"
 #include <entt/entt.hpp>
 #include <map>
 #include <vector>
@@ -23,6 +23,10 @@ public:
   void applyOutfit(entt::registry &registry, entt::entity entity,
                    uint32_t factionId, Tier sizeTier,
                    const std::string &role = "General") const;
+
+  std::vector<ModuleId>
+  getBlueprintModules(uint32_t factionId, Tier sizeTier,
+                      const std::string &role = "General") const;
 
   ShipOutfitHash calculateOutfitHash(entt::registry &registry,
                                      entt::entity entity) const;

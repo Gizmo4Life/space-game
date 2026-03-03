@@ -1,5 +1,6 @@
 #pragma once
-#include "components/FactionDNA.h"
+#include "game/components/FactionDNA.h"
+#include "game/components/GameTypes.h"
 #include <SFML/Graphics/Color.hpp>
 #include <algorithm>
 #include <entt/entt.hpp>

@@ -6,9 +6,11 @@
 #include "game/components/Faction.h"
 #include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
+#include "game/components/InstalledModules.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
+#include "game/components/ShipModule.h"
 #include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
@@ -85,7 +87,7 @@ static void drawHUD(entt::registry &registry, entt::entity player,
 
   sf::Vector2u windowSize = window.getSize();
   float hudWidth = 280.0f;
-  float hudHeight = 145.0f;
+  float hudHeight = 320.0f; // Expanded to fit modules
   float margin = 20.0f;
   sf::Vector2f hudPos(margin, windowSize.y - hudHeight - margin);
 
@@ -180,6 +182,37 @@ static void drawHUD(entt::registry &registry, entt::entity player,
           " kN";
       drawText(thrustStr, 12, sf::Color(180, 180, 180));
     }
+  }
+
+  // 4. Installed Modules
+  y += 5.0f;
+  drawText("─── INSTALLED MODULES ───", 11, sf::Color(100, 200, 255));
+  y -= 5.0f;
+
+  auto &reg = ModuleRegistry::instance();
+  auto drawModuleList = [&](const std::vector<ModuleId> &ids) {
+    for (auto id : ids) {
+      if (id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(id);
+      drawText(" • " + m.name, 10, sf::Color(200, 200, 200));
+    }
+  };
+
+  if (registry.all_of<InstalledEngines>(player)) {
+    drawModuleList(registry.get<InstalledEngines>(player).ids);
+  }
+  if (registry.all_of<InstalledWeapons>(player)) {
+    drawModuleList(registry.get<InstalledWeapons>(player).ids);
+  }
+  if (registry.all_of<InstalledShields>(player)) {
+    drawModuleList(registry.get<InstalledShields>(player).ids);
+  }
+  if (registry.all_of<InstalledCargo>(player)) {
+    drawModuleList(registry.get<InstalledCargo>(player).ids);
+  }
+  if (registry.all_of<InstalledPower>(player)) {
+    drawModuleList(registry.get<InstalledPower>(player).ids);
   }
 }
 

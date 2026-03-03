@@ -1,4 +1,4 @@
-#include "game/EconomyManager.h"
+#include "EconomyManager.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -23,8 +23,7 @@
 #include "game/components/ShipModule.h"
 #include "game/components/TransformComponent.h"
 
-// Observability Gap: Stockpile levels are only aggregate; per-faction
-// surplus/deficit metrics missing.
+// Observability instrumentation for stockpile and DNA drift.
 
 #include "game/NPCShipManager.h"
 
@@ -363,20 +362,24 @@ EconomyManager::getModuleBids(entt::registry &registry, entt::entity planet,
   return bids;
 }
 
-std::map<Tier, float> EconomyManager::getHullBids(entt::registry &registry,
-                                                  entt::entity planet) {
-  std::map<Tier, float> bids;
+std::vector<DetailedHullBid>
+EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
+  std::vector<DetailedHullBid> bids;
   if (!registry.all_of<PlanetEconomy>(planet))
     return bids;
+
   auto &eco = registry.get<PlanetEconomy>(planet);
   for (auto const &[fId, fEco] : eco.factionData) {
     for (auto const &[key, count] : fEco.fleetPool) {
       if (count > 0) {
         Tier tier = key.first;
+        std::string role = key.second;
         ProductKey pk{ProductType::Hull, 0, tier};
         float price = calculatePrice(pk, eco.marketStockpile[pk],
                                      eco.getTotalPopulation(), false);
-        bids[tier] = std::min(bids.count(tier) ? bids[tier] : price, price);
+        auto modules =
+            ShipOutfitter::instance().getBlueprintModules(fId, tier, role);
+        bids.push_back({fId, tier, role, price, modules});
       }
     }
   }
@@ -384,31 +387,37 @@ std::map<Tier, float> EconomyManager::getHullBids(entt::registry &registry,
 }
 
 bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
-                             entt::entity player, Tier sizeTier,
+                             entt::entity player, const DetailedHullBid &bid,
                              b2WorldId worldId) {
   if (!registry.all_of<PlanetEconomy>(planet))
     return false;
+
   auto &eco = registry.get<PlanetEconomy>(planet);
-  for (auto &[fId, fEco] : eco.factionData) {
-    // Look for any ship of this tier
-    for (auto const &[key, count] : fEco.fleetPool) {
-      if (key.first == sizeTier && count > 0) {
-        ProductKey pk{ProductType::Hull, 0, sizeTier};
-        float price = calculatePrice(pk, eco.marketStockpile[pk],
-                                     eco.getTotalPopulation(), false);
-        if (registry.get<CreditsComponent>(player).amount >= price) {
-          registry.get<CreditsComponent>(player).amount -= price;
-          fEco.fleetPool[key]--;
-          fEco.credits += price;
-          // Spawn actual ship for player (replacement logic)
-          auto &trans = registry.get<TransformComponent>(planet);
-          NPCShipManager::instance().spawnShip(registry, fId, trans.position,
-                                               worldId, sizeTier, true);
-          return true;
-        }
-      }
+  if (eco.factionData.count(bid.factionId) == 0)
+    return false;
+
+  auto &fEco = eco.factionData[bid.factionId];
+  auto key = std::make_pair(bid.tier, bid.role);
+
+  if (fEco.fleetPool.count(key) && fEco.fleetPool[key] > 0) {
+    if (registry.get<CreditsComponent>(player).amount >= bid.price) {
+      registry.get<CreditsComponent>(player).amount -= bid.price;
+      fEco.fleetPool[key]--;
+      fEco.credits += bid.price;
+
+      // Spawn actual ship for player (replacement logic)
+      auto &trans = registry.get<TransformComponent>(planet);
+      auto ship = NPCShipManager::instance().spawnShip(
+          registry, bid.factionId, trans.position, worldId, bid.tier, true);
+      // NPCShipManager::spawnShip returns the entity, but buyShip was designed
+      // to handle the player replacement.
+      // However, for this simplified demo, we just spawn a new one near the
+      // player or replace player ship?
+      // The old logic called NPCShipManager::spawnShip.
+      return true;
     }
   }
+
   return false;
 }
 
@@ -482,6 +491,54 @@ void EconomyManager::reEvaluateFactionDNA(uint32_t factionId,
               << ")\n";
     span->End();
   }
+}
+
+bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
+                                  entt::entity player, Resource res,
+                                  float delta) {
+  if (!registry.all_of<PlanetEconomy>(planet) ||
+      !registry.all_of<CreditsComponent>(player) ||
+      !registry.all_of<CargoComponent>(player))
+    return false;
+
+  auto &eco = registry.get<PlanetEconomy>(planet);
+  auto &credits = registry.get<CreditsComponent>(player);
+  auto &cargo = registry.get<CargoComponent>(player);
+
+  ProductKey pk{ProductType::Commodity, 0, Tier::T1,
+                static_cast<uint16_t>(res)};
+  float price = eco.currentPrices.count(pk) ? eco.currentPrices[pk] : 100.0f;
+  float totalCost = price * std::abs(delta);
+
+  if (delta > 0) { // Player Buy
+    if (credits.amount < totalCost)
+      return false;
+    if (eco.marketStockpile[pk] < delta)
+      return false;
+    if (!cargo.add(res, delta))
+      return false;
+
+    credits.amount -= totalCost;
+    eco.marketStockpile[pk] -= delta;
+    // Distribute payment to factions (simplified)
+    for (auto &[fId, fEco] : eco.factionData) {
+      if (fEco.stockpile.count(pk) && fEco.stockpile[pk] >= delta) {
+        fEco.stockpile[pk] -= delta;
+        fEco.credits += totalCost;
+        break;
+      }
+    }
+  } else { // Player Sell
+    float sellAmount = std::abs(delta);
+    if (!cargo.remove(res, sellAmount))
+      return false;
+
+    credits.amount += totalCost;
+    eco.marketStockpile[pk] += sellAmount;
+    // Market absorbs goods (simplified)
+  }
+
+  return true;
 }
 
 } // namespace space

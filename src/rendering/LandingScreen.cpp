@@ -1,6 +1,7 @@
 #include "LandingScreen.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
+#include "game/ShipOutfitter.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/CelestialBody.h"
 #include "game/components/Economy.h"
@@ -52,7 +53,7 @@ void LandingScreen::open(entt::entity planet, entt::entity player) {
   open_ = true;
   planetEntity_ = planet;
   playerEntity_ = player;
-  selectedTier_ = Tier::T1;
+  selectedBidIndex_ = 0;
   span->End();
 }
 
@@ -62,30 +63,76 @@ void LandingScreen::handleEvent(const sf::Event &event,
                                 entt::registry &registry, b2WorldId worldId) {
   if (!open_)
     return;
+
   if (const auto *kp = event.getIf<sf::Event::KeyPressed>()) {
     if (kp->code == sf::Keyboard::Key::Escape) {
       close();
       return;
     }
-    // Ship type selection
-    if (kp->code == sf::Keyboard::Key::Num1 ||
-        kp->code == sf::Keyboard::Key::Numpad1)
-      selectedTier_ = Tier::T1;
-    if (kp->code == sf::Keyboard::Key::Num2 ||
-        kp->code == sf::Keyboard::Key::Numpad2)
-      selectedTier_ = Tier::T2;
-    if (kp->code == sf::Keyboard::Key::Num3 ||
-        kp->code == sf::Keyboard::Key::Numpad3)
-      selectedTier_ = Tier::T3;
-    // Buy
-    if (kp->code == sf::Keyboard::Key::Enter ||
-        kp->code == sf::Keyboard::Key::B) {
-      auto span =
-          Telemetry::instance().tracer()->StartSpan("game.ui.ship.purchase");
-      span->SetAttribute("vessel.tier", tierName(selectedTier_));
-      EconomyManager::instance().buyShip(registry, planetEntity_, playerEntity_,
-                                         selectedTier_, worldId);
-      span->End();
+
+    // --- Tab Switching ---
+    if (kp->code == sf::Keyboard::Key::Num1) {
+      currentTab_ = LandingTab::Info;
+    } else if (kp->code == sf::Keyboard::Key::Num2) {
+      currentTab_ = LandingTab::Shipyard;
+      currentBids_ =
+          EconomyManager::instance().getHullBids(registry, planetEntity_);
+    } else if (kp->code == sf::Keyboard::Key::Num3) {
+      currentTab_ = LandingTab::Outfitter;
+    } else if (kp->code == sf::Keyboard::Key::Num4) {
+      currentTab_ = LandingTab::Market;
+    }
+
+    // --- Tab-Specific Input ---
+    if (currentTab_ == LandingTab::Shipyard) {
+      if (kp->code == sf::Keyboard::Key::Up ||
+          kp->code == sf::Keyboard::Key::W) {
+        if (selectedBidIndex_ > 0)
+          selectedBidIndex_--;
+      }
+      if (kp->code == sf::Keyboard::Key::Down ||
+          kp->code == sf::Keyboard::Key::S) {
+        if (selectedBidIndex_ < (int)currentBids_.size() - 1)
+          selectedBidIndex_++;
+      }
+
+      // Buy
+      if ((kp->code == sf::Keyboard::Key::Enter ||
+           kp->code == sf::Keyboard::Key::B) &&
+          !currentBids_.empty()) {
+        auto span =
+            Telemetry::instance().tracer()->StartSpan("game.ui.ship.purchase");
+        const auto &bid = currentBids_[selectedBidIndex_];
+        span->SetAttribute("vessel.tier", tierName(bid.tier));
+        if (EconomyManager::instance().buyShip(registry, planetEntity_,
+                                               playerEntity_, bid, worldId)) {
+          currentBids_ =
+              EconomyManager::instance().getHullBids(registry, planetEntity_);
+        }
+        span->End();
+      }
+    } else if (currentTab_ == LandingTab::Market) {
+      int maxRes = static_cast<int>(Resource::Refinery);
+      if (kp->code == sf::Keyboard::Key::Up ||
+          kp->code == sf::Keyboard::Key::W) {
+        if (selectedMarketIndex_ > 0)
+          selectedMarketIndex_--;
+      }
+      if (kp->code == sf::Keyboard::Key::Down ||
+          kp->code == sf::Keyboard::Key::S) {
+        if (selectedMarketIndex_ < maxRes)
+          selectedMarketIndex_++;
+      }
+
+      // Trade
+      Resource res = static_cast<Resource>(selectedMarketIndex_);
+      if (kp->code == sf::Keyboard::Key::B) { // Buy 1
+        EconomyManager::instance().executeTrade(registry, planetEntity_,
+                                                playerEntity_, res, 1.0f);
+      } else if (kp->code == sf::Keyboard::Key::V) { // Sell 1
+        EconomyManager::instance().executeTrade(registry, planetEntity_,
+                                                playerEntity_, res, -1.0f);
+      }
     }
   }
 }
@@ -186,11 +233,16 @@ void LandingScreen::drawPlanetInfo(sf::RenderWindow &w, entt::registry &r,
   }
 }
 
-void LandingScreen::drawShipMarket(sf::RenderWindow &w, entt::registry &r,
-                                   const sf::Font *f, sf::FloatRect rect,
-                                   b2WorldId /*worldId*/) {
+void LandingScreen::drawShipyard(sf::RenderWindow &w, entt::registry &r,
+                                 const sf::Font *f, sf::FloatRect rect,
+                                 b2WorldId /*worldId*/) {
   if (!f)
     return;
+
+  // Update current bids every frame to catch price changes or stock changes
+  currentBids_ = EconomyManager::instance().getHullBids(r, planetEntity_);
+  if (selectedBidIndex_ >= (int)currentBids_.size())
+    selectedBidIndex_ = std::max(0, (int)currentBids_.size() - 1);
 
   float x = rect.position.x + 20.f;
   float y = rect.position.y + 16.f;
@@ -214,30 +266,75 @@ void LandingScreen::drawShipMarket(sf::RenderWindow &w, entt::registry &r,
   text("Your Credits: $" + fmt(playerCredits, 0), 16, sf::Color(100, 255, 100));
   y += 8.f;
 
-  std::vector<Tier> tiers = {Tier::T1, Tier::T2, Tier::T3};
-  int keyNum = 1;
-  for (auto tier : tiers) {
-    bool isSelected = (tier == selectedTier_);
-    sf::Color headerCol =
-        isSelected ? sf::Color(255, 220, 80) : sf::Color(180, 180, 180);
-    text("[" + std::to_string(keyNum++) + "] " + tierName(tier) + " Ship",
-         isSelected ? 18 : 16, headerCol);
+  if (currentBids_.empty()) {
+    text("No ships available for sale here.", 14, sf::Color(150, 150, 150));
+  } else {
+    for (int i = 0; i < (int)currentBids_.size(); ++i) {
+      const auto &bid = currentBids_[i];
+      bool isSelected = (i == selectedBidIndex_);
+      const auto &fd = FactionManager::instance().getFaction(bid.factionId);
 
-    auto bids = EconomyManager::instance().getHullBids(r, planetEntity_);
-    if (!bids.count(tier)) {
-      text("   No sellers available", 13, sf::Color(120, 120, 120));
-    } else {
-      float price = bids.at(tier);
-      bool canAfford = (playerCredits >= price);
-      sf::Color col =
-          canAfford ? sf::Color(80, 255, 80) : sf::Color(255, 80, 80);
-      text("   ★ Available: $" + fmt(price, 0), 14, col);
+      sf::Color col = isSelected ? sf::Color::White : sf::Color(180, 180, 180);
+      std::string prefix = isSelected ? "> " : "  ";
+      std::string desc = prefix + tierName(bid.tier) + " " + bid.role + " (" +
+                         fd.name + ") : $" + fmt(bid.price, 0);
+
+      sf::Text t(*f, desc, 14);
+      t.setFillColor(isSelected ? fd.color : col);
+      if (isSelected)
+        t.setStyle(sf::Text::Bold);
+      t.setPosition({x, y});
+      w.draw(t);
+      y += lineH;
     }
-    y += 6.f;
   }
 
-  y += 8.f;
-  text("[ Enter / B ] Buy selected type", 14, sf::Color(150, 200, 255));
+  // Preview Box (Right Side)
+  float previewWidth = 300.f;
+  float previewHeight = rect.size.y - 100.f;
+  sf::FloatRect previewRect(
+      {rect.position.x + rect.size.x - previewWidth - 20.f,
+       rect.position.y + 20.f},
+      {previewWidth, previewHeight});
+  drawPanel(w, previewRect, sf::Color(15, 20, 25, 220),
+            sf::Color(100, 150, 255, 150));
+
+  if (!currentBids_.empty() && selectedBidIndex_ < (int)currentBids_.size()) {
+    const auto &bid = currentBids_[selectedBidIndex_];
+
+    // Position text INSIDE the preview box
+    float oldX = x;
+    float oldY = y;
+    x = previewRect.position.x + 15.f;
+    y = previewRect.position.y + 15.f;
+
+    text("── Selected Vessel ──", 16, sf::Color(140, 200, 255));
+    text("Tier: " + tierName(bid.tier), 14, sf::Color(200, 200, 200));
+    text("Role: " + bid.role, 14, sf::Color(200, 200, 200));
+
+    auto hull =
+        ShipOutfitter::instance().getHull(bid.factionId, bid.tier, bid.role);
+    text("Mass: " + fmt(hull.baseMass, 0) + "t", 14, sf::Color(180, 180, 180));
+    text("HP: " + fmt(hull.baseHitpoints, 0), 14, sf::Color(180, 180, 180));
+
+    y += 12.f;
+    text("── Installed Modules ──", 16, sf::Color(140, 200, 255));
+    if (bid.modules.empty()) {
+      text("  (No modules installed)", 12, sf::Color(150, 150, 150));
+    } else {
+      for (auto mId : bid.modules) {
+        if (mId == EMPTY_MODULE)
+          continue;
+        const auto &m = ModuleRegistry::instance().getModule(mId);
+        text(" • " + m.name, 13, sf::Color(220, 220, 220));
+      }
+    }
+
+    x = oldX;
+    y = oldY;
+  }
+
+  y = rect.position.y + rect.size.y - 30.f;
   text("[ Esc ] Depart", 14, sf::Color(150, 150, 150));
 }
 
@@ -327,18 +424,32 @@ void LandingScreen::render(sf::RenderWindow &w, entt::registry &r,
   float panelH = H - 2.f * pad;
   float halfW = (W - 3.f * pad) / 2.f;
 
-  // Left: planet info
-  sf::FloatRect leftRect({pad, pad}, {halfW, panelH});
-  drawPanel(w, leftRect, sf::Color(20, 20, 35, 230),
-            sf::Color(80, 120, 200, 200));
-  drawPlanetInfo(w, r, f, leftRect);
-  drawFactionDNA(w, r, f, leftRect);
+  sf::FloatRect screenRect(50.0f, 50.0f, size.x - 100.0f, size.y - 100.0f);
 
-  // Right: ship market
-  sf::FloatRect rightRect({2.f * pad + halfW, pad}, {halfW, panelH});
-  drawPanel(w, rightRect, sf::Color(20, 30, 20, 230),
-            sf::Color(80, 200, 120, 200));
-  drawShipMarket(w, r, f, rightRect, b2WorldId{});
+  // 1. Draw Tab Bar (Top)
+  sf::FloatRect tabRect(screenRect.left, screenRect.top, screenRect.width,
+                        40.0f);
+  drawTabs(w, f, tabRect);
+
+  // 2. Content Area
+  sf::FloatRect contentRect(screenRect.left, screenRect.top + 60.0f,
+                            screenRect.width, screenRect.height - 60.0f);
+
+  switch (currentTab_) {
+  case LandingTab::Info:
+    drawPlanetInfo(w, r, f, contentRect);
+    drawFactionDNA(w, r, f, contentRect);
+    break;
+  case LandingTab::Shipyard:
+    drawShipyard(w, r, f, contentRect, b2WorldId{});
+    break;
+  case LandingTab::Outfitter:
+    drawOutfitter(w, r, f, contentRect);
+    break;
+  case LandingTab::Market:
+    drawMarket(w, r, f, contentRect);
+    break;
+  }
 
   // Bottom hint bar
   if (f) {
@@ -348,13 +459,150 @@ void LandingScreen::render(sf::RenderWindow &w, entt::registry &r,
             (r.valid(planetEntity_) && r.all_of<NameComponent>(planetEntity_)
                  ? r.get<NameComponent>(planetEntity_).name
                  : "planet") +
-            "   |   [1] Light   [2] Medium   [3] Heavy   "
-            "[Enter] Buy   [Esc] Depart",
+            "   |   [1-4] Tabs   [Esc] Depart",
         13);
     hint.setFillColor(sf::Color(180, 180, 180));
-    hint.setPosition({pad, H - 30.f});
+    hint.setPosition({50.f, size.y - 30.f});
     w.draw(hint);
   }
+}
+
+void LandingScreen::drawTabs(sf::RenderWindow &w, const sf::Font *f,
+                             sf::FloatRect rect) {
+  std::vector<std::string> tabs = {"1: Info", "2: Shipyard", "3: Outfitter",
+                                   "4: Market"};
+  float tabWidth = rect.width / tabs.size();
+
+  for (size_t i = 0; i < tabs.size(); ++i) {
+    sf::FloatRect singleTab(rect.left + i * tabWidth, rect.top, tabWidth - 5.0f,
+                            rect.height);
+    bool active = (static_cast<size_t>(currentTab_) == i);
+
+    drawPanel(w, singleTab,
+              active ? sf::Color(60, 60, 80) : sf::Color(40, 40, 50),
+              active ? sf::Color::Cyan : sf::Color(100, 100, 100));
+
+    if (f) {
+      sf::Text text(tabs[i], *f, 18);
+      auto b = text.getLocalBounds();
+      text.setPosition(
+          {singleTab.left + (singleTab.width - b.size.x) / 2.0f,
+           singleTab.top + (singleTab.height - b.size.y) / 2.0f - 5.0f});
+      w.draw(text);
+    }
+  }
+}
+
+void LandingScreen::drawOutfitter(sf::RenderWindow &w, entt::registry &r,
+                                  const sf::Font *f, sf::FloatRect rect) {
+  drawPanel(w, rect, sf::Color(30, 20, 40, 230), sf::Color(180, 100, 255, 200));
+  if (f) {
+    sf::Text text("Outfitter: Ship Refitting & Modules", *f, 24);
+    text.setPosition({rect.left + 20.0f, rect.top + 20.0f});
+    w.draw(text);
+
+    sf::Text comingSoon(
+        "(Module purchasing and refitting coming in next update)", *f, 18);
+    comingSoon.setFillColor(sf::Color(150, 150, 150));
+    comingSoon.setPosition({rect.left + 20.0f, rect.top + 60.0f});
+    w.draw(comingSoon);
+  }
+}
+
+void LandingScreen::drawMarket(sf::RenderWindow &w, entt::registry &r,
+                               const sf::Font *f, sf::FloatRect rect) {
+  drawPanel(w, rect, sf::Color(25, 25, 20, 230), sf::Color(200, 180, 80, 200));
+  if (!f || !r.all_of<PlanetEconomy>(planetEntity_) ||
+      !r.all_of<CargoComponent>(playerEntity_))
+    return;
+
+  auto &eco = r.get<PlanetEconomy>(planetEntity_);
+  auto &cargo = r.get<CargoComponent>(playerEntity_);
+  auto &credits = r.get<CreditsComponent>(playerEntity_);
+
+  float y = rect.top + 20.0f;
+  float midX = rect.left + rect.width * 0.5f;
+
+  sf::Text title("Global Commodity Market", *f, 24);
+  title.setPosition({rect.left + 20.0f, y});
+  w.draw(title);
+
+  sf::Text balance("Wallet: " + fmt(credits.amount, 0) +
+                       " Cr  |  Cargo: " + fmt(cargo.currentWeight, 1) + "/" +
+                       fmt(cargo.maxCapacity, 0),
+                   *f, 18);
+  balance.setFillColor(sf::Color::Cyan);
+  balance.setPosition({rect.left + rect.width - 350.f, y + 5.f});
+  w.draw(balance);
+
+  y += 50.0f;
+
+  // --- Left Side: Market Supply ---
+  sf::Text headerL("Planet Stockpile (Buy)", *f, 18);
+  headerL.setFillColor(sf::Color(180, 180, 180));
+  headerL.setPosition({rect.left + 30.0f, y});
+  w.draw(headerL);
+
+  // --- Right Side: Player Inventory ---
+  sf::Text headerR("Your Cargo (Sell)", *f, 18);
+  headerR.setFillColor(sf::Color(180, 180, 180));
+  headerR.setPosition({midX + 30.0f, y});
+  w.draw(headerR);
+
+  y += 40.0f;
+  float rowY = y;
+
+  // Render Market List
+  for (int i = 0; i <= static_cast<int>(space::Resource::Refinery); ++i) {
+    if (y > rect.top + rect.height - 40.f)
+      break;
+
+    space::Resource res = static_cast<space::Resource>(i);
+    ProductKey pk{ProductType::Commodity, 0, Tier::T1,
+                  static_cast<uint16_t>(i)};
+
+    std::string name = getResourceName(res);
+    float price = eco.currentPrices.count(pk) ? eco.currentPrices[pk] : 0.0f;
+    float supply =
+        eco.marketStockpile.count(pk) ? eco.marketStockpile[pk] : 0.0f;
+
+    sf::Text row(name + " | " + fmt(price, 1) +
+                     " Cr | Supply: " + fmt(supply, 0),
+                 *f, 16);
+    if (i == selectedMarketIndex_) {
+      row.setFillColor(sf::Color::Yellow);
+      row.setString("> " + std::string(row.getString()));
+    }
+    row.setPosition({rect.left + 40.0f, y});
+    w.draw(row);
+    y += 25.0f;
+  }
+
+  // Render Player List
+  y = rowY;
+  for (auto const &[res, amount] : cargo.inventory) {
+    if (amount <= 0.01f)
+      continue;
+    if (y > rect.top + rect.height - 40.f)
+      break;
+
+    ProductKey pk{ProductType::Commodity, 0, Tier::T1,
+                  static_cast<uint16_t>(res)};
+    float price = eco.currentPrices.count(pk) ? eco.currentPrices[pk] : 0.0f;
+
+    sf::Text row(getResourceName(res) + " | " + fmt(amount, 1) +
+                     " units | Value: " + fmt(price, 1),
+                 *f, 16);
+    row.setPosition({midX + 40.0f, y});
+    w.draw(row);
+    y += 25.0f;
+  }
+
+  // Market Controls Hint
+  sf::Text hint("[W/S] Select   [B] Buy 1   [V] Sell 1", *f, 14);
+  hint.setFillColor(sf::Color(200, 200, 200));
+  hint.setPosition({rect.left + 20.f, rect.top + rect.height - 30.f});
+  w.draw(hint);
 }
 
 } // namespace space

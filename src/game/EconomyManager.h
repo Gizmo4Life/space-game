@@ -1,6 +1,8 @@
 #pragma once
-#include "components/Economy.h"
-#include "components/GameTypes.h"
+#include "game/components/CargoComponent.h"
+#include "game/components/Economy.h"
+#include "game/components/GameTypes.h"
+#include "game/components/ShipModule.h"
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
 #include <map>
@@ -20,6 +22,14 @@ struct ShipOffer {
   float price;
 };
 
+struct DetailedHullBid {
+  uint32_t factionId;
+  Tier tier;
+  std::string role;
+  float price;
+  std::vector<ModuleId> modules;
+};
+
 class EconomyManager {
 public:
   static EconomyManager &instance() {
@@ -34,14 +44,21 @@ public:
                                        entt::entity planet);
   std::map<uint16_t, float> getModuleBids(entt::registry &registry,
                                           entt::entity planet, ProductKey pk);
-  std::map<Tier, float> getHullBids(entt::registry &registry,
-                                    entt::entity planet);
+  std::vector<DetailedHullBid> getHullBids(entt::registry &registry,
+                                           entt::entity planet);
 
   bool buyShip(entt::registry &registry, entt::entity planet,
-               entt::entity player, Tier sizeTier, b2WorldId worldId);
+               entt::entity player, const DetailedHullBid &bid,
+               b2WorldId worldId);
 
   bool buyModularShip(entt::registry &registry, entt::entity shipEntity,
                       entt::entity player);
+
+  /// Exchange commodity goods between player cargo and planet stockpile.
+  /// delta > 0 for player buying from planet, delta < 0 for player selling to
+  /// planet.
+  bool executeTrade(entt::registry &registry, entt::entity planet,
+                    entt::entity player, Resource res, float delta);
 
   const Recipe &getRecipe(ProductKey pk) const { return recipes.at(pk); }
 

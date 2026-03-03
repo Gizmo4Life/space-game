@@ -1,5 +1,5 @@
 #pragma once
-#include "GameTypes.h"
+#include "game/components/GameTypes.h"
 #include <SFML/System/Vector2.hpp>
 #include <cstdint>
 #include <map>
