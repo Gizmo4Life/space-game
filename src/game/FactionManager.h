@@ -1,6 +1,7 @@
 #pragma once
 #include "game/components/FactionDNA.h"
 #include "game/components/GameTypes.h"
+#include "game/components/HullDef.h"
 #include <SFML/Graphics/Color.hpp>
 #include <algorithm>
 #include <entt/entt.hpp>
@@ -20,6 +21,9 @@ struct FactionData {
 
   FactionDNA dna;
   MissionStats stats;
+  std::vector<ShipBlueprint> blueprints;
+
+  const ShipBlueprint *getBlueprint(Tier tier, const std::string &role) const;
 };
 
 class FactionManager {
@@ -34,6 +38,8 @@ public:
   const FactionData &getFaction(uint32_t id) const;
   FactionData *getFactionPtr(uint32_t id);
   uint32_t getRandomFactionId() const;
+
+  std::string generateShipLineName(NamingScheme scheme, uint32_t index);
 
   // Get relationship between two factions (-1.0 to 1.0)
   float getRelationship(uint32_t idA, uint32_t idB) const;

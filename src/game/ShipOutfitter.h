@@ -18,15 +18,17 @@ public:
   void init();
 
   const HullDef &getHull(uint32_t factionId, Tier sizeTier,
-                         const std::string &role = "General") const;
+                         const std::string &role = "General",
+                         uint32_t lineIndex = 0) const;
 
   void applyBlueprint(::entt::registry &registry, ::entt::entity entity,
                       uint32_t factionId, Tier sizeTier,
                       const std::string &role = "General") const;
 
-  std::vector<ModuleId>
-  getBlueprintModules(uint32_t factionId, Tier sizeTier,
-                      const std::string &role = "General") const;
+  ShipBlueprint generateBlueprint(uint32_t factionId, Tier sizeTier,
+                                  const std::string &role,
+                                  uint32_t lineIndex = 0,
+                                  bool isElite = true) const;
 
   ShipOutfitHash calculateOutfitHash(entt::registry &registry,
                                      entt::entity entity) const;
@@ -46,7 +48,7 @@ private:
   void refreshStats(entt::registry &registry, entt::entity entity,
                     const HullDef &hull) const;
 
-  mutable std::map<std::tuple<uint32_t, Tier, std::string>, HullDef>
+  mutable std::map<std::tuple<uint32_t, Tier, std::string, uint32_t>, HullDef>
       proceduralHulls_;
 
   struct DefaultOutfit {

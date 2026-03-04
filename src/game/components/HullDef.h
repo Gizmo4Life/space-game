@@ -141,4 +141,53 @@ inline HullDef makeBasicHull(const std::string &name,
   return h;
 }
 
+// ─── Ship Blueprint (Hull + Modules)
+// ──────────────────────────────────────────────────────────
+struct ShipBlueprint {
+  HullDef hull;
+  std::vector<ProductKey> modules;
+  std::string role;
+  float performanceScore = 1.0f; // For future genetic/learning sims
+  uint32_t lineIndex = 0;
+
+  bool validate(std::string &outError) const {
+    if (!hull.validate(outError))
+      return false;
+
+    // 1. Check module count matches slot count (for engines/hardpoints)
+    if (modules.size() <
+        (hull.engineSlots.size() + hull.hardpointSlots.size())) {
+      outError = "Insufficient modules for hull slots.";
+      return false;
+    }
+
+    // 2. Technical constraints check
+    float usedVol = 0.0f;
+    float powerDraw = 0.0f;
+    bool hasReactor = false;
+    bool hasEngine = false;
+
+    // First part of modules are engines
+    for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
+      if (modules[i].id != 0) // EMPTY_MODULE check (using 0 as placeholder for
+                              // now, but better to be explicit)
+        hasEngine = true;
+    }
+
+    // All modules check
+    for (const auto &pk : modules) {
+      if (pk.type == ProductType::Module) {
+        // In a real implementation we'd look up the module def here
+        // For now, validation is partially dependent on the caller knowing the
+        // IDs
+      }
+    }
+
+    // The validation here will be expanded as ShipOutfitter logic is migrated
+    // into this unified structure.
+
+    return true;
+  }
+};
+
 } // namespace space

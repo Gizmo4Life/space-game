@@ -16,6 +16,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 
 ## 2. Capability Alignment
 - [Capability: Economy](/docs/architecture/capability/economy.md) (T2)
+- [Capability: Ship Modular System](/docs/architecture/capability/ship-modular-system.md) (T1) — Refit Fees
 
 ## 3. Pattern Composition
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `PlanetEconomy`, `CargoComponent`, `CreditsComponent`
@@ -27,6 +28,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P) — `targetStock / currentStock` price formula
 - [economy-arbitrage-logic](/docs/developer/pattern/economy-arbitrage-logic.md) (P) — AI traders move goods between planets based on price differentials and faction DNA
 - [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model using `Tier` for tiered pricing
+- [economy-refit-fee](/docs/developer/pattern/economy-refit-fee.md) (P) — Installation costs for player refits
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 

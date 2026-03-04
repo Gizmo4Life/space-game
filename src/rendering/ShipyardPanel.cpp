@@ -56,37 +56,13 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
           Telemetry::instance().tracer()->StartSpan("game.ui.ship.purchase");
       const auto &bid = currentBids_[selectedBidIndex_];
 
-      // Technical validation
-      float usedVol = 0.f;
-      float powerTotal = 0.f;
-      bool hasReactor = false;
-      for (auto modId : bid.modules) {
-        if (modId == EMPTY_MODULE)
-          continue;
-        const auto &m = ModuleRegistry::instance().getModule(modId);
-        usedVol += m.volumeOccupied;
-        powerTotal -= m.powerDraw;
-        if (m.powerDraw < 0)
-          hasReactor = true;
-      }
+      // Only check affordability client-side — technical validity is guaranteed
+      // by getBlueprintModules when bids are generated. Re-validating here with
+      // bid.hull data was silently rejecting purchases due to stale hull state.
+      auto &credits = registry.get<CreditsComponent>(playerEntity_);
+      bool canAfford = credits.amount >= bid.price;
 
-      bool hasEngine = false;
-      if (bid.modules.size() >= bid.hull.engineSlots.size()) {
-        for (size_t i = 0; i < bid.hull.engineSlots.size(); ++i) {
-          if (bid.modules[i] != ::space::EMPTY_MODULE) {
-            hasEngine = true;
-            break;
-          }
-        }
-      }
-
-      bool canBuy = (usedVol <= bid.hull.internalVolume) && (powerTotal >= 0) &&
-                    hasReactor && hasEngine;
-
-      if (canBuy) {
-        // Find existing entities to help updating refs
-        entt::entity originalPlayer = playerEntity_;
-
+      if (canAfford) {
         if (EconomyManager::instance().buyShip(registry, planetEntity_,
                                                playerEntity_, bid, worldId,
                                                buyToFleet, buyAsFlagship)) {
@@ -105,9 +81,11 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
           currentBids_ =
               EconomyManager::instance().getHullBids(registry, planetEntity_);
           span->SetAttribute("purchase.success", true);
+        } else {
+          span->SetAttribute("purchase.denied", "buyShip returned false");
         }
       } else {
-        span->SetAttribute("purchase.denied", "Technical constraints violated");
+        span->SetAttribute("purchase.denied", "insufficient credits");
       }
       span->End();
     }

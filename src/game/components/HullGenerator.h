@@ -8,7 +8,7 @@ namespace space {
 class HullGenerator {
 public:
   static HullDef generateHull(const FactionDNA &dna, Tier tier,
-                              const std::string &role);
+                              const std::string &role, uint32_t lineIndex = 0);
 
 private:
   static float calculateMass(const TierDNA &tdna, Tier tier);

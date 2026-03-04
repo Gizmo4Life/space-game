@@ -209,6 +209,26 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
   auto &outfitter = ShipOutfitter::instance();
   outfitter.applyBlueprint(registry, entity, factionId, sizeTier);
 
+  // Initialize Physics (Box2D)
+  b2BodyDef bodyDef = b2DefaultBodyDef();
+  bodyDef.type = b2_dynamicBody;
+  bodyDef.linearDamping = 0.0f;
+  bodyDef.angularDamping = 2.0f;
+  bodyDef.position = {position.x / WorldConfig::WORLD_SCALE,
+                      position.y / WorldConfig::WORLD_SCALE};
+  bodyDef.userData = (void *)(uintptr_t)entity;
+  b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
+
+  b2Polygon dynamicBox = b2MakeBox(0.6f, 0.4f);
+  b2ShapeDef shapeDef = b2DefaultShapeDef();
+  shapeDef.density = 1.0f;
+  shapeDef.filter.maskBits = 0xFFFFFFFF; // Collide with everything
+  b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
+
+  registry.emplace_or_replace<InertialBody>(entity, bodyId, 500.0f, 0.05f,
+                                            20.0f);
+  registry.emplace_or_replace<WeaponComponent>(entity);
+
   const auto &hull = outfitter.getHull(factionId, sizeTier);
   registry.emplace<NameComponent>(
       entity,

@@ -5,7 +5,7 @@
 
 namespace space {
 
-enum class Tier { T1 = 1, T2 = 2, T3 = 3, T4 = 4 };
+enum class Tier { T1 = 1, T2 = 2, T3 = 3 };
 enum class VisualStyle { Triangle, Square, Circular, Sleek };
 
 enum class AttributeType {
@@ -53,18 +53,26 @@ struct ProductKey {
 static inline std::string tierName(Tier t) {
   switch (t) {
   case Tier::T1:
-    return "Light";
+    return "Small";
   case Tier::T2:
     return "Medium";
   case Tier::T3:
-    return "Heavy";
-  case Tier::T4:
-    return "Capital";
+    return "Large";
   }
   return "Unknown";
 }
 
 enum class MissionType { Patrol, Trade, Combat, Expansion, Escort, Piracy };
+
+enum class NamingScheme {
+  Raptors,
+  Rodents,
+  Ungulates,
+  Insects,
+  Felines,
+  Mythical,
+  Celestial
+};
 
 using ShipOutfitHash = uint64_t;
 

@@ -32,7 +32,7 @@ ModuleGenerator::generate(const std::string &baseName, Tier baseTier,
     Tier t = static_cast<Tier>(tInt);
     def.attributes.push_back({type, t});
 
-    // Tiered reduction: T1=100%, T2=90%, T3=80%, T4=70%
+    // Tiered reduction: T1=100%, T2=90%, T3=80%
     float multiplier = 1.1f - (static_cast<float>(t) * 0.1f);
     multiplier = std::max(0.1f, multiplier);
 

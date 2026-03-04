@@ -394,21 +394,49 @@ void EconomyManager::tryExpandInfrastructure(uint32_t factionId,
 float EconomyManager::calculatePrice(ProductKey pk, float currentStock,
                                      float population, bool isAtWar) {
   float base = 10.0f;
-  if (pk.type == ProductType::Resource)
-    base = 10.0f;
-  else if (pk.type == ProductType::Module)
-    base = 200.0f;
-  else if (pk.type == ProductType::Hull)
-    base = 2500.0f; // Hulls are significantly more expensive
-  if (currentStock < population * 0.05f)
-    base *= 2.5f;
-  if (currentStock > population * 0.5f)
-    base *= 0.7f;
+  float tierMultiplier = 1.0f;
+
   if (pk.tier == Tier::T2)
-    base *= 3.0f;
-  if (pk.tier == Tier::T3)
-    base *= 8.0f;
-  return base;
+    tierMultiplier = 5.0f;
+  else if (pk.tier == Tier::T3)
+    tierMultiplier = 25.0f;
+
+  if (pk.type == ProductType::Resource) {
+    base = 10.0f * tierMultiplier;
+  } else if (pk.type == ProductType::Module) {
+    base = 500.0f * tierMultiplier;
+
+    // Production Penalty (Stars)
+    // Multi-star modules are exponentially harder to produce.
+    const auto &reg = ModuleRegistry::instance().modules;
+    if (pk.id < reg.size()) {
+      const auto &m = reg[pk.id];
+      float starPenalty = 1.0f;
+      for (const auto &attr : m.attributes) {
+        if (attr.tier == Tier::T2)
+          starPenalty *= 1.8f;
+        else if (attr.tier == Tier::T3)
+          starPenalty *= 3.5f;
+      }
+      base *= starPenalty;
+    }
+  } else if (pk.type == ProductType::Hull) {
+    base = 5000.0f * tierMultiplier;
+  }
+
+  // Supply/Demand curve
+  float stockFactor = 1.0f;
+  if (currentStock < population * 0.05f)
+    stockFactor = 3.0f;
+  else if (currentStock > population * 0.5f)
+    stockFactor = 0.5f;
+
+  float finalPrice = base * stockFactor;
+
+  // Faction Cut & Market Markup (20% fee for used car feel)
+  finalPrice *= 1.25f; // Base market fee
+
+  return finalPrice;
 }
 
 std::vector<ShipOffer> EconomyManager::getShipOffers(entt::registry &registry,
@@ -451,16 +479,54 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
 
   auto &eco = registry.get<PlanetEconomy>(planet);
   for (auto const &[fId, fEco] : eco.factionData) {
-    for (auto const &[key, count] : fEco.fleetPool) {
-      if (count > 0) {
-        Tier tier = key.first;
-        std::string role = key.second;
-        ProductKey pk{ProductType::Hull, 0, tier};
-        float price = calculatePrice(pk, eco.marketStockpile[pk],
+    auto *fData = FactionManager::instance().getFactionPtr(fId);
+    if (!fData)
+      continue;
+
+    for (const auto &bp : fData->blueprints) {
+      // Check if the planet's economy supports this tier/role
+      // (Simplified: if the fleetPool has ANY count for this tier, we show all
+      // blueprints of that tier)
+      bool tierInPool = false;
+      for (auto const &[key, count] : fEco.fleetPool) {
+        if (key.first == bp.hull.sizeTier && count > 0) {
+          tierInPool = true;
+          break;
+        }
+      }
+
+      if (tierInPool) {
+        // Generate market-compliant blueprint (isElite = false)
+        ShipBlueprint marketBP = ShipOutfitter::instance().generateBlueprint(
+            fId, bp.hull.sizeTier, bp.role, bp.lineIndex, false);
+
+        float totalPrice = 0;
+        // Hull price
+        ProductKey hullPK{ProductType::Hull, 0, marketBP.hull.sizeTier};
+        totalPrice += calculatePrice(hullPK, eco.marketStockpile[hullPK],
                                      eco.getTotalPopulation(), false);
-        auto modules =
-            ShipOutfitter::instance().getBlueprintModules(fId, tier, role);
-        bids.push_back({fId, tier, role, price, modules});
+
+        // Module prices
+        for (const auto &mpk : marketBP.modules) {
+          if (mpk.id == 0)
+            continue; // EMPTY_MODULE
+          totalPrice += calculatePrice(mpk, eco.marketStockpile[mpk],
+                                       eco.getTotalPopulation(), false);
+        }
+
+        DetailedHullBid bid;
+        bid.factionId = fId;
+        bid.tier = marketBP.hull.sizeTier;
+        bid.role = marketBP.role;
+        bid.price = totalPrice;
+        bid.hull = marketBP.hull;
+        bid.hullName = marketBP.hull.className + " (" + marketBP.role + ")";
+
+        for (const auto &mpk : marketBP.modules) {
+          bid.modules.push_back(static_cast<ModuleId>(mpk.id));
+        }
+
+        bids.push_back(bid);
       }
     }
   }

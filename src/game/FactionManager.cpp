@@ -20,6 +20,39 @@ void FactionManager::init() {
   factions.clear();
   relationships.clear();
 
+  auto generateShipLines = [&](FactionData &fData) {
+    fData.blueprints.clear();
+    for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
+      const TierDNA &tdna = fData.dna.tierDNA.at(t);
+
+      // Number of lines scales with specialization (lower = more variety)
+      // and fleetScale (higher = more investment in the tier)
+      int numLines = 1;
+      if (tdna.specialization < 0.4f)
+        numLines += 1;
+      if (tdna.fleetScale > 0.7f)
+        numLines += 1;
+
+      // Ensure at least one Combat and one Commercial line if appropriate
+      std::vector<std::string> roles;
+      if (fData.dna.aggression > 0.3f)
+        roles.push_back("Combat");
+      if (fData.dna.commercialism > 0.3f)
+        roles.push_back("Cargo");
+      if (roles.empty())
+        roles.push_back("General");
+
+      for (int i = 0; i < numLines; ++i) {
+        std::string role = roles[i % roles.size()];
+        if (i >= (int)roles.size())
+          role += " " + std::to_string(i / roles.size() + 1);
+
+        fData.blueprints.push_back(
+            ShipOutfitter::instance().generateBlueprint(fData.id, t, role, i));
+      }
+    }
+  };
+
   // Faction 0 is Neutral
   FactionData civ;
   civ.id = 0;
@@ -28,7 +61,7 @@ void FactionManager::init() {
   civ.dna.aggression = 0.05f;
   civ.dna.industrialism = 1.0f;
   civ.dna.commercialism = 1.0f;
-  civ.dna.cooperation = 1.0f; // Max cooperation for civilians
+  civ.dna.cooperation = 1.0f;
   for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
     TierDNA &tdna = civ.dna.tierDNA[t];
     tdna.fleetScale = (t == Tier::T1) ? 0.8f : 0.2f;
@@ -37,6 +70,8 @@ void FactionManager::init() {
     tdna.hardpointDensities[Tier::T1] = 0.1f;
     tdna.mountDensities[Tier::T1] = 0.3f;
   }
+  civ.dna.namingScheme = NamingScheme::Celestial;
+  generateShipLines(civ);
   factions[0] = civ;
 
   // Faction 1 is Player
@@ -45,26 +80,41 @@ void FactionManager::init() {
   player.name = "Player";
   player.color = sf::Color::Cyan;
   player.dna.aggression = 0.5f;
+  player.dna.industrialism = 0.5f;
+  player.dna.commercialism = 0.5f;
   player.dna.cooperation = 0.5f;
+  player.dna.namingScheme = NamingScheme::Raptors;
+  player.dna.visual.layoutPattern = LayoutPattern::Symmetrical;
+  player.dna.visual.nacelleStyle = NacelleStyle::Outriggers;
+  player.dna.visual.bodyStyle = VisualStyle::Sleek;
   for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
-    player.dna.tierDNA[t] = TierDNA(); // Default 0.5 balanced
+    TierDNA &tdna = player.dna.tierDNA[t];
+    tdna.fleetScale = 0.5f;
+    tdna.specialization = 0.5f;
+    tdna.prefDurability = 0.5f;
+    tdna.prefVolume = 0.4f;
+    tdna.hardpointDensities[Tier::T1] = 0.5f;
+    tdna.hardpointDensities[Tier::T2] = 0.3f;
+    tdna.mountDensities[Tier::T1] = 0.5f;
+    tdna.mountDensities[Tier::T2] = 0.3f;
   }
+  generateShipLines(player);
   factions[1] = player;
 
   // Generate exactly 5 procedural factions (IDs 2–6)
   int count = 5;
   for (uint32_t i = 0; i < static_cast<uint32_t>(count); ++i) {
     FactionData data;
-    data.id = i + 2; // Start from 2
+    data.id = i + 2;
     data.name = generateFactionName();
-    data.color =
-        sf::Color(rand() % 155 + 100, rand() % 155 + 100, rand() % 155 + 100);
+    data.color = sf::Color(rand() % 155 + 100, rand() % 155 + 100,
+                           rand() % 155 + 100, 255);
 
-    // Randomize DNA
     data.dna.aggression = (rand() % 100) * 0.01f;
     data.dna.industrialism = (rand() % 100) * 0.01f;
     data.dna.commercialism = (rand() % 100) * 0.01f;
     data.dna.cooperation = (rand() % 100) * 0.01f;
+    data.dna.namingScheme = static_cast<NamingScheme>(rand() % 7);
 
     data.dna.visual.layoutPattern = static_cast<LayoutPattern>(rand() % 4);
     data.dna.visual.nacelleStyle = static_cast<NacelleStyle>(rand() % 4);
@@ -85,14 +135,8 @@ void FactionManager::init() {
       }
     }
 
+    generateShipLines(data);
     factions[data.id] = data;
-
-    // Pre-generate a few hull variants for the faction
-    for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
-      ShipOutfitter::instance().getHull(data.id, t, "General");
-      ShipOutfitter::instance().getHull(data.id, t, "Combat");
-      ShipOutfitter::instance().getHull(data.id, t, "Cargo");
-    }
   }
 
   // Initialize relationships: alignment-based fuzzy logic
@@ -277,6 +321,48 @@ std::string FactionManager::generateFactionName() {
 
   return adjectives[rand() % adjectives.size()] + " " +
          nouns[rand() % nouns.size()];
+}
+
+std::string FactionManager::generateShipLineName(NamingScheme scheme,
+                                                 uint32_t index) {
+  static const std::map<NamingScheme, std::vector<std::string>> schemeNames = {
+      {NamingScheme::Raptors,
+       {"Eagle", "Hawk", "Falcon", "Osprey", "Kestrel", "Merlin", "Goshawk",
+        "Buzzard", "Harrier", "Vulture"}},
+      {NamingScheme::Rodents,
+       {"Mouse", "Rat", "Squirrel", "Chipmunk", "Beaver", "Gopher", "Marmot",
+        "Capybara", "Porcupine", "Jerboa"}},
+      {NamingScheme::Ungulates,
+       {"Gazelle", "Impala", "Kudu", "Oryx", "Eland", "Bongo", "Okapi",
+        "Giraffe", "Zebra", "Hippo"}},
+      {NamingScheme::Insects,
+       {"Hornet", "Wasp", "Beetle", "Mantis", "Locust", "Dragonfly", "Scorpion",
+        "Spider", "Ant", "Moth"}},
+      {NamingScheme::Felines,
+       {"Tiger", "Lion", "Leopard", "Jaguar", "Cougar", "Lynx", "Ocelot",
+        "Caracal", "Serval", "Cheetah"}},
+      {NamingScheme::Mythical,
+       {"Dragon", "Phoenix", "Griffin", "Hydra", "Chimera", "Basilisk",
+        "Kraken", "Sphinx", "Wyvern", "Gorgon"}},
+      {NamingScheme::Celestial,
+       {"Pulsar", "Quasar", "Nebula", "Comet", "Meteor", "Asteroid", "Galaxy",
+        "Zenith", "Nadir", "Eclipse"}}};
+
+  auto it = schemeNames.find(scheme);
+  if (it == schemeNames.end())
+    return "Unknown";
+
+  const auto &names = it->second;
+  return names[index % names.size()];
+}
+
+const ShipBlueprint *FactionData::getBlueprint(Tier tier,
+                                               const std::string &role) const {
+  for (const auto &bp : blueprints) {
+    if (bp.hull.sizeTier == tier && bp.role == role)
+      return &bp;
+  }
+  return nullptr;
 }
 
 } // namespace space
