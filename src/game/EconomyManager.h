@@ -84,6 +84,7 @@ private:
 
   std::map<ProductKey, Recipe> recipes;
   std::vector<ProductKey> productionPriority;
+  float accumulationTimer = 0.0f;
 };
 
 } // namespace space

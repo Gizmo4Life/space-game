@@ -50,9 +50,25 @@ struct InstalledFuel {
   float level = 0.f;
 };
 
+enum class CommandType { Cockpit, Bridge, Unmanned };
+
+struct InstalledCommand {
+  std::vector<ModuleId> ids;
+  CommandType type = CommandType::Cockpit;
+  bool isStaffed = true;
+  int staffingLevel = 1;
+};
+
 struct InstalledPower {
   std::vector<ModuleId> ids;
   float output = 0.f;
+  float isotopeFuel = 100.f; // Current fuel mass
+};
+
+struct InstalledBatteries {
+  std::vector<ModuleId> ids;
+  float capacity = 0.f;
+  float current = 0.f;
 };
 
 } // namespace space

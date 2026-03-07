@@ -7,6 +7,8 @@ namespace space {
 class AsteroidSystem {
 public:
   static void update(entt::registry &registry, b2WorldId worldId, float dt);
+  static void fragment(entt::registry &registry, b2WorldId worldId,
+                       entt::entity parent);
 };
 
 } // namespace space

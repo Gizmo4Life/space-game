@@ -54,3 +54,14 @@ Establish the technical foundations for the space-game proof-of-concept using C+
 | [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) | **P** | Required for `PlanetEconomy`, `CargoComponent`, `Faction`, `NPCComponent`, `CreditsComponent`. |
 | **Singleton Manager** | **A** | `EconomyManager`, `FactionManager`, `NPCShipManager` use static `instance()` singletons. Acceptable for prototyping; evaluate ECS-system refactor later. |
 | [trade-static-interface](/docs/developer/pattern/trade-static-interface.md) | **P** | `TradeManager` uses static buy/sell methods for atomic cargo transactions. |
+
+## 6. Combat & Logistics
+*Nuance: Tiered combat requires strict resource discipline and unified slot definitions.*
+
+| Pattern | Rating | Nuance |
+| :--- | :--- | :--- |
+| **Tiered Ammo Matrix** | **P** | 12-type matrix (T2/T3) managed via `AmmoMagazine` volume logic. |
+| [unified-slot-system](/docs/developer/pattern/unified-slot-system.md) | **P** | Positional role assignment in `HullDef` (Command/Hardpoint/Engine). |
+| **Wet Mass Dynamics** | **P** | Kinematics must account for cargo, fuel, and ammo mass in physics steps. |
+| **Boarding Protocol** | **P** | `BoardingSystem` allows resource transfer and fleet joining for derelict/friendly targets. |
+| **Incapacitation (EMP)** | **P** | EMP warheads trigger `empTimer` (60s). Incapacitated vessels are derelict. |

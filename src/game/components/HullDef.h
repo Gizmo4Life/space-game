@@ -1,6 +1,7 @@
 #pragma once
 #include "GameTypes.h"
 #include <SFML/System/Vector2.hpp>
+#include <algorithm> // For std::count_if
 #include <cstdint>
 #include <map>
 #include <string>
@@ -8,21 +9,24 @@
 #include <vector>
 
 #include "game/components/FactionDNA.h"
+#include "game/components/ShipModule.h"
 
 namespace space {
 
+enum class SlotRole { Hardpoint, Engine, Command };
+
 struct MountSlot {
   uint8_t id;
-  Tier size;
   sf::Vector2f localPos;
+  Tier size;
   VisualStyle style;
+  SlotRole role = SlotRole::Hardpoint;
 };
 
 // ─── Hull definition
 // ──────────────────────────────────────────────────────────
 struct HullDef {
-  std::vector<MountSlot> engineSlots;
-  std::vector<MountSlot> hardpointSlots;
+  std::vector<MountSlot> slots; // Unified slot vector
   std::string name;
   std::string className;
   Tier sizeTier;
@@ -38,27 +42,34 @@ struct HullDef {
   float massMultiplier = 1.0f;
   float maintenanceMultiplier = 1.0f;
 
-  int hardpointCount() const { return static_cast<int>(hardpointSlots.size()); }
+  int hardpointCount() const {
+    return static_cast<int>(
+        std::count_if(slots.begin(), slots.end(), [](const MountSlot &s) {
+          return s.role == SlotRole::Hardpoint;
+        }));
+  }
 
   bool allowsEngine(Tier tier) const {
-    for (const auto &s : engineSlots)
-      if (s.size == tier)
+    for (const auto &s : slots)
+      if (s.role == SlotRole::Engine && s.size == tier)
         return true;
     return false;
   }
 
   bool allowsHardpoint(Tier tier) const {
-    for (const auto &s : hardpointSlots)
-      if (s.size == tier)
+    for (const auto &s : slots)
+      if (s.role == SlotRole::Hardpoint && s.size == tier)
         return true;
     return false;
   }
 
   std::string getSlotSummary() const {
-    auto countTiers = [&](const std::vector<MountSlot> &slots) {
+    auto countTiers = [&](SlotRole role) {
       std::map<Tier, int> counts;
-      for (const auto &s : slots)
-        counts[s.size]++;
+      for (const auto &s : slots) {
+        if (s.role == role)
+          counts[s.size]++;
+      }
       std::string res;
       for (int t = 1; t <= 4; ++t) {
         Tier tier = static_cast<Tier>(t);
@@ -71,46 +82,52 @@ struct HullDef {
       return res.empty() ? "None" : res;
     };
 
-    return "Engines: " + countTiers(engineSlots) +
-           "\nHardpoints: " + countTiers(hardpointSlots);
+    return "Engines: " + countTiers(SlotRole::Engine) +
+           "\nHardpoints: " + countTiers(SlotRole::Hardpoint);
   }
 
   bool validate(std::string &outError) const {
-    if (engineSlots.empty()) {
+    bool hasEngine = false;
+    bool hasHardpoint = false;
+    bool hasCommand = false;
+
+    for (const auto &s : slots) {
+      if (s.role == SlotRole::Engine)
+        hasEngine = true;
+      if (s.role == SlotRole::Hardpoint)
+        hasHardpoint = true;
+      if (s.role == SlotRole::Command)
+        hasCommand = true;
+    }
+
+    if (!hasEngine) {
       outError = "Missing mandatory Engine slots.";
       return false;
     }
-    if (hardpointSlots.empty()) {
+    if (!hasHardpoint) {
       outError = "Missing mandatory Hardpoint slots.";
       return false;
     }
+    if (!hasCommand) {
+      outError = "Missing mandatory Command slots.";
+      return false;
+    }
 
-    auto checkOverlap = [&](const std::vector<MountSlot> &s1,
-                            const std::vector<MountSlot> &s2) {
-      for (const auto &a : s1) {
-        for (const auto &b : s2) {
-          if (&a == &b)
-            continue;
-          float dx = a.localPos.x - b.localPos.x;
-          float dy = a.localPos.y - b.localPos.y;
-          if (std::sqrt(dx * dx + dy * dy) < 5.0f) {
-            outError = "Hull contains overlapping slots.";
-            return false;
-          }
+    for (size_t i = 0; i < slots.size(); ++i) {
+      for (size_t j = i + 1; j < slots.size(); ++j) {
+        const auto &a = slots[i];
+        const auto &b = slots[j];
+        float dx = a.localPos.x - b.localPos.x;
+        float dy = a.localPos.y - b.localPos.y;
+        if (std::sqrt(dx * dx + dy * dy) < 2.0f) {
+          outError = "Hull contains overlapping slots.";
+          return false;
         }
       }
-      return true;
-    };
+    }
 
-    if (!checkOverlap(engineSlots, engineSlots))
-      return false;
-    if (!checkOverlap(hardpointSlots, hardpointSlots))
-      return false;
-    if (!checkOverlap(engineSlots, hardpointSlots))
-      return false;
-
-    for (const auto &s : engineSlots) {
-      if (s.localPos.y <= 0) {
+    for (const auto &s : slots) {
+      if (s.role == SlotRole::Engine && s.localPos.y <= 0) {
         outError = "Engines must be positioned at the aft (Y > 0).";
         return false;
       }
@@ -125,8 +142,7 @@ inline HullDef makeBasicHull(const std::string &name,
                              const std::string &className, Tier size,
                              Tier armor, float mass, float hp, float volume,
                              VisualStyle body,
-                             const std::vector<MountSlot> &engines,
-                             const std::vector<MountSlot> &weapons) {
+                             const std::vector<MountSlot> &allSlots) {
   HullDef h;
   h.name = name;
   h.className = className;
@@ -136,8 +152,7 @@ inline HullDef makeBasicHull(const std::string &name,
   h.baseHitpoints = hp;
   h.internalVolume = volume;
   h.visual.bodyStyle = body;
-  h.engineSlots = engines;
-  h.hardpointSlots = weapons;
+  h.slots = allSlots;
   return h;
 }
 
@@ -154,37 +169,77 @@ struct ShipBlueprint {
     if (!hull.validate(outError))
       return false;
 
-    // 1. Check module count matches slot count (for engines/hardpoints)
-    if (modules.size() <
-        (hull.engineSlots.size() + hull.hardpointSlots.size())) {
+    // 1. Check module count matches slot count (engines + hardpoints + command)
+    size_t requiredModules = 0;
+    for (const auto &s : hull.slots) {
+      requiredModules++;
+    }
+
+    if (modules.size() < requiredModules) {
       outError = "Insufficient modules for hull slots.";
       return false;
     }
 
-    // 2. Technical constraints check
-    float usedVol = 0.0f;
-    float powerDraw = 0.0f;
-    bool hasReactor = false;
-    bool hasEngine = false;
+    // 2. Technical constraints: Power, Volume, and Mandatory Modules
+    bool hasCommandModule = false;
+    bool hasEngineModule = false;
+    float totalVolume = 0.0f;
+    float totalPowerDraw = 0.0f;
 
-    // First part of modules are engines
-    for (size_t i = 0; i < hull.engineSlots.size(); ++i) {
-      if (modules[i].id != 0) // EMPTY_MODULE check (using 0 as placeholder for
-                              // now, but better to be explicit)
-        hasEngine = true;
-    }
+    auto &reg = ModuleRegistry::instance();
 
-    // All modules check
-    for (const auto &pk : modules) {
-      if (pk.type == ProductType::Module) {
-        // In a real implementation we'd look up the module def here
-        // For now, validation is partially dependent on the caller knowing the
-        // IDs
+    for (size_t i = 0; i < hull.slots.size(); ++i) {
+      if (i >= modules.size())
+        break;
+      if (modules[i].id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(modules[i].id);
+      totalVolume += m.volumeOccupied;
+      totalPowerDraw += m.powerDraw;
+
+      // Slot-tier enforcement: module tier must not exceed slot size
+      Tier moduleTier = modules[i].tier;
+      Tier slotSize = hull.slots[i].size;
+      if (static_cast<int>(moduleTier) > static_cast<int>(slotSize)) {
+        outError = "Module '" + m.name + "' (T" +
+                   std::to_string(static_cast<int>(moduleTier)) +
+                   ") is too large for slot " + std::to_string(i) + " (T" +
+                   std::to_string(static_cast<int>(slotSize)) + ").";
+        return false;
       }
+
+      if (hull.slots[i].role == SlotRole::Command)
+        hasCommandModule = true;
+      if (hull.slots[i].role == SlotRole::Engine)
+        hasEngineModule = true;
     }
 
-    // The validation here will be expanded as ShipOutfitter logic is migrated
-    // into this unified structure.
+    // Check internals (those beyond slot count)
+    for (size_t i = hull.slots.size(); i < modules.size(); ++i) {
+      if (modules[i].id == EMPTY_MODULE)
+        continue;
+      const auto &m = reg.getModule(modules[i].id);
+      totalVolume += m.volumeOccupied;
+      totalPowerDraw += m.powerDraw;
+    }
+
+    if (!hasCommandModule) {
+      outError = "Ship requires an active Command module.";
+      return false;
+    }
+    if (!hasEngineModule) {
+      outError = "Ship requires an active Engine module.";
+      return false;
+    }
+    if (totalVolume > hull.internalVolume) {
+      outError = "Modules exceed hull internal volume.";
+      return false;
+    }
+    if (totalPowerDraw > 0.0f) {
+      outError = "Ship has insufficient power generation (net draw: " +
+                 std::to_string(totalPowerDraw) + " GW).";
+      return false;
+    }
 
     return true;
   }

@@ -19,7 +19,8 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 - [Capability: Navigation](/docs/architecture/capability/navigation.md) (T2)
 
 ## 3. Key Systems
-- **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses `Tier` to determine base attributes and utility slot counts. Handles the composition of `HullDef` and `ShipModule` components. Enforces technical validation: vessels must include at least one reactor, maintain a positive power balance, and stay within internal volume bounds.
+- **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses a **Unified Slot System** where modules are mapped to `SlotRole` types. Handles technical validation: ensure at least one `Command` slot is present, manages power balance, and enforces volume bounds for `AmmoMagazine` (T3 ammo consumes 5 units, T2 consumes 1).
+- **PowerSystem**: Manages energy production via Isotope Reactors (exponential fuel decay) and buffer storage in Batteries. Updates `batteryLevel` for energy weapon draw.
 - **ShipConfig**: Static registry of hull definitions and default outfits. Replaces hardcoded mappings within the outfitter to allow for data-driven ship balancing.
 - **ModuleRegistry**: Singleton catalogue for all available ship modules.
 - **WorldLoader**: Procedural star system generation and deterministic player spawning near inhabited worlds.

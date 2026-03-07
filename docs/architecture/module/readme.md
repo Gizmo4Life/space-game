@@ -45,16 +45,19 @@ graph TD
 
 ## 1. Game Engine (C++)
 *Nuance: High-performance modules implementing the spatial simulation and interactive systems.*
-- [physics](physics.md): Box2D-powered Newtonian physics engine.
-- [rendering](engine-rendering.md): SFML rendering pipeline, camera, offscreen indicators.
+- [physics](engine-physics.md): Box2D-powered Newtonian physics engine.
+- [rendering](rendering-main.md): SFML rendering pipeline, camera, offscreen indicators.
 - [telemetry](engine-telemetry.md): OpenTelemetry-based instrumentation and tracing.
+- [engine-combat](engine-combat.md): Ship-to-ship engagement and projectile systems.
+- [engine-systems](engine-systems.md): Complex ECS systems like Ship Boarding.
 - [game-ui](game-ui.md): Planetary landing screen, pause overlay, and ship market.
-- [game-combat](game-combat.md): Ship-to-ship engagement and projectile systems.
 - [game-economy](game-economy.md): Planetary production, dynamic pricing, trade transactions, and ship market.
 - [game-factions](game-factions.md): Procedural factions, bilateral relationship matrix, and credit accumulation.
 - [game-npc](game-npc.md): NPC ship spawning, faction-weighted AI, and player fleet management.
 - [game-core](game-core.md): Procedural world generation, player spawning, and modular vessel outfitting.
+- [game-hull](game-hull.md): Procedural generation of ship hulls.
 - [system-gate](system-gate.md): Inter-system jump and loading logic.
+- [core-main](core-main.md): Low-level primitives and shared utilities.
 
 ## 2. Documentation System
 *Nuance: Structural modules governing how the repository is organized.*

@@ -398,24 +398,22 @@ void ShipyardPanel::drawShipBlueprint(sf::RenderWindow &w, const HullDef &hull,
     }
   };
 
-  drawConnectors(hull.engineSlots);
-  drawConnectors(hull.hardpointSlots);
+  drawConnectors(hull.slots);
 
   // Main body
   drawHullComp(w, hull.visual.bodyStyle, pos, 0.f, schematicColor, scale);
 
-  // Engine nacelles / pods
-  for (const auto &slot : hull.engineSlots) {
-    sf::Vector2f offset = rotateVector(slot.localPos * scale * 12.0f, 0.f);
-    drawHullComp(w, slot.style, pos + offset, 0.f, schematicColor,
-                 scale * 0.7f);
-  }
-
-  // Weapons / Hardpoints
-  for (const auto &slot : hull.hardpointSlots) {
-    sf::Vector2f offset = rotateVector(slot.localPos * scale * 12.0f, 0.f);
-    drawHullComp(w, slot.style, pos + offset, 0.f, schematicColor,
-                 scale * 0.5f);
+  // Module nacelles / pods
+  for (const auto &slot : hull.slots) {
+    if (slot.role == SlotRole::Engine) {
+      sf::Vector2f offset = rotateVector(slot.localPos * scale * 12.0f, 0.f);
+      drawHullComp(w, slot.style, pos + offset, 0.f, schematicColor,
+                   scale * 0.7f);
+    } else if (slot.role == SlotRole::Hardpoint) {
+      sf::Vector2f offset = rotateVector(slot.localPos * scale * 12.0f, 0.f);
+      drawHullComp(w, slot.style, pos + offset, 0.f, schematicColor,
+                   scale * 0.5f);
+    }
   }
 }
 

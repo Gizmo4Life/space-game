@@ -330,11 +330,12 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   shapeDef.filter.maskBits = 0;
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 
+  registry.emplace_or_replace<InertialBody>(ship, bodyId, 8000.0f, 150.0f,
+                                            20.0f);
+
   Tier startTier = Tier::T2;
   ShipOutfitter::instance().applyBlueprint(registry, ship, 1, startTier);
   const HullDef &hull = ShipOutfitter::instance().getHull(1, startTier);
-
-  registry.emplace_or_replace<InertialBody>(ship, bodyId, 500.0f, 0.05f, 20.0f);
   registry.emplace_or_replace<WeaponComponent>(ship);
   registry.emplace_or_replace<NameComponent>(ship,
                                              "Player Ship (" + hull.name + ")");

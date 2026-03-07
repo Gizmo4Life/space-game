@@ -1,7 +1,7 @@
 # Engine
 
 → [T3 Module: Physics](/docs/architecture/module/physics.md)
-→ [T3 Module: Game Combat](/docs/architecture/module/game-combat.md)
+→ [T3 Module: Engine Combat](/docs/architecture/module/engine-combat.md)
 → [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
 ## Subsystems

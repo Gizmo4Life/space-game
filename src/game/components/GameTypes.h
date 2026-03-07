@@ -6,7 +6,7 @@
 namespace space {
 
 enum class Tier { T1 = 1, T2 = 2, T3 = 3 };
-enum class VisualStyle { Triangle, Square, Circular, Sleek };
+enum class VisualStyle { Triangle, Square, Circular, Sleek, Polygon };
 
 enum class AttributeType {
   Size,
@@ -22,7 +22,9 @@ enum class AttributeType {
   Regen,
   Volume,
   Output,
-  Maintenance
+  Maintenance,
+  Command,
+  Battery
 };
 
 enum class LayoutPattern { Symmetrical, Radial, Asymmetrical, Alternating };

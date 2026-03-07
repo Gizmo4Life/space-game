@@ -1,7 +1,10 @@
-#include "WeaponSystem.h"
+#include "engine/combat/WeaponSystem.h"
+#include "engine/physics/AsteroidSystem.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
+#include "game/components/AmmoComponent.h"
+#include "game/components/CelestialBody.h"
 #include "game/components/Faction.h"
 #include "game/components/GameTypes.h"
 #include "game/components/InertialBody.h"
@@ -10,15 +13,18 @@
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
+#include <box2d/box2d.h>
 #include <cmath>
 #include <entt/entt.hpp>
 #include <iostream>
+#include <map>
 #include <opentelemetry/trace/provider.h>
 #include <vector>
 
 namespace space {
 
-void WeaponSystem::update(::entt::registry &registry, float deltaTime) {
+void WeaponSystem::update(::entt::registry &registry, float deltaTime,
+                          b2WorldId worldId) {
   // 1. Update Cooldowns
   auto weaponView = registry.template view<WeaponComponent>();
   for (auto entity : weaponView) {
@@ -33,27 +39,58 @@ void WeaponSystem::update(::entt::registry &registry, float deltaTime) {
   for (auto entity : statsView) {
     auto &stats = statsView.get<ShipStats>(entity);
     if (stats.currentEnergy < stats.energyCapacity) {
-      stats.currentEnergy += 10.0f * deltaTime; // Regen 10 energy/sec
+      stats.currentEnergy += 10.0f * deltaTime;
       if (stats.currentEnergy > stats.energyCapacity)
         stats.currentEnergy = stats.energyCapacity;
     }
   }
 
-  // 3. Update Projectile TTL
-  auto projView = registry.template view<ProjectileComponent>();
-  std::vector<entt::entity> toDestroy;
-
+  // 3. Update Projectile TTL & Missile Acceleration
+  auto projView = registry.template view<ProjectileComponent, InertialBody>();
+  std::vector<entt::entity> projToDestroy;
   for (auto entity : projView) {
     auto &proj = projView.get<ProjectileComponent>(entity);
     proj.timeToLive -= deltaTime;
     if (proj.timeToLive <= 0) {
-      toDestroy.push_back(entity);
+      projToDestroy.push_back(entity);
     }
   }
 
-  handleCollisions(registry);
+  auto missileView = registry.template view<MissileComponent, InertialBody>();
+  for (auto entity : missileView) {
+    auto &missile = missileView.get<MissileComponent>(entity);
+    auto &inertial = missileView.get<InertialBody>(entity);
 
-  for (auto entity : toDestroy) {
+    if (b2Body_IsValid(inertial.bodyId)) {
+      b2Rot rot = b2Body_GetRotation(inertial.bodyId);
+      // Constant acceleration
+      b2Vec2 thrust = {rot.s * missile.acceleration,
+                       -rot.c * missile.acceleration};
+      b2Body_ApplyForceToCenter(inertial.bodyId, thrust, true);
+
+      // Basic Guidance (T3 Heat Seeking / Remote)
+      if (missile.isHeatSeeking && registry.valid(missile.target)) {
+        // Simple turn towards target
+        auto &tPos = registry.get<TransformComponent>(missile.target).position;
+        b2Vec2 mPos = b2Body_GetPosition(inertial.bodyId);
+        float dx = tPos.x / 30.0f - mPos.x; // World scale 30.0f
+        float dy = tPos.y / 30.0f - mPos.y;
+        float targetAngle = std::atan2(dx, -dy);
+        b2Rot rotNow = b2Body_GetRotation(inertial.bodyId);
+        float currentAngle = std::atan2(rotNow.s, rotNow.c);
+        float diff = targetAngle - currentAngle;
+        while (diff > M_PI)
+          diff -= 2 * M_PI;
+        while (diff < -M_PI)
+          diff += 2 * M_PI;
+        b2Body_SetAngularVelocity(inertial.bodyId, diff * missile.turnRate);
+      }
+    }
+  }
+
+  handleCollisions(registry, worldId);
+
+  for (auto entity : projToDestroy) {
     if (registry.valid(entity)) {
       if (registry.all_of<InertialBody>(entity)) {
         b2DestroyBody(registry.get<InertialBody>(entity).bodyId);
@@ -63,14 +100,14 @@ void WeaponSystem::update(::entt::registry &registry, float deltaTime) {
   }
 }
 
-void WeaponSystem::handleCollisions(::entt::registry &registry) {
+void WeaponSystem::handleCollisions(::entt::registry &registry,
+                                    b2WorldId worldId) {
   auto span =
       Telemetry::instance().tracer()->StartSpan("combat.collision.resolve");
   auto projView = registry.template view<ProjectileComponent, InertialBody>();
   auto shipView = registry.template view<ShipStats, InertialBody>();
 
-  std::vector<entt::entity> toDestroy;
-  int hitCount = 0;
+  std::vector<entt::entity> victimsToDestroy;
 
   for (auto projEntity : projView) {
     auto &proj = projView.get<ProjectileComponent>(projEntity);
@@ -78,106 +115,111 @@ void WeaponSystem::handleCollisions(::entt::registry &registry) {
         b2Body_GetPosition(projView.get<InertialBody>(projEntity).bodyId);
 
     for (auto shipEntity : shipView) {
-      // Don't hit owner
       if (shipEntity == proj.owner)
         continue;
 
       b2Vec2 shipPos =
           b2Body_GetPosition(shipView.get<InertialBody>(shipEntity).bodyId);
-
       float dx = projPos.x - shipPos.x;
       float dy = projPos.y - shipPos.y;
       float distSq = dx * dx + dy * dy;
 
-      if (distSq < 64.0f) { // 8.0 units radius (~16 pixels at SHIP_SCALE=2.0)
+      if (distSq < 64.0f) {
         auto &stats = shipView.get<ShipStats>(shipEntity);
-        stats.currentHull -= proj.damage;
+        if (proj.isEmp) {
+          stats.empTimer = 60.0f; // EMP renders craft incapacitated for 1 min
+        } else {
+          stats.currentHull -= proj.damage;
+        }
 
         if (stats.currentHull <= 0.0f) {
-          // Signal NPCShipManager about the death for mission tracking
-          uint32_t victimFaction = 0;
-          if (registry.all_of<Faction>(shipEntity)) {
-            victimFaction =
-                registry.get<Faction>(shipEntity).getMajorityFaction();
-          }
-          uint32_t attackerFaction = 0;
-          if (registry.all_of<Faction>(proj.owner)) {
-            attackerFaction =
-                registry.get<Faction>(proj.owner).getMajorityFaction();
-          }
-
-          // Record combat event
-          // We need a way to pass the victim's outfit hash and the attacker's
-          // info I'll add a static hook to NPCShipManager
           NPCShipManager::recordCombatDeath(registry, shipEntity, proj.owner);
 
-          toDestroy.push_back(shipEntity);
+          if (registry.all_of<CelestialBody>(shipEntity) &&
+              registry.get<CelestialBody>(shipEntity).type ==
+                  CelestialType::Asteroid) {
+            AsteroidSystem::fragment(registry, worldId, shipEntity);
+          }
+
+          victimsToDestroy.push_back(shipEntity);
         }
       }
     }
+  }
 
-    for (auto e : toDestroy) {
-      if (registry.valid(e)) {
-        b2DestroyBody(registry.get<InertialBody>(e).bodyId);
-        registry.destroy(e);
-      }
+  for (auto e : victimsToDestroy) {
+    if (registry.valid(e)) {
+      b2DestroyBody(registry.get<InertialBody>(e).bodyId);
+      registry.destroy(e);
     }
   }
-  span->SetAttribute("combat.hits", hitCount);
   span->End();
 }
 
 entt::entity WeaponSystem::fire(::entt::registry &registry, entt::entity owner,
                                 b2WorldId worldId) {
-  if (!registry.all_of<WeaponComponent, TransformComponent, InertialBody>(
-          owner))
-    return entt::null;
-
-  // Check if any weapons are actually installed
-  if (registry.all_of<InstalledWeapons>(owner)) {
-    auto &iw = registry.get<InstalledWeapons>(owner);
-    bool hasWeapon = false;
-    for (auto id : iw.ids) {
-      if (id != EMPTY_MODULE) {
-        hasWeapon = true;
-        break;
-      }
-    }
-    if (!hasWeapon)
+  if (registry.all_of<WeaponComponent, TransformComponent, InertialBody>(
+          owner)) {
+    auto &stats = registry.get<ShipStats>(owner);
+    if (stats.isDerelict)
       return entt::null;
-  } else {
-    // If component is missing, it definitely has no weapons
-    return entt::null;
   }
 
-  auto span = Telemetry::instance().tracer()->StartSpan("combat.weapon.fire");
-
   auto &weapon = registry.get<WeaponComponent>(owner);
-  if (weapon.currentCooldown > 0)
+  if (weapon.currentCooldown > 0 || weapon.mode == WeaponMode::Safety)
     return entt::null;
 
-  // Check energy
-  if (registry.all_of<ShipStats>(owner)) {
+  // 1. Check & Consume Resources
+  if (weapon.tier == WeaponTier::T1_Energy) {
     auto &stats = registry.get<ShipStats>(owner);
-    if (stats.currentEnergy < weapon.energyCost)
+    if (stats.batteryLevel < weapon.energyCost)
       return entt::null;
-    stats.currentEnergy -= weapon.energyCost;
+    stats.batteryLevel -= weapon.energyCost;
+  } else {
+    // T2/T3 require ammo from magazine
+    if (!registry.all_of<AmmoMagazine>(owner))
+      return entt::null;
+    auto &mag = registry.get<AmmoMagazine>(owner);
+
+    if (mag.storedAmmo[weapon.selectedAmmo] <= 0)
+      return entt::null;
+    mag.storedAmmo[weapon.selectedAmmo]--;
   }
 
   auto &ownerTrans = registry.get<TransformComponent>(owner);
   auto &ownerInertial = registry.get<InertialBody>(owner);
-
   weapon.currentCooldown = weapon.fireCooldown;
 
   auto projectile = registry.create();
-  registry.emplace<ProjectileComponent>(projectile, 10.0f, 3.0f, owner);
+  // Base damage from weapon tier/caliber; ammo types like EMP/Explosive handle
+  // specific effects in CollisionSystem
+  auto &projComp = registry.emplace<ProjectileComponent>(
+      projectile, weapon.baseDamage, 3.0f, owner);
 
-  // Box2D Setup for Projectile
+  if (weapon.tier == WeaponTier::T3_Missile) {
+    auto &missile = registry.emplace<MissileComponent>(projectile);
+    missile.acceleration = 15.0f; // T3 missiles constantly accelerate
+    missile.isHeatSeeking =
+        (weapon.selectedAmmo.guidance == GuidanceType::HeatSeeking);
+    missile.isRemote = (weapon.selectedAmmo.guidance == GuidanceType::Remote);
+
+    if (missile.isRemote) {
+      // T3 Remote missiles are faster and more agile
+      missile.acceleration = 20.0f;
+      missile.turnRate = 8.0f;
+    }
+  }
+
+  // Set warhead flags for CollisionSystem
+  projComp.isEmp = (weapon.selectedAmmo.warhead == WarheadType::EMP);
+  projComp.isExplosive =
+      (weapon.selectedAmmo.warhead == WarheadType::Explosive);
+
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
   bodyDef.position = b2Body_GetPosition(ownerInertial.bodyId);
   bodyDef.isBullet = true;
-
+  bodyDef.userData = (void *)(uintptr_t)projectile;
   b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
 
   b2ShapeDef shapeDef = b2DefaultShapeDef();
@@ -185,34 +227,15 @@ entt::entity WeaponSystem::fire(::entt::registry &registry, entt::entity owner,
   b2CreateCircleShape(bodyId, &shapeDef, &circle);
 
   b2Rot rot = b2Body_GetRotation(ownerInertial.bodyId);
-  float projSpeed = 5000.0f; // Matches WeaponComponent
-
-  // Inherit ship velocity
+  float projSpeed = weapon.projectileSpeed;
   b2Vec2 shipVel = b2Body_GetLinearVelocity(ownerInertial.bodyId);
-  // visual forward is -Y (rotation 0), so projectile relative vector should
-  // be: x = sin(angle) * speed, y = -cos(angle) * speed
-  b2Vec2 projectileRelativeVel = {rot.s * projSpeed, -rot.c * projSpeed};
+  b2Vec2 projRelVel = {rot.s * projSpeed, -rot.c * projSpeed};
+  b2Body_SetLinearVelocity(
+      bodyId, {shipVel.x + projRelVel.x, shipVel.y + projRelVel.y});
 
-  b2Vec2 finalVel = {shipVel.x + projectileRelativeVel.x,
-                     shipVel.y + projectileRelativeVel.y};
-
-  b2Body_SetLinearVelocity(bodyId, finalVel);
-
-  // Debug check
-  b2Vec2 actualVel = b2Body_GetLinearVelocity(bodyId);
-  float actualSpeed =
-      std::sqrt(actualVel.x * actualVel.x + actualVel.y * actualVel.y);
-  std::cout << "[Combat] Projectile Speed: " << actualSpeed
-            << " m/s (Requested: "
-            << std::sqrt(finalVel.x * finalVel.x + finalVel.y * finalVel.y)
-            << ")\n";
-
-  // Projectiles need a high speed limit to avoid KinematicsSystem clamping
   registry.emplace<InertialBody>(projectile, bodyId, 0.0f, 0.0f, 10000.0f);
   registry.emplace<TransformComponent>(projectile, ownerTrans.position);
 
-  span->SetAttribute("combat.projectile_speed", (double)weapon.projectileSpeed);
-  span->End();
   return projectile;
 }
 

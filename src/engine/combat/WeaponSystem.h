@@ -6,13 +6,14 @@ namespace space {
 
 class WeaponSystem {
 public:
-  static void update(entt::registry &registry, float deltaTime);
+  static void update(entt::registry &registry, float deltaTime,
+                     b2WorldId worldId);
 
   static entt::entity fire(entt::registry &registry, entt::entity owner,
                            b2WorldId worldId);
 
 private:
-  static void handleCollisions(entt::registry &registry);
+  static void handleCollisions(entt::registry &registry, b2WorldId worldId);
 };
 
 } // namespace space

@@ -10,7 +10,7 @@ pillar: root
 This directory contains the primary physical implementation of the system.
 
 ## Linkage
-- **T3 Module:** [src-core](/docs/architecture/module/src-core.md)
+- **T3 Module:** [core-main](/docs/architecture/module/core-main.md)
 
 ## Local Context
 ```bash

@@ -1,6 +1,7 @@
 # /src/engine/combat/
 
-→ [T3 Module: Game Combat](/docs/architecture/module/game-combat.md)
+→ [Home](/docs/readme.md)
+→ [T3 Module: Engine Combat](/docs/architecture/module/engine-combat.md)
 → [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
 ## Systems

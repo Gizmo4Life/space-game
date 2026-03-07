@@ -4,7 +4,6 @@ project(SpaceGame VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --- Dependencies ---
 
@@ -20,15 +19,17 @@ find_package(EnTT CONFIG REQUIRED)
 # OpenTelemetry (brew-installed)
 find_package(opentelemetry-cpp CONFIG REQUIRED)
 
-# --- Executable ---
-add_executable(SpaceGame 
-    src/main.cpp
+# --- Core Game Library (shared between game and tests) ---
+set(CORE_SOURCES
     src/engine/physics/KinematicsSystem.cpp
+    src/engine/physics/CollisionSystem.cpp
     src/engine/physics/PhysicsEngine.cpp
     src/engine/physics/OrbitalSystem.cpp
     src/engine/physics/GravitySystem.cpp
     src/engine/physics/AsteroidSystem.cpp
+    src/engine/physics/PowerSystem.cpp
     src/engine/combat/WeaponSystem.cpp
+    src/engine/systems/BoardingSystem.cpp
     src/engine/telemetry/Telemetry.cpp
     src/rendering/MainRenderer.cpp
     src/rendering/RenderSystem.cpp
@@ -47,9 +48,9 @@ add_executable(SpaceGame
     src/game/components/ModuleGenerator.cpp
 )
 
-target_include_directories(SpaceGame PRIVATE src)
-
-target_link_libraries(SpaceGame PRIVATE 
+add_library(SpaceGameCore OBJECT ${CORE_SOURCES})
+target_include_directories(SpaceGameCore PUBLIC src)
+target_link_libraries(SpaceGameCore PUBLIC
     SFML::Graphics 
     SFML::Window 
     SFML::System 
@@ -59,3 +60,28 @@ target_link_libraries(SpaceGame PRIVATE
     opentelemetry-cpp::otlp_http_exporter
     opentelemetry-cpp::ostream_span_exporter
 )
+
+# --- Game Executable ---
+add_executable(SpaceGame src/main.cpp)
+target_include_directories(SpaceGame PRIVATE src)
+target_link_libraries(SpaceGame PRIVATE SpaceGameCore)
+
+# --- Tests (Catch2 via FetchContent) ---
+include(FetchContent)
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG v3.5.2
+)
+FetchContent_MakeAvailable(Catch2)
+
+add_executable(SpaceGameTests
+    tests/test_blueprint_viability.cpp
+)
+target_include_directories(SpaceGameTests PRIVATE src)
+target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(SpaceGameTests)
+

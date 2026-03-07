@@ -23,5 +23,5 @@ Enable ship-to-ship engagement through projectile and beam-based weapon systems.
 - **Consistency:** ACID compliance on final health state changes to prevent "ghost kills."
 
 ## 4. Operational Context
-- **Primary Module:** [game-combat](/docs/architecture/module/game-combat.md) (T3)
+- **Primary Module:** [engine-combat](/docs/architecture/module/engine-combat.md) (T3)
 - **Critical Failure Metric:** Hit registration latency exceeding 200ms or health desync.

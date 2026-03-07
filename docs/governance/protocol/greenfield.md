@@ -24,6 +24,7 @@ Add new functionality by gathering domain context, deriving a testable solution 
 
 ## 4. Implementation Execution
 - **Action:** Materialize the hollow [T3 Modules](/docs/developer/pattern/doc-t3-module.md) (Architecture).
+- **Verify:** Ensure T3 Module filenames use the pillar-prefix convention (e.g., `engine-`, `game-`) for traceability.
 - **Action:** Select the **Preferred (P)** [Patterns] from the [Standard] (Standard).
 - **Action:** Write the physical code in `/src` adhering strictly to the selected Patterns.
 - **Action:** Materialize required [Operational Artifacts] (Runbooks/Alerts).

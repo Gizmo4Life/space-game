@@ -1,4 +1,5 @@
 #include "HullGenerator.h"
+#include "HullDef.h"
 #include "game/FactionManager.h"
 #include <algorithm>
 #include <cmath>
@@ -43,6 +44,20 @@ HullDef HullGenerator::generateHull(const FactionDNA &dna, Tier tier,
 
   distributeSlots(hull, tdna);
 
+  // Post-slot volume floor: ensure hull can fit modules for all its slots
+  // Estimate ~15 m³ per T1 slot, ~35 m³ per T2 slot, ~65 m³ per T3 slot
+  // plus ~50 m³ for internals (reactor, shields, battery)
+  float estimatedModuleVolume = 0.0f;
+  for (const auto &slot : hull.slots) {
+    float slotTier = static_cast<float>(slot.size);
+    estimatedModuleVolume += 10.0f + slotTier * 15.0f;
+  }
+  estimatedModuleVolume +=
+      50.0f * static_cast<float>(tier); // internals headroom
+  if (hull.internalVolume < estimatedModuleVolume) {
+    hull.internalVolume = estimatedModuleVolume;
+  }
+
   return hull;
 }
 
@@ -61,11 +76,16 @@ float HullGenerator::calculateHP(const TierDNA &tdna, Tier tier) {
 }
 
 float HullGenerator::calculateVolume(const TierDNA &tdna, Tier tier) {
-  float base = static_cast<float>(tier) * 50.0f;
+  float base = static_cast<float>(tier) * 80.0f; // Increased from 50.0f
   base *= (0.5f + tdna.prefVolume);
 
-  // Civilian DNA bias: High commercialism + High prefVolume = Massive Transport
-  // Boost
+  // Minimum floor to ensure basic viability for high-tier ships
+  float floor = static_cast<float>(tier) * 30.0f;
+  if (base < floor)
+    base = floor;
+
+  // Civilian DNA bias: High commercialism + High prefVolume = Massive
+  // Transport Boost
   if (tdna.prefVolume > 0.6f) {
     base *= 2.5f;
   }
@@ -74,29 +94,38 @@ float HullGenerator::calculateVolume(const TierDNA &tdna, Tier tier) {
 }
 
 void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
-  int tierInt = static_cast<int>(hull.sizeTier); // 1, 2, 3, 4
+  int tierInt = static_cast<int>(hull.sizeTier);
 
-  // --- Slot count ranges per tier ---
-  // T1 (Small): 1-3, T2 (Medium): 3-8, T3 (Large): 8-24
-  //  base + aggression-biased bonus
   auto slotCount = [&](float density, int minCount, int maxCount) -> int {
-    // density in [0,1] maps linearly to [minCount, maxCount]
     int count =
         minCount + static_cast<int>(density * (maxCount - minCount + 1));
     return std::clamp(count, minCount, maxCount);
   };
 
-  // Ship body radius in local pixels — slots sit just outside this.
-  // T1 ≈ 6px, T2 ≈ 9px, T3 ≈ 12px
   float bodyR = 3.0f + tierInt * 3.0f;
-  // How far apart adjacent slots are — very tight by design
   float step = 2.5f + tierInt * 0.5f;
-  // Flush vertical clustering - offset by just a sliver
   float minOff = bodyR + 0.1f;
 
-  // --- HARDPOINTS (fore / lateral) ---
-  // Combine densities across all tiers present; dominant Tier drives the count
-  float totalHPDensity = 0.0f;
+  uint8_t nextId = 0;
+
+  // --- 1. COMMAND SLOTS (Bow: forward-most) ---
+  int cmdCount = 1; // Minimum 1 for viability
+  if (tierInt >= 3)
+    cmdCount = 2; // Bridge + Secondary
+
+  for (int i = 0; i < cmdCount; ++i) {
+    MountSlot slot;
+    slot.id = nextId++;
+    slot.size = hull.sizeTier;
+    slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Command;
+    // Positioned at the very front (negative Y), spaced >= 6.0 units apart
+    slot.localPos = {0.0f, -(minOff + bodyR + i * 6.0f)};
+    hull.slots.push_back(slot);
+  }
+
+  // --- 2. HARDPOINTS (Fore / Lateral) ---
+  float totalHPDensity = tdna.hardpointDensities.empty() ? 0.5f : 0.0f;
   Tier dominantHPTier = Tier::T1;
   for (auto const &[sz, dens] : tdna.hardpointDensities) {
     if (dens > totalHPDensity) {
@@ -104,78 +133,36 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
       dominantHPTier = sz;
     }
   }
-  // Ensure at least some density even if DNA had none populated
-  if (tdna.hardpointDensities.empty())
-    totalHPDensity = 0.5f;
 
-  int hpMin, hpMax;
-  if (tierInt <= 1) {
-    hpMin = 1;
-    hpMax = 3;
-  } else if (tierInt == 2) {
-    hpMin = 3;
-    hpMax = 8;
-  } else {
-    hpMin = 8;
-    hpMax = 24;
-  }
-
+  int hpMin = (tierInt <= 1) ? 1 : (tierInt == 2 ? 3 : 8);
+  int hpMax = (tierInt <= 1) ? 3 : (tierInt == 2 ? 8 : 24);
   int hpCount = slotCount(totalHPDensity, hpMin, hpMax);
 
-  uint8_t hpId = 0;
   for (int i = 0; i < hpCount; ++i) {
     MountSlot slot;
-    slot.id = hpId++;
+    slot.id = nextId++;
     slot.size = dominantHPTier;
     slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Hardpoint;
 
     sf::Vector2f pos;
     if (hull.visual.layoutPattern == LayoutPattern::Radial) {
-      // Tight ring just outside the body, fore half only
       float angle = -1.5708f + (3.14159f * i) / std::max(1, hpCount - 1);
-      float r = minOff + (i % 2) * step * 0.5f; // slight radial variation
+      float r = bodyR + step + (i % 2) * step;
       pos = {std::cos(angle) * r, std::sin(angle) * r};
-    } else if (hull.visual.layoutPattern == LayoutPattern::Asymmetrical) {
-      // Slightly offset left-biased, stacked forward
-      float rowOff = (i / 3) * step;
-      pos = {(i % 3 - 1) * step, -(minOff + rowOff)};
-    } else if (hull.visual.layoutPattern == LayoutPattern::Alternating) {
-      // L/R alternation, clustering in tight toward center
-      float side = (i % 2 == 0) ? 1.0f : -1.0f;
-      float lateralOff = step * 0.3f + (i / 2) * step * 0.2f;
-      float fwdOff = minOff + (i / 2) * step * 0.05f; // Factor of 4 tighter
-      pos = {side * lateralOff, -fwdOff};
     } else {
-      // Symmetrical: tight mirrored pairs forward of center
-      if (hpCount == 1) {
-        pos = {0.0f, -minOff}; // single nose mount
-      } else {
-        float side = (i % 2 == 0) ? 1.0f : -1.0f;
-        float row = static_cast<float>(i / 2);
-        // Ultra-tight vertical clustering
-        pos = {side * (step * 0.35f + row * step * 0.2f),
-               -(minOff + row * step * 0.08f)};
-      }
+      // Symmetrical default — ensure >= 5.0 unit spacing
+      float side = (i % 2 == 0) ? 1.0f : -1.0f;
+      float row = static_cast<float>(i / 2);
+      pos = {side * (bodyR + step + row * step * 0.5f),
+             -(minOff + row * step * 1.2f)};
     }
-
-    // Overlap check with min separation = step
-    bool overlap = false;
-    for (const auto &existing : hull.hardpointSlots) {
-      float dx = existing.localPos.x - pos.x;
-      float dy = existing.localPos.y - pos.y;
-      if (std::sqrt(dx * dx + dy * dy) < step * 0.9f) {
-        overlap = true;
-        break;
-      }
-    }
-    if (!overlap) {
-      slot.localPos = pos;
-      hull.hardpointSlots.push_back(slot);
-    }
+    slot.localPos = pos;
+    hull.slots.push_back(slot);
   }
 
-  // --- ENGINE MOUNTS (aft — positive Y) ---
-  float totalEngDensity = 0.0f;
+  // --- 3. ENGINE MOUNTS (Aft: positive Y) ---
+  float totalEngDensity = tdna.mountDensities.empty() ? 0.5f : 0.0f;
   Tier dominantEngTier = Tier::T1;
   for (auto const &[sz, dens] : tdna.mountDensities) {
     if (dens > totalEngDensity) {
@@ -183,65 +170,64 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
       dominantEngTier = sz;
     }
   }
-  if (tdna.mountDensities.empty())
-    totalEngDensity = 0.5f;
 
-  int engMin, engMax;
-  if (tierInt <= 1) {
-    engMin = 1;
-    engMax = 3;
-  } else if (tierInt == 2) {
-    engMin = 2;
-    engMax = 6;
-  } else {
-    engMin = 6;
-    engMax = 20;
-  }
-
-  // Ensure every ship has at least one engine slot for operational viability
-  engMin = std::max(1, engMin);
-
+  int engMin = (tierInt <= 1) ? 1 : (tierInt == 2 ? 2 : 6);
+  int engMax = (tierInt <= 1) ? 3 : (tierInt == 2 ? 6 : 20);
   int engCount = slotCount(totalEngDensity, engMin, engMax);
 
-  uint8_t engId = 0;
   for (int i = 0; i < engCount; ++i) {
     MountSlot slot;
-    slot.id = engId++;
+    slot.id = nextId++;
     slot.size = dominantEngTier;
     slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Engine;
 
+    // Ensure >= 5.0 unit spacing between engines
+    float engStep = std::max(5.5f, step);
     sf::Vector2f pos;
-    if (hull.visual.nacelleStyle == NacelleStyle::Ring) {
-      // Tight ring at the aft
-      float angle = (2.0f * 3.14159f * i) / engCount;
-      float r = minOff * 0.8f;
-      pos = {std::cos(angle) * r,
-             minOff + std::sin(angle) * r * 0.1f}; // Squash ring
-    } else if (hull.visual.nacelleStyle == NacelleStyle::Pods) {
-      // Paired outboard pods, close to the flanks
+    if (hull.visual.nacelleStyle == NacelleStyle::Integrated) {
+      pos = {0.0f, minOff + i * engStep};
+    } else {
       float side = (i % 2 == 0) ? 1.0f : -1.0f;
       float row = static_cast<float>(i / 2);
-      // Pods: ultra-compact vertically
-      pos = {side * (minOff * 0.35f + row * step * 0.3f),
-             minOff + row * step * 0.05f};
-    } else if (hull.visual.nacelleStyle == NacelleStyle::Integrated) {
-      // Centreline stack, just aft of hull
-      pos = {0.0f, minOff + i * step};
-    } else {
-      // Outriggers (default): tight symmetric flanking pairs
-      if (engCount == 1) {
-        pos = {0.0f, minOff};
-      } else {
-        float side = (i % 2 == 0) ? 1.0f : -1.0f;
-        float row = static_cast<float>(i / 2);
-        // Outriggers: ultra-compact vertically
-        pos = {side * (step * 0.4f + row * step * 0.2f),
-               minOff + row * step * 0.05f};
+      pos = {side * (bodyR + step + row * step * 0.5f), minOff + row * engStep};
+    }
+    slot.localPos = pos;
+    hull.slots.push_back(slot);
+  }
+
+  // --- POST-DISTRIBUTION OVERLAP REPAIR ---
+  // Push apart any slots closer than 5.5 units (validation threshold is 5.0)
+  constexpr float MIN_DIST = 2.5f;
+  constexpr int MAX_REPAIR_ITERS = 20;
+  for (int iter = 0; iter < MAX_REPAIR_ITERS; ++iter) {
+    bool moved = false;
+    for (size_t i = 0; i < hull.slots.size(); ++i) {
+      for (size_t j = i + 1; j < hull.slots.size(); ++j) {
+        auto &a = hull.slots[i];
+        auto &b = hull.slots[j];
+        float dx = b.localPos.x - a.localPos.x;
+        float dy = b.localPos.y - a.localPos.y;
+        float dist = std::sqrt(dx * dx + dy * dy);
+        if (dist < MIN_DIST) {
+          float push = (MIN_DIST - dist) / 2.0f + 0.1f;
+          if (dist < 0.01f) {
+            dx = 1.0f;
+            dy = 0.0f;
+            dist = 1.0f;
+          }
+          float nx = dx / dist;
+          float ny = dy / dist;
+          a.localPos.x -= nx * push;
+          a.localPos.y -= ny * push;
+          b.localPos.x += nx * push;
+          b.localPos.y += ny * push;
+          moved = true;
+        }
       }
     }
-
-    slot.localPos = pos;
-    hull.engineSlots.push_back(slot);
+    if (!moved)
+      break;
   }
 }
 

@@ -4,10 +4,12 @@
 
 #include "engine/combat/WeaponSystem.h"
 #include "engine/physics/AsteroidSystem.h"
+#include "engine/physics/CollisionSystem.h"
 #include "engine/physics/GravitySystem.h"
 #include "engine/physics/KinematicsSystem.h"
 #include "engine/physics/OrbitalSystem.h"
 #include "engine/physics/PhysicsEngine.h"
+#include "engine/physics/PowerSystem.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/EconomyManager.h"
 #include "game/FactionManager.h"
@@ -172,14 +174,24 @@ int main() {
     if (spaceHeld)
       WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
 
-    // Visual Feedback — thruster glow
-    auto &sc = registry.get<SpriteComponent>(playerEntity);
-    sc.sprite->setColor(wHeld ? sf::Color::White : sf::Color::Cyan);
+    // Input Telemetry
+    {
+      auto inputSpan = Telemetry::instance().tracer()->StartSpan("game.input");
+      inputSpan->SetAttribute("input.w", wHeld);
+      inputSpan->SetAttribute("input.a", aHeld);
+      inputSpan->SetAttribute("input.s", sHeld);
+      inputSpan->SetAttribute("input.d", dHeld);
+      inputSpan->SetAttribute("input.space", spaceHeld);
+      inputSpan->SetAttribute("input.l", lHeld);
+      inputSpan->End();
+    }
 
     // Physics & AI updates
+    CollisionSystem::update(registry, physics.getWorldId());
+    PowerSystem::update(registry, dt);
     GravitySystem::update(registry);
     EconomyManager::instance().update(registry, dt);
-    WeaponSystem::update(registry, dt);
+    WeaponSystem::update(registry, dt, physics.getWorldId());
     NPCShipManager::instance().update(registry, dt);
     FactionManager::instance().update(registry, dt);
     physics.update(dt);

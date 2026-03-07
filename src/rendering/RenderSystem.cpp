@@ -18,6 +18,7 @@
 #include "game/components/WorldConfig.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <cmath>
 #include <iostream>
@@ -36,48 +37,151 @@ static sf::Vector2f rotateVector(sf::Vector2f vec, float degrees) {
 static void drawHullComponent(sf::RenderWindow &window, VisualStyle style,
                               sf::Vector2f pos, float rotation, sf::Color color,
                               float scale) {
-  if (style == VisualStyle::Triangle) {
-    sf::ConvexShape triangle(3);
-    triangle.setPoint(0, {0, -12 * scale});
-    triangle.setPoint(1, {-10 * scale, 10 * scale});
-    triangle.setPoint(2, {10 * scale, 10 * scale});
-    triangle.setFillColor(color);
+  static sf::ConvexShape triangle(3);
+  static sf::RectangleShape rect;
+  static sf::CircleShape circle;
+  static sf::ConvexShape sleek(4);
+  static bool initialized = false;
+
+  if (!initialized) {
     triangle.setOutlineThickness(1.0f);
     triangle.setOutlineColor(sf::Color(50, 50, 50));
+
+    rect.setOutlineThickness(1.0f);
+    rect.setOutlineColor(sf::Color(50, 50, 50));
+
+    circle.setOutlineThickness(1.0f);
+    circle.setOutlineColor(sf::Color(50, 50, 50));
+
+    sleek.setOutlineThickness(1.0f);
+    sleek.setOutlineColor(sf::Color(50, 50, 50));
+    initialized = true;
+  }
+
+  if (style == VisualStyle::Triangle) {
+    triangle.setPoint(0, {0, -8 * scale});
+    triangle.setPoint(1, {-7 * scale, 7 * scale});
+    triangle.setPoint(2, {7 * scale, 7 * scale});
+    triangle.setFillColor(color);
     triangle.setPosition(pos);
     triangle.setRotation(sf::degrees(rotation));
     window.draw(triangle);
   } else if (style == VisualStyle::Square) {
-    sf::RectangleShape rect({20 * scale, 20 * scale});
-    rect.setOrigin({10 * scale, 10 * scale});
+    rect.setSize({14 * scale, 14 * scale});
+    rect.setOrigin({7 * scale, 7 * scale});
     rect.setFillColor(color);
-    rect.setOutlineThickness(1.0f);
-    rect.setOutlineColor(sf::Color(50, 50, 50));
     rect.setPosition(pos);
     rect.setRotation(sf::degrees(rotation));
     window.draw(rect);
   } else if (style == VisualStyle::Circular) {
-    sf::CircleShape circle(10 * scale);
-    circle.setOrigin({10 * scale, 10 * scale});
+    circle.setRadius(7 * scale);
+    circle.setOrigin({7 * scale, 7 * scale});
     circle.setFillColor(color);
-    circle.setOutlineThickness(1.0f);
-    circle.setOutlineColor(sf::Color(50, 50, 50));
     circle.setPosition(pos);
     circle.setRotation(sf::degrees(rotation));
     window.draw(circle);
   } else if (style == VisualStyle::Sleek) {
-    sf::ConvexShape sleek(4);
-    sleek.setPoint(0, {0, -15 * scale});
-    sleek.setPoint(1, {-8 * scale, 5 * scale});
-    sleek.setPoint(2, {0, 10 * scale});
-    sleek.setPoint(3, {8 * scale, 5 * scale});
+    sleek.setPoint(0, {0, -10 * scale});
+    sleek.setPoint(1, {-5 * scale, 3 * scale});
+    sleek.setPoint(2, {0, 7 * scale});
+    sleek.setPoint(3, {5 * scale, 3 * scale});
     sleek.setFillColor(color);
-    sleek.setOutlineThickness(1.0f);
-    sleek.setOutlineColor(sf::Color(50, 50, 50));
     sleek.setPosition(pos);
     sleek.setRotation(sf::degrees(rotation));
     window.draw(sleek);
+  } else if (style == VisualStyle::Polygon) {
+    // Specialized hull drawing handles this below
   }
+}
+
+static void drawPolygonalHull(sf::RenderWindow &window, const HullDef &hull,
+                              sf::Vector2f pos, float rotation,
+                              sf::Color color) {
+  // Compute bounding radius from slot positions to determine hull scale
+  float maxR = 10.0f;
+  float maxFwd = 10.0f; // most negative Y (bow)
+  float maxAft = 5.0f;  // most positive Y (stern)
+  for (const auto &slot : hull.slots) {
+    float sx = std::abs(slot.localPos.x);
+    float sy = slot.localPos.y;
+    float r = std::sqrt(sx * sx + sy * sy);
+    if (r > maxR)
+      maxR = r;
+    if (-sy > maxFwd)
+      maxFwd = -sy;
+    if (sy > maxAft)
+      maxAft = sy;
+  }
+
+  // Scale factor to make hull visually encapsulate all slots
+  float scale = 1.3f;
+  float halfW = maxR * scale * 0.8f; // half-width at widest point
+  float bowY = -(maxFwd * scale);    // bow tip (negative Y = forward)
+  float sternY = maxAft * scale;     // stern (positive Y = aft)
+  float midY = bowY * 0.3f;          // widest point, slightly forward of center
+
+  // Build right-side profile points (will be mirrored for left side)
+  // Points go clockwise from bow tip
+  std::vector<sf::Vector2f> rightProfile = {
+      {0.0f, bowY},                  // 0: bow tip (centerline)
+      {halfW * 0.4f, bowY * 0.5f},   // 1: bow shoulder
+      {halfW, midY},                 // 2: widest beam
+      {halfW * 0.9f, sternY * 0.3f}, // 3: aft taper
+      {halfW * 0.7f, sternY * 0.7f}, // 4: aft quarter
+      {halfW * 0.5f, sternY},        // 5: stern corner
+      {0.0f, sternY * 0.9f},         // 6: stern center
+  };
+
+  // Build full symmetric hull: right side + mirrored left side
+  std::vector<sf::Vector2f> hullPoints;
+  // Right side (bow to stern)
+  for (size_t i = 0; i < rightProfile.size(); ++i) {
+    hullPoints.push_back(rightProfile[i]);
+  }
+  // Left side (stern back to bow, mirrored X)
+  for (int i = static_cast<int>(rightProfile.size()) - 2; i >= 1; --i) {
+    hullPoints.push_back({-rightProfile[i].x, rightProfile[i].y});
+  }
+
+  if (hullPoints.size() < 3)
+    return;
+
+  // Draw filled hull (TriangleFan from center)
+  sf::VertexArray fan(sf::PrimitiveType::TriangleFan, hullPoints.size() + 2);
+  sf::Vector2f center = {0.0f, (bowY + sternY) * 0.3f};
+  fan[0].position = pos + rotateVector(center, rotation);
+  fan[0].color = sf::Color(static_cast<uint8_t>(std::min(255, color.r + 30)),
+                           static_cast<uint8_t>(std::min(255, color.g + 30)),
+                           static_cast<uint8_t>(std::min(255, color.b + 30)));
+
+  for (size_t i = 0; i < hullPoints.size(); ++i) {
+    sf::Vector2f rotatedP = rotateVector(hullPoints[i], rotation);
+    fan[i + 1].position = pos + rotatedP;
+    fan[i + 1].color = color;
+  }
+  fan[hullPoints.size() + 1] = fan[1]; // close the fan
+  window.draw(fan);
+
+  // Outline
+  sf::VertexArray outline(sf::PrimitiveType::LineStrip, hullPoints.size() + 1);
+  sf::Color outlineColor(static_cast<uint8_t>(color.r * 0.4f),
+                         static_cast<uint8_t>(color.g * 0.4f),
+                         static_cast<uint8_t>(color.b * 0.4f));
+  for (size_t i = 0; i < hullPoints.size(); ++i) {
+    outline[i].position = pos + rotateVector(hullPoints[i], rotation);
+    outline[i].color = outlineColor;
+  }
+  outline[hullPoints.size()].position =
+      pos + rotateVector(hullPoints[0], rotation);
+  outline[hullPoints.size()].color = outlineColor;
+  window.draw(outline);
+
+  // Cockpit detail (centered, near bow)
+  sf::CircleShape detail(3.0f);
+  detail.setFillColor(sf::Color(100, 200, 255, 180));
+  detail.setOrigin({3.0f, 3.0f});
+  detail.setPosition(pos + rotateVector({0.0f, bowY * 0.5f}, rotation));
+  window.draw(detail);
 }
 
 static void drawHUD(entt::registry &registry, entt::entity player,
@@ -85,11 +189,62 @@ static void drawHUD(entt::registry &registry, entt::entity player,
   if (!registry.valid(player) || !font)
     return;
 
+  // Static FPS counter
+  static sf::Clock fpsClock;
+  static int frameCount = 0;
+  static float fps = 0;
+  frameCount++;
+  if (fpsClock.getElapsedTime().asSeconds() >= 1.0f) {
+    fps = frameCount / fpsClock.restart().asSeconds();
+    frameCount = 0;
+  }
+
   sf::Vector2u windowSize = window.getSize();
+  float margin = 20.0f;
+
+  // --- 0. Telemetry Overlay (Top Right) ---
+  float telX = windowSize.x - 220.0f;
+  float telY = margin;
+  auto drawTelText = [&](const std::string &str,
+                         sf::Color col = sf::Color::Green) {
+    sf::Text t(*font, str, 12);
+    t.setFillColor(col);
+    t.setPosition({telX, telY});
+    window.draw(t);
+    telY += 16.0f;
+  };
+
+  drawTelText("--- DIAGNOSTICS ---", sf::Color::Cyan);
+  drawTelText("FPS: " + std::to_string((int)fps));
+
+  // Input State
+  bool w = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W);
+  bool a = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
+  bool s = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);
+  bool d = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
+  std::string inputStr = "INPUT: ";
+  inputStr += w ? "W " : "_ ";
+  inputStr += a ? "A " : "_ ";
+  inputStr += s ? "S " : "_ ";
+  inputStr += d ? "D " : "_ ";
+  drawTelText(inputStr);
+
+  // Velocity/ACC
+  if (registry.all_of<InertialBody>(player)) {
+    auto &ib = registry.get<InertialBody>(player);
+    if (b2Body_IsValid(ib.bodyId)) {
+      b2Vec2 vel = b2Body_GetLinearVelocity(ib.bodyId);
+      float speed = std::sqrt(vel.x * vel.x + vel.y * vel.y);
+      drawTelText("VEL: " + std::to_string((int)speed) + " m/s");
+      drawTelText("FORC: " + std::to_string((int)ib.thrustForce) + " N");
+    }
+  }
+
+  // --- Old HUD Logic ---
   float hudWidth = 280.0f;
   float hudHeight = 320.0f; // Expanded to fit modules
-  float margin = 20.0f;
-  sf::Vector2f hudPos(margin, windowSize.y - hudHeight - margin);
+  float hudMargin = 20.0f;
+  sf::Vector2f hudPos(hudMargin, windowSize.y - hudHeight - hudMargin);
 
   // Panel background
   sf::RectangleShape panel({hudWidth, hudHeight});
@@ -105,10 +260,12 @@ static void drawHUD(entt::registry &registry, entt::entity player,
 
   auto drawText = [&](const std::string &str, unsigned int size,
                       sf::Color color) {
-    sf::Text text(*font, str, size);
-    text.setFillColor(color);
-    text.setPosition({x, y});
-    window.draw(text);
+    if (!font)
+      return;
+    sf::Text sharedText(*font, str, size);
+    sharedText.setFillColor(color);
+    sharedText.setPosition({x, y});
+    window.draw(sharedText);
     y += lineSpacing;
   };
 
@@ -262,7 +419,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         window.draw(*spriteComp.sprite);
 
         // Draw planet name label above body
-        if (font && registry.all_of<NameComponent>(entity)) {
+        if (registry.all_of<NameComponent>(entity)) {
           auto &nameComp = registry.get<NameComponent>(entity);
 
           sf::Color factionColor = sf::Color(200, 200, 255);
@@ -272,15 +429,18 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
             factionColor =
                 FactionManager::instance().getFaction(majorityId).color;
           }
+          if (font) {
+            sf::Text planetNameText(*font, nameComp.name, 16);
+            planetNameText.setFillColor(factionColor);
 
-          sf::Text text(*font, nameComp.name, 16);
-          text.setFillColor(factionColor);
-          sf::FloatRect bounds = spriteComp.sprite->getGlobalBounds();
-          float offset = (bounds.size.y / 2.0f) + 18.0f;
-          text.setOrigin({text.getLocalBounds().size.x / 2.0f, 0.0f});
-          text.setPosition(
-              {transform.position.x, transform.position.y + offset});
-          window.draw(text);
+            sf::FloatRect bounds = spriteComp.sprite->getGlobalBounds();
+            float offset = (bounds.size.y / 2.0f) + 18.0f;
+            planetNameText.setOrigin(
+                {planetNameText.getLocalBounds().size.x / 2.0f, 0.0f});
+            planetNameText.setPosition(
+                {transform.position.x, transform.position.y + offset});
+            window.draw(planetNameText);
+          }
         }
       }
     }
@@ -320,13 +480,13 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                 continue;
               sf::Vector2f startPos = pixelPos;
               sf::Vector2f endPos =
-                  pixelPos + rotateVector(slot.localPos * 12.0f, angleDegrees);
+                  pixelPos + rotateVector(slot.localPos * 5.0f, angleDegrees);
 
               if (hull.visual.nacelleStyle == NacelleStyle::Ring) {
                 sf::CircleShape ring(
                     std::sqrt(slot.localPos.x * slot.localPos.x +
                               slot.localPos.y * slot.localPos.y) *
-                    12.0f);
+                    5.0f);
                 ring.setOrigin({ring.getRadius(), ring.getRadius()});
                 ring.setPosition(pixelPos);
                 ring.setFillColor(sf::Color::Transparent);
@@ -350,27 +510,27 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
               }
             }
           };
-          drawConnectors(hull.engineSlots);
-          drawConnectors(hull.hardpointSlots);
+          drawConnectors(hull.slots);
 
           // 2. Draw Main Body
-          drawHullComponent(window, hull.visual.bodyStyle, pixelPos,
-                            angleDegrees, shipColor, 1.0f);
-
-          // 3. Draw Engine Nacelles
-          for (const auto &slot : hull.engineSlots) {
-            sf::Vector2f offset =
-                rotateVector(slot.localPos * 12.0f, angleDegrees);
-            drawHullComponent(window, slot.style, pixelPos + offset,
-                              angleDegrees, shipColor, 0.7f);
+          if (hull.visual.bodyStyle == VisualStyle::Polygon) {
+            drawPolygonalHull(window, hull, pixelPos, angleDegrees, shipColor);
+          } else {
+            drawHullComponent(window, hull.visual.bodyStyle, pixelPos,
+                              angleDegrees, shipColor, 1.0f);
           }
 
-          // 4. Draw Weapons/Hardpoints
-          for (const auto &slot : hull.hardpointSlots) {
+          // 3. Draw Nacelles & Hardpoints
+          for (const auto &slot : hull.slots) {
             sf::Vector2f offset =
-                rotateVector(slot.localPos * 12.0f, angleDegrees);
-            drawHullComponent(window, slot.style, pixelPos + offset,
-                              angleDegrees, shipColor, 0.5f);
+                rotateVector(slot.localPos * 5.0f, angleDegrees);
+            if (slot.role == SlotRole::Engine) {
+              drawHullComponent(window, slot.style, pixelPos + offset,
+                                angleDegrees, shipColor, 0.7f);
+            } else if (slot.role == SlotRole::Hardpoint) {
+              drawHullComponent(window, slot.style, pixelPos + offset,
+                                angleDegrees, shipColor, 0.5f);
+            }
           }
         } else if (registry.all_of<SpriteComponent>(entity)) {
           auto &spriteComp = registry.get<SpriteComponent>(entity);

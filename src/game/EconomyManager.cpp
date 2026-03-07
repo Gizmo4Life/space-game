@@ -199,6 +199,13 @@ void EconomyManager::init() {
 }
 
 void EconomyManager::update(entt::registry &registry, float deltaTime) {
+  accumulationTimer += deltaTime;
+  if (accumulationTimer < 1.0f)
+    return;
+
+  float stepTime = accumulationTimer;
+  accumulationTimer = 0.0f;
+
   auto span =
       space::Telemetry::instance().tracer()->StartSpan("game.economy.process");
   auto view = registry.view<PlanetEconomy>();
@@ -206,10 +213,10 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
   for (auto entity : view) {
     auto &eco = view.get<PlanetEconomy>(entity);
     for (auto &pair : eco.factionData) {
-      processProduction(pair.first, pair.second, deltaTime);
-      reEvaluateFactionDNA(pair.first, pair.second, deltaTime);
+      processProduction(pair.first, pair.second, stepTime);
+      reEvaluateFactionDNA(pair.first, pair.second, stepTime);
       reEvaluateTraderLogic(registry, pair.first, pair.second, entity,
-                            deltaTime);
+                            stepTime);
     }
 
     eco.marketStockpile.clear();

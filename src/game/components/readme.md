@@ -4,7 +4,7 @@
 → [T3 Module: Game Economy](/docs/architecture/module/game-economy.md)
 → [T3 Module: Game Factions](/docs/architecture/module/game-factions.md)
 → [T3 Module: Game NPC](/docs/architecture/module/game-npc.md)
-→ [T3 Module: Game Combat](/docs/architecture/module/game-combat.md)
+→ [T3 Module: Engine Combat](/docs/architecture/module/engine-combat.md)
 → [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
 ## Components

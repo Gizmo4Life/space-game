@@ -11,6 +11,8 @@ Find undocumented or outdated documentation with respect to current code, charac
 ## 2. Drift Analysis (Code vs. Docs)
 - **Action:** Execute [Documentation Validation](documentation-validation.md).
 - **Verify:** Identify physical code files that lack a corresponding T3 module or have stale pattern mappings.
+- **Verify:** Ensure T3 Module filenames match their physical directory pillar (e.g., `src/engine/` -> `engine-*`).
+
 
 ## 3. Characterization & Elicitation
 - **Action:** For newly discovered or altered code shapes, execute [Capability Elicitation](capability-elicitation.md) (Brownfield Mode).

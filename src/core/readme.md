@@ -1,6 +1,6 @@
 # /src/core/
 
-→ [T3 Module: Source Core](/docs/architecture/module/src-core.md)
+→ [T3 Module: Core Main](/docs/architecture/module/core-main.md)
 → [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
 ## Systems

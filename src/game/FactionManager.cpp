@@ -85,8 +85,9 @@ void FactionManager::init() {
   player.dna.cooperation = 0.5f;
   player.dna.namingScheme = NamingScheme::Raptors;
   player.dna.visual.layoutPattern = LayoutPattern::Symmetrical;
-  player.dna.visual.nacelleStyle = NacelleStyle::Outriggers;
-  player.dna.visual.bodyStyle = VisualStyle::Sleek;
+  player.dna.visual.nacelleStyle =
+      NacelleStyle::Integrated; // Polygons look better integrated
+  player.dna.visual.bodyStyle = VisualStyle::Polygon;
   for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
     TierDNA &tdna = player.dna.tierDNA[t];
     tdna.fleetScale = 0.5f;
@@ -120,7 +121,7 @@ void FactionManager::init() {
     data.dna.visual.nacelleStyle = static_cast<NacelleStyle>(rand() % 4);
     data.dna.visual.hullConnectivity =
         static_cast<HullConnectivity>(rand() % 3);
-    data.dna.visual.bodyStyle = static_cast<VisualStyle>(rand() % 4);
+    data.dna.visual.bodyStyle = static_cast<VisualStyle>(rand() % 5);
 
     for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
       TierDNA &tdna = data.dna.tierDNA[t];

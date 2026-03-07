@@ -8,9 +8,9 @@ struct WorldConfig {
   static constexpr float GRAVITY_G = 1.2f;
   static constexpr float MAX_GRAVITY_FORCE = 60.0f;
   static constexpr float WORLD_SCALE =
-      1.0f; // 1:1 pixel to physics meter (background)
+      0.05f; // 1:20 pixel to physics meter (background)
   static constexpr float SHIP_SCALE =
-      2.0f; // Combat scale (ship rendering/physics)
+      30.0f; // Combat scale (ship rendering/physics)
   static constexpr float DEFAULT_ZOOM = 1.5f; // 1.5x zoomed out
 
   // Planetary thresholds (mass units)
