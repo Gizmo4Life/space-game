@@ -7,6 +7,7 @@
 #include "game/components/FactionDNA.h"
 #include "game/components/HullDef.h"
 #include "game/components/HullGenerator.h"
+#include "game/components/ModuleGenerator.h"
 #include "game/components/ShipModule.h"
 
 using namespace space;

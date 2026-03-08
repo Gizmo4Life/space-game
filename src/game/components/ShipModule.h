@@ -32,29 +32,4 @@ struct ModuleDef {
   }
 };
 
-// ─── Singleton registry
-// ───────────────────────────────────────────────────────
-class ModuleRegistry {
-public:
-  static ModuleRegistry &instance() {
-    static ModuleRegistry inst;
-    return inst;
-  }
-
-  void init(); // populate standard catalogue
-
-  const ModuleDef &getModule(ModuleId id) const {
-    if (id == EMPTY_MODULE || id >= (ModuleId)modules.size()) {
-      static ModuleDef empty{"Empty Slot", {}, 0.f, 0.f};
-      return empty;
-    }
-    return modules[id];
-  }
-
-  std::vector<ModuleDef> modules;
-
-private:
-  ModuleRegistry() = default;
-};
-
 } // namespace space

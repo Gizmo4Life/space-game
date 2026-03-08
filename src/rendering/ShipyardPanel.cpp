@@ -173,10 +173,16 @@ void ShipyardPanel::render(sf::RenderWindow &window, ::entt::registry &registry,
     float powerProduction = 0.f;
     float powerLoad = 0.f;
     float totalMass = bid.hull.baseMass * bid.hull.massMultiplier;
-    for (auto modId : bid.modules) {
-      if (modId == EMPTY_MODULE)
+    auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+    auto &fEco = eco.factionData[bid.factionId];
+
+    for (auto modKey : bid.modules) {
+      if (modKey.id == 0xFFFF)
         continue;
-      const auto &m = ModuleRegistry::instance().getModule(modId);
+      auto it = fEco.factionDesigns.find(modKey);
+      if (it == fEco.factionDesigns.end())
+        continue;
+      const auto &m = it->second;
       usedVol += m.volumeOccupied;
       totalMass += m.mass;
       if (m.powerDraw < 0)
@@ -225,11 +231,17 @@ void ShipyardPanel::render(sf::RenderWindow &window, ::entt::registry &registry,
     float listStart = my;
     my -= moduleScrollY_;
 
+    auto &eco2 = registry.get<PlanetEconomy>(planetEntity_);
+    auto &fEco2 = eco2.factionData[bid.factionId];
+
     for (size_t i = 0; i < bid.modules.size(); ++i) {
-      ModuleId modId = bid.modules[i];
-      if (modId == EMPTY_MODULE)
+      auto modKey = bid.modules[i];
+      if (modKey.id == 0xFFFF)
         continue;
-      const auto &mod = ModuleRegistry::instance().getModule(modId);
+      auto it = fEco2.factionDesigns.find(modKey);
+      if (it == fEco2.factionDesigns.end())
+        continue;
+      const auto &mod = it->second;
       bool exp = expandedModules_.count(i);
       std::string modLabel = (exp ? "[-] " : "[+] ") + mod.name;
 

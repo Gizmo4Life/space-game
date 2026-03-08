@@ -5,6 +5,7 @@
 #include "game/components/Economy.h"
 #include "game/components/HullDef.h"
 #include "game/components/InstalledModules.h"
+#include "game/components/NPCComponent.h"
 #include "game/components/ShipModule.h"
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
@@ -21,6 +22,34 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
       outfitterMarketMode_ = !outfitterMarketMode_;
       selectedOutfitterIndex_ = 0;
     }
+
+    // Cycle target ship
+    if (kp->code == sf::Keyboard::Key::Left ||
+        kp->code == sf::Keyboard::Key::Right) {
+      std::vector<entt::entity> fleet;
+      if (registry.valid(playerEntity_))
+        fleet.push_back(playerEntity_);
+      auto npcView = registry.view<NPCComponent>();
+      for (auto e : npcView) {
+        if (npcView.get<NPCComponent>(e).isPlayerFleet) {
+          fleet.push_back(e);
+        }
+      }
+
+      if (!fleet.empty()) {
+        if (targetShip_ == entt::null)
+          targetShip_ = playerEntity_;
+        auto it = std::find(fleet.begin(), fleet.end(), targetShip_);
+        int idx = (it != fleet.end()) ? std::distance(fleet.begin(), it) : 0;
+
+        if (kp->code == sf::Keyboard::Key::Left) {
+          idx = (idx - 1 + fleet.size()) % fleet.size();
+        } else {
+          idx = (idx + 1) % fleet.size();
+        }
+        targetShip_ = fleet[idx];
+      }
+    }
     if (kp->code == sf::Keyboard::Key::Up || kp->code == sf::Keyboard::Key::W) {
       if (selectedOutfitterIndex_ > 0)
         selectedOutfitterIndex_--;
@@ -32,17 +61,22 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
     if (kp->code == sf::Keyboard::Key::Enter ||
         kp->code == sf::Keyboard::Key::B) {
       if (outfitterMarketMode_) {
-        auto &reg = ModuleRegistry::instance();
+        std::vector<ModuleDef> shopModules;
+        if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+          shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
+        }
         if (selectedOutfitterIndex_ >= 0 &&
-            selectedOutfitterIndex_ < (int)reg.modules.size()) {
-          const auto &mdef = reg.modules[selectedOutfitterIndex_];
+            selectedOutfitterIndex_ < (int)shopModules.size()) {
+          const auto &mdef = shopModules[selectedOutfitterIndex_];
           ProductKey pk{ProductType::Module, (uint32_t)selectedOutfitterIndex_,
                         Tier::T1}; // Default T1 for registry lookup
 
           // For Engines/Weapons, we need a slot. For now, try slot 0.
           // In a full UI, the player would select a slot first.
-          ShipOutfitter::instance().refitModule(registry, playerEntity_,
-                                                planetEntity_, pk, 0);
+          entt::entity target =
+              registry.valid(targetShip_) ? targetShip_ : playerEntity_;
+          ShipOutfitter::instance().refitModule(registry, target, planetEntity_,
+                                                pk, 0);
         }
       }
     }
@@ -54,6 +88,10 @@ void OutfitterPanel::render(sf::RenderWindow &window,
                             sf::FloatRect rect) {
   if (!font || !registry.valid(playerEntity_))
     return;
+
+  if (!registry.valid(targetShip_)) {
+    targetShip_ = playerEntity_;
+  }
 
   float x = rect.position.x + 20.f;
   float y = rect.position.y + 20.f;
@@ -74,35 +112,35 @@ void OutfitterPanel::render(sf::RenderWindow &window,
     // or need to be fetched from the playerEntity_
     // For now, I'll assume they are available as per the instruction's context.
     // If not, this would cause a compilation error.
-    const auto &hdef = registry.get<HullDef>(playerEntity_);
+    const auto &hdef = registry.get<HullDef>(targetShip_);
     const auto &fdr = registry.get<CreditsComponent>(playerEntity_);
 
-    dtext(hdef.name + " (" + hdef.className + ")", 20, sf::Color::Cyan);
+    dtext(hdef.name + " (" + hdef.className + ") [Left/Right to Swap Ship]", 20,
+          sf::Color::Cyan);
     dtext("Tier: " + tierName(hdef.sizeTier), 14, sf::Color(200, 200, 200));
 
     // Power & Volume
     float usedVol = 0.f;
     float powerTotal = 0.f;
 
-    auto calcStats = [&](const std::vector<ModuleId> &ids) {
-      for (auto id : ids) {
-        if (id == EMPTY_MODULE)
+    auto calcStats = [&](const std::vector<ModuleDef> &modules) {
+      for (const auto &m : modules) {
+        if (m.name.empty() || m.name == "Empty")
           continue;
-        const auto &m = ModuleRegistry::instance().getModule(id);
         usedVol += m.volumeOccupied;
         powerTotal -= m.powerDraw;
       }
     };
-    if (registry.all_of<InstalledEngines>(playerEntity_))
-      calcStats(registry.get<InstalledEngines>(playerEntity_).ids);
-    if (registry.all_of<InstalledWeapons>(playerEntity_))
-      calcStats(registry.get<InstalledWeapons>(playerEntity_).ids);
-    if (registry.all_of<InstalledShields>(playerEntity_))
-      calcStats(registry.get<InstalledShields>(playerEntity_).ids);
-    if (registry.all_of<InstalledCargo>(playerEntity_))
-      calcStats(registry.get<InstalledCargo>(playerEntity_).ids);
-    if (registry.all_of<InstalledPower>(playerEntity_))
-      calcStats(registry.get<InstalledPower>(playerEntity_).ids);
+    if (registry.all_of<InstalledEngines>(targetShip_))
+      calcStats(registry.get<InstalledEngines>(targetShip_).modules);
+    if (registry.all_of<InstalledWeapons>(targetShip_))
+      calcStats(registry.get<InstalledWeapons>(targetShip_).modules);
+    if (registry.all_of<InstalledShields>(targetShip_))
+      calcStats(registry.get<InstalledShields>(targetShip_).modules);
+    if (registry.all_of<InstalledCargo>(targetShip_))
+      calcStats(registry.get<InstalledCargo>(targetShip_).modules);
+    if (registry.all_of<InstalledPower>(targetShip_))
+      calcStats(registry.get<InstalledPower>(targetShip_).modules);
 
     dtext("Volume: " + fmt(usedVol, 1) + "/" + fmt(hdef.internalVolume, 0) +
               " cubic m",
@@ -124,22 +162,22 @@ void OutfitterPanel::render(sf::RenderWindow &window,
   }
   y += 10.f;
 
-  std::vector<ModuleId> allInstalled;
-  auto collect = [&](const std::vector<ModuleId> &ids) {
-    for (auto id : ids)
-      if (id != EMPTY_MODULE)
-        allInstalled.push_back(id);
+  std::vector<ModuleDef> allInstalled;
+  auto collect = [&](const std::vector<ModuleDef> &modules) {
+    for (const auto &m : modules)
+      if (!m.name.empty() && m.name != "Empty")
+        allInstalled.push_back(m);
   };
-  if (registry.all_of<InstalledEngines>(playerEntity_))
-    collect(registry.get<InstalledEngines>(playerEntity_).ids);
-  if (registry.all_of<InstalledWeapons>(playerEntity_))
-    collect(registry.get<InstalledWeapons>(playerEntity_).ids);
-  if (registry.all_of<InstalledShields>(playerEntity_))
-    collect(registry.get<InstalledShields>(playerEntity_).ids);
-  if (registry.all_of<InstalledCargo>(playerEntity_))
-    collect(registry.get<InstalledCargo>(playerEntity_).ids);
-  if (registry.all_of<InstalledPower>(playerEntity_))
-    collect(registry.get<InstalledPower>(playerEntity_).ids);
+  if (registry.all_of<InstalledEngines>(targetShip_))
+    collect(registry.get<InstalledEngines>(targetShip_).modules);
+  if (registry.all_of<InstalledWeapons>(targetShip_))
+    collect(registry.get<InstalledWeapons>(targetShip_).modules);
+  if (registry.all_of<InstalledShields>(targetShip_))
+    collect(registry.get<InstalledShields>(targetShip_).modules);
+  if (registry.all_of<InstalledCargo>(targetShip_))
+    collect(registry.get<InstalledCargo>(targetShip_).modules);
+  if (registry.all_of<InstalledPower>(targetShip_))
+    collect(registry.get<InstalledPower>(targetShip_).modules);
 
   // Left: Player Modules
   float leftX = x;
@@ -152,10 +190,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
   } else {
     for (int i = 0; i < (int)allInstalled.size(); ++i) {
       bool sel = (!outfitterMarketMode_ && i == selectedOutfitterIndex_);
-      ModuleId modId = allInstalled[i];
-      if (modId == EMPTY_MODULE)
-        continue;
-      const auto &mdef = ModuleRegistry::instance().getModule(modId);
+      const auto &mdef = allInstalled[i];
 
       std::string label = (sel ? "> " : "  ") + mdef.name;
       sf::Text t(*font, label, 14);
@@ -198,13 +233,16 @@ void OutfitterPanel::render(sf::RenderWindow &window,
   dtext("Planet Market", 15, sf::Color::Yellow);
 
   // For now, list global registry modules as a test market
-  auto &reg = ModuleRegistry::instance();
-  for (int i = 0; i < (int)reg.modules.size(); ++i) {
+  std::vector<ModuleDef> shopModules;
+  if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+    shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
+  }
+  for (int i = 0; i < (int)shopModules.size(); ++i) {
     bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
-    const auto &mdef = reg.modules[i];
-    ProductKey pk{ProductType::Module, (uint32_t)i, Tier::T1};
+    const auto &mdef = shopModules[i];
+    ProductKey pk{ProductType::Module, (uint32_t)i, Tier::T1}; // Placeholder
 
-    float price = 0.f;
+    float price = 500.f; // Base Price
     if (registry.all_of<PlanetEconomy>(planetEntity_)) {
       auto &eco = registry.get<PlanetEconomy>(planetEntity_);
       price = EconomyManager::instance().calculatePrice(

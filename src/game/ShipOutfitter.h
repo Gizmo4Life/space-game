@@ -15,8 +15,6 @@ public:
     return inst;
   }
 
-  void init();
-
   const HullDef &getHull(uint32_t factionId, Tier sizeTier,
                          const std::string &role = "General",
                          uint32_t lineIndex = 0) const;
@@ -25,10 +23,10 @@ public:
                       uint32_t factionId, Tier sizeTier,
                       const std::string &role = "General") const;
 
-  ShipBlueprint generateBlueprint(uint32_t factionId, Tier sizeTier,
-                                  const std::string &role,
-                                  uint32_t lineIndex = 0,
-                                  bool isElite = true) const;
+  ShipBlueprint generateBlueprint(
+      uint32_t factionId, Tier sizeTier, const std::string &role,
+      uint32_t lineIndex = 0, bool isElite = true,
+      const std::map<ProductKey, ModuleDef> *availableModules = nullptr) const;
 
   ShipOutfitHash calculateOutfitHash(entt::registry &registry,
                                      entt::entity entity) const;

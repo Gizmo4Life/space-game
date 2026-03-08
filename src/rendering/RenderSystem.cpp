@@ -346,30 +346,28 @@ static void drawHUD(entt::registry &registry, entt::entity player,
   drawText("─── INSTALLED MODULES ───", 11, sf::Color(100, 200, 255));
   y -= 5.0f;
 
-  auto &reg = ModuleRegistry::instance();
-  auto drawModuleList = [&](const std::vector<ModuleId> &ids) {
-    for (auto id : ids) {
-      if (id == EMPTY_MODULE)
+  auto drawModuleList = [&](const std::vector<ModuleDef> &modules) {
+    for (const auto &m : modules) {
+      if (m.name.empty() || m.name == "Empty")
         continue;
-      const auto &m = reg.getModule(id);
       drawText(" • " + m.name, 10, sf::Color(200, 200, 200));
     }
   };
 
   if (registry.all_of<InstalledEngines>(player)) {
-    drawModuleList(registry.get<InstalledEngines>(player).ids);
+    drawModuleList(registry.get<InstalledEngines>(player).modules);
   }
   if (registry.all_of<InstalledWeapons>(player)) {
-    drawModuleList(registry.get<InstalledWeapons>(player).ids);
+    drawModuleList(registry.get<InstalledWeapons>(player).modules);
   }
   if (registry.all_of<InstalledShields>(player)) {
-    drawModuleList(registry.get<InstalledShields>(player).ids);
+    drawModuleList(registry.get<InstalledShields>(player).modules);
   }
   if (registry.all_of<InstalledCargo>(player)) {
-    drawModuleList(registry.get<InstalledCargo>(player).ids);
+    drawModuleList(registry.get<InstalledCargo>(player).modules);
   }
   if (registry.all_of<InstalledPower>(player)) {
-    drawModuleList(registry.get<InstalledPower>(player).ids);
+    drawModuleList(registry.get<InstalledPower>(player).modules);
   }
 }
 
@@ -457,6 +455,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
         b2Rot rot = b2Body_GetRotation(inertial.bodyId);
         float angleDegrees = atan2f(rot.s, rot.c) * 180.0f / 3.14159f;
+        float visualAngle = angleDegrees + 90.0f;
         sf::Vector2f pixelPos(pos.x * WorldConfig::SHIP_SCALE,
                               pos.y * WorldConfig::SHIP_SCALE);
 
@@ -480,7 +479,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                 continue;
               sf::Vector2f startPos = pixelPos;
               sf::Vector2f endPos =
-                  pixelPos + rotateVector(slot.localPos * 5.0f, angleDegrees);
+                  pixelPos + rotateVector(slot.localPos * 5.0f, visualAngle);
 
               if (hull.visual.nacelleStyle == NacelleStyle::Ring) {
                 sf::CircleShape ring(
@@ -514,22 +513,22 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
 
           // 2. Draw Main Body
           if (hull.visual.bodyStyle == VisualStyle::Polygon) {
-            drawPolygonalHull(window, hull, pixelPos, angleDegrees, shipColor);
+            drawPolygonalHull(window, hull, pixelPos, visualAngle, shipColor);
           } else {
             drawHullComponent(window, hull.visual.bodyStyle, pixelPos,
-                              angleDegrees, shipColor, 1.0f);
+                              visualAngle, shipColor, 1.0f);
           }
 
           // 3. Draw Nacelles & Hardpoints
           for (const auto &slot : hull.slots) {
             sf::Vector2f offset =
-                rotateVector(slot.localPos * 5.0f, angleDegrees);
+                rotateVector(slot.localPos * 5.0f, visualAngle);
             if (slot.role == SlotRole::Engine) {
               drawHullComponent(window, slot.style, pixelPos + offset,
-                                angleDegrees, shipColor, 0.7f);
+                                visualAngle, shipColor, 0.7f);
             } else if (slot.role == SlotRole::Hardpoint) {
               drawHullComponent(window, slot.style, pixelPos + offset,
-                                angleDegrees, shipColor, 0.5f);
+                                visualAngle, shipColor, 0.5f);
             }
           }
         } else if (registry.all_of<SpriteComponent>(entity)) {

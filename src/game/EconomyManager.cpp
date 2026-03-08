@@ -19,6 +19,7 @@
 #include "game/components/GameTypes.h"
 #include "game/components/HullGenerator.h"
 #include "game/components/Landed.h"
+#include "game/components/ModuleGenerator.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
@@ -63,106 +64,74 @@ void EconomyManager::init() {
                                      15.0f};
 
   // Module Production (Engines, Weapons, etc.)
-  // We use ProductType::Module and the module's ID + Tier
-  auto &reg = ModuleRegistry::instance();
-  for (size_t i = 0; i < reg.modules.size(); ++i) {
-    const auto &m = reg.modules[i];
-    Tier tier = m.hasAttribute(AttributeType::Size)
-                    ? m.getAttributeTier(AttributeType::Size)
-                    : Tier::T1;
-    ProductKey pk{ProductType::Module, (uint32_t)i, tier};
+  // We use ProductType::Module and the module's ID is the ModuleCategory
+  std::vector<ModuleCategory> categories = {
+      ModuleCategory::Engine,  ModuleCategory::Weapon,  ModuleCategory::Shield,
+      ModuleCategory::Utility, ModuleCategory::Reactor, ModuleCategory::Command,
+      ModuleCategory::Battery};
 
-    Recipe r;
-    // ADR: Attribute-Differentiated Recipes
-    float baseMetals = 2.0f;
-    float baseElectronics = 1.0f;
+  std::vector<Tier> tiers = {Tier::T1, Tier::T2, Tier::T3};
 
-    r.inputs[resKey(Resource::Metals)] = baseMetals;
-    r.inputs[resKey(Resource::Electronics)] = baseElectronics;
+  for (auto category : categories) {
+    for (auto tier : tiers) {
+      ProductKey pk{ProductType::Module, static_cast<uint32_t>(category), tier};
 
-    int totalStars = 0;
-    std::vector<Resource> usedResources = {Resource::Metals,
-                                           Resource::Electronics};
+      Recipe r;
+      float baseMetals = 2.0f;
+      float baseElectronics = 1.0f;
 
-    auto addInput = [&](Resource res, float amount) {
-      r.inputs[resKey(res)] += amount;
-      if (std::find(usedResources.begin(), usedResources.end(), res) ==
-          usedResources.end()) {
-        usedResources.push_back(res);
-      }
-    };
+      r.inputs[resKey(Resource::Metals)] = baseMetals;
+      r.inputs[resKey(Resource::Electronics)] = baseElectronics;
 
-    for (const auto &attr : m.attributes) {
-      int stars = static_cast<int>(attr.tier);
-      totalStars += stars;
-      float attrRes = (stars == 1) ? 3.0f : (stars == 2 ? 5.0f : 8.0f);
+      // Base costs based on category and tier
+      float multiplier =
+          (tier == Tier::T1) ? 1.0f : (tier == Tier::T2 ? 2.5f : 6.0f);
 
-      switch (attr.type) {
-      case AttributeType::Thrust:
-        addInput(Resource::Metals, attrRes * 0.6f);
-        addInput(Resource::RareMetals, attrRes * 0.4f);
+      switch (category) {
+      case ModuleCategory::Engine:
+        r.inputs[resKey(Resource::Metals)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::RareMetals)] += 1.0f * multiplier;
+        r.inputs[resKey(Resource::Fuel)] += 1.0f * multiplier;
         break;
-      case AttributeType::Efficiency:
-        addInput(Resource::Isotopes, attrRes * 0.5f);
-        addInput(Resource::Fuel, attrRes * 0.5f);
+      case ModuleCategory::Weapon:
+        r.inputs[resKey(Resource::Weapons)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::Electronics)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::RareMetals)] += 1.0f * multiplier;
         break;
-      case AttributeType::Mass:
-        addInput(Resource::Plastics, attrRes * 0.7f);
-        addInput(Resource::RareMetals, attrRes * 0.3f);
+      case ModuleCategory::Shield:
+        r.inputs[resKey(Resource::Plastics)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::Electronics)] += 1.5f * multiplier;
+        r.inputs[resKey(Resource::Powercells)] += 1.0f * multiplier;
         break;
-      case AttributeType::Caliber:
-      case AttributeType::Warhead:
-        addInput(Resource::Weapons, attrRes * 0.6f);
-        addInput(Resource::Electronics, attrRes * 0.4f);
+      case ModuleCategory::Utility:
+        r.inputs[resKey(Resource::Metals)] += 3.0f * multiplier;
+        r.inputs[resKey(Resource::Plastics)] += 1.0f * multiplier;
         break;
-      case AttributeType::ROF:
-        addInput(Resource::Electronics, attrRes * 0.5f);
-        addInput(Resource::Plastics, attrRes * 0.5f);
+      case ModuleCategory::Reactor:
+        r.inputs[resKey(Resource::Powercells)] += 3.0f * multiplier;
+        r.inputs[resKey(Resource::Isotopes)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::RareMetals)] += 1.0f * multiplier;
         break;
-      case AttributeType::Range:
-      case AttributeType::Accuracy:
-        addInput(Resource::Electronics, attrRes * 0.6f);
-        addInput(Resource::RareMetals, attrRes * 0.4f);
+      case ModuleCategory::Command:
+        r.inputs[resKey(Resource::Electronics)] += 4.0f * multiplier;
+        r.inputs[resKey(Resource::RareMetals)] += 1.0f * multiplier;
         break;
-      case AttributeType::Capacity:
-        addInput(Resource::Plastics, attrRes * 0.6f);
-        addInput(Resource::Metals, attrRes * 0.4f);
-        break;
-      case AttributeType::Output:
-      case AttributeType::Regen:
-        addInput(Resource::Powercells, attrRes * 0.7f);
-        addInput(Resource::Electronics, attrRes * 0.3f);
-        break;
-      case AttributeType::Maintenance:
-        addInput(Resource::Electronics, attrRes * 0.6f);
-        addInput(Resource::Isotopes, attrRes * 0.4f);
-        break;
-      case AttributeType::Volume:
-        addInput(Resource::Metals, attrRes * 0.5f);
-        addInput(Resource::Plastics, attrRes * 0.5f);
-        break;
-      default:
+      case ModuleCategory::Battery:
+        r.inputs[resKey(Resource::Powercells)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::Metals)] += 1.0f * multiplier;
         break;
       }
-    }
 
-    // Total Star Modifier: +1 of each used resource per 4 stars
-    float starBonus = static_cast<float>(totalStars / 4);
-    for (Resource res : usedResources) {
-      r.inputs[resKey(res)] += starBonus;
+      float sizeScale =
+          (tier == Tier::T1) ? 1.0f : (tier == Tier::T2 ? 3.0f : 8.0f);
+      for (auto &pair : r.inputs) {
+        pair.second *= sizeScale;
+      }
+      r.laborRequired = 0.5f * sizeScale;
+      r.baseOutputRate = 0.1f;
+      recipes[pk] = r;
+      productionPriority.push_back(pk);
     }
-
-    // Size Tier Scaling
-    float sizeScale =
-        (tier == Tier::T1) ? 1.0f : (tier == Tier::T2 ? 3.0f : 8.0f);
-    for (auto &pair : r.inputs) {
-      pair.second *= sizeScale;
-    }
-
-    r.laborRequired = 0.5f * sizeScale;
-    r.baseOutputRate = 0.1f;
-    recipes[pk] = r;
-    productionPriority.push_back(pk);
   }
 
   // Prepend resources to priority so they build first
@@ -213,7 +182,7 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
   for (auto entity : view) {
     auto &eco = view.get<PlanetEconomy>(entity);
     for (auto &pair : eco.factionData) {
-      processProduction(pair.first, pair.second, stepTime);
+      processProduction(pair.first, pair.second, eco, stepTime);
       reEvaluateFactionDNA(pair.first, pair.second, stepTime);
       reEvaluateTraderLogic(registry, pair.first, pair.second, entity,
                             stepTime);
@@ -234,7 +203,7 @@ void EconomyManager::update(entt::registry &registry, float deltaTime) {
 }
 
 void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
-                                       float deltaTime) {
+                                       PlanetEconomy &eco, float deltaTime) {
   tryExpandInfrastructure(factionId, fEco, deltaTime);
 
   float availableLabor = fEco.populationCount * 0.1f;
@@ -412,21 +381,6 @@ float EconomyManager::calculatePrice(ProductKey pk, float currentStock,
     base = 10.0f * tierMultiplier;
   } else if (pk.type == ProductType::Module) {
     base = 500.0f * tierMultiplier;
-
-    // Production Penalty (Stars)
-    // Multi-star modules are exponentially harder to produce.
-    const auto &reg = ModuleRegistry::instance().modules;
-    if (pk.id < reg.size()) {
-      const auto &m = reg[pk.id];
-      float starPenalty = 1.0f;
-      for (const auto &attr : m.attributes) {
-        if (attr.tier == Tier::T2)
-          starPenalty *= 1.8f;
-        else if (attr.tier == Tier::T3)
-          starPenalty *= 3.5f;
-      }
-      base *= starPenalty;
-    }
   } else if (pk.type == ProductType::Hull) {
     base = 5000.0f * tierMultiplier;
   }
@@ -529,9 +483,7 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
         bid.hull = marketBP.hull;
         bid.hullName = marketBP.hull.className + " (" + marketBP.role + ")";
 
-        for (const auto &mpk : marketBP.modules) {
-          bid.modules.push_back(static_cast<ModuleId>(mpk.id));
-        }
+        bid.modules = marketBP.modules;
 
         bids.push_back(bid);
       }
@@ -552,7 +504,7 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
     return false;
 
   auto &fEco = eco.factionData[bid.factionId];
-  auto key = std::make_pair(bid.tier, bid.role);
+  auto key = std::make_pair(bid.tier, std::string("General"));
 
   if (fEco.fleetPool.count(key) && fEco.fleetPool[key] > 0) {
     if (registry.get<CreditsComponent>(player).amount >= bid.price) {

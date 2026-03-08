@@ -1,5 +1,7 @@
 #pragma once
+#include "game/components/GameTypes.h"
 #include "game/components/ShipModule.h"
+#include <random>
 #include <string>
 #include <vector>
 
@@ -12,12 +14,12 @@ public:
     return inst;
   }
 
-  /// Generate a ModuleDef based on a base type and target tier.
-  /// Variability introduces a chance for attributes to be +/- 1 tier.
-  ModuleDef generate(const std::string &baseName, Tier baseTier,
-                     const std::vector<AttributeType> &requiredAttrs,
+  ModuleDef generate(ModuleCategory category,
+                     const std::vector<ModuleAttribute> &attributes,
                      float baseVolume, float baseMass, float baseMaint,
                      float basePower);
+
+  ModuleDef generateRandomModule(ModuleCategory category, Tier sizeTier);
 
 private:
   ModuleGenerator() = default;

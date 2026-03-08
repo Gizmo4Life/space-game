@@ -8,8 +8,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "game/components/FactionDNA.h"
-#include "game/components/ShipModule.h"
+#include "FactionDNA.h"
+#include "ShipModule.h"
 
 namespace space {
 
@@ -160,12 +160,13 @@ inline HullDef makeBasicHull(const std::string &name,
 // ──────────────────────────────────────────────────────────
 struct ShipBlueprint {
   HullDef hull;
-  std::vector<ProductKey> modules;
+  std::vector<ModuleDef> modules;
   std::string role;
   float performanceScore = 1.0f; // For future genetic/learning sims
   uint32_t lineIndex = 0;
 
-  bool validate(std::string &outError) const {
+  bool validate(const std::map<ProductKey, ModuleDef> &availableModules,
+                std::string &outError) const {
     if (!hull.validate(outError))
       return false;
 
@@ -186,14 +187,18 @@ struct ShipBlueprint {
     float totalVolume = 0.0f;
     float totalPowerDraw = 0.0f;
 
-    auto &reg = ModuleRegistry::instance();
-
     for (size_t i = 0; i < hull.slots.size(); ++i) {
       if (i >= modules.size())
         break;
-      if (modules[i].id == EMPTY_MODULE)
+      if (modules[i].id == 0xFFFF) // EMPTY_MODULE replacement
         continue;
-      const auto &m = reg.getModule(modules[i].id);
+
+      auto it = availableModules.find(modules[i]);
+      if (it == availableModules.end()) {
+        outError = "Module design not found for ProductKey in blueprint.";
+        return false;
+      }
+      const auto &m = it->second;
       totalVolume += m.volumeOccupied;
       totalPowerDraw += m.powerDraw;
 
@@ -216,9 +221,12 @@ struct ShipBlueprint {
 
     // Check internals (those beyond slot count)
     for (size_t i = hull.slots.size(); i < modules.size(); ++i) {
-      if (modules[i].id == EMPTY_MODULE)
+      if (modules[i].id == 0xFFFF)
         continue;
-      const auto &m = reg.getModule(modules[i].id);
+      auto it = availableModules.find(modules[i]);
+      if (it == availableModules.end())
+        continue;
+      const auto &m = it->second;
       totalVolume += m.volumeOccupied;
       totalPowerDraw += m.powerDraw;
     }

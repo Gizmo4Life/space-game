@@ -35,113 +35,168 @@ namespace space {
 
 void ModuleRegistry::init() {
   auto &gen = ModuleGenerator::instance();
-  auto genSet = [&](const std::string &name, Tier t,
-                    std::vector<AttributeType> a, float v, float m, float p) {
-    auto mod = gen.generate(name, t, a, v, m, 1.0f, p);
+  auto genSet = [&](ModuleCategory category, std::vector<ModuleAttribute> a,
+                    float v, float m, float p) {
+    auto mod = gen.generate(category, a, v, m, 1.0f, p);
     modules.push_back(mod);
   };
 
   // --- Engines ---
-  genSet("Standard Light Engine", Tier::T1,
-         {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass,
-          AttributeType::Volume, AttributeType::Size},
+  genSet(ModuleCategory::Engine,
+         {{AttributeType::Thrust, Tier::T1},
+          {AttributeType::Efficiency, Tier::T1},
+          {AttributeType::Mass, Tier::T1},
+          {AttributeType::Volume, Tier::T1},
+          {AttributeType::Size, Tier::T1}},
          5.0f, 1.0f, 0.2f);
-  genSet("Heavy Duty Medium Engine", Tier::T2,
-         {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass,
-          AttributeType::Volume, AttributeType::Size},
+  genSet(ModuleCategory::Engine,
+         {{AttributeType::Thrust, Tier::T2},
+          {AttributeType::Efficiency, Tier::T2},
+          {AttributeType::Mass, Tier::T2},
+          {AttributeType::Volume, Tier::T2},
+          {AttributeType::Size, Tier::T2}},
          15.0f, 3.0f, 0.8f);
-  genSet("Industrial Heavy Engine", Tier::T3,
-         {AttributeType::Thrust, AttributeType::Efficiency, AttributeType::Mass,
-          AttributeType::Volume, AttributeType::Size},
+  genSet(ModuleCategory::Engine,
+         {{AttributeType::Thrust, Tier::T3},
+          {AttributeType::Efficiency, Tier::T3},
+          {AttributeType::Mass, Tier::T3},
+          {AttributeType::Volume, Tier::T3},
+          {AttributeType::Size, Tier::T3}},
          40.0f, 10.0f, 2.5f);
 
   // --- Weapons ---
-  genSet("LC-1 Light Cannon", Tier::T1,
-         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range,
-          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Weapon,
+         {{AttributeType::ROF, Tier::T1},
+          {AttributeType::Range, Tier::T1},
+          {AttributeType::Efficiency, Tier::T1},
+          {AttributeType::Mass, Tier::T1},
+          {AttributeType::Volume, Tier::T1},
+          {AttributeType::Size, Tier::T1}},
          3.0f, 2.0f, 0.1f);
-  genSet("MC-2 Medium Cannon", Tier::T2,
-         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range,
-          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Weapon,
+         {{AttributeType::ROF, Tier::T2},
+          {AttributeType::Range, Tier::T2},
+          {AttributeType::Efficiency, Tier::T2},
+          {AttributeType::Mass, Tier::T2},
+          {AttributeType::Volume, Tier::T2},
+          {AttributeType::Size, Tier::T2}},
          10.0f, 5.0f, 0.4f);
-  genSet("HC-3 Heavy Cannon", Tier::T3,
-         {AttributeType::Caliber, AttributeType::ROF, AttributeType::Range,
-          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Weapon,
+         {{AttributeType::ROF, Tier::T3},
+          {AttributeType::Range, Tier::T3},
+          {AttributeType::Efficiency, Tier::T3},
+          {AttributeType::Mass, Tier::T3},
+          {AttributeType::Volume, Tier::T3},
+          {AttributeType::Size, Tier::T3}},
          30.0f, 15.0f, 1.2f);
 
   // --- Shields ---
-  genSet("S-10 Light Shield", Tier::T1,
-         {AttributeType::Capacity, AttributeType::Regen,
-          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Shield,
+         {{AttributeType::Capacity, Tier::T1},
+          {AttributeType::Regen, Tier::T1},
+          {AttributeType::Efficiency, Tier::T1},
+          {AttributeType::Mass, Tier::T1},
+          {AttributeType::Volume, Tier::T1},
+          {AttributeType::Size, Tier::T1}},
          8.0f, 4.0f, 0.3f);
-  genSet("S-20 Medium Shield", Tier::T2,
-         {AttributeType::Capacity, AttributeType::Regen,
-          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Shield,
+         {{AttributeType::Capacity, Tier::T2},
+          {AttributeType::Regen, Tier::T2},
+          {AttributeType::Efficiency, Tier::T2},
+          {AttributeType::Mass, Tier::T2},
+          {AttributeType::Volume, Tier::T2},
+          {AttributeType::Size, Tier::T2}},
          25.0f, 12.0f, 1.0f);
-  genSet("S-30 Heavy Shield", Tier::T3,
-         {AttributeType::Capacity, AttributeType::Regen,
-          AttributeType::Efficiency, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Shield,
+         {{AttributeType::Capacity, Tier::T3},
+          {AttributeType::Regen, Tier::T3},
+          {AttributeType::Efficiency, Tier::T3},
+          {AttributeType::Mass, Tier::T3},
+          {AttributeType::Volume, Tier::T3},
+          {AttributeType::Size, Tier::T3}},
          70.0f, 35.0f, 3.5f);
 
   // --- Utility ---
-  genSet("C-10 Cargo Pod", Tier::T1,
-         {AttributeType::Volume, AttributeType::Mass, AttributeType::Efficiency,
-          AttributeType::Size},
+  genSet(ModuleCategory::Utility,
+         {{AttributeType::Volume, Tier::T1},
+          {AttributeType::Mass, Tier::T1},
+          {AttributeType::Efficiency, Tier::T1},
+          {AttributeType::Size, Tier::T1}},
          5.0f, 0.5f, 0.01f);
-  genSet("C-20 Cargo Pod", Tier::T2,
-         {AttributeType::Volume, AttributeType::Mass, AttributeType::Efficiency,
-          AttributeType::Size},
+  genSet(ModuleCategory::Utility,
+         {{AttributeType::Volume, Tier::T2},
+          {AttributeType::Mass, Tier::T2},
+          {AttributeType::Efficiency, Tier::T2},
+          {AttributeType::Size, Tier::T2}},
          15.0f, 1.5f, 0.02f);
-  genSet("C-30 Cargo Bay", Tier::T3,
-         {AttributeType::Volume, AttributeType::Mass, AttributeType::Efficiency,
-          AttributeType::Size},
+  genSet(ModuleCategory::Utility,
+         {{AttributeType::Volume, Tier::T3},
+          {AttributeType::Mass, Tier::T3},
+          {AttributeType::Efficiency, Tier::T3},
+          {AttributeType::Size, Tier::T3}},
          50.0f, 5.0f, 0.05f);
 
-  genSet("R-1 Reactor", Tier::T1,
-         {AttributeType::Output, AttributeType::Efficiency, AttributeType::Mass,
-          AttributeType::Volume, AttributeType::Size},
+  // --- Reactors ---
+  genSet(ModuleCategory::Reactor,
+         {{AttributeType::Output, Tier::T1},
+          {AttributeType::Efficiency, Tier::T1},
+          {AttributeType::Mass, Tier::T1},
+          {AttributeType::Volume, Tier::T1},
+          {AttributeType::Size, Tier::T1}},
          10.0f, 2.0f, -1.5f);
-  genSet("R-2 Reactor", Tier::T2,
-         {AttributeType::Output, AttributeType::Efficiency, AttributeType::Mass,
-          AttributeType::Volume, AttributeType::Size},
+  genSet(ModuleCategory::Reactor,
+         {{AttributeType::Output, Tier::T2},
+          {AttributeType::Efficiency, Tier::T2},
+          {AttributeType::Mass, Tier::T2},
+          {AttributeType::Volume, Tier::T2},
+          {AttributeType::Size, Tier::T2}},
          30.0f, 6.0f, -5.0f);
-  genSet("R-3 Heavy Reactor", Tier::T3,
-         {AttributeType::Output, AttributeType::Efficiency, AttributeType::Mass,
-          AttributeType::Volume, AttributeType::Size},
+  genSet(ModuleCategory::Reactor,
+         {{AttributeType::Output, Tier::T3},
+          {AttributeType::Efficiency, Tier::T3},
+          {AttributeType::Mass, Tier::T3},
+          {AttributeType::Volume, Tier::T3},
+          {AttributeType::Size, Tier::T3}},
          100.0f, 20.0f, -15.0f);
 
   // --- Command ---
-  genSet("C-1 Cockpit", Tier::T1,
-         {AttributeType::Command, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Command,
+         {{AttributeType::Command, Tier::T1},
+          {AttributeType::Mass, Tier::T1},
+          {AttributeType::Volume, Tier::T1},
+          {AttributeType::Size, Tier::T1}},
          1.0f, 0.5f, 0.05f);
-  genSet("B-2 Bridge", Tier::T2,
-         {AttributeType::Command, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Command,
+         {{AttributeType::Command, Tier::T2},
+          {AttributeType::Mass, Tier::T2},
+          {AttributeType::Volume, Tier::T2},
+          {AttributeType::Size, Tier::T2}},
          5.0f, 2.0f, 0.2f);
-  genSet("AI-3 Core", Tier::T3,
-         {AttributeType::Command, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Command,
+         {{AttributeType::Command, Tier::T3},
+          {AttributeType::Mass, Tier::T3},
+          {AttributeType::Volume, Tier::T3},
+          {AttributeType::Size, Tier::T3}},
          0.0f, 1.0f, 0.5f);
 
   // --- Batteries ---
-  genSet("B-10 Battery", Tier::T1,
-         {AttributeType::Battery, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Battery,
+         {{AttributeType::Battery, Tier::T1},
+          {AttributeType::Mass, Tier::T1},
+          {AttributeType::Volume, Tier::T1},
+          {AttributeType::Size, Tier::T1}},
          3.0f, 0.3f, 0.0f);
-  genSet("B-50 Battery Pack", Tier::T2,
-         {AttributeType::Battery, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Battery,
+         {{AttributeType::Battery, Tier::T2},
+          {AttributeType::Mass, Tier::T2},
+          {AttributeType::Volume, Tier::T2},
+          {AttributeType::Size, Tier::T2}},
          8.0f, 1.0f, 0.0f);
-  genSet("B-100 Battery Array", Tier::T3,
-         {AttributeType::Battery, AttributeType::Mass, AttributeType::Volume,
-          AttributeType::Size},
+  genSet(ModuleCategory::Battery,
+         {{AttributeType::Battery, Tier::T3},
+          {AttributeType::Mass, Tier::T3},
+          {AttributeType::Volume, Tier::T3},
+          {AttributeType::Size, Tier::T3}},
          20.0f, 3.0f, 0.0f);
 }
 
@@ -486,26 +541,25 @@ ShipOutfitHash ShipOutfitter::calculateOutfitHash(entt::registry &registry,
     combine(static_cast<uint64_t>(h.sizeTier));
   }
 
-  if (registry.all_of<InstalledEngines>(entity)) {
-    for (auto id : registry.get<InstalledEngines>(entity).ids)
-      combine(id);
-  }
-  if (registry.all_of<InstalledWeapons>(entity)) {
-    for (auto id : registry.get<InstalledWeapons>(entity).ids)
-      combine(id);
-  }
-  if (registry.all_of<InstalledShields>(entity)) {
-    for (auto id : registry.get<InstalledShields>(entity).ids)
-      combine(id);
-  }
-  if (registry.all_of<InstalledCargo>(entity)) {
-    for (auto id : registry.get<InstalledCargo>(entity).ids)
-      combine(id);
-  }
-  if (registry.all_of<InstalledPower>(entity)) {
-    for (auto id : registry.get<InstalledPower>(entity).ids)
-      combine(id);
-  }
+  auto addMods = [&](const auto &comp) {
+    for (const auto &m : comp.modules) {
+      if (!m.name.empty() && m.name != "Empty") {
+        combine(std::hash<std::string>{}(m.name));
+        combine(static_cast<uint64_t>(m.category));
+      }
+    }
+  };
+
+  if (registry.all_of<InstalledEngines>(entity))
+    addMods(registry.get<InstalledEngines>(entity));
+  if (registry.all_of<InstalledWeapons>(entity))
+    addMods(registry.get<InstalledWeapons>(entity));
+  if (registry.all_of<InstalledShields>(entity))
+    addMods(registry.get<InstalledShields>(entity));
+  if (registry.all_of<InstalledCargo>(entity))
+    addMods(registry.get<InstalledCargo>(entity));
+  if (registry.all_of<InstalledPower>(entity))
+    addMods(registry.get<InstalledPower>(entity));
 
   return hash;
 }
@@ -513,74 +567,74 @@ ShipOutfitHash ShipOutfitter::calculateOutfitHash(entt::registry &registry,
 bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
                                 entt::entity planet, ProductKey moduleKey,
                                 int slotIndex) {
-  auto &reg = ModuleRegistry::instance();
   if (!registry.all_of<Landed>(entity) ||
       registry.get<Landed>(entity).planet != planet)
     return false;
 
   auto &eco = registry.get<PlanetEconomy>(planet);
-  for (auto &pair : eco.factionData) {
-    FactionEconomy &fEco = pair.second;
-    if (fEco.stockpile.count(moduleKey) &&
-        fEco.stockpile.at(moduleKey) >= 1.0f) {
-      if (!registry.all_of<HullDef>(entity))
-        return false;
-      const auto &hull = registry.get<HullDef>(entity);
-      const auto &mDef = reg.getModule(moduleKey.id);
-      Tier mTier = mDef.getAttributeTier(AttributeType::Size);
+  if (moduleKey.id >= eco.shopModules.size())
+    return false;
+  const auto &mDef = eco.shopModules[moduleKey.id];
 
-      if (mDef.hasAttribute(AttributeType::Thrust)) {
-        if (slotIndex < 0 || slotIndex >= (int)hull.slots.size() ||
-            hull.slots[slotIndex].role != SlotRole::Engine ||
-            hull.slots[slotIndex].size < mTier)
-          return false;
-        auto &ie = registry.get_or_emplace<InstalledEngines>(entity);
-        size_t engineIdx = 0;
-        for (int i = 0; i < slotIndex; ++i)
-          if (hull.slots[i].role == SlotRole::Engine)
-            engineIdx++;
-        if (ie.ids.size() <= engineIdx)
-          ie.ids.resize(engineIdx + 1, EMPTY_MODULE);
-        ie.ids[engineIdx] = moduleKey.id;
-      } else if (mDef.hasAttribute(AttributeType::Caliber)) {
-        if (slotIndex < 0 || slotIndex >= (int)hull.slots.size() ||
-            hull.slots[slotIndex].role != SlotRole::Hardpoint ||
-            hull.slots[slotIndex].size < mTier)
-          return false;
-        auto &iw = registry.get_or_emplace<InstalledWeapons>(entity);
-        size_t weaponIdx = 0;
-        for (int i = 0; i < slotIndex; ++i)
-          if (hull.slots[i].role == SlotRole::Hardpoint)
-            weaponIdx++;
-        if (iw.ids.size() <= weaponIdx)
-          iw.ids.resize(weaponIdx + 1, EMPTY_MODULE);
-        iw.ids[weaponIdx] = moduleKey.id;
-      } else if (mDef.hasAttribute(AttributeType::Capacity)) {
-        registry.get_or_emplace<InstalledShields>(entity).ids.push_back(
-            moduleKey.id);
-      } else if (mDef.hasAttribute(AttributeType::Volume)) {
-        registry.get_or_emplace<InstalledCargo>(entity).ids.push_back(
-            moduleKey.id);
-      } else if (mDef.hasAttribute(AttributeType::Output)) {
-        registry.get_or_emplace<InstalledPower>(entity).ids.push_back(
-            moduleKey.id);
-      }
+  if (!registry.all_of<HullDef>(entity))
+    return false;
+  const auto &hull = registry.get<HullDef>(entity);
+  Tier mTier = mDef.getAttributeTier(AttributeType::Size);
 
-      if (registry.all_of<PlayerComponent>(entity)) {
-        auto &credits = registry.get<CreditsComponent>(entity);
-        float price = EconomyManager::instance().calculatePrice(
-            moduleKey, eco.marketStockpile[moduleKey], eco.getTotalPopulation(),
-            false);
-        credits.amount -= (price + 50.0f);
-        fEco.credits += (price + 50.0f);
-      }
+  if (mDef.hasAttribute(AttributeType::Thrust)) {
+    if (slotIndex < 0 || slotIndex >= (int)hull.slots.size() ||
+        hull.slots[slotIndex].role != SlotRole::Engine ||
+        hull.slots[slotIndex].size < mTier)
+      return false;
+    auto &ie = registry.get_or_emplace<InstalledEngines>(entity);
+    size_t engineIdx = 0;
+    for (int i = 0; i < slotIndex; ++i)
+      if (hull.slots[i].role == SlotRole::Engine)
+        engineIdx++;
+    if (ie.modules.size() <= engineIdx)
+      ie.modules.resize(engineIdx + 1, ModuleDef{});
+    ie.modules[engineIdx] = mDef;
+  } else if (mDef.hasAttribute(AttributeType::Caliber)) {
+    if (slotIndex < 0 || slotIndex >= (int)hull.slots.size() ||
+        hull.slots[slotIndex].role != SlotRole::Hardpoint ||
+        hull.slots[slotIndex].size < mTier)
+      return false;
+    auto &iw = registry.get_or_emplace<InstalledWeapons>(entity);
+    size_t weaponIdx = 0;
+    for (int i = 0; i < slotIndex; ++i)
+      if (hull.slots[i].role == SlotRole::Hardpoint)
+        weaponIdx++;
+    if (iw.modules.size() <= weaponIdx)
+      iw.modules.resize(weaponIdx + 1, ModuleDef{});
+    iw.modules[weaponIdx] = mDef;
+  } else if (mDef.hasAttribute(AttributeType::Capacity)) {
+    registry.get_or_emplace<InstalledShields>(entity).modules.push_back(mDef);
+  } else if (mDef.hasAttribute(AttributeType::Volume)) {
+    registry.get_or_emplace<InstalledCargo>(entity).modules.push_back(mDef);
+  } else if (mDef.hasAttribute(AttributeType::Output)) {
+    registry.get_or_emplace<InstalledPower>(entity).modules.push_back(mDef);
+  }
 
-      refreshStats(registry, entity, hull);
-      fEco.stockpile[moduleKey] -= 1.0f;
-      return true;
+  entt::entity payer = entity;
+  if (!registry.all_of<PlayerComponent>(payer)) {
+    for (auto e : registry.view<PlayerComponent>()) {
+      payer = e;
+      break;
     }
   }
-  return false;
+  if (registry.valid(payer) && registry.all_of<CreditsComponent>(payer)) {
+    auto &credits = registry.get<CreditsComponent>(payer);
+    float price = EconomyManager::instance().calculatePrice(
+        moduleKey, 1.0f, eco.getTotalPopulation(), false);
+    credits.amount -= (price + 50.0f);
+    // Add to first faction as proxy
+    if (!eco.factionData.empty()) {
+      eco.factionData.begin()->second.credits += (price + 50.0f);
+    }
+  }
+
+  refreshStats(registry, entity, hull);
+  return true;
 }
 
 float ShipOutfitter::calculateShipValue(entt::registry &registry,
@@ -590,27 +644,26 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
     total += 10000.0f *
              (static_cast<int>(registry.get<HullDef>(entity).sizeTier) + 1);
   }
-  auto addVal = [&](const std::vector<ModuleId> &ids) {
-    for (auto id : ids)
-      if (id != EMPTY_MODULE)
+  auto addVal = [&](const std::vector<ModuleDef> &modules) {
+    for (const auto &m : modules)
+      if (!m.name.empty() && m.name != "Empty")
         total += 5000.0f;
   };
   if (registry.all_of<InstalledEngines>(entity))
-    addVal(registry.get<InstalledEngines>(entity).ids);
+    addVal(registry.get<InstalledEngines>(entity).modules);
   if (registry.all_of<InstalledWeapons>(entity))
-    addVal(registry.get<InstalledWeapons>(entity).ids);
+    addVal(registry.get<InstalledWeapons>(entity).modules);
   if (registry.all_of<InstalledShields>(entity))
-    addVal(registry.get<InstalledShields>(entity).ids);
+    addVal(registry.get<InstalledShields>(entity).modules);
   if (registry.all_of<InstalledCargo>(entity))
-    addVal(registry.get<InstalledCargo>(entity).ids);
+    addVal(registry.get<InstalledCargo>(entity).modules);
   if (registry.all_of<InstalledPower>(entity))
-    addVal(registry.get<InstalledPower>(entity).ids);
+    addVal(registry.get<InstalledPower>(entity).modules);
   return total;
 }
 
 void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
                                  const HullDef &hull) const {
-  auto &reg = ModuleRegistry::instance();
   auto getMult = [](Tier t) {
     if (t == Tier::T1)
       return 1.0f;
@@ -628,10 +681,9 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   stats.restingPowerDraw = 0.0f;
   stats.internalVolumeOccupied = 0.0f;
 
-  auto sumModules = [&](const std::vector<ModuleId> &ids) {
-    for (auto id : ids) {
-      if (id != EMPTY_MODULE) {
-        const auto &m = reg.getModule(id);
+  auto sumModules = [&](const std::vector<ModuleDef> &modules) {
+    for (const auto &m : modules) {
+      if (!m.name.empty() && m.name != "Empty") {
         stats.totalMass += m.mass;
         stats.restingPowerDraw += m.powerDraw;
         stats.internalVolumeOccupied += m.volumeOccupied;
@@ -643,26 +695,23 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
     auto &ie = registry.get<InstalledEngines>(entity);
     ie.totalThrust = 0;
     ie.totalRotSpeed = 0;
-    sumModules(ie.ids);
-    for (auto id : ie.ids) {
-      if (id == EMPTY_MODULE)
+    sumModules(ie.modules);
+    for (const auto &m : ie.modules) {
+      if (m.name.empty() || m.name == "Empty")
         continue;
-      const auto &m = reg.getModule(id);
       if (m.hasAttribute(AttributeType::Thrust))
         ie.totalThrust +=
             getMult(m.getAttributeTier(AttributeType::Thrust)) * 8000.0f;
-      ie.totalRotSpeed +=
-          4000.0f; // Calibrated for snappy steering with ~200-500 mass
+      ie.totalRotSpeed += 4000.0f;
     }
   }
   if (registry.all_of<InstalledWeapons>(entity)) {
     auto &iw = registry.get<InstalledWeapons>(entity);
     iw.damage = 0;
-    sumModules(iw.ids);
-    for (auto id : iw.ids) {
-      if (id == EMPTY_MODULE)
+    sumModules(iw.modules);
+    for (const auto &m : iw.modules) {
+      if (m.name.empty() || m.name == "Empty")
         continue;
-      const auto &m = reg.getModule(id);
       if (m.hasAttribute(AttributeType::Caliber))
         iw.damage +=
             getMult(m.getAttributeTier(AttributeType::Caliber)) * 10.0f;
@@ -672,11 +721,10 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
     auto &is = registry.get<InstalledShields>(entity);
     is.maxShield = 0;
     is.regenRate = 0;
-    sumModules(is.ids);
-    for (auto id : is.ids) {
-      if (id == EMPTY_MODULE)
+    sumModules(is.modules);
+    for (const auto &m : is.modules) {
+      if (m.name.empty() || m.name == "Empty")
         continue;
-      const auto &m = reg.getModule(id);
       if (m.hasAttribute(AttributeType::Capacity))
         is.maxShield +=
             getMult(m.getAttributeTier(AttributeType::Capacity)) * 80.0f;
@@ -691,11 +739,10 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   if (registry.all_of<InstalledCargo>(entity)) {
     auto &ic = registry.get<InstalledCargo>(entity);
     ic.capacity = 0;
-    sumModules(ic.ids);
-    for (auto id : ic.ids) {
-      if (id == EMPTY_MODULE)
+    sumModules(ic.modules);
+    for (const auto &m : ic.modules) {
+      if (m.name.empty() || m.name == "Empty")
         continue;
-      const auto &m = reg.getModule(id);
       if (m.hasAttribute(AttributeType::Volume))
         ic.capacity +=
             getMult(m.getAttributeTier(AttributeType::Volume)) * 50.0f;
@@ -704,11 +751,10 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   if (registry.all_of<InstalledPower>(entity)) {
     auto &ip = registry.get<InstalledPower>(entity);
     ip.output = 0;
-    sumModules(ip.ids);
-    for (auto id : ip.ids) {
-      if (id == EMPTY_MODULE)
+    sumModules(ip.modules);
+    for (const auto &m : ip.modules) {
+      if (m.name.empty() || m.name == "Empty")
         continue;
-      const auto &m = reg.getModule(id);
       if (m.hasAttribute(AttributeType::Output))
         ip.output +=
             getMult(m.getAttributeTier(AttributeType::Output)) * 100.0f;
@@ -720,11 +766,10 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   if (registry.all_of<InstalledBatteries>(entity)) {
     auto &ib = registry.get<InstalledBatteries>(entity);
     ib.capacity = 0;
-    sumModules(ib.ids);
-    for (auto id : ib.ids) {
-      if (id == EMPTY_MODULE)
+    sumModules(ib.modules);
+    for (const auto &m : ib.modules) {
+      if (m.name.empty() || m.name == "Empty")
         continue;
-      const auto &m = reg.getModule(id);
       if (m.hasAttribute(AttributeType::Battery))
         ib.capacity +=
             getMult(m.getAttributeTier(AttributeType::Battery)) * 500.0f;
@@ -734,7 +779,7 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   }
 
   if (registry.all_of<InstalledCommand>(entity)) {
-    sumModules(registry.get<InstalledCommand>(entity).ids);
+    sumModules(registry.get<InstalledCommand>(entity).modules);
   }
 
   registry.emplace_or_replace<ShipStats>(entity, stats);

@@ -28,7 +28,7 @@ struct DetailedHullBid {
   Tier tier;
   std::string role;
   float price;
-  std::vector<ModuleId> modules;
+  std::vector<ModuleDef> modules;
   HullDef hull;
   std::string hullName;
 };
@@ -73,7 +73,7 @@ private:
   EconomyManager() = default;
 
   void processProduction(uint32_t factionId, FactionEconomy &fEco,
-                         float deltaTime);
+                         PlanetEconomy &eco, float deltaTime);
   void tryExpandInfrastructure(uint32_t factionId, FactionEconomy &fEco,
                                float deltaTime);
   void reEvaluateFactionDNA(uint32_t factionId, FactionEconomy &fEco,

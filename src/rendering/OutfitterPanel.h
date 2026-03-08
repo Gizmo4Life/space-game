@@ -17,6 +17,7 @@ public:
 private:
   entt::entity planetEntity_;
   entt::entity playerEntity_;
+  entt::entity targetShip_ = entt::null;
   int selectedOutfitterIndex_ = 0;
   bool outfitterMarketMode_ = false;
 };

@@ -11,6 +11,7 @@
 #include "game/components/Faction.h"
 #include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
+#include "game/components/ModuleGenerator.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/OrbitalComponent.h"
@@ -33,11 +34,19 @@ namespace space {
 
 static std::string generateName() {
   static const std::vector<std::string> prefixes = {
-      "Zeta", "Delta",  "Korg",    "Xylos",  "Veda",
-      "Nyx",  "Aether", "Chronos", "Icarus", "Helios"};
+      "Zeta",   "Delta",    "Korg",    "Xylos",  "Veda",     "Nyx",
+      "Aether", "Chronos",  "Icarus",  "Helios", "Valhalla", "Odin",
+      "Thor",   "Loki",     "Freya",   "Tyr",    "Heimdall", "Frigg",
+      "Baldr",  "Hodr",     "Pollux",  "Janus",  "Castor",   "Romulus",
+      "Remus",  "Tiberius", "Octavius"};
   static const std::vector<std::string> suffixes = {
-      " Prime", "-4",  " Alpha", " Beta", " Major",
-      " Minor", " IV", " IX",    " Void", " Reach"};
+      "-2",       "-3",       "-4",      "-5",        "-6",        "-7",
+      "-8",       "-9",       "-10",     " Alpha",    " Beta",     " Gamma",
+      " Delta",   " Epsilon", " Major",  " Minor",    " II",       " III",
+      " IV",      " V",       " VI",     " VII",      " VIII",     " IX",
+      " X",       " Void",    " Reach",  " Prime",    " Secundus", " Tertius",
+      " Quartus", " Quintus", " Sextus", " Septimus", " Octavus",  " Nonus",
+      " Decimus", " Anteres"};
 
   return prefixes[rand() % prefixes.size()] +
          suffixes[rand() % suffixes.size()];
@@ -330,8 +339,8 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   shapeDef.filter.maskBits = 0;
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 
-  registry.emplace_or_replace<InertialBody>(ship, bodyId, 8000.0f, 150.0f,
-                                            20.0f);
+  registry.emplace_or_replace<InertialBody>(ship, bodyId, 8000.0f, 1.50f,
+                                            40.0f);
 
   Tier startTier = Tier::T2;
   ShipOutfitter::instance().applyBlueprint(registry, ship, 1, startTier);
@@ -439,13 +448,21 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
 
     // Ensure variety in module production across the galaxy
     // Each faction on each planet picks 5 random modules to specialize in
-    auto &modReg = ModuleRegistry::instance();
-    if (!modReg.modules.empty()) {
-      for (int i = 0; i < 5; ++i) {
-        uint32_t mid = rand() % modReg.modules.size();
-        fEco.factories[mKey(mid, Tier::T1)] += 1;
-        if (fEco.populationCount > 15.0f)
-          fEco.factories[mKey(mid, Tier::T2)] += 1;
+    for (int i = 0; i < 5; ++i) {
+      ModuleCategory randCat = static_cast<ModuleCategory>(rand() % 7);
+      ModuleDef newDef =
+          ModuleGenerator::instance().generateRandomModule(randCat, Tier::T1);
+      ProductKey pk{ProductType::Module, (uint32_t)(rand() % 10000), Tier::T1};
+      fEco.factionDesigns[pk] = newDef;
+      fEco.factories[pk] += 1;
+
+      if (fEco.populationCount > 15.0f) {
+        ModuleDef advancedDef =
+            ModuleGenerator::instance().generateRandomModule(randCat, Tier::T2);
+        ProductKey advancedPk{ProductType::Module, (uint32_t)(rand() % 10000),
+                              Tier::T2};
+        fEco.factionDesigns[advancedPk] = advancedDef;
+        fEco.factories[advancedPk] += 1;
       }
     }
 

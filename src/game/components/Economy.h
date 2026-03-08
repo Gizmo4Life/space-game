@@ -1,9 +1,11 @@
 #pragma once
 #include "game/components/FactionDNA.h"
 #include "game/components/GameTypes.h"
+#include "game/components/ShipModule.h"
 #include <map>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 namespace space {
 
@@ -33,6 +35,8 @@ struct FactionEconomy {
   float populationCount = 0.0f; // In thousands
   std::map<ProductKey, float> stockpile;
   std::map<ProductKey, int> factories;
+  std::map<ProductKey, ModuleDef>
+      factionDesigns; // Specific module blueprints invented by this faction
   std::map<std::pair<Tier, std::string>, int>
       fleetPool; // Ready ships by tier and role
   FactionDNA dna;
@@ -45,6 +49,7 @@ struct PlanetEconomy {
   std::map<uint32_t, FactionEconomy> factionData;
   std::map<ProductKey, float> marketStockpile; // Aggregate supply for trade
   std::map<ProductKey, float> currentPrices;
+  std::vector<ModuleDef> shopModules; // Procedurally generated local modules
 
   // Base consumption per 1k population (Global reference)
   std::map<Resource, float> baseConsumption;

@@ -21,8 +21,15 @@ enum class AttributeType {
   Capacity,
   Regen,
   Volume,
-  Output,
-  Maintenance,
+  Output
+};
+
+enum class ModuleCategory {
+  Engine,
+  Weapon,
+  Shield,
+  Utility,
+  Reactor,
   Command,
   Battery
 };
