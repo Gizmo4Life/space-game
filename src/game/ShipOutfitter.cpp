@@ -33,175 +33,6 @@
 
 namespace space {
 
-void ModuleRegistry::init() {
-  auto &gen = ModuleGenerator::instance();
-  auto genSet = [&](ModuleCategory category, std::vector<ModuleAttribute> a,
-                    float v, float m, float p) {
-    auto mod = gen.generate(category, a, v, m, 1.0f, p);
-    modules.push_back(mod);
-  };
-
-  // --- Engines ---
-  genSet(ModuleCategory::Engine,
-         {{AttributeType::Thrust, Tier::T1},
-          {AttributeType::Efficiency, Tier::T1},
-          {AttributeType::Mass, Tier::T1},
-          {AttributeType::Volume, Tier::T1},
-          {AttributeType::Size, Tier::T1}},
-         5.0f, 1.0f, 0.2f);
-  genSet(ModuleCategory::Engine,
-         {{AttributeType::Thrust, Tier::T2},
-          {AttributeType::Efficiency, Tier::T2},
-          {AttributeType::Mass, Tier::T2},
-          {AttributeType::Volume, Tier::T2},
-          {AttributeType::Size, Tier::T2}},
-         15.0f, 3.0f, 0.8f);
-  genSet(ModuleCategory::Engine,
-         {{AttributeType::Thrust, Tier::T3},
-          {AttributeType::Efficiency, Tier::T3},
-          {AttributeType::Mass, Tier::T3},
-          {AttributeType::Volume, Tier::T3},
-          {AttributeType::Size, Tier::T3}},
-         40.0f, 10.0f, 2.5f);
-
-  // --- Weapons ---
-  genSet(ModuleCategory::Weapon,
-         {{AttributeType::ROF, Tier::T1},
-          {AttributeType::Range, Tier::T1},
-          {AttributeType::Efficiency, Tier::T1},
-          {AttributeType::Mass, Tier::T1},
-          {AttributeType::Volume, Tier::T1},
-          {AttributeType::Size, Tier::T1}},
-         3.0f, 2.0f, 0.1f);
-  genSet(ModuleCategory::Weapon,
-         {{AttributeType::ROF, Tier::T2},
-          {AttributeType::Range, Tier::T2},
-          {AttributeType::Efficiency, Tier::T2},
-          {AttributeType::Mass, Tier::T2},
-          {AttributeType::Volume, Tier::T2},
-          {AttributeType::Size, Tier::T2}},
-         10.0f, 5.0f, 0.4f);
-  genSet(ModuleCategory::Weapon,
-         {{AttributeType::ROF, Tier::T3},
-          {AttributeType::Range, Tier::T3},
-          {AttributeType::Efficiency, Tier::T3},
-          {AttributeType::Mass, Tier::T3},
-          {AttributeType::Volume, Tier::T3},
-          {AttributeType::Size, Tier::T3}},
-         30.0f, 15.0f, 1.2f);
-
-  // --- Shields ---
-  genSet(ModuleCategory::Shield,
-         {{AttributeType::Capacity, Tier::T1},
-          {AttributeType::Regen, Tier::T1},
-          {AttributeType::Efficiency, Tier::T1},
-          {AttributeType::Mass, Tier::T1},
-          {AttributeType::Volume, Tier::T1},
-          {AttributeType::Size, Tier::T1}},
-         8.0f, 4.0f, 0.3f);
-  genSet(ModuleCategory::Shield,
-         {{AttributeType::Capacity, Tier::T2},
-          {AttributeType::Regen, Tier::T2},
-          {AttributeType::Efficiency, Tier::T2},
-          {AttributeType::Mass, Tier::T2},
-          {AttributeType::Volume, Tier::T2},
-          {AttributeType::Size, Tier::T2}},
-         25.0f, 12.0f, 1.0f);
-  genSet(ModuleCategory::Shield,
-         {{AttributeType::Capacity, Tier::T3},
-          {AttributeType::Regen, Tier::T3},
-          {AttributeType::Efficiency, Tier::T3},
-          {AttributeType::Mass, Tier::T3},
-          {AttributeType::Volume, Tier::T3},
-          {AttributeType::Size, Tier::T3}},
-         70.0f, 35.0f, 3.5f);
-
-  // --- Utility ---
-  genSet(ModuleCategory::Utility,
-         {{AttributeType::Volume, Tier::T1},
-          {AttributeType::Mass, Tier::T1},
-          {AttributeType::Efficiency, Tier::T1},
-          {AttributeType::Size, Tier::T1}},
-         5.0f, 0.5f, 0.01f);
-  genSet(ModuleCategory::Utility,
-         {{AttributeType::Volume, Tier::T2},
-          {AttributeType::Mass, Tier::T2},
-          {AttributeType::Efficiency, Tier::T2},
-          {AttributeType::Size, Tier::T2}},
-         15.0f, 1.5f, 0.02f);
-  genSet(ModuleCategory::Utility,
-         {{AttributeType::Volume, Tier::T3},
-          {AttributeType::Mass, Tier::T3},
-          {AttributeType::Efficiency, Tier::T3},
-          {AttributeType::Size, Tier::T3}},
-         50.0f, 5.0f, 0.05f);
-
-  // --- Reactors ---
-  genSet(ModuleCategory::Reactor,
-         {{AttributeType::Output, Tier::T1},
-          {AttributeType::Efficiency, Tier::T1},
-          {AttributeType::Mass, Tier::T1},
-          {AttributeType::Volume, Tier::T1},
-          {AttributeType::Size, Tier::T1}},
-         10.0f, 2.0f, -1.5f);
-  genSet(ModuleCategory::Reactor,
-         {{AttributeType::Output, Tier::T2},
-          {AttributeType::Efficiency, Tier::T2},
-          {AttributeType::Mass, Tier::T2},
-          {AttributeType::Volume, Tier::T2},
-          {AttributeType::Size, Tier::T2}},
-         30.0f, 6.0f, -5.0f);
-  genSet(ModuleCategory::Reactor,
-         {{AttributeType::Output, Tier::T3},
-          {AttributeType::Efficiency, Tier::T3},
-          {AttributeType::Mass, Tier::T3},
-          {AttributeType::Volume, Tier::T3},
-          {AttributeType::Size, Tier::T3}},
-         100.0f, 20.0f, -15.0f);
-
-  // --- Command ---
-  genSet(ModuleCategory::Command,
-         {{AttributeType::Command, Tier::T1},
-          {AttributeType::Mass, Tier::T1},
-          {AttributeType::Volume, Tier::T1},
-          {AttributeType::Size, Tier::T1}},
-         1.0f, 0.5f, 0.05f);
-  genSet(ModuleCategory::Command,
-         {{AttributeType::Command, Tier::T2},
-          {AttributeType::Mass, Tier::T2},
-          {AttributeType::Volume, Tier::T2},
-          {AttributeType::Size, Tier::T2}},
-         5.0f, 2.0f, 0.2f);
-  genSet(ModuleCategory::Command,
-         {{AttributeType::Command, Tier::T3},
-          {AttributeType::Mass, Tier::T3},
-          {AttributeType::Volume, Tier::T3},
-          {AttributeType::Size, Tier::T3}},
-         0.0f, 1.0f, 0.5f);
-
-  // --- Batteries ---
-  genSet(ModuleCategory::Battery,
-         {{AttributeType::Battery, Tier::T1},
-          {AttributeType::Mass, Tier::T1},
-          {AttributeType::Volume, Tier::T1},
-          {AttributeType::Size, Tier::T1}},
-         3.0f, 0.3f, 0.0f);
-  genSet(ModuleCategory::Battery,
-         {{AttributeType::Battery, Tier::T2},
-          {AttributeType::Mass, Tier::T2},
-          {AttributeType::Volume, Tier::T2},
-          {AttributeType::Size, Tier::T2}},
-         8.0f, 1.0f, 0.0f);
-  genSet(ModuleCategory::Battery,
-         {{AttributeType::Battery, Tier::T3},
-          {AttributeType::Mass, Tier::T3},
-          {AttributeType::Volume, Tier::T3},
-          {AttributeType::Size, Tier::T3}},
-         20.0f, 3.0f, 0.0f);
-}
-
-void ShipOutfitter::init() { ModuleRegistry::instance().init(); }
-
 const HullDef &ShipOutfitter::getHull(uint32_t factionId, Tier sizeTier,
                                       const std::string &role,
                                       uint32_t lineIndex) const {
@@ -218,11 +49,10 @@ const HullDef &ShipOutfitter::getHull(uint32_t factionId, Tier sizeTier,
   return proceduralHulls_[key];
 }
 
-ShipBlueprint ShipOutfitter::generateBlueprint(uint32_t factionId,
-                                               Tier sizeTier,
-                                               const std::string &role,
-                                               uint32_t lineIndex,
-                                               bool isElite) const {
+ShipBlueprint ShipOutfitter::generateBlueprint(
+    uint32_t factionId, Tier sizeTier, const std::string &role,
+    uint32_t lineIndex, bool isElite,
+    const std::map<ProductKey, ModuleDef> * /*availableModules*/) const {
   auto span = Telemetry::instance().tracer()->StartSpan(
       "ShipOutfitter::generateBlueprint");
   span->SetAttribute("vessel.faction", factionId);
@@ -241,199 +71,111 @@ ShipBlueprint ShipOutfitter::generateBlueprint(uint32_t factionId,
     return bp;
   }
 
-  auto &reg = ModuleRegistry::instance();
+  auto &gen = ModuleGenerator::instance();
 
-  auto findBestModule = [&](AttributeType attr, Tier maxTier,
-                            bool mandatory) -> ProductKey {
-    uint32_t bestIdx = 0;
-    Tier bestTier = Tier::T1;
-    bool found = false;
-
-    Tier searchTier = maxTier;
-    if (!isElite) {
-      if (searchTier == Tier::T3)
-        searchTier = Tier::T2;
-      else if (searchTier == Tier::T2)
-        searchTier = Tier::T1;
-    }
-
-    // Attempt to find best module at searchTier or lower
-    while (static_cast<int>(searchTier) >= 1) {
-      for (size_t i = 0; i < reg.modules.size(); ++i) {
-        if (!reg.modules[i].hasAttribute(attr))
-          continue;
-        Tier mTier = reg.modules[i].getAttributeTier(AttributeType::Size);
-        if (mTier == searchTier) {
-          bestIdx = static_cast<uint32_t>(i);
-          bestTier = searchTier; // Use slot tier, not randomized attribute
-          found = true;
-          break;
-        }
-      }
-      if (found)
-        break;
-      searchTier = static_cast<Tier>(static_cast<int>(searchTier) - 1);
-    }
-
-    if (!found && mandatory) {
-      // Hard fallback to first module that has the attribute AND fits the slot
-      for (size_t i = 0; i < reg.modules.size(); ++i) {
-        if (!reg.modules[i].hasAttribute(attr))
-          continue;
-        Tier mTier = reg.modules[i].getAttributeTier(AttributeType::Size);
-        if (static_cast<int>(mTier) <= static_cast<int>(maxTier)) {
-          return {ProductType::Module, static_cast<uint16_t>(i), maxTier};
-        }
-      }
-      // Last resort: pick any module with attribute (use maxTier for
-      // ProductKey)
-      for (size_t i = 0; i < reg.modules.size(); ++i) {
-        if (reg.modules[i].hasAttribute(attr)) {
-          return {ProductType::Module, static_cast<uint16_t>(i), maxTier};
-        }
-      }
-    }
-
-    return {ProductType::Module,
-            static_cast<uint16_t>(found ? bestIdx : EMPTY_MODULE), bestTier};
+  // Apply tier reduction for non-elite ships
+  auto effectiveTier = [&](Tier t) -> Tier {
+    if (isElite)
+      return t;
+    return static_cast<Tier>(std::max(1, static_cast<int>(t) - 1));
   };
+
+  // Generates a ModuleDef for the requested attribute + tier
+  auto makeModule = [&](ModuleCategory cat, AttributeType attr,
+                        Tier slotSize) -> ModuleDef {
+    Tier t = effectiveTier(slotSize);
+    return gen.generate(cat,
+                        {{attr, t},
+                         {AttributeType::Size, t},
+                         {AttributeType::Mass, t},
+                         {AttributeType::Volume, t}},
+                        0.0f, 0.0f, 1.0f, 0.0f);
+  };
+
+  ModuleDef emptyMod; // default-constructed empty module
 
   // 1. Fill slots
   for (const auto &slot : bp.hull.slots) {
     if (slot.role == SlotRole::Engine) {
       bp.modules.push_back(
-          findBestModule(AttributeType::Thrust, slot.size, true));
+          makeModule(ModuleCategory::Engine, AttributeType::Thrust, slot.size));
     } else if (slot.role == SlotRole::Command) {
-      bp.modules.push_back(
-          findBestModule(AttributeType::Command, slot.size, true));
+      bp.modules.push_back(makeModule(ModuleCategory::Command,
+                                      AttributeType::Command, slot.size));
     } else if (slot.role == SlotRole::Hardpoint) {
       if (fData->dna.aggression > 0.3f || role == "Combat") {
         bp.modules.push_back(
-            findBestModule(AttributeType::Caliber, slot.size, false));
+            makeModule(ModuleCategory::Weapon, AttributeType::ROF, slot.size));
       } else {
-        bp.modules.push_back({ProductType::Module, EMPTY_MODULE, Tier::T1});
+        bp.modules.push_back(emptyMod);
       }
     }
   }
 
   // 2. Add Internals
+  // Reactor (mandatory)
   bp.modules.push_back(
-      findBestModule(AttributeType::Output, sizeTier, true)); // Reactor
+      makeModule(ModuleCategory::Reactor, AttributeType::Output, sizeTier));
+  // Shield (optional)
   bp.modules.push_back(
-      findBestModule(AttributeType::Capacity, sizeTier, false)); // Shield
-
+      makeModule(ModuleCategory::Shield, AttributeType::Capacity, sizeTier));
+  // Cargo (if commercial)
   if (role == "Cargo" || role == "Transport" ||
       fData->dna.commercialism > 0.6f) {
     bp.modules.push_back(
-        findBestModule(AttributeType::Volume, sizeTier, false));
+        makeModule(ModuleCategory::Utility, AttributeType::Volume, sizeTier));
   }
+  // Battery
+  bp.modules.push_back(
+      makeModule(ModuleCategory::Battery, AttributeType::Battery, sizeTier));
 
-  bp.modules.push_back(findBestModule(AttributeType::Battery, sizeTier, false));
-
-  // 3. Balancing Pass (iterative until constraints met)
+  // 3. Simple volume/power balancing pass
   auto recomputeTotals = [&](float &totalVol, float &totalPower) {
     totalVol = 0.0f;
     totalPower = 0.0f;
-    for (const auto &pk : bp.modules) {
-      if (pk.id == EMPTY_MODULE)
-        continue;
-      const auto &m = reg.getModule(pk.id);
-      totalVol += m.volumeOccupied;
-      totalPower += m.powerDraw;
+    for (const auto &m : bp.modules) {
+      if (!m.name.empty() && m.name != "Empty") {
+        totalVol += m.volumeOccupied;
+        totalPower += m.powerDraw;
+      }
     }
   };
 
-  auto balance = [&]() {
-    constexpr int MAX_BALANCE_ITERS = 5;
-    for (int iter = 0; iter < MAX_BALANCE_ITERS; ++iter) {
-      float totalVol = 0.0f, totalPower = 0.0f;
-      recomputeTotals(totalVol, totalPower);
+  constexpr int MAX_BALANCE_ITERS = 5;
+  for (int iter = 0; iter < MAX_BALANCE_ITERS; ++iter) {
+    float totalVol = 0.0f, totalPower = 0.0f;
+    recomputeTotals(totalVol, totalPower);
+    bool changed = false;
 
-      bool changed = false;
-
-      // Volume Balance: prune optional internals (back→front past slot modules)
-      while (totalVol > bp.hull.internalVolume &&
-             bp.modules.size() > bp.hull.slots.size() + 1) {
-        auto &back = bp.modules.back();
-        if (back.id != EMPTY_MODULE) {
-          totalVol -= reg.getModule(back.id).volumeOccupied;
-          totalPower -= reg.getModule(back.id).powerDraw;
-        }
-        bp.modules.pop_back();
-        changed = true;
+    // Prune optional internals if over volume
+    while (totalVol > bp.hull.internalVolume &&
+           bp.modules.size() > bp.hull.slots.size() + 1) {
+      const auto &back = bp.modules.back();
+      if (!back.name.empty() && back.name != "Empty") {
+        totalVol -= back.volumeOccupied;
+        totalPower -= back.powerDraw;
       }
-
-      // Down-tier oversized mandatory internals if still over volume
-      if (totalVol > bp.hull.internalVolume) {
-        size_t reactorIdx = bp.hull.slots.size();
-        if (reactorIdx < bp.modules.size() &&
-            bp.modules[reactorIdx].id != EMPTY_MODULE) {
-          Tier cur = bp.modules[reactorIdx].tier;
-          if (static_cast<int>(cur) > 1) {
-            Tier lower = static_cast<Tier>(static_cast<int>(cur) - 1);
-            bp.modules[reactorIdx] =
-                findBestModule(AttributeType::Output, lower, true);
-            changed = true;
-          }
-        }
-      }
-
-      recomputeTotals(totalVol, totalPower);
-
-      // Power Balance: If draw > 0, try upgrading reactor
-      if (totalPower > 0.0f) {
-        size_t reactorIdx = bp.hull.slots.size();
-        if (reactorIdx < bp.modules.size()) {
-          auto upgraded = findBestModule(AttributeType::Output, Tier::T3, true);
-          if (upgraded.id != bp.modules[reactorIdx].id) {
-            bp.modules[reactorIdx] = upgraded;
-            changed = true;
-          }
-        }
-      }
-
-      recomputeTotals(totalVol, totalPower);
-
-      // If still power-starved after T3 reactor, add extra reactors
-      // (as many as needed, as long as volume allows)
-      while (totalPower > 0.0f) {
-        auto extraReactor =
-            findBestModule(AttributeType::Output, Tier::T3, true);
-        if (extraReactor.id != EMPTY_MODULE) {
-          float reactorVol = reg.getModule(extraReactor.id).volumeOccupied;
-          recomputeTotals(totalVol, totalPower);
-          if (totalVol + reactorVol <= bp.hull.internalVolume) {
-            bp.modules.push_back(extraReactor);
-            totalPower += reg.getModule(extraReactor.id).powerDraw;
-            changed = true;
-          } else {
-            break; // No more volume for reactors
-          }
-        } else {
-          break;
-        }
-      }
-      recomputeTotals(totalVol, totalPower);
-
-      // Last resort: if still power-starved, empty optional hardpoints
-      if (totalPower > 0.0f) {
-        for (int si = static_cast<int>(bp.hull.slots.size()) - 1;
-             si >= 0 && totalPower > 0.0f; --si) {
-          if (bp.hull.slots[si].role == SlotRole::Hardpoint &&
-              bp.modules[si].id != EMPTY_MODULE) {
-            totalPower -= reg.getModule(bp.modules[si].id).powerDraw;
-            bp.modules[si] = {ProductType::Module, EMPTY_MODULE, Tier::T1};
-            changed = true;
-          }
-        }
-      }
-
-      if (!changed)
-        break;
+      bp.modules.pop_back();
+      changed = true;
     }
-  };
 
-  balance();
+    // If power-starved, empty optional hardpoints
+    recomputeTotals(totalVol, totalPower);
+    if (totalPower > 0.0f) {
+      for (int si = static_cast<int>(bp.hull.slots.size()) - 1;
+           si >= 0 && totalPower > 0.0f; --si) {
+        if (bp.hull.slots[si].role == SlotRole::Hardpoint &&
+            !bp.modules[si].name.empty() && bp.modules[si].name != "Empty") {
+          totalPower -= bp.modules[si].powerDraw;
+          bp.modules[si] = emptyMod;
+          changed = true;
+        }
+      }
+    }
+
+    if (!changed)
+      break;
+  }
 
   span->End();
   return bp;
@@ -471,38 +213,39 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   InstalledCommand icmd;
   InstalledBatteries ib;
 
-  // 1. Engines
+  auto isEmpty = [](const ModuleDef &m) {
+    return m.name.empty() || m.name == "Empty";
+  };
+
   // 1. Map slots to their respective components
   for (size_t i = 0; i < bp.hull.slots.size() && i < bp.modules.size(); ++i) {
     const auto &slot = bp.hull.slots[i];
-    ModuleId mId = bp.modules[i].id;
-
-    if (slot.role == SlotRole::Engine) {
-      ie.ids.push_back(mId);
-    } else if (slot.role == SlotRole::Hardpoint) {
-      iw.ids.push_back(mId);
-    } else if (slot.role == SlotRole::Command) {
-      icmd.ids.push_back(mId);
-    }
-  }
-  idx = bp.hull.slots.size();
-
-  // 3. Internals
-  while (idx < bp.modules.size()) {
-    ModuleId mId = bp.modules[idx++].id;
-    if (mId == EMPTY_MODULE)
+    const auto &mod = bp.modules[i];
+    if (isEmpty(mod))
       continue;
 
-    const auto &m = ModuleRegistry::instance().getModule(mId);
-    if (m.hasAttribute(AttributeType::Capacity))
-      is.ids.push_back(mId);
-    else if (m.hasAttribute(AttributeType::Volume))
-      ic.ids.push_back(mId);
-    else if (m.hasAttribute(AttributeType::Output))
-      ip.ids.push_back(mId);
-    else if (m.hasAttribute(AttributeType::Battery)) {
-      ib.ids.push_back(mId);
+    if (slot.role == SlotRole::Engine) {
+      ie.modules.push_back(mod);
+    } else if (slot.role == SlotRole::Hardpoint) {
+      iw.modules.push_back(mod);
+    } else if (slot.role == SlotRole::Command) {
+      icmd.modules.push_back(mod);
     }
+  }
+
+  // 2. Internals (beyond slot count)
+  for (size_t idx = bp.hull.slots.size(); idx < bp.modules.size(); ++idx) {
+    const auto &m = bp.modules[idx];
+    if (isEmpty(m))
+      continue;
+    if (m.hasAttribute(AttributeType::Capacity))
+      is.modules.push_back(m);
+    else if (m.hasAttribute(AttributeType::Volume))
+      ic.modules.push_back(m);
+    else if (m.hasAttribute(AttributeType::Output))
+      ip.modules.push_back(m);
+    else if (m.hasAttribute(AttributeType::Battery))
+      ib.modules.push_back(m);
   }
 
   registry.emplace_or_replace<InstalledEngines>(entity, ie);
@@ -545,7 +288,6 @@ ShipOutfitHash ShipOutfitter::calculateOutfitHash(entt::registry &registry,
     for (const auto &m : comp.modules) {
       if (!m.name.empty() && m.name != "Empty") {
         combine(std::hash<std::string>{}(m.name));
-        combine(static_cast<uint64_t>(m.category));
       }
     }
   };

@@ -34,7 +34,6 @@ int main() {
 
   // --- Core Systems ---
   FactionManager::instance().init();
-  ShipOutfitter::instance().init();
   MainRenderer renderer(1200, 800, "Escape Velocity - Modularized");
   PhysicsEngine physics;
   entt::registry registry;

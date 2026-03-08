@@ -165,18 +165,12 @@ struct ShipBlueprint {
   float performanceScore = 1.0f; // For future genetic/learning sims
   uint32_t lineIndex = 0;
 
-  bool validate(const std::map<ProductKey, ModuleDef> &availableModules,
-                std::string &outError) const {
+  bool validate(std::string &outError) const {
     if (!hull.validate(outError))
       return false;
 
     // 1. Check module count matches slot count (engines + hardpoints + command)
-    size_t requiredModules = 0;
-    for (const auto &s : hull.slots) {
-      requiredModules++;
-    }
-
-    if (modules.size() < requiredModules) {
+    if (modules.size() < hull.slots.size()) {
       outError = "Insufficient modules for hull slots.";
       return false;
     }
@@ -187,23 +181,22 @@ struct ShipBlueprint {
     float totalVolume = 0.0f;
     float totalPowerDraw = 0.0f;
 
+    auto isEmpty = [](const ModuleDef &m) {
+      return m.name.empty() || m.name == "Empty";
+    };
+
     for (size_t i = 0; i < hull.slots.size(); ++i) {
       if (i >= modules.size())
         break;
-      if (modules[i].id == 0xFFFF) // EMPTY_MODULE replacement
+      const auto &m = modules[i];
+      if (isEmpty(m))
         continue;
 
-      auto it = availableModules.find(modules[i]);
-      if (it == availableModules.end()) {
-        outError = "Module design not found for ProductKey in blueprint.";
-        return false;
-      }
-      const auto &m = it->second;
       totalVolume += m.volumeOccupied;
       totalPowerDraw += m.powerDraw;
 
-      // Slot-tier enforcement: module tier must not exceed slot size
-      Tier moduleTier = modules[i].tier;
+      // Slot-tier enforcement: module size tier must not exceed slot size
+      Tier moduleTier = m.getAttributeTier(AttributeType::Size);
       Tier slotSize = hull.slots[i].size;
       if (static_cast<int>(moduleTier) > static_cast<int>(slotSize)) {
         outError = "Module '" + m.name + "' (T" +
@@ -221,12 +214,9 @@ struct ShipBlueprint {
 
     // Check internals (those beyond slot count)
     for (size_t i = hull.slots.size(); i < modules.size(); ++i) {
-      if (modules[i].id == 0xFFFF)
+      const auto &m = modules[i];
+      if (isEmpty(m))
         continue;
-      auto it = availableModules.find(modules[i]);
-      if (it == availableModules.end())
-        continue;
-      const auto &m = it->second;
       totalVolume += m.volumeOccupied;
       totalPowerDraw += m.powerDraw;
     }

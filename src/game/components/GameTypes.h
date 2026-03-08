@@ -21,7 +21,9 @@ enum class AttributeType {
   Capacity,
   Regen,
   Volume,
-  Output
+  Output,
+  Command,
+  Battery
 };
 
 enum class ModuleCategory {

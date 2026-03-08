@@ -69,8 +69,6 @@ std::string getAttributeName(AttributeType type) {
     return "Volume";
   case AttributeType::Output:
     return "Output";
-  case AttributeType::Maintenance:
-    return "Maintenance";
   }
   return "Unknown";
 }

@@ -121,7 +121,7 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
     break;
   case ModuleCategory::Utility:
     attrs.push_back({AttributeType::Volume, rollTier()});
-    attrs.push_back({AttributeType::Maintenance, rollTier()});
+    attrs.push_back({AttributeType::Efficiency, rollTier()});
     break;
   case ModuleCategory::Reactor:
     attrs.push_back({AttributeType::Output, rollTier()});

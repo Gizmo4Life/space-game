@@ -467,12 +467,12 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
         totalPrice += calculatePrice(hullPK, eco.marketStockpile[hullPK],
                                      eco.getTotalPopulation(), false);
 
-        // Module prices
-        for (const auto &mpk : marketBP.modules) {
-          if (mpk.id == 0)
-            continue; // EMPTY_MODULE
-          totalPrice += calculatePrice(mpk, eco.marketStockpile[mpk],
-                                       eco.getTotalPopulation(), false);
+        // Module prices: estimate based on tier
+        for (const auto &m : marketBP.modules) {
+          if (m.name.empty() || m.name == "Empty")
+            continue;
+          Tier t = m.getAttributeTier(AttributeType::Size);
+          totalPrice += 500.0f * static_cast<float>(t);
         }
 
         DetailedHullBid bid;
