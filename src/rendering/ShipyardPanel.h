@@ -14,7 +14,7 @@ public:
 
   void handleEvent(const sf::Event &event, ::entt::registry &registry,
                    b2WorldId worldId) override;
-  void render(sf::RenderWindow &window, ::entt::registry &registry,
+  void render(sf::RenderTarget &target, ::entt::registry &registry,
               const sf::Font *font, sf::FloatRect rect) override;
 
 private:
@@ -25,7 +25,7 @@ private:
   std::set<size_t> expandedModules_;
   float moduleScrollY_ = 0.f;
 
-  void drawShipBlueprint(sf::RenderWindow &w, const HullDef &hull,
+  void drawShipBlueprint(sf::RenderTarget &target, const HullDef &hull,
                          sf::Vector2f pos, float scale,
                          const FactionData &faction);
 };

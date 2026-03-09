@@ -6,7 +6,7 @@ namespace space {
 
 class RenderSystem {
 public:
-  static void update(entt::registry &registry, sf::RenderWindow &window,
+  static void update(entt::registry &registry, sf::RenderTarget &target,
                      const sf::Font *font = nullptr);
 };
 

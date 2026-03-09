@@ -11,7 +11,7 @@ public:
 
   void handleEvent(const sf::Event &event, entt::registry &registry,
                    b2WorldId worldId) override;
-  void render(sf::RenderWindow &window, entt::registry &registry,
+  void render(sf::RenderTarget &target, ::entt::registry &registry,
               const sf::Font *font, sf::FloatRect rect) override;
 
 private:

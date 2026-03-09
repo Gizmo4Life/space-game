@@ -34,7 +34,7 @@ static sf::Vector2f rotateVector(sf::Vector2f vec, float degrees) {
           vec.x * sin(rad) + vec.y * cos(rad)};
 }
 
-static void drawHullComponent(sf::RenderWindow &window, VisualStyle style,
+static void drawHullComponent(sf::RenderTarget &target, VisualStyle style,
                               sf::Vector2f pos, float rotation, sf::Color color,
                               float scale) {
   static sf::ConvexShape triangle(3);
@@ -65,21 +65,21 @@ static void drawHullComponent(sf::RenderWindow &window, VisualStyle style,
     triangle.setFillColor(color);
     triangle.setPosition(pos);
     triangle.setRotation(sf::degrees(rotation));
-    window.draw(triangle);
+    target.draw(triangle);
   } else if (style == VisualStyle::Square) {
     rect.setSize({14 * scale, 14 * scale});
     rect.setOrigin({7 * scale, 7 * scale});
     rect.setFillColor(color);
     rect.setPosition(pos);
     rect.setRotation(sf::degrees(rotation));
-    window.draw(rect);
+    target.draw(rect);
   } else if (style == VisualStyle::Circular) {
     circle.setRadius(7 * scale);
     circle.setOrigin({7 * scale, 7 * scale});
     circle.setFillColor(color);
     circle.setPosition(pos);
     circle.setRotation(sf::degrees(rotation));
-    window.draw(circle);
+    target.draw(circle);
   } else if (style == VisualStyle::Sleek) {
     sleek.setPoint(0, {0, -10 * scale});
     sleek.setPoint(1, {-5 * scale, 3 * scale});
@@ -88,13 +88,13 @@ static void drawHullComponent(sf::RenderWindow &window, VisualStyle style,
     sleek.setFillColor(color);
     sleek.setPosition(pos);
     sleek.setRotation(sf::degrees(rotation));
-    window.draw(sleek);
+    target.draw(sleek);
   } else if (style == VisualStyle::Polygon) {
     // Specialized hull drawing handles this below
   }
 }
 
-static void drawPolygonalHull(sf::RenderWindow &window, const HullDef &hull,
+static void drawPolygonalHull(sf::RenderTarget &target, const HullDef &hull,
                               sf::Vector2f pos, float rotation,
                               sf::Color color) {
   // Compute bounding radius from slot positions to determine hull scale
@@ -160,7 +160,7 @@ static void drawPolygonalHull(sf::RenderWindow &window, const HullDef &hull,
     fan[i + 1].color = color;
   }
   fan[hullPoints.size() + 1] = fan[1]; // close the fan
-  window.draw(fan);
+  target.draw(fan);
 
   // Outline
   sf::VertexArray outline(sf::PrimitiveType::LineStrip, hullPoints.size() + 1);
@@ -174,18 +174,18 @@ static void drawPolygonalHull(sf::RenderWindow &window, const HullDef &hull,
   outline[hullPoints.size()].position =
       pos + rotateVector(hullPoints[0], rotation);
   outline[hullPoints.size()].color = outlineColor;
-  window.draw(outline);
+  target.draw(outline);
 
   // Cockpit detail (centered, near bow)
   sf::CircleShape detail(3.0f);
   detail.setFillColor(sf::Color(100, 200, 255, 180));
   detail.setOrigin({3.0f, 3.0f});
   detail.setPosition(pos + rotateVector({0.0f, bowY * 0.5f}, rotation));
-  window.draw(detail);
+  target.draw(detail);
 }
 
 static void drawHUD(entt::registry &registry, entt::entity player,
-                    sf::RenderWindow &window, const sf::Font *font) {
+                    sf::RenderTarget &target, const sf::Font *font) {
   if (!registry.valid(player) || !font)
     return;
 
@@ -199,7 +199,7 @@ static void drawHUD(entt::registry &registry, entt::entity player,
     frameCount = 0;
   }
 
-  sf::Vector2u windowSize = window.getSize();
+  sf::Vector2u windowSize = target.getSize();
   float margin = 20.0f;
 
   // --- 0. Telemetry Overlay (Top Right) ---
@@ -210,7 +210,7 @@ static void drawHUD(entt::registry &registry, entt::entity player,
     sf::Text t(*font, str, 12);
     t.setFillColor(col);
     t.setPosition({telX, telY});
-    window.draw(t);
+    target.draw(t);
     telY += 16.0f;
   };
 
@@ -252,7 +252,7 @@ static void drawHUD(entt::registry &registry, entt::entity player,
   panel.setFillColor(sf::Color(20, 25, 30, 220));
   panel.setOutlineColor(sf::Color(100, 150, 200, 180));
   panel.setOutlineThickness(2.0f);
-  window.draw(panel);
+  target.draw(panel);
 
   float x = hudPos.x + 15.0f;
   float y = hudPos.y + 12.0f;
@@ -265,7 +265,7 @@ static void drawHUD(entt::registry &registry, entt::entity player,
     sf::Text sharedText(*font, str, size);
     sharedText.setFillColor(color);
     sharedText.setPosition({x, y});
-    window.draw(sharedText);
+    target.draw(sharedText);
     y += lineSpacing;
   };
 
@@ -287,7 +287,7 @@ static void drawHUD(entt::registry &registry, entt::entity player,
       sf::Text lbl(*font, label, 10);
       lbl.setFillColor(sf::Color(200, 200, 200));
       lbl.setPosition({x, y + 2.0f});
-      window.draw(lbl);
+      target.draw(lbl);
 
       float barWidth = 140.0f;
       float barHeight = 8.0f;
@@ -296,19 +296,19 @@ static void drawHUD(entt::registry &registry, entt::entity player,
       sf::RectangleShape bg({barWidth, barHeight});
       bg.setPosition({x + 45.0f, y + 4.0f});
       bg.setFillColor(bgCol);
-      window.draw(bg);
+      target.draw(bg);
 
       sf::RectangleShape bar({barWidth * pct, barHeight});
       bar.setPosition({x + 45.0f, y + 4.0f});
       bar.setFillColor(barCol);
-      window.draw(bar);
+      target.draw(bar);
 
       sf::Text val(
           *font, std::to_string((int)current) + "/" + std::to_string((int)max),
           12);
       val.setFillColor(sf::Color::White);
       val.setPosition({x + 45.0f + barWidth + 8.0f, y});
-      window.draw(val);
+      target.draw(val);
       y += lineSpacing;
     };
 
@@ -371,12 +371,12 @@ static void drawHUD(entt::registry &registry, entt::entity player,
   }
 }
 
-void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
+void RenderSystem::update(entt::registry &registry, sf::RenderTarget &target,
                           const sf::Font *font) {
   auto span =
       Telemetry::instance().tracer()->StartSpan("engine.rendering.update");
   // 0. Setup Views
-  sf::View originalView = window.getView();
+  sf::View originalView = target.getView();
   float zoom = WorldConfig::DEFAULT_ZOOM;
 
   // Find Player position for centering
@@ -404,7 +404,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                     playerPhysPos.y * WorldConfig::SHIP_SCALE});
 
   // 1. Render Static/Orbital Transforms (Stars, Planets) - BACKGROUND LAYER
-  window.setView(bgView);
+  target.setView(bgView);
   {
     auto view = registry.view<TransformComponent, SpriteComponent>(
         entt::exclude<InertialBody>);
@@ -414,7 +414,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
       if (spriteComp.sprite) {
         spriteComp.sprite->setPosition(transform.position);
         spriteComp.sprite->setRotation(sf::degrees(transform.rotation));
-        window.draw(*spriteComp.sprite);
+        target.draw(*spriteComp.sprite);
 
         // Draw planet name label above body
         if (registry.all_of<NameComponent>(entity)) {
@@ -437,7 +437,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                 {planetNameText.getLocalBounds().size.x / 2.0f, 0.0f});
             planetNameText.setPosition(
                 {transform.position.x, transform.position.y + offset});
-            window.draw(planetNameText);
+            target.draw(planetNameText);
           }
         }
       }
@@ -445,7 +445,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
   }
 
   // 2. Render Physics Bodies (Ship, Projectiles) - FOREGROUND LAYER
-  window.setView(fgView);
+  target.setView(fgView);
   {
     // A. Ships
     auto shipView = registry.view<InertialBody>();
@@ -491,7 +491,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                 ring.setFillColor(sf::Color::Transparent);
                 ring.setOutlineThickness(1.0f);
                 ring.setOutlineColor(sf::Color(60, 60, 60));
-                window.draw(ring);
+                target.draw(ring);
               } else {
                 float thick = (hull.visual.nacelleStyle == NacelleStyle::Pods)
                                   ? 2.f
@@ -505,7 +505,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
                 line.setRotation(
                     sf::degrees(std::atan2(diff.y, diff.x) * 180.f / 3.14159f));
                 line.setFillColor(sf::Color(80, 80, 80));
-                window.draw(line);
+                target.draw(line);
               }
             }
           };
@@ -513,9 +513,9 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
 
           // 2. Draw Main Body
           if (hull.visual.bodyStyle == VisualStyle::Polygon) {
-            drawPolygonalHull(window, hull, pixelPos, visualAngle, shipColor);
+            drawPolygonalHull(target, hull, pixelPos, visualAngle, shipColor);
           } else {
-            drawHullComponent(window, hull.visual.bodyStyle, pixelPos,
+            drawHullComponent(target, hull.visual.bodyStyle, pixelPos,
                               visualAngle, shipColor, 1.0f);
           }
 
@@ -524,10 +524,10 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
             sf::Vector2f offset =
                 rotateVector(slot.localPos * 5.0f, visualAngle);
             if (slot.role == SlotRole::Engine) {
-              drawHullComponent(window, slot.style, pixelPos + offset,
+              drawHullComponent(target, slot.style, pixelPos + offset,
                                 visualAngle, shipColor, 0.7f);
             } else if (slot.role == SlotRole::Hardpoint) {
-              drawHullComponent(window, slot.style, pixelPos + offset,
+              drawHullComponent(target, slot.style, pixelPos + offset,
                                 visualAngle, shipColor, 0.5f);
             }
           }
@@ -536,7 +536,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
           if (spriteComp.sprite) {
             spriteComp.sprite->setPosition(pixelPos);
             spriteComp.sprite->setRotation(sf::degrees(angleDegrees));
-            window.draw(*spriteComp.sprite);
+            target.draw(*spriteComp.sprite);
           }
         }
 
@@ -546,7 +546,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
           text.setFillColor(sf::Color::White);
           text.setOrigin({text.getLocalBounds().size.x / 2.0f, 0.0f});
           text.setPosition({pixelPos.x, pixelPos.y + 35.0f});
-          window.draw(text);
+          target.draw(text);
         }
       }
     }
@@ -562,13 +562,13 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         bullet.setOrigin({1.0f, 1.0f});
         bullet.setPosition({bPos.x * WorldConfig::SHIP_SCALE,
                             bPos.y * WorldConfig::SHIP_SCALE});
-        window.draw(bullet);
+        target.draw(bullet);
       }
     }
   }
 
   // 3. Render Offscreen indicators - UI LAYER
-  window.setView(originalView);
+  target.setView(originalView);
   {
     sf::View mainView = originalView;
     sf::FloatRect viewBounds(mainView.getCenter() - mainView.getSize() / 2.f,
@@ -599,7 +599,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
       arrow.setFillColor(color);
       arrow.setOrigin({indicatorSize, indicatorSize});
       arrow.setPosition({x, y});
-      window.draw(arrow);
+      target.draw(arrow);
 
       if (font) {
         // Distance text (e.g. "1.2k" or "340")
@@ -617,13 +617,13 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
         nameText.setFillColor(color);
         nameText.setOrigin({0.0f, 12.0f});
         nameText.setPosition({x + indicatorSize + 3, y - 2});
-        window.draw(nameText);
+        target.draw(nameText);
 
         sf::Text distText(*font, distStr, 10);
         distText.setFillColor(sf::Color(color.r, color.g, color.b, 140));
         distText.setOrigin({0.0f, 0.0f});
         distText.setPosition({x + indicatorSize + 3, y + 2});
-        window.draw(distText);
+        target.draw(distText);
       }
     };
 
@@ -684,7 +684,7 @@ void RenderSystem::update(entt::registry &registry, sf::RenderWindow &window,
 
     // 4. Render Ship HUD
     if (playerEntity != entt::null && font) {
-      drawHUD(registry, playerEntity, window, font);
+      drawHUD(registry, playerEntity, target, font);
     }
 
     span->SetAttribute("engine.rendering.indicator.count", indicatorCount);

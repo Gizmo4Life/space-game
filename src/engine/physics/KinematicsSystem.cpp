@@ -71,6 +71,8 @@ void KinematicsSystem::applyThrust(entt::registry &registry,
       registry.get<ShipStats>(entity).isDerelict)
     return;
 
+  if (!registry.all_of<InertialBody>(entity))
+    return;
   auto &inertial = registry.get<InertialBody>(entity);
   if (b2Body_IsValid(inertial.bodyId)) {
     b2Rot rot = b2Body_GetRotation(inertial.bodyId);
@@ -86,6 +88,8 @@ void KinematicsSystem::applyRotation(entt::registry &registry,
       registry.get<ShipStats>(entity).isDerelict)
     return;
 
+  if (!registry.all_of<InertialBody>(entity))
+    return;
   auto &inertial = registry.get<InertialBody>(entity);
   if (b2Body_IsValid(inertial.bodyId)) {
     b2Body_SetAngularVelocity(inertial.bodyId,

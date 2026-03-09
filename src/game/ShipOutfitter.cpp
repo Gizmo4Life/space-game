@@ -559,7 +559,7 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
         continue;
       if (m.hasAttribute(AttributeType::TurnRate))
         irw.totalTurnRate +=
-            getMult(m.getAttributeTier(AttributeType::TurnRate)) * 20000.0f;
+            getMult(m.getAttributeTier(AttributeType::TurnRate)) * 2000.0f;
     }
   }
 
@@ -573,7 +573,7 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
 
     // Calculate rotation speed from reaction wheels (and a base minimum)
     // divided by mass
-    float baseTurnRate = 50000.0f; // Minimum rotational force
+    float baseTurnRate = 5000.0f; // Minimum rotational force
     float wheelTurnRate = 0.0f;
     if (registry.all_of<InstalledReactionWheels>(entity)) {
       wheelTurnRate =

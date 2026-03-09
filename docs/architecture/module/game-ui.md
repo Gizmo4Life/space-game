@@ -16,7 +16,7 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - UI summarizes available hard points and engine mounts by tier (Small/Medium/Large).
 
 ## 1. Physical Scope
-- **Path:** `/src/rendering/` — `LandingScreen.h/.cpp`, `MarketPanel.h/.cpp`, `ShipyardPanel.h/.cpp`, `OutfitterPanel.h/.cpp`
+- **Path:** `/src/rendering/` — `LandingScreen.h/.cpp`, `MarketPanel.h/.cpp`, `ShipyardPanel.h/.cpp`, `OutfitterPanel.h/.cpp`, `InfoPanel.h/.cpp`, `LandingPanel.h`, `UIUtils.h/.cpp`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
@@ -27,7 +27,8 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `EconomyManager::getShipBids`, `EconomyManager::buyShip`
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `NPCComponent::isPlayerFleet`, `NPCComponent::leaderEntity`
 - [rendering-pause-overlay](/docs/developer/pattern/rendering-pause-overlay.md) (P) — game-loop suspension + full-screen overlay
-- [rendering-spatial-bridge](/docs/developer/pattern/rendering-spatial-bridge.md) (P) — `window.setView(defaultView)` for overlay rendering
+- [rendering-spatial-bridge](/docs/developer/pattern/rendering-spatial-bridge.md) (P) — `target.setView(defaultView)` for overlay rendering
+- [cpp-interface-segregation](/docs/developer/pattern/cpp-interface-segregation.md) (P) — `sf::RenderTarget` abstract parameters avoiding `sf::RenderWindow` concrete coupling.
 - [rendering-schematic-visuals](/docs/developer/pattern/rendering-schematic-visuals.md) (P) — Blueprint outlines moving away from faction color schemes.
 - [rendering-scrollable-subpanel](/docs/developer/pattern/rendering-scrollable-subpanel.md) (P) — `ShipyardPanel` module detail scrolling via `PageUp/PageDown`
 - [ui-component-guard](/docs/developer/pattern/ui-component-guard.md) (P) — Resilient `try_get` access for `CargoComponent` and `CreditsComponent`

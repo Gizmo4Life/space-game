@@ -26,7 +26,7 @@ public:
                    b2WorldId worldId);
 
   /// Render the full overlay onto window. Call every frame while isOpen().
-  void render(sf::RenderWindow &window, entt::registry &registry,
+  void render(sf::RenderTarget &target, entt::registry &registry,
               const sf::Font *font);
 
 private:

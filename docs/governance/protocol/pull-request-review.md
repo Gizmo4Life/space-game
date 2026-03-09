@@ -11,6 +11,7 @@ Verify that a contribution adheres to the [Git Workflow](/docs/developer/workflo
 ## 2. Architectural Verification
 - **Action:** Execute [Architecture Review](architecture-review.md) on all changed files.
 - **Verify:** The PR includes a [Walkthrough](/docs/developer/pattern/doc-walkthrough.md) of the changes made.
+- **Verify:** Large structural changes provably adhere to the [Compiler-Driven Refactoring](/docs/developer/pattern/cpp-compiler-driven-refactoring.md) protocol rather than blind text replacement. Avoid [Concrete Coupling](/docs/developer/pattern/cpp-interface-segregation.md).
 
 
 ## 3. Verification & Compliance

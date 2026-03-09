@@ -85,14 +85,23 @@ std::string getTierStars(Tier tier) {
   return res;
 }
 
-void drawPanel(sf::RenderWindow &w, sf::FloatRect rect, sf::Color bg,
+void drawPanel(sf::RenderTarget &target, sf::FloatRect rect, sf::Color bg,
                sf::Color border) {
-  sf::RectangleShape box({rect.size.x, rect.size.y});
-  box.setPosition({rect.position.x, rect.position.y});
-  box.setFillColor(bg);
-  box.setOutlineColor(border);
-  box.setOutlineThickness(2.f);
-  w.draw(box);
+  sf::RectangleShape bgRect(rect.size);
+  bgRect.setPosition(rect.position);
+  bgRect.setFillColor(bg);
+  bgRect.setOutlineThickness(2.f);
+  bgRect.setOutlineColor(border);
+  target.draw(bgRect);
+}
+
+void drawText(sf::RenderTarget &target, const sf::Font &font,
+              const std::string &str, sf::Vector2f pos, unsigned int size,
+              sf::Color color) {
+  sf::Text t(font, str, size);
+  t.setPosition(pos);
+  t.setFillColor(color);
+  target.draw(t);
 }
 
 } // namespace space

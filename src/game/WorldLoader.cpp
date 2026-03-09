@@ -11,6 +11,8 @@
 #include "game/components/Faction.h"
 #include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
+#include "game/components/InstalledModules.h"
+#include "game/components/Landed.h"
 #include "game/components/ModuleGenerator.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
@@ -310,60 +312,61 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
-  bodyDef.linearDamping = 0.0f;
+  bodyDef.linearDamping = 0.5f;
   bodyDef.angularDamping = 2.0f;
+
+  auto &fm = FactionManager::instance();
+  auto factions = fm.getAllFactions();
+  uint32_t playerFactionId = 0;
+  for (const auto &kv : factions) {
+    if (kv.first != 0 &&
+        kv.first != 1) { // 0 is independent, 1 is player fallback
+      playerFactionId = kv.first;
+      break;
+    }
+  }
+  if (playerFactionId == 0)
+    playerFactionId = fm.getRandomFactionId();
 
   sf::Vector2f spawnPos(900.0f, 900.0f);
   auto view = registry.view<PlanetEconomy, TransformComponent>();
-  std::vector<entt::entity> populatedBodies;
+
+  entt::entity targetBody = entt::null;
+  float maxPop = -1.0f;
   for (auto entity : view) {
-    populatedBodies.push_back(entity);
+    auto &eco = view.get<PlanetEconomy>(entity);
+    if (eco.factionData.count(playerFactionId)) {
+      float pop = eco.factionData.at(playerFactionId).populationCount;
+      if (pop > maxPop) {
+        maxPop = pop;
+        targetBody = entity;
+      }
+    }
   }
 
-  if (!populatedBodies.empty()) {
-    entt::entity targetBody = populatedBodies[rand() % populatedBodies.size()];
+  if (targetBody == entt::null && view.begin() != view.end()) {
+    targetBody = view.front();
+  }
+
+  if (targetBody != entt::null) {
     auto &bodyTrans = registry.get<TransformComponent>(targetBody);
-    float angle = (rand() % 628) * 0.01f;
-    spawnPos = bodyTrans.position +
-               sf::Vector2f(std::cos(angle) * 400.0f, std::sin(angle) * 400.0f);
+    spawnPos = bodyTrans.position;
   }
 
-  bodyDef.position = {spawnPos.x / WorldConfig::WORLD_SCALE,
-                      spawnPos.y / WorldConfig::WORLD_SCALE};
-  bodyDef.userData = (void *)(uintptr_t)ship;
-  b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
-
-  b2Polygon dynamicBox = b2MakeBox(0.6f, 0.4f);
-  b2ShapeDef shapeDef = b2DefaultShapeDef();
-  shapeDef.density = 1.0f;
-  shapeDef.filter.maskBits = 0;
-  b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
-
-  registry.emplace_or_replace<InertialBody>(ship, bodyId, 8000.0f, 1.50f,
-                                            40.0f);
-
-  Tier startTier = Tier::T2;
-  ShipOutfitter::instance().applyBlueprint(registry, ship, 1, startTier);
-  const HullDef &hull = ShipOutfitter::instance().getHull(1, startTier);
-  registry.emplace_or_replace<WeaponComponent>(ship);
-  registry.emplace_or_replace<NameComponent>(ship,
-                                             "Player Ship (" + hull.name + ")");
+  registry.emplace_or_replace<NameComponent>(ship, "Player Commander");
   registry.emplace_or_replace<PlayerComponent>(ship);
   registry.emplace_or_replace<TransformComponent>(ship, spawnPos);
   registry.emplace_or_replace<CreditsComponent>(ship,
                                                 WorldConfig::STARTING_CREDITS);
 
-  Faction f;
-  f.allegiances[1] = 1.0f;
-  registry.emplace_or_replace<Faction>(ship, f);
+  // Make the player dock immediately so they can buy a ship
+  if (targetBody != entt::null) {
+    registry.emplace_or_replace<Landed>(ship, targetBody);
+  }
 
-  SpriteComponent sc;
-  auto texture = std::make_shared<sf::Texture>();
-  sf::Image img({2, 2}, sf::Color::Transparent);
-  (void)texture->loadFromImage(img);
-  sc.texture = texture;
-  sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
-  registry.emplace_or_replace<SpriteComponent>(ship, sc);
+  Faction f;
+  f.allegiances[playerFactionId] = 1.0f;
+  registry.emplace_or_replace<Faction>(ship, f);
 
   return ship;
 }

@@ -43,7 +43,7 @@ void MarketPanel::handleEvent(const sf::Event &event, entt::registry &registry,
   }
 }
 
-void MarketPanel::render(sf::RenderWindow &window, entt::registry &registry,
+void MarketPanel::render(sf::RenderTarget &target, entt::registry &registry,
                          const sf::Font *font, sf::FloatRect rect) {
   auto playerView = registry.view<PlayerComponent>();
   for (auto e : playerView) {
@@ -63,7 +63,7 @@ void MarketPanel::render(sf::RenderWindow &window, entt::registry &registry,
     sf::Text t(*font, s, sz);
     t.setFillColor(c);
     t.setPosition({x, y});
-    window.draw(t);
+    target.draw(t);
     y += sz + 6.f;
   };
 
@@ -109,12 +109,12 @@ void MarketPanel::render(sf::RenderWindow &window, entt::registry &registry,
     sf::Text t1(*font, label, 15);
     t1.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
     t1.setPosition({x, y});
-    window.draw(t1);
+    target.draw(t1);
 
     sf::Text t2(*font, stats, 14);
     t2.setFillColor(sf::Color(180, 180, 180));
     t2.setPosition({x + 200.f, y});
-    window.draw(t2);
+    target.draw(t2);
 
     y += 22.f;
   }

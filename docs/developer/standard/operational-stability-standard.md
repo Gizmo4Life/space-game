@@ -20,6 +20,10 @@ We prioritize a codebase that compiles correctly across all environments and age
 | [cpp-component-aggregation](../pattern/cpp-component-aggregation.md) | A | Critical for keeping UI panels in sync with gameplay logic. |
 | [cpp-header-resilience](../pattern/cpp-header-resilience.md) | D | Standardized protocol to prevent "Operation not permitted" and missing include errors. |
 | [cpp-structural-integrity](../pattern/cpp-structural-integrity.md) | D | Mandatory protocol for scope hygiene, API verification, and structural validation. |
+| [cpp-interface-segregation](../pattern/cpp-interface-segregation.md) | A | Prevents cascading breaks by requiring the most generic interfaces (e.g., Target vs Window). |
+| [cpp-compiler-driven-refactoring](../pattern/cpp-compiler-driven-refactoring.md) | D | Mandatory workflow: modify headers first, then let the compiler find downstream breakages. |
+| [cpp-external-api-facade](../pattern/cpp-external-api-facade.md) | B | Shields business logic from external libraries to limit structural brittleness. |
+| [cpp-type-safe-handles](../pattern/cpp-type-safe-handles.md) | A | Enforces compiler correctness by avoiding primitive identifiers (e.g., using b2WorldId). |
 
 ## 4. Stability Gate
 All changes MUST pass a local build verification before being merged or considered "done" by an agent.
@@ -28,3 +32,4 @@ All changes MUST pass a local build verification before being merged or consider
 - **Lint Verification**: All "Missing Header" or "Unknown Type" errors must be resolved by explicit inclusion, following the [cpp-header-hygiene](../pattern/cpp-header-hygiene.md) pattern.
 - **API Verification**: Singleton and module method signatures MUST be verified against original headers before implementation.
 - **Namespace Resolution**: EnTT and SFML types must use explicit prefixes (`::entt::`, `::sf::`) to prevent collision regressions, as per [cpp-explicit-namespace-resolution](../pattern/cpp-explicit-namespace-resolution.md).
+- **Refactoring Protocol**: Wide-reaching changes MUST follow [cpp-compiler-driven-refactoring](../pattern/cpp-compiler-driven-refactoring.md) to guarantee all instances are updated. Global text replacement is strictly forbidden for structural changes.

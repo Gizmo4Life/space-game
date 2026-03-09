@@ -82,6 +82,7 @@ add_executable(SpaceGameTests
     tests/test_world_loader.cpp
     tests/test_ammo.cpp
     tests/test_economy.cpp
+    tests/test_shipless_player.cpp
 )
 target_include_directories(SpaceGameTests PRIVATE src)
 target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)

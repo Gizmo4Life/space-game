@@ -5,6 +5,8 @@
 #include "ShipyardPanel.h"
 #include "UIUtils.h"
 #include "engine/telemetry/Telemetry.h"
+#include "game/components/NameComponent.h"
+#include <SFML/Graphics/RenderTarget.hpp>
 #include <opentelemetry/trace/provider.h>
 
 namespace space {
@@ -67,21 +69,80 @@ void LandingScreen::handleEvent(const sf::Event &event,
   }
 }
 
-void LandingScreen::render(sf::RenderWindow &window, entt::registry &registry,
+void LandingScreen::render(sf::RenderTarget &target, entt::registry &registry,
                            const sf::Font *font) {
   if (!open_ || !font)
     return;
-
-  sf::Vector2u size = window.getSize();
+  // Draw Panel
+  sf::Vector2u size = target.getSize();
   sf::FloatRect rect({50.f, 50.f}, {size.x - 100.f, size.y - 100.f});
 
-  drawPanel(window, rect, sf::Color(20, 20, 30, 230), sf::Color(70, 70, 100));
-  drawTabs(window, font, rect);
+  drawPanel(target, rect, sf::Color(20, 20, 30, 230), sf::Color(70, 70, 100));
 
-  sf::FloatRect contentRect({rect.position.x, rect.position.y + 40.f},
-                            {rect.size.x, rect.size.y - 40.f});
+  // Read planet name
+  std::string planetName = "Unknown Outpost";
+  if (registry.valid(planetEntity_) &&
+      registry.all_of<NameComponent>(planetEntity_)) {
+    planetName = registry.get<NameComponent>(planetEntity_).name;
+  }
+
+  sf::Text title(*font, planetName, 24);
+  title.setFillColor(sf::Color::White);
+  title.setPosition({rect.position.x + 20.f, rect.position.y + 20.f});
+  target.draw(title);
+
+  // Draw top-right player credits
+  if (registry.valid(playerEntity_) &&
+      registry.all_of<CreditsComponent>(playerEntity_)) {
+    float credits = registry.get<CreditsComponent>(playerEntity_).amount;
+    std::string cx = "$" + fmt(credits, 0);
+    sf::Text cText(*font, cx, 18);
+    cText.setFillColor(sf::Color(100, 255, 100));
+    cText.setPosition(
+        {rect.position.x + rect.size.x - cText.getLocalBounds().size.x - 20.f,
+         rect.position.y + 20.f});
+    target.draw(cText);
+  }
+
+  // Draw Tabs
+  float tabX = rect.position.x + 20.f;
+  float tabY = rect.position.y + 60.f;
+
+  auto drawTab = [&](LandingTab tab, const std::string &label, sf::Color col,
+                     bool active) {
+    sf::Text t(*font, label, 18);
+    t.setFillColor(active ? sf::Color::White : col);
+    t.setPosition({tabX, tabY});
+    if (active) {
+      sf::RectangleShape line({t.getLocalBounds().size.x, 2.f});
+      line.setPosition({tabX, tabY + 22.f});
+      line.setFillColor(sf::Color::White);
+      target.draw(line);
+    }
+    target.draw(t);
+    tabX += t.getLocalBounds().size.x + 30.f;
+  };
+
+  drawTab(LandingTab::Info, "[1] Info", sf::Color(150, 150, 150),
+          currentTab_ == LandingTab::Info);
+  drawTab(LandingTab::Market, "[2] Market", sf::Color(150, 150, 150),
+          currentTab_ == LandingTab::Market);
+  drawTab(LandingTab::Outfitter, "[3] Outfitter", sf::Color(150, 150, 150),
+          currentTab_ == LandingTab::Outfitter);
+  drawTab(LandingTab::Shipyard, "[4] Shipyard", sf::Color(150, 150, 150),
+          currentTab_ == LandingTab::Shipyard);
+
+  // Divider
+  sf::RectangleShape div({rect.size.x - 40.f, 1.f});
+  div.setPosition({rect.position.x + 20.f, tabY + 30.f});
+  div.setFillColor(sf::Color(100, 100, 100));
+  target.draw(div);
+
+  sf::FloatRect contentRect({rect.position.x + 20.f, tabY + 40.f},
+                            {rect.size.x - 40.f, rect.size.y - (tabY + 40.f)});
+
   if (panels_.count(currentTab_)) {
-    panels_[currentTab_]->render(window, registry, font, contentRect);
+    panels_[currentTab_]->render(target, registry, font, contentRect);
   }
 }
 

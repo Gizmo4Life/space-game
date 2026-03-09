@@ -14,13 +14,13 @@ void InfoPanel::handleEvent(const sf::Event &, entt::registry &, b2WorldId) {
   // Info panel doesn't handle keyboard events for now
 }
 
-void InfoPanel::render(sf::RenderWindow &window, entt::registry &registry,
+void InfoPanel::render(sf::RenderTarget &target, entt::registry &registry,
                        const sf::Font *font, sf::FloatRect rect) {
-  drawPlanetInfo(window, registry, font, rect);
-  drawFactionDNA(window, registry, font, rect);
+  drawPlanetInfo(target, registry, font, rect);
+  drawFactionDNA(target, registry, font, rect);
 }
 
-void InfoPanel::drawPlanetInfo(sf::RenderWindow &w, entt::registry &r,
+void InfoPanel::drawPlanetInfo(sf::RenderTarget &target, entt::registry &r,
                                const sf::Font *f, sf::FloatRect rect) {
   if (!f || !r.valid(planetEntity_))
     return;
@@ -33,7 +33,7 @@ void InfoPanel::drawPlanetInfo(sf::RenderWindow &w, entt::registry &r,
     sf::Text t(*f, s, sz);
     t.setFillColor(col);
     t.setPosition({x, y});
-    w.draw(t);
+    target.draw(t);
     y += lineH;
   };
 
@@ -89,7 +89,7 @@ void InfoPanel::drawPlanetInfo(sf::RenderWindow &w, entt::registry &r,
   }
 }
 
-void InfoPanel::drawFactionDNA(sf::RenderWindow &w, entt::registry &r,
+void InfoPanel::drawFactionDNA(sf::RenderTarget &target, entt::registry &r,
                                const sf::Font *f, sf::FloatRect rect) {
   if (!f || !r.valid(planetEntity_) || !r.all_of<Faction>(planetEntity_))
     return;
@@ -106,7 +106,7 @@ void InfoPanel::drawFactionDNA(sf::RenderWindow &w, entt::registry &r,
     sf::Text t(*f, s, sz);
     t.setFillColor(col);
     t.setPosition({x, y});
-    w.draw(t);
+    target.draw(t);
     y += lineH;
   };
 
@@ -117,19 +117,19 @@ void InfoPanel::drawFactionDNA(sf::RenderWindow &w, entt::registry &r,
     sf::Text lbl(*f, label, 13);
     lbl.setFillColor(sf::Color(200, 200, 200));
     lbl.setPosition({x, y});
-    w.draw(lbl);
+    target.draw(lbl);
 
     float barW = 120.f;
     float barH = 6.f;
     sf::RectangleShape bg({barW, barH});
     bg.setPosition({x + 110.f, y + 6.f});
     bg.setFillColor(sf::Color(40, 40, 60));
-    w.draw(bg);
+    target.draw(bg);
 
     sf::RectangleShape bar({barW * val, barH});
     bar.setPosition({x + 110.f, y + 6.f});
     bar.setFillColor(fd.color);
-    w.draw(bar);
+    target.draw(bar);
     y += lineH;
   };
 

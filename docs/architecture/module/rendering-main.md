@@ -33,6 +33,8 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
 - [rendering-offscreen-indicator](/docs/developer/pattern/rendering-offscreen-indicator.md) (P) — Edge arrows with distance for off-camera entities
 - [rendering-pause-overlay](/docs/developer/pattern/rendering-pause-overlay.md) (P) — `LandingScreen` game-loop suspension and full-screen UI
 - [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `RenderSystem::update`
+- [cpp-interface-segregation](/docs/developer/pattern/cpp-interface-segregation.md) (P) — UI panels and rendering pipelines only depend on `sf::RenderTarget`.
+- [cpp-external-api-facade](/docs/developer/pattern/cpp-external-api-facade.md) (P) — Isolates actual SFML window rendering lifecycle inside `MainRenderer`.
 
 ## 5. Telemetry & Observability
 - `engine.rendering.update` — duration of 4-pass pipeline

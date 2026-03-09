@@ -6,6 +6,7 @@
 #include "game/components/HullDef.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/NPCComponent.h"
+#include "game/components/PlayerComponent.h"
 #include "game/components/ShipModule.h"
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
@@ -96,11 +97,20 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
   }
 }
 
-void OutfitterPanel::render(sf::RenderWindow &window,
+void OutfitterPanel::render(sf::RenderTarget &target,
                             ::entt::registry &registry, const sf::Font *font,
                             sf::FloatRect rect) {
   if (!font || !registry.valid(playerEntity_))
     return;
+
+  // Update playerEntity_ in case a Flagship was purchased in the Shipyard
+  auto playerView = registry.view<PlayerComponent>();
+  for (auto e : playerView) {
+    if (playerView.get<PlayerComponent>(e).isFlagship) {
+      playerEntity_ = e;
+      break;
+    }
+  }
 
   if (!registry.valid(targetShip_)) {
     targetShip_ = playerEntity_;
@@ -113,7 +123,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
     sf::Text t(*font, s, sz);
     t.setFillColor(c);
     t.setPosition({x, y});
-    window.draw(t);
+    target.draw(t);
     y += sz + 6.f;
   };
 
@@ -121,55 +131,57 @@ void OutfitterPanel::render(sf::RenderWindow &window,
   CreditsComponent *pCredits =
       registry.try_get<CreditsComponent>(playerEntity_);
   if (pCredits) {
-    // Assuming hdef and fdr are available in this scope,
-    // or need to be fetched from the playerEntity_
-    // For now, I'll assume they are available as per the instruction's context.
-    // If not, this would cause a compilation error.
-    const auto &hdef = registry.get<HullDef>(targetShip_);
-    const auto &fdr = registry.get<CreditsComponent>(playerEntity_);
+    if (registry.all_of<HullDef>(targetShip_)) {
+      const auto &hdef = registry.get<HullDef>(targetShip_);
 
-    dtext(hdef.name + " (" + hdef.className + ") [Left/Right to Swap Ship]", 20,
-          sf::Color::Cyan);
-    dtext("Tier: " + tierName(hdef.sizeTier), 14, sf::Color(200, 200, 200));
+      dtext(hdef.name + " (" + hdef.className + ") [Left/Right to Swap Ship]",
+            20, sf::Color::Cyan);
+      dtext("Tier: " + tierName(hdef.sizeTier), 14, sf::Color(200, 200, 200));
 
-    // Power & Volume
-    float usedVol = 0.f;
-    float powerTotal = 0.f;
+      // Power & Volume
+      float usedVol = 0.f;
+      float powerTotal = 0.f;
 
-    auto calcStats = [&](const std::vector<ModuleDef> &modules) {
-      for (const auto &m : modules) {
-        if (m.name.empty() || m.name == "Empty")
-          continue;
-        usedVol += m.volumeOccupied;
-        powerTotal -= m.powerDraw;
-      }
-    };
-    if (registry.all_of<InstalledEngines>(targetShip_))
-      calcStats(registry.get<InstalledEngines>(targetShip_).modules);
-    if (registry.all_of<InstalledWeapons>(targetShip_))
-      calcStats(registry.get<InstalledWeapons>(targetShip_).modules);
-    if (registry.all_of<InstalledShields>(targetShip_))
-      calcStats(registry.get<InstalledShields>(targetShip_).modules);
-    if (registry.all_of<InstalledCargo>(targetShip_))
-      calcStats(registry.get<InstalledCargo>(targetShip_).modules);
-    if (registry.all_of<InstalledPower>(targetShip_))
-      calcStats(registry.get<InstalledPower>(targetShip_).modules);
+      auto calcStats = [&](const std::vector<ModuleDef> &modules) {
+        for (const auto &m : modules) {
+          if (m.name.empty() || m.name == "Empty")
+            continue;
+          usedVol += m.volumeOccupied;
+          powerTotal -= m.powerDraw;
+        }
+      };
+      if (registry.all_of<InstalledEngines>(targetShip_))
+        calcStats(registry.get<InstalledEngines>(targetShip_).modules);
+      if (registry.all_of<InstalledWeapons>(targetShip_))
+        calcStats(registry.get<InstalledWeapons>(targetShip_).modules);
+      if (registry.all_of<InstalledShields>(targetShip_))
+        calcStats(registry.get<InstalledShields>(targetShip_).modules);
+      if (registry.all_of<InstalledCargo>(targetShip_))
+        calcStats(registry.get<InstalledCargo>(targetShip_).modules);
+      if (registry.all_of<InstalledPower>(targetShip_))
+        calcStats(registry.get<InstalledPower>(targetShip_).modules);
 
-    dtext("Volume: " + fmt(usedVol, 1) + "/" + fmt(hdef.internalVolume, 0) +
-              " cubic m",
-          14, usedVol > hdef.internalVolume ? sf::Color::Red : sf::Color::Cyan);
-    dtext("Power: " + fmt(powerTotal, 1) + " GW", 14,
-          powerTotal < 0 ? sf::Color::Red : sf::Color(100, 255, 100));
+      dtext("Volume: " + fmt(usedVol, 1) + "/" + fmt(hdef.internalVolume, 0) +
+                " cubic m",
+            14,
+            usedVol > hdef.internalVolume ? sf::Color::Red : sf::Color::Cyan);
+      dtext("Power: " + fmt(powerTotal, 1) + " GW", 14,
+            powerTotal < 0 ? sf::Color::Red : sf::Color(100, 255, 100));
 
-    // Slots summary
-    y += 5.f;
-    sf::Text slotSum(*font, hdef.getSlotSummary(), 12);
-    slotSum.setFillColor(sf::Color(150, 150, 150));
-    slotSum.setPosition({x, y});
-    window.draw(slotSum);
-    y += 35.f;
+      // Slots summary
+      y += 5.f;
+      sf::Text slotSum(*font, hdef.getSlotSummary(), 12);
+      slotSum.setFillColor(sf::Color(150, 150, 150));
+      slotSum.setPosition({x, y});
+      target.draw(slotSum);
+      y += 35.f;
+    } else {
+      dtext("No Active Vessel [Left/Right to Swap Ship]", 20, sf::Color::Cyan);
+      y += 50.f;
+    }
 
-    dtext("Credits: $" + fmt(fdr.amount, 0), 16, sf::Color(100, 255, 100));
+    dtext("Credits: $" + fmt(pCredits->amount, 0), 16,
+          sf::Color(100, 255, 100));
   } else {
     dtext("Credits: N/A", 16, sf::Color(150, 150, 150));
   }
@@ -212,7 +224,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
         sf::Text t(*font, label, 14);
         t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
         t.setPosition({leftX, y});
-        window.draw(t);
+        target.draw(t);
         y += 18.f;
 
         std::string statsLine = "    Vol: " + fmt(mdef.volumeOccupied, 1) +
@@ -221,7 +233,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
         sf::Text st(*font, statsLine, 12);
         st.setFillColor(sf::Color(160, 160, 160));
         st.setPosition({leftX, y});
-        window.draw(st);
+        target.draw(st);
         y += 18.f;
 
         if (sel) {
@@ -230,12 +242,12 @@ void OutfitterPanel::render(sf::RenderWindow &window,
                                "    " + getAttributeName(attr.type) + ": ", 12);
             labelText.setFillColor(sf::Color(180, 180, 180));
             labelText.setPosition({leftX, y});
-            window.draw(labelText);
+            target.draw(labelText);
 
             sf::Text starText(*font, getTierStars(attr.tier), 12);
             starText.setFillColor(sf::Color::Yellow);
             starText.setPosition({leftX + 130.f, y});
-            window.draw(starText);
+            target.draw(starText);
 
             y += 16.f;
           }
@@ -285,7 +297,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
       sf::Text t(*font, label, 14);
       t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
       t.setPosition({x, y});
-      window.draw(t);
+      target.draw(t);
       y += 18.f;
 
       std::string statsLine = "    Vol: " + fmt(mdef.volumeOccupied, 1) +
@@ -294,7 +306,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
       sf::Text st(*font, statsLine, 12);
       st.setFillColor(sf::Color(160, 160, 160));
       st.setPosition({x, y});
-      window.draw(st);
+      target.draw(st);
       y += 18.f;
 
       if (sel) {
@@ -303,12 +315,12 @@ void OutfitterPanel::render(sf::RenderWindow &window,
                              12);
           labelText.setFillColor(sf::Color(180, 180, 180));
           labelText.setPosition({x, y});
-          window.draw(labelText);
+          target.draw(labelText);
 
           sf::Text starText(*font, getTierStars(attr.tier), 12);
           starText.setFillColor(sf::Color::Yellow);
           starText.setPosition({x + 130.f, y});
-          window.draw(starText);
+          target.draw(starText);
           y += 16.f;
         }
       }
@@ -328,7 +340,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
       sf::Text t(*font, label, 14);
       t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
       t.setPosition({x, y});
-      window.draw(t);
+      target.draw(t);
       y += 18.f;
 
       std::string statsLine = "    Vol: " + fmt(ammo.volumePerRound, 1) +
@@ -336,7 +348,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
       sf::Text st(*font, statsLine, 12);
       st.setFillColor(sf::Color(160, 160, 160));
       st.setPosition({x, y});
-      window.draw(st);
+      target.draw(st);
       y += 18.f;
     }
   }

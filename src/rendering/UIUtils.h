@@ -14,7 +14,11 @@ std::string typeName(CelestialType t);
 std::string getAttributeName(AttributeType type);
 std::string getTierStars(Tier tier);
 
-void drawPanel(sf::RenderWindow &w, sf::FloatRect rect, sf::Color bg,
-               sf::Color border);
+void drawPanel(sf::RenderTarget &target, sf::FloatRect rect,
+               sf::Color fillColor, sf::Color outlineColor);
+
+void drawText(sf::RenderTarget &target, const sf::Font &font,
+              const std::string &str, sf::Vector2f pos, unsigned int size,
+              sf::Color color);
 
 } // namespace space
