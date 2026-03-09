@@ -3,7 +3,6 @@
 #include "game/FactionManager.h"
 #include "game/components/Economy.h"
 #include "game/components/GameTypes.h"
-#include "game/components/ModuleGenerator.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <entt/entt.hpp>
@@ -77,6 +76,110 @@ TEST_CASE("EconomyManager populates faction standard ammo and scrap yard",
   REQUIRE(finalPlanetEco.shopAmmo.size() > 0);
 
   // Base prices should be > 0
+  // Base prices should be > 0
   REQUIRE(fData->factionAmmo[ammoKey].basePrice > 0.0f);
   REQUIRE(finalPlanetEco.shopAmmo[0].basePrice > 0.0f);
+}
+
+TEST_CASE("Economy Hull Scarcity pricing", "[economy]") {
+  Telemetry::instance().init("test_telemetry");
+  FactionManager::instance().init();
+  EconomyManager::instance().init();
+
+  entt::registry registry;
+  entt::entity planet = registry.create();
+  PlanetEconomy eco;
+  uint32_t fid = FactionManager::instance().getRandomFactionId();
+
+  // Setup faction data with a fleet pool to ensure we get bids
+  FactionEconomy fEco;
+  fEco.dna = FactionManager::instance().getFaction(fid).dna;
+  fEco.fleetPool[{Tier::T1, "General"}] = 1;
+  eco.factionData[fid] = fEco;
+  registry.emplace<PlanetEconomy>(planet, eco);
+
+  // 1. Get baseline bids
+  auto bidsNormal = EconomyManager::instance().getHullBids(registry, planet);
+  REQUIRE((bidsNormal.size() > 0));
+
+  auto &targetBid = bidsNormal[0];
+  std::string className = targetBid.hull.className;
+  float priceNormal = targetBid.price;
+
+  // 2. Set high scarcity for this specific class
+  eco.hullClassScarcity[className] = 2.0f;
+  registry.replace<PlanetEconomy>(planet, eco);
+
+  // 3. Get bids with scarcity
+  auto bidsScarce = EconomyManager::instance().getHullBids(registry, planet);
+  float priceWithScarcity = 0;
+  for (auto &b : bidsScarce) {
+    if (b.hull.className == className) {
+      priceWithScarcity = b.price;
+      break;
+    }
+  }
+
+  REQUIRE((priceWithScarcity > priceNormal));
+}
+
+TEST_CASE("Economy Market Aggregation", "[economy]") {
+  Telemetry::instance().init("test_telemetry");
+  EconomyManager::instance().init();
+
+  entt::registry registry;
+  entt::entity planet = registry.create();
+  PlanetEconomy eco;
+
+  // Faction A has 1 module
+  uint32_t fidA = 2;
+  FactionEconomy fA;
+  ModuleDef modA;
+  modA.name = "ModA";
+  fA.shopModules.push_back(modA);
+  eco.factionData[fidA] = fA;
+
+  // Faction B has 1 module
+  uint32_t fidB = 3;
+  FactionEconomy fB;
+  ModuleDef modB;
+  modB.name = "ModB";
+  fB.shopModules.push_back(modB);
+  eco.factionData[fidB] = fB;
+
+  registry.emplace<PlanetEconomy>(planet, eco);
+
+  // Update should aggregate them
+  EconomyManager::instance().update(registry, 1.0f);
+
+  auto &finalEco = registry.get<PlanetEconomy>(planet);
+  REQUIRE(finalEco.shopModules.size() == 2);
+}
+
+TEST_CASE("Economy Resource Trading", "[economy]") {
+  Telemetry::instance().init("test_telemetry");
+  EconomyManager::instance().init();
+
+  entt::registry registry;
+  entt::entity planet = registry.create();
+  entt::entity player = registry.create();
+
+  PlanetEconomy eco;
+  ProductKey pk{ProductType::Resource, static_cast<uint32_t>(Resource::Food),
+                Tier::T1};
+  eco.marketStockpile[pk] = 100.0f;
+  eco.currentPrices[pk] = 10.0f;
+  registry.emplace<PlanetEconomy>(planet, eco);
+
+  registry.emplace<CreditsComponent>(player, 1000.0f);
+  registry.emplace<CargoComponent>(player);
+
+  // Player buys 5 food
+  bool success = EconomyManager::instance().executeTrade(
+      registry, planet, player, Resource::Food, 5.0f);
+
+  REQUIRE(success == true);
+  REQUIRE(registry.get<CreditsComponent>(player).amount == 950.0f);
+  REQUIRE(registry.get<CargoComponent>(player).inventory[Resource::Food] ==
+          5.0f);
 }

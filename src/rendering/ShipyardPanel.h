@@ -18,9 +18,13 @@ public:
               const sf::Font *font, sf::FloatRect rect) override;
 
 private:
+  enum class ShipyardMode { Buy, Sell };
+  ShipyardMode mode_ = ShipyardMode::Buy;
+
   ::entt::entity planetEntity_;
   ::entt::entity playerEntity_;
   std::vector<DetailedHullBid> currentBids_;
+  std::vector<entt::entity> fleetEntities_; // For Sell mode
   int selectedBidIndex_ = 0;
   std::set<size_t> expandedModules_;
   float moduleScrollY_ = 0.f;

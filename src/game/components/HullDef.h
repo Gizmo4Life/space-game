@@ -34,6 +34,7 @@ struct HullDef {
   float baseMass; // affects acceleration
   float baseHitpoints;
   float internalVolume; // total m³ for internal modules
+  uint32_t originFactionId = 0;
 
   VisualDNA visual;
 

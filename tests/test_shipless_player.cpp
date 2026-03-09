@@ -1,5 +1,4 @@
 #include "engine/combat/WeaponSystem.h"
-#include "engine/physics/AsteroidSystem.h"
 #include "engine/physics/CollisionSystem.h"
 #include "engine/physics/GravitySystem.h"
 #include "engine/physics/KinematicsSystem.h"
@@ -10,6 +9,7 @@
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
 #include "game/ShipOutfitter.h"
+#include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/Faction.h"
 #include "game/components/GameTypes.h"
@@ -17,14 +17,11 @@
 #include "game/components/InertialBody.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
-#include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
-#include "game/components/ShipStats.h"
 #include "game/components/TransformComponent.h"
 #include "rendering/LandingScreen.h"
 #include "rendering/RenderSystem.h"
-
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <box2d/box2d.h>
 #include <catch2/catch_test_macros.hpp>
@@ -72,12 +69,12 @@ TEST_CASE("Shipless Player Buying Ship as Flagship", "[shipless][economy]") {
   registry.emplace<Faction>(player, pFaction);
 
   // Verify Player starts Shipless
-  REQUIRE(!registry.all_of<HullDef>(player));
-  REQUIRE(!registry.all_of<InertialBody>(player));
+  REQUIRE((!registry.all_of<HullDef>(player)));
+  REQUIRE((!registry.all_of<InertialBody>(player)));
 
   // 3. Get Bids
   auto bids = EconomyManager::instance().getHullBids(registry, planet);
-  REQUIRE(bids.size() > 0);
+  REQUIRE((bids.size() > 0));
 
   auto &bid = bids[0];
 
@@ -85,7 +82,7 @@ TEST_CASE("Shipless Player Buying Ship as Flagship", "[shipless][economy]") {
   bool bought = EconomyManager::instance().buyShip(registry, planet, player,
                                                    bid, worldId, false, true);
 
-  REQUIRE(bought == true);
+  REQUIRE((bought));
 
   // 5. Verify the new flagship
   auto playerView = registry.view<PlayerComponent>();
@@ -97,16 +94,16 @@ TEST_CASE("Shipless Player Buying Ship as Flagship", "[shipless][economy]") {
     }
   }
 
-  REQUIRE(registry.valid(newFlagship));
-  REQUIRE(newFlagship != player); // It should be a new entity
+  REQUIRE((registry.valid(newFlagship)));
+  REQUIRE((newFlagship != player)); // It should be a new entity
 
-  REQUIRE(registry.all_of<HullDef>(newFlagship));
-  REQUIRE(registry.all_of<InertialBody>(newFlagship));
-  REQUIRE(registry.all_of<CreditsComponent>(newFlagship));
+  REQUIRE((registry.all_of<HullDef>(newFlagship)));
+  REQUIRE((registry.all_of<InertialBody>(newFlagship)));
+  REQUIRE((registry.all_of<CreditsComponent>(newFlagship)));
 
   // Verify credits were transferred and deducted
   auto &newCredits = registry.get<CreditsComponent>(newFlagship);
-  REQUIRE(newCredits.amount == 1000000.0f - bid.price);
+  REQUIRE((newCredits.amount == 1000000.0f - bid.price));
 
   // 6. Test Outfitting the new flagship
   // Let's test outfitting by removing a weapon and appending a new one.
@@ -117,7 +114,7 @@ TEST_CASE("Shipless Player Buying Ship as Flagship", "[shipless][economy]") {
 
   // Since the outfitter uses specific module definitions the planet must have,
   // we'll just check if it survives without crashing
-  REQUIRE(registry.all_of<InstalledWeapons>(newFlagship));
+  REQUIRE((registry.all_of<InstalledWeapons>(newFlagship)));
 
   b2DestroyWorld(worldId);
 }
@@ -158,14 +155,14 @@ TEST_CASE("Shipless Player Buying Ship to Fleet", "[shipless][economy]") {
 
   // 3. Get Bids
   auto bids = EconomyManager::instance().getHullBids(registry, planet);
-  REQUIRE(bids.size() > 0);
+  REQUIRE((bids.size() > 0));
   auto &bid = bids[0];
 
   // 4. Buy Ship as Supporting Fleet member (addToFleet=true)
   bool bought = EconomyManager::instance().buyShip(registry, planet, player,
                                                    bid, worldId, true, false);
 
-  REQUIRE(bought == true);
+  REQUIRE((bought));
 
   // 5. Verify flagship ship spawned (since they are shipless)
   // Old player should still be player but the new flagship takes over
@@ -178,9 +175,9 @@ TEST_CASE("Shipless Player Buying Ship to Fleet", "[shipless][economy]") {
     }
   }
 
-  REQUIRE(registry.valid(newFlagship));
-  REQUIRE(registry.all_of<HullDef>(newFlagship)); // It has a ship
-  REQUIRE(newFlagship != player);                 // New entity
+  REQUIRE((registry.valid(newFlagship)));
+  REQUIRE((registry.all_of<HullDef>(newFlagship))); // It has a ship
+  REQUIRE((newFlagship != player));                 // New entity
 
   // Tick systems to reproduce crash
   for (int i = 0; i < 5; ++i) {
@@ -239,16 +236,17 @@ TEST_CASE("Player with Ship Swaps Flagship", "[economy]") {
   registry.emplace<InertialBody>(player, oldBody, 100.0f, 0.1f, 10.0f);
 
   auto bids = EconomyManager::instance().getHullBids(registry, planet);
-  REQUIRE(bids.size() > 0);
+  REQUIRE((bids.size() > 0));
   auto &bid = bids[0];
 
   bool bought = EconomyManager::instance().buyShip(registry, planet, player,
                                                    bid, worldId, false, true);
 
-  REQUIRE(bought == true);
+  REQUIRE((bought));
 
   sf::RenderTexture rTex;
-  rTex.resize({1200, 800});
+  bool resized = rTex.resize({1200, 800});
+  REQUIRE((resized));
   LandingScreen landingScreen;
   landingScreen.open(planet, player); // Note: player was old dummy/ship
 

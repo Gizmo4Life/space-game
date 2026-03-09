@@ -1,7 +1,9 @@
 #pragma once
-#include "game/components/FactionDNA.h"
-#include "game/components/GameTypes.h"
-#include "game/components/ShipModule.h"
+#include "FactionDNA.h"
+#include "GameTypes.h"
+#include "HullDef.h"
+#include "MissionStats.h"
+#include "ShipModule.h"
 #include <map>
 #include <string>
 #include <type_traits>
@@ -36,7 +38,13 @@ struct FactionEconomy {
   std::map<ProductKey, float> stockpile;
   std::map<ProductKey, int> factories;
   std::map<std::pair<Tier, std::string>, int>
-      fleetPool; // Ready ships by tier and role
+      fleetPool;                      // Ready ships by tier and role
+  std::vector<ModuleDef> shopModules; // Procedurally generated local modules
+  std::vector<AmmoDef> shopAmmo;      // Procedurally generated local ammunition
+
+  std::vector<ModuleDef> scrapyardModules; // Salvaged modules
+  std::vector<HullDef> scrapyardHulls;     // Salvaged hulls
+
   FactionDNA dna;
   MissionStats stats;
   float credits = 1000.0f;
@@ -47,8 +55,13 @@ struct PlanetEconomy {
   std::map<uint32_t, FactionEconomy> factionData;
   std::map<ProductKey, float> marketStockpile; // Aggregate supply for trade
   std::map<ProductKey, float> currentPrices;
-  std::vector<ModuleDef> shopModules; // Procedurally generated local modules
-  std::vector<AmmoDef> shopAmmo;      // Procedurally generated local ammunition
+
+  std::vector<ModuleDef> shopModules; // Aggregate planetary module market
+  std::vector<AmmoDef> shopAmmo;      // Aggregate planetary ammunition market
+
+  // Scarcity tracking: hull class name -> relative abundance (0.0 to 2.0, 1.0
+  // is normal)
+  std::map<std::string, float> hullClassScarcity;
 
   // Base consumption per 1k population (Global reference)
   std::map<Resource, float> baseConsumption;

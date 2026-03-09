@@ -3,11 +3,10 @@
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
 #include <map>
-#include <type_traits>
 #include <vector>
 
-#include "game/components/FactionDNA.h"
 #include "game/components/GameTypes.h"
+#include "game/components/MissionStats.h"
 
 namespace space {
 

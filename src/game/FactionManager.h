@@ -2,8 +2,8 @@
 #include "game/components/FactionDNA.h"
 #include "game/components/GameTypes.h"
 #include "game/components/HullDef.h"
+#include "game/components/MissionStats.h"
 #include <SFML/Graphics/Color.hpp>
-#include <algorithm>
 #include <entt/entt.hpp>
 #include <map>
 #include <set>

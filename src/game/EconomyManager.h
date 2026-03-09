@@ -57,6 +57,11 @@ public:
 
   bool buyModularShip(entt::registry &registry, entt::entity shipEntity,
                       entt::entity player);
+  bool sellModularShip(entt::registry &registry, entt::entity shipEntity,
+                       entt::entity player);
+
+  bool sellShip(entt::registry &registry, entt::entity planet,
+                entt::entity player, entt::entity shipToSell);
 
   /// Exchange commodity goods between player cargo and planet stockpile.
   /// delta > 0 for player buying from planet, delta < 0 for player selling to

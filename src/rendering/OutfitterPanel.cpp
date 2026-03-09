@@ -1,8 +1,10 @@
 #include "OutfitterPanel.h"
 #include "UIUtils.h"
-#include "game/EconomyManager.h"
+#include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
+#include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
+#include "game/components/GameTypes.h"
 #include "game/components/HullDef.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/NPCComponent.h"
@@ -17,7 +19,7 @@ OutfitterPanel::OutfitterPanel(entt::entity planet, entt::entity player)
     : planetEntity_(planet), playerEntity_(player) {}
 
 void OutfitterPanel::handleEvent(const sf::Event &event,
-                                 ::entt::registry &registry, b2WorldId) {
+                                 entt::registry &registry, b2WorldId) {
   if (const auto *kp = event.getIf<sf::Event::KeyPressed>()) {
     if (kp->code == sf::Keyboard::Key::Tab) {
       outfitterMarketMode_ = !outfitterMarketMode_;
@@ -30,7 +32,7 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
       std::vector<entt::entity> fleet;
       if (registry.valid(playerEntity_))
         fleet.push_back(playerEntity_);
-      auto npcView = registry.view<NPCComponent>();
+      auto npcView = registry.template view<NPCComponent>();
       for (auto e : npcView) {
         if (npcView.get<NPCComponent>(e).isPlayerFleet) {
           fleet.push_back(e);
@@ -65,12 +67,28 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
     if (kp->code == sf::Keyboard::Key::Enter ||
         kp->code == sf::Keyboard::Key::B) {
       if (outfitterMarketMode_) {
+        uint32_t primaryFactionId = 0;
+        if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+          auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+          float maxPop = -1.f;
+          for (auto const &entry : eco.factionData) {
+            uint32_t id = entry.first;
+            auto const &fEco = entry.second;
+            if (fEco.populationCount > maxPop) {
+              maxPop = fEco.populationCount;
+              primaryFactionId = id;
+            }
+          }
+        }
+
         // Module Tab
         if (outfitterTab_ == 0) {
           std::vector<ModuleDef> shopModules;
-          if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-            shopModules =
-                registry.get<PlanetEconomy>(planetEntity_).shopModules;
+          if (primaryFactionId != 0) {
+            auto &eco = registry.get<PlanetEconomy>(
+                planetEntity_); // Re-get eco if needed, or pass
+                                // primaryFactionId
+            shopModules = eco.factionData[primaryFactionId].shopModules;
           }
           if (selectedOutfitterIndex_ >= 0 &&
               selectedOutfitterIndex_ < (int)shopModules.size()) {
@@ -85,7 +103,19 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
           // Ammo Tab
           std::vector<AmmoDef> shopAmmo;
           if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-            shopAmmo = registry.get<PlanetEconomy>(planetEntity_).shopAmmo;
+            auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+            uint32_t fid = 0;
+            float maxPop = -1.f;
+            for (auto const &entry : eco.factionData) {
+              uint32_t id = entry.first;
+              auto const &fEco = entry.second;
+              if (fEco.populationCount > maxPop) {
+                maxPop = fEco.populationCount;
+                fid = id;
+              }
+            }
+            if (fid != 0)
+              shopAmmo = eco.factionData[fid].shopAmmo;
           }
           if (selectedOutfitterIndex_ >= 0 &&
               selectedOutfitterIndex_ < (int)shopAmmo.size()) {
@@ -97,14 +127,13 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
   }
 }
 
-void OutfitterPanel::render(sf::RenderTarget &target,
-                            ::entt::registry &registry, const sf::Font *font,
-                            sf::FloatRect rect) {
+void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
+                            const sf::Font *font, sf::FloatRect rect) {
   if (!font || !registry.valid(playerEntity_))
     return;
 
   // Update playerEntity_ in case a Flagship was purchased in the Shipyard
-  auto playerView = registry.view<PlayerComponent>();
+  auto playerView = registry.template view<PlayerComponent>();
   for (auto e : playerView) {
     if (playerView.get<PlayerComponent>(e).isFlagship) {
       playerEntity_ = e;
@@ -279,12 +308,27 @@ void OutfitterPanel::render(sf::RenderTarget &target,
   // Right: Market Modules
   y = startY;
   x = rightX;
+  std::vector<ModuleDef> shopModules;
+  std::vector<AmmoDef> shopAmmo;
+
+  uint32_t primaryFactionId = 0;
+  if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+    auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+    float maxPop = -1.f;
+    for (auto const &entry : eco.factionData) {
+      uint32_t id = entry.first;
+      auto const &fEco = entry.second;
+      if (fEco.populationCount > maxPop) {
+        maxPop = fEco.populationCount;
+        primaryFactionId = id;
+      }
+    }
+  }
+
   if (outfitterTab_ == 0) {
     dtext("Planet Market (Modules)", 15, sf::Color::Yellow);
-    std::vector<ModuleDef> shopModules;
-    if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-      shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
-    }
+    auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+    shopModules = eco.shopModules;
     for (int i = 0; i < (int)shopModules.size(); ++i) {
       bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
       const auto &mdef = shopModules[i];
@@ -300,7 +344,14 @@ void OutfitterPanel::render(sf::RenderTarget &target,
       target.draw(t);
       y += 18.f;
 
-      std::string statsLine = "    Vol: " + fmt(mdef.volumeOccupied, 1) +
+      std::string sellerName = "Unknown";
+      auto *sellerFaction =
+          FactionManager::instance().getFactionPtr(mdef.originFactionId);
+      if (sellerFaction)
+        sellerName = sellerFaction->name;
+
+      std::string statsLine = "    Seller: " + sellerName +
+                              "  Vol: " + fmt(mdef.volumeOccupied, 1) +
                               "  Mass: " + fmt(mdef.mass, 1) +
                               "  Power: " + fmt(mdef.powerDraw, 1) + " GW";
       sf::Text st(*font, statsLine, 12);
@@ -326,11 +377,9 @@ void OutfitterPanel::render(sf::RenderTarget &target,
       }
     }
   } else {
-    dtext("Planet Market (Ammonition)", 15, sf::Color::Yellow);
-    std::vector<AmmoDef> shopAmmo;
-    if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-      shopAmmo = registry.get<PlanetEconomy>(planetEntity_).shopAmmo;
-    }
+    dtext("Planet Market (Ammunition)", 15, sf::Color::Yellow);
+    auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+    shopAmmo = eco.shopAmmo;
     for (int i = 0; i < (int)shopAmmo.size(); ++i) {
       bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
       const auto &ammo = shopAmmo[i];

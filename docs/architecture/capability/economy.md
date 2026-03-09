@@ -29,12 +29,22 @@ Two-tier resource economy. See [economy-resource-chain](/docs/developer/pattern/
 ### `PlanetEconomy` Component
 | Field | Type | Purpose |
 |-------|------|---------|
-| `populationCount` | `float` | Population in thousands; supports 10 factories per 1k. |
-| `stockpile` | `map<Resource, float>` | Current quantity of each resource. |
-| `factories` | `map<Resource, int>` | Count of active production facilities. |
-| `currentPrices` | `map<Resource, float>` | Dynamic market price per [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P). |
-| `shopModules` | `vector<ModuleDef>` | Surplus or outdated ("scrap yard") module production sold to players. |
-| `shopAmmo` | `vector<AmmoDef>` | Surplus or outdated ammo production sold to players. |
+| `factionData` | `map<uint32_t, FactionEconomy>` | Multi-faction data per planet. |
+| `marketStockpile` | `map<ProductKey, float>` | Aggregate supply for trade transactions. |
+| `currentPrices` | `map<ProductKey, float>` | Dynamic market price per product. |
+| `shopModules` | `vector<ModuleDef>` | Surplus module production aggregated from all local factions. |
+| `shopAmmo` | `vector<AmmoDef>` | Surplus ammo production aggregated from all local factions. |
+| `hullClassScarcity`| `map<string, float>` | Scarcity multiplier per hull class (e.g. "Interceptor": 1.5). |
+
+### `FactionEconomy` Fields
+| Field | Type | Purpose |
+|-------|------|---------|
+| `populationCount` | `float` | Local population in thousands. |
+| `stockpile` | `map<ProductKey, float>` | Local faction resource reserves. |
+| `factories` | `map<ProductKey, int>` | Count of active production facilities. |
+| `fleetPool` | `map<pair<Tier, role>, int>` | Finished hulls ready for assignment. |
+| `scrapyardModules` | `vector<ModuleDef>` | Salvaged or obsolete modules for discount sale. |
+| `scrapyardHulls` | `vector<HullDef>` | Salvaged or obsolete hulls for discount sale. |
 
 ## 5. Faction System
 
@@ -57,7 +67,7 @@ Spawn weights are normalised on generation so they always sum to 1.0.
 |----|------|------|
 | 0 | Civilian | Neutral baseline; heavy freight/passenger bias. |
 | 1 | Player | Human faction; no NPC spawn weights. |
-| 2+ | Procedural | 8–12 factions generated at `FactionManager::init()`. |
+| 2+ | Procedural | 8-12 major factions. Planets are seeded with **3-5** of these to create local competition. |
 
 Names drawn from two 10-word lists (adjectives × nouns), e.g. *Nova Syndicate*, *Iron Hegemony*.
 
@@ -95,7 +105,9 @@ Idle → Traveling → Docked → Idle (loop)
 
 ## 7. Ship Market
 
-Factions compete via supply-adjusted bids; player buys from cheapest bidder via an atomic 4-step transaction. See [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P).
+Factions compete via supply-adjusted bids; player buys from cheapest bidder via an atomic transfer. 
+- **Dynamic Scarcity:** Buying a ship type increases its `hullClassScarcity` (up to 5.0x), raising future prices. Selling a ship decreases scarcity (down to 0.5x), lowering prices.
+- **Shipyard Sell Menu:** Player can toggle [Tab] to sell fleet members at current market valuation. Revenue is attributed to the originating `originFactionId`.
 
 ## 8. Operational Context
 - **Primary Modules:** [game-economy](/docs/architecture/module/game-economy.md), [game-factions](/docs/architecture/module/game-factions.md), [game-npc](/docs/architecture/module/game-npc.md)

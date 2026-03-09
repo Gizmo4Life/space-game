@@ -11,10 +11,14 @@
 - `ShipConfig.h` — Static hull and outfit registry
 - `HullDef.h` — Shape, mass, and hardpoint geometry
 - `ShipModule.h` — Module attributes and ID definitions
-- `Economy.h` — `PlanetEconomy`, `CreditsComponent`, `CargoComponent`
-- `Faction.h` — Faction allegiance mapping
-- `NPCComponent.h` — AI decision state
-- `CelestialBody.h` — Body type and mass
-- `OrbitalComponent.h` — Orbital parameters and phase
-- `TransformComponent.h` — World position and rotation
+- `Economy.h`- [x] Resolve `EconomyManager` Errors
+- [x] Resolve `LandingScreen.cpp` Errors
+- [x] Resolve Linking Errors
+- [x] Implement Economy Features
+    - [x] Dynamic ship pricing based on hull class scarcity
+    - [x] Multi-faction planetary seeding (3-5 factions)
+    - [x] UI: Display seller faction in Shipyard and Outfitter
+    - [x] Market: Aggregate resource and module pools (scrapyards)
+    - [x] Shipyard: Functional Sell menu via Tab key
+- [x] Final Build Verification
 - `WorldConfig.h` — Star system constants

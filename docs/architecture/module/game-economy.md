@@ -20,8 +20,11 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 
 ## 3. Key Systems
 - **EconomyManager**: Orchestrates planetary markets and the ship inventory.
-  - **Dynamic Pricing**: Uses factory supply nodes to adjust `basePrice` across factions.
-  - **Ship Purchase (`buyShip`)**: Handles vessel ownership transfer. If replacing a flagship, it spawns a player-controlled entity, removes its `NPCComponent` safely (verifying pre-existence to avoid crashes), and re-assigns the old flagship as a fleet escort.
+  - **Dynamic Pricing**: Uses factory supply nodes and `hullClassScarcity` to adjust prices.
+  - **Ship Transactions**: `buyShip` and `sellModularShip` handle vessel ownership and fleet management. Includes atomic flagship swapping and escort assignment.
+  - **Competitive Bidding**: Factions list hulls via `DetailedHullBid`. Player buys from specific factions, affecting their individual `credits` and planetary `hullClassScarcity`.
+  - **Scrapyard Management**: Factions store salvaged and obsolete inventory in `scrapyardModules` and `scrapyardHulls`, selling them at a distance from "Standard" designs.
+  - **Resource Trading**: `executeTrade` manages commodity buy/sell between player cargo and aggregate planetary stockpiles.
 - **TradeManager**: Lightweight singleton for executing fine-grained cargo transactions within the UI.
 
 ## 4. Pattern Composition

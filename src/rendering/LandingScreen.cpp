@@ -5,8 +5,9 @@
 #include "ShipyardPanel.h"
 #include "UIUtils.h"
 #include "engine/telemetry/Telemetry.h"
+#include "game/components/CargoComponent.h"
 #include "game/components/NameComponent.h"
-#include <SFML/Graphics/RenderTarget.hpp>
+#include <SFML/Graphics.hpp>
 #include <opentelemetry/trace/provider.h>
 
 namespace space {
@@ -88,7 +89,8 @@ void LandingScreen::render(sf::RenderTarget &target, entt::registry &registry,
 
   sf::Text title(*font, planetName, 24);
   title.setFillColor(sf::Color::White);
-  title.setPosition({rect.position.x + 20.f, rect.position.y + 20.f});
+  title.setPosition(
+      sf::Vector2f(rect.position.x + 20.f, rect.position.y + 20.f));
   target.draw(title);
 
   // Draw top-right player credits
@@ -98,9 +100,9 @@ void LandingScreen::render(sf::RenderTarget &target, entt::registry &registry,
     std::string cx = "$" + fmt(credits, 0);
     sf::Text cText(*font, cx, 18);
     cText.setFillColor(sf::Color(100, 255, 100));
-    cText.setPosition(
-        {rect.position.x + rect.size.x - cText.getLocalBounds().size.x - 20.f,
-         rect.position.y + 20.f});
+    cText.setPosition(sf::Vector2f(rect.position.x + rect.size.x -
+                                       cText.getLocalBounds().size.x - 20.f,
+                                   rect.position.y + 20.f));
     target.draw(cText);
   }
 
@@ -112,10 +114,10 @@ void LandingScreen::render(sf::RenderTarget &target, entt::registry &registry,
                      bool active) {
     sf::Text t(*font, label, 18);
     t.setFillColor(active ? sf::Color::White : col);
-    t.setPosition({tabX, tabY});
+    t.setPosition(sf::Vector2f(tabX, tabY));
     if (active) {
       sf::RectangleShape line({t.getLocalBounds().size.x, 2.f});
-      line.setPosition({tabX, tabY + 22.f});
+      line.setPosition(sf::Vector2f(tabX, tabY + 22.f));
       line.setFillColor(sf::Color::White);
       target.draw(line);
     }
@@ -134,7 +136,7 @@ void LandingScreen::render(sf::RenderTarget &target, entt::registry &registry,
 
   // Divider
   sf::RectangleShape div({rect.size.x - 40.f, 1.f});
-  div.setPosition({rect.position.x + 20.f, tabY + 30.f});
+  div.setPosition(sf::Vector2f(rect.position.x + 20.f, tabY + 30.f));
   div.setFillColor(sf::Color(100, 100, 100));
   target.draw(div);
 

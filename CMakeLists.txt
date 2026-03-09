@@ -67,27 +67,30 @@ target_include_directories(SpaceGame PRIVATE src)
 target_link_libraries(SpaceGame PRIVATE SpaceGameCore)
 
 # --- Tests (Catch2 via FetchContent) ---
-include(FetchContent)
-FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG v3.5.2
-)
-FetchContent_MakeAvailable(Catch2)
+option(BUILD_TESTING "Build the testing tree." OFF)
+if (BUILD_TESTING)
+    include(FetchContent)
+    FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.5.2
+    )
+    FetchContent_MakeAvailable(Catch2)
 
-add_executable(SpaceGameTests
-    tests/test_blueprint_viability.cpp
-    tests/test_kinematics.cpp
-    tests/test_gravity.cpp
-    tests/test_world_loader.cpp
-    tests/test_ammo.cpp
-    tests/test_economy.cpp
-    tests/test_shipless_player.cpp
-)
-target_include_directories(SpaceGameTests PRIVATE src)
-target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
+    add_executable(SpaceGameTests
+        tests/test_blueprint_viability.cpp
+        tests/test_kinematics.cpp
+        tests/test_gravity.cpp
+        tests/test_world_loader.cpp
+        tests/test_ammo.cpp
+        tests/test_economy.cpp
+        tests/test_shipless_player.cpp
+    )
+    target_include_directories(SpaceGameTests PRIVATE src)
+    target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
 
-include(CTest)
-include(Catch)
-catch_discover_tests(SpaceGameTests)
+    include(CTest)
+    include(Catch)
+    catch_discover_tests(SpaceGameTests)
+endif()
 

@@ -378,12 +378,27 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     mainFact = 2;
 
   Faction f;
-  float mainAllegiance = 0.7f + (rand() % 20) * 0.01f;
+  float mainAllegiance = 0.4f + (rand() % 20) * 0.01f;
   f.allegiances[mainFact] = mainAllegiance;
-  f.allegiances[0] = 0.05f + (rand() % 5) * 0.01f;
+  f.allegiances[0] = 0.05f + (rand() % 10) * 0.01f;
+
+  // Add 2-4 more secondary factions (ensuring 3-5 total factions per planet)
+  uint32_t extraCount = 2 + (rand() % 3);
+  for (uint32_t i = 0; i < extraCount; ++i) {
+    uint32_t extraFid = FactionManager::instance().getRandomFactionId();
+    if (f.allegiances.count(extraFid) == 0) {
+      f.allegiances[extraFid] = 0.1f + (rand() % 15) * 0.01f;
+    }
+  }
+
   registry.emplace<Faction>(body, f);
 
   PlanetEconomy eco;
+  // Baseline scarcity for common hull classes
+  eco.hullClassScarcity["Sparrow"] = 1.0f;
+  eco.hullClassScarcity["Falcon"] = 1.0f;
+  eco.hullClassScarcity["Eagle"] = 1.0f;
+  eco.hullClassScarcity["Vulture"] = 1.0f;
   float totalPop = (5.0f + (rand() % 21)) * populationScale;
   if (type == CelestialType::Earthlike)
     totalPop *= 3.0f;

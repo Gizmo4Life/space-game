@@ -21,6 +21,8 @@ struct ModuleDef {
   float powerDraw = 0.f; // GW; negative = generation (reactors)
   float basePrice = 0.0f;
 
+  uint32_t originFactionId = 0; // Who gets the money if sold on market
+
   // Helper to find a specific attribute
   bool hasAttribute(AttributeType type) const {
     for (const auto &attr : attributes)
@@ -48,6 +50,8 @@ struct AmmoDef {
   float massPerRound = 1.0f;
   float volumePerRound = 0.1f;
   float basePrice = 10.0f;
+
+  uint32_t originFactionId = 0;
 
   // For map keys and sorting AmmoStacks
   bool operator<(const AmmoDef &other) const {
