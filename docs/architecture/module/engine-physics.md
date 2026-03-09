@@ -20,7 +20,7 @@ Newtonian kinematics, gravity wells, orbital mechanics, and Box2D world manageme
 
 ## 3. Key Systems
 - **PhysicsEngine**: Owns the Box2D `b2WorldId`, steps the simulation each frame. See [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P).
-- **KinematicsSystem**: Applies thrust/rotation forces and syncs Box2D positions with `TransformComponent`.
+- **KinematicsSystem**: Applies thrust/rotation forces and syncs Box2D positions with `TransformComponent`. Rotation operates on a fixed angular velocity basis determined by total mass and counter-balanced by Reaction Wheel capabilities.
 - **Dynamic Mass & Stats**: Ship mass is calculated as `Base Hull + Modules + Fuel + Cargo + Ammo`. `ShipStats` also tracks real-time `restingPowerDraw` (GW) and `internalVolumeOccupied` (m³) to ensure viability. T3 missiles are 5x mass/volume of T2 projectiles. See [kinematics-newtonian-2d](/docs/developer/pattern/kinematics-newtonian-2d.md) (P).
 - **GravitySystem**: Iterates `CelestialBody` × `InertialBody` pairs, applies gravitational pull.
 - **OrbitalSystem**: Updates `TransformComponent` via Kepler ellipse equations for moons/planets. See [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P).

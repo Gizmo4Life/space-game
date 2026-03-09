@@ -23,6 +23,9 @@ struct FactionData {
   MissionStats stats;
   std::vector<ShipBlueprint> blueprints;
 
+  std::map<ProductKey, ModuleDef> factionDesigns;
+  std::map<ProductKey, AmmoDef> factionAmmo;
+
   const ShipBlueprint *getBlueprint(Tier tier, const std::string &role) const;
 };
 

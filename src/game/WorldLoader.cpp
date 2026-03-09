@@ -453,7 +453,11 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
       ModuleDef newDef =
           ModuleGenerator::instance().generateRandomModule(randCat, Tier::T1);
       ProductKey pk{ProductType::Module, (uint32_t)(rand() % 10000), Tier::T1};
-      fEco.factionDesigns[pk] = newDef;
+
+      auto *globalDataPtr = FactionManager::instance().getFactionPtr(fid);
+      if (globalDataPtr) {
+        globalDataPtr->factionDesigns[pk] = newDef;
+      }
       fEco.factories[pk] += 1;
 
       if (fEco.populationCount > 15.0f) {
@@ -461,7 +465,9 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
             ModuleGenerator::instance().generateRandomModule(randCat, Tier::T2);
         ProductKey advancedPk{ProductType::Module, (uint32_t)(rand() % 10000),
                               Tier::T2};
-        fEco.factionDesigns[advancedPk] = advancedDef;
+        if (globalDataPtr) {
+          globalDataPtr->factionDesigns[advancedPk] = advancedDef;
+        }
         fEco.factories[advancedPk] += 1;
       }
     }

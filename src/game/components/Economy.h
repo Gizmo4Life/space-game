@@ -35,8 +35,6 @@ struct FactionEconomy {
   float populationCount = 0.0f; // In thousands
   std::map<ProductKey, float> stockpile;
   std::map<ProductKey, int> factories;
-  std::map<ProductKey, ModuleDef>
-      factionDesigns; // Specific module blueprints invented by this faction
   std::map<std::pair<Tier, std::string>, int>
       fleetPool; // Ready ships by tier and role
   FactionDNA dna;

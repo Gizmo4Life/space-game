@@ -66,9 +66,11 @@ void EconomyManager::init() {
   // Module Production (Engines, Weapons, etc.)
   // We use ProductType::Module and the module's ID is the ModuleCategory
   std::vector<ModuleCategory> categories = {
-      ModuleCategory::Engine,  ModuleCategory::Weapon,  ModuleCategory::Shield,
-      ModuleCategory::Utility, ModuleCategory::Reactor, ModuleCategory::Command,
-      ModuleCategory::Battery};
+      ModuleCategory::Engine,       ModuleCategory::Weapon,
+      ModuleCategory::Shield,       ModuleCategory::Utility,
+      ModuleCategory::Reactor,      ModuleCategory::Command,
+      ModuleCategory::Battery,      ModuleCategory::Ammo,
+      ModuleCategory::ReactionWheel};
 
   std::vector<Tier> tiers = {Tier::T1, Tier::T2, Tier::T3};
 
@@ -124,8 +126,38 @@ void EconomyManager::init() {
         r.inputs[resKey(Resource::Metals)] += 2.0f * multiplier;
         r.inputs[resKey(Resource::ManufacturingGoods)] += 1.0f * multiplier;
         break;
+      case ModuleCategory::ReactionWheel:
+        r.inputs[resKey(Resource::Metals)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::Electronics)] += 2.0f * multiplier;
+        break;
       }
 
+      float sizeScale =
+          (tier == Tier::T1) ? 1.0f : (tier == Tier::T2 ? 3.0f : 8.0f);
+      for (auto &pair : r.inputs) {
+        pair.second *= sizeScale;
+      }
+      r.laborRequired = 0.5f * sizeScale;
+      r.baseOutputRate = 0.1f;
+      recipes[pk] = r;
+      productionPriority.push_back(pk);
+    }
+  }
+
+  std::vector<WeaponType> ammoTypes = {WeaponType::Projectile,
+                                       WeaponType::Missile};
+  for (auto wType : ammoTypes) {
+    for (auto tier : tiers) {
+      ProductKey pk{ProductType::Ammo, static_cast<uint32_t>(wType), tier};
+      Recipe r;
+      float multiplier =
+          (tier == Tier::T1) ? 1.0f : (tier == Tier::T2 ? 2.5f : 6.0f);
+      r.inputs[resKey(Resource::Metals)] = 2.0f * multiplier;
+      r.inputs[resKey(Resource::ManufacturingGoods)] = 1.0f * multiplier;
+      if (wType == WeaponType::Missile) {
+        r.inputs[resKey(Resource::Electronics)] = 1.0f * multiplier;
+        r.inputs[resKey(Resource::Fuel)] = 0.5f * multiplier;
+      }
       float sizeScale =
           (tier == Tier::T1) ? 1.0f : (tier == Tier::T2 ? 3.0f : 8.0f);
       for (auto &pair : r.inputs) {
@@ -260,16 +292,105 @@ void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
 
       if (product.type == ProductType::Hull) {
         // Hulls go directly into the fleet pool as integer units
-        // Final output is fractional, so we accumulate into a hidden stockpile
-        // and add to fleetPool when it reaches >= 1.0f
         fEco.stockpile[product] += finalOutput;
         if (fEco.stockpile[product] >= 1.0f) {
           int count = static_cast<int>(fEco.stockpile[product]);
-          // Default to "General" role for mass production
           fEco.fleetPool[{product.tier, "General"}] += count;
           fEco.stockpile[product] -= static_cast<float>(count);
           std::cout << "[Economy] Produced " << count << " T"
                     << static_cast<int>(product.tier) << " hulls!\n";
+        }
+      } else if (product.type == ProductType::Module) {
+        fEco.stockpile[product] += finalOutput;
+        if (fEco.stockpile[product] >= 1.0f) {
+          int count = static_cast<int>(fEco.stockpile[product]);
+          fEco.stockpile[product] -= static_cast<float>(count);
+          for (int i = 0; i < count; i++) {
+            ModuleDef generated =
+                ModuleGenerator::instance().generateRandomModule(
+                    static_cast<ModuleCategory>(product.id), product.tier);
+
+            float truePrice = 0.0f;
+            for (const auto &in : recipe.inputs) {
+              truePrice += in.second * eco.currentPrices[in.first];
+            }
+            generated.basePrice = truePrice * 1.25f;
+
+            int genScore = 0;
+            for (const auto &attr : generated.attributes)
+              genScore += static_cast<int>(attr.tier);
+
+            auto *fData = FactionManager::instance().getFactionPtr(factionId);
+            bool isNewStandard = true;
+            if (fData && fData->factionDesigns.count(product)) {
+              int currentScore = 0;
+              for (const auto &attr : fData->factionDesigns[product].attributes)
+                currentScore += static_cast<int>(attr.tier);
+              if (genScore <= currentScore) {
+                isNewStandard = false;
+              }
+            }
+
+            if (isNewStandard && fData) {
+              if (fData->factionDesigns.count(product)) {
+                eco.shopModules.push_back(fData->factionDesigns[product]);
+              }
+              fData->factionDesigns[product] = generated;
+              std::cout << "[Economy] Faction invented new standard module for "
+                           "category "
+                        << product.id << "\n";
+            } else {
+              eco.shopModules.push_back(generated);
+            }
+            if (eco.shopModules.size() > 50) {
+              eco.shopModules.erase(eco.shopModules.begin());
+            }
+          }
+        }
+      } else if (product.type == ProductType::Ammo) {
+        fEco.stockpile[product] += finalOutput;
+        if (fEco.stockpile[product] >= 1.0f) {
+          int count = static_cast<int>(fEco.stockpile[product]);
+          fEco.stockpile[product] -= static_cast<float>(count);
+          for (int i = 0; i < count; i++) {
+            AmmoDef generated = ModuleGenerator::instance().generateAmmo(
+                static_cast<WeaponType>(product.id), product.tier);
+            float truePrice = 0.0f;
+            for (const auto &in : recipe.inputs) {
+              truePrice += in.second * eco.currentPrices[in.first];
+            }
+            generated.basePrice = truePrice * 1.25f;
+            int genScore = static_cast<int>(generated.caliber) +
+                           static_cast<int>(generated.warhead) +
+                           static_cast<int>(generated.range) +
+                           static_cast<int>(generated.guidance);
+            auto *fData = FactionManager::instance().getFactionPtr(factionId);
+            bool isNewStandard = true;
+            if (fData && fData->factionAmmo.count(product)) {
+              const auto &current = fData->factionAmmo[product];
+              int currentScore = static_cast<int>(current.caliber) +
+                                 static_cast<int>(current.warhead) +
+                                 static_cast<int>(current.range) +
+                                 static_cast<int>(current.guidance);
+              if (genScore <= currentScore) {
+                isNewStandard = false;
+              }
+            }
+            if (isNewStandard && fData) {
+              if (fData->factionAmmo.count(product)) {
+                eco.shopAmmo.push_back(fData->factionAmmo[product]);
+              }
+              fData->factionAmmo[product] = generated;
+              std::cout << "[Economy] Faction invented new standard ammo for "
+                           "weapon type "
+                        << product.id << "\n";
+            } else {
+              eco.shopAmmo.push_back(generated);
+            }
+            if (eco.shopAmmo.size() > 50) {
+              eco.shopAmmo.erase(eco.shopAmmo.begin());
+            }
+          }
         }
       } else {
         fEco.stockpile[product] += finalOutput;

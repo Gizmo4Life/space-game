@@ -12,8 +12,8 @@ Transform the static, role-based vessel model into a flexible, dynamic compositi
 
 ## 2. Orchestration Flow
 1. **Hull Selection:** Define the base physical constraints using `HullDef` (Mass, Volume, Mounts, Hardpoints, Visual Styles).
-2. **Module Allocation:** Attach function-specific modules (Engines, Weapons, Shields, Ammo Racks) to mounts or hardpoints via `ShipOutfitter`.
-3. **Attribute-Driven Stat Computation:** Aggregate tiered attributes (`AttributeType` like Size, Mass, Thrust, Capacity) to compute final `ShipStats`. Scaling follows Tier-based multipliers (e.g., T1=1x, T2=3x, T3=8x). Includes capacity calculations for dynamic `InstalledAmmo` inventory storage.
+2. **Module Allocation:** Attach function-specific modules (Engines, Reaction Wheels, Weapons, Shields, Ammo Racks) to mounts or hardpoints via `ShipOutfitter`. Reaction Wheels provide a flat offset to rotational mass penalties.
+3. **Attribute-Driven Stat Computation:** Aggregate tiered attributes (`AttributeType` like Size, Mass, Thrust, Capacity, TurnRate) to compute final `ShipStats`. Dynamic pricing applies installation pricing derived from `ModuleDef::basePrice`.
 4. **Procedural Rendering:** Generate ship visuals on-the-fly in `RenderSystem` by compositing the hull style with per-slot nacelle/mount styles and connecting them with functional outriggers.
 
 ## 3. Data Flow & Integrity

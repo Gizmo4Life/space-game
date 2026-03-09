@@ -92,4 +92,9 @@ struct InstalledAmmo {
   }
 };
 
+struct InstalledReactionWheels {
+  std::vector<ModuleDef> modules;
+  float totalTurnRate = 0.f;
+};
+
 } // namespace space

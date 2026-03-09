@@ -19,6 +19,7 @@ struct ModuleDef {
   float mass = 0.f;
   float maintenanceCost = 0.f;
   float powerDraw = 0.f; // GW; negative = generation (reactors)
+  float basePrice = 0.0f;
 
   // Helper to find a specific attribute
   bool hasAttribute(AttributeType type) const {

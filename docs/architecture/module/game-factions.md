@@ -22,6 +22,7 @@ Procedural faction generation, bilateral relationship tracking, per-faction cred
 - [faction-dna-genetic-profile](/docs/developer/pattern/faction-dna-genetic-profile.md) (P) — Multi-axis strategic DNA (Aggressive, Industrial, Commercial, Cooperative)
 - [procedural-hull-generation](/docs/developer/pattern/procedural-hull-generation.md) (P) — Role-based HullDef construction (Combat, Cargo, General)
 - [evolutionary-strategy-drift](/docs/developer/pattern/evolutionary-strategy-drift.md) (P) — K/D-ratio driven DNA mutation in `EconomyManager`
+- [economy-faction-standards](/docs/developer/pattern/economy-faction-standards.md) (P) — Faction progression caches their engineered `ModuleDef` and `AmmoDef` variants globally.
 - [faction-specialization-dna](/docs/developer/pattern/faction-specialization-dna.md) (P) — Civilian hulls receive 2.5x volume bonus to facilitate market equilibrium.
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `FactionManager::instance()`
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)

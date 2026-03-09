@@ -88,8 +88,8 @@ void KinematicsSystem::applyRotation(entt::registry &registry,
 
   auto &inertial = registry.get<InertialBody>(entity);
   if (b2Body_IsValid(inertial.bodyId)) {
-    b2Body_ApplyAngularImpulse(inertial.bodyId,
-                               direction * inertial.rotationSpeed, true);
+    b2Body_SetAngularVelocity(inertial.bodyId,
+                              direction * inertial.rotationSpeed);
   }
 }
 

@@ -33,6 +33,8 @@ Two-tier resource economy. See [economy-resource-chain](/docs/developer/pattern/
 | `stockpile` | `map<Resource, float>` | Current quantity of each resource. |
 | `factories` | `map<Resource, int>` | Count of active production facilities. |
 | `currentPrices` | `map<Resource, float>` | Dynamic market price per [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P). |
+| `shopModules` | `vector<ModuleDef>` | Surplus or outdated ("scrap yard") module production sold to players. |
+| `shopAmmo` | `vector<AmmoDef>` | Surplus or outdated ammo production sold to players. |
 
 ## 5. Faction System
 
@@ -44,6 +46,8 @@ Two-tier resource economy. See [economy-resource-chain](/docs/developer/pattern/
 | `color` | `sf::Color` | Faction color used in all UI rendering. |
 | `dna` | `FactionDNA` | Genetic strategic axes: Aggression, Industrialism, Commercialism. |
 | `stats` | `MissionStats` | Historical performance, kills/losses, and K/D value ratio. |
+| `factionDesigns` | `map<ProductKey, ModuleDef>` | Holds the highest-tier proven design for module categories (Faction Standards). |
+| `factionAmmo` | `map<ProductKey, AmmoDef>` | Holds the highest-tier proven design for ammo types (Faction Standards). |
 | `credits` | `float` | Strategic budget used for factory expansion and ship outfitting. |
 
 Spawn weights are normalised on generation so they always sum to 1.0.

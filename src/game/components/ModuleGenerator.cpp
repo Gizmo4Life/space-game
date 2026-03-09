@@ -35,6 +35,9 @@ ModuleDef ModuleGenerator::generate(
   case ModuleCategory::Battery:
     catName = "Battery";
     break;
+  case ModuleCategory::ReactionWheel:
+    catName = "Reaction Wheel";
+    break;
   }
 
   Tier sizeTier = Tier::T1;
@@ -180,6 +183,9 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
   case ModuleCategory::Ammo:
     // Ammo racks just hold ammo, governed purely by their universal
     // Size and Volume attributes. No extra functional attributes.
+    break;
+  case ModuleCategory::ReactionWheel:
+    attrs.push_back({AttributeType::TurnRate, rollTier()});
     break;
   }
 

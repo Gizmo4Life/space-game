@@ -166,10 +166,13 @@ int main() {
       KinematicsSystem::applyThrust(registry, playerEntity, 1.0f);
     if (sHeld)
       KinematicsSystem::applyThrust(registry, playerEntity, -0.6f);
+
+    float rotDir = 0.0f;
     if (aHeld)
-      KinematicsSystem::applyRotation(registry, playerEntity, -1.0f);
+      rotDir -= 1.0f;
     if (dHeld)
-      KinematicsSystem::applyRotation(registry, playerEntity, 1.0f);
+      rotDir += 1.0f;
+    KinematicsSystem::applyRotation(registry, playerEntity, rotDir);
     if (spaceHeld)
       WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
 

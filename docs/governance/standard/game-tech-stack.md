@@ -54,6 +54,8 @@ Establish the technical foundations for the space-game proof-of-concept using C+
 | [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) | **P** | Required for `PlanetEconomy`, `CargoComponent`, `Faction`, `NPCComponent`, `CreditsComponent`. |
 | **Singleton Manager** | **A** | `EconomyManager`, `FactionManager`, `NPCShipManager` use static `instance()` singletons. Acceptable for prototyping; evaluate ECS-system refactor later. |
 | [trade-static-interface](/docs/developer/pattern/trade-static-interface.md) | **P** | `TradeManager` uses static buy/sell methods for atomic cargo transactions. |
+| [economy-faction-standards](/docs/developer/pattern/economy-faction-standards.md) | **P** | Factions cache their best modular variants. Inferior variants go to Scrap Yards. |
+| [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) | **P** | Live market price calculations utilizing resource scarcity. |
 
 ## 6. Combat & Logistics
 *Nuance: Tiered combat requires strict resource discipline and unified slot definitions.*

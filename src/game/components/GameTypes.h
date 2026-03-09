@@ -23,7 +23,8 @@ enum class AttributeType {
   Regen,
   Volume,
   Output,
-  Guidance // Missile ammo targeting: T1=unguided, T2=heat-seek, T3=fly-by-wire
+  Guidance, // Missile ammo targeting: T1=unguided, T2=heat-seek, T3=fly-by-wire
+  TurnRate  // Reaction Wheel turning power
 };
 
 enum class ModuleCategory {
@@ -34,7 +35,8 @@ enum class ModuleCategory {
   Reactor,
   Command,
   Battery,
-  Ammo // Physical storage rack for ammunition
+  Ammo,         // Physical storage rack for ammunition
+  ReactionWheel // Provides TurnRate attribute
 };
 
 enum class LayoutPattern { Symmetrical, Radial, Asymmetrical, Alternating };
@@ -46,7 +48,7 @@ struct ModuleAttribute {
   Tier tier;
 };
 
-enum class ProductType { Resource, Hull, Module };
+enum class ProductType { Resource, Hull, Module, Ammo };
 
 struct ProductKey {
   ProductType type;

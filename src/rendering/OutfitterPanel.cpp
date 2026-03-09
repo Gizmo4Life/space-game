@@ -278,12 +278,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
       const auto &mdef = shopModules[i];
       ProductKey pk{ProductType::Module, (uint32_t)i, Tier::T1};
 
-      float price = 500.f;
-      if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-        auto &eco = registry.get<PlanetEconomy>(planetEntity_);
-        price = EconomyManager::instance().calculatePrice(
-            pk, eco.marketStockpile[pk], eco.getTotalPopulation(), false);
-      }
+      float price = mdef.basePrice > 0.f ? mdef.basePrice : 500.f;
 
       std::string label =
           (sel ? "> " : "  ") + mdef.name + " $" + fmt(price, 0);

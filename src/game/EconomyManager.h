@@ -64,9 +64,10 @@ public:
   bool executeTrade(entt::registry &registry, entt::entity planet,
                     entt::entity player, Resource res, float delta);
 
-  float calculatePrice(ProductKey pk, float currentStock, float population,
-                       bool isAtWar);
+  float calculatePrice(ProductKey product, float localSupply,
+                       float localPopulation, bool isBlackMarket = false);
 
+  const std::map<ProductKey, Recipe> &getRecipes() const { return recipes; }
   const Recipe &getRecipe(ProductKey pk) const { return recipes.at(pk); }
 
 private:

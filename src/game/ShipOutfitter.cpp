@@ -80,10 +80,18 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
     return static_cast<Tier>(std::max(1, static_cast<int>(t) - 1));
   };
 
-  // Generates a ModuleDef for the requested attribute + tier
+  // Generates a ModuleDef for the requested attribute + tier, checking faction
+  // standards first
   auto makeModule = [&](ModuleCategory cat, AttributeType attr,
                         Tier slotSize) -> ModuleDef {
     Tier t = effectiveTier(slotSize);
+
+    // Check if the faction has a standard design for this category and tier
+    ProductKey pk{ProductType::Module, static_cast<uint32_t>(cat), t};
+    if (fData->factionDesigns.count(pk)) {
+      return fData->factionDesigns.at(pk);
+    }
+
     return gen.generate(cat,
                         {{attr, t},
                          {AttributeType::Size, t},
@@ -212,6 +220,7 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   InstalledPower ip;
   InstalledCommand icmd;
   InstalledBatteries ib;
+  InstalledReactionWheels irw;
 
   auto isEmpty = [](const ModuleDef &m) {
     return m.name.empty() || m.name == "Empty";
@@ -251,6 +260,9 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
     case ModuleCategory::Battery:
       ib.modules.push_back(m);
       break;
+    case ModuleCategory::ReactionWheel:
+      irw.modules.push_back(m);
+      break;
     default:
       break; // Engine/Weapon/Command should not appear here
     }
@@ -263,6 +275,7 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   registry.emplace_or_replace<InstalledCargo>(entity, ic);
   registry.emplace_or_replace<InstalledPower>(entity, ip);
   registry.emplace_or_replace<InstalledBatteries>(entity, ib);
+  registry.emplace_or_replace<InstalledReactionWheels>(entity, irw);
   registry.emplace_or_replace<CargoComponent>(entity);
   registry.emplace_or_replace<HullDef>(entity, bp.hull);
 
@@ -310,6 +323,8 @@ ShipOutfitHash ShipOutfitter::calculateOutfitHash(entt::registry &registry,
     addMods(registry.get<InstalledCargo>(entity));
   if (registry.all_of<InstalledPower>(entity))
     addMods(registry.get<InstalledPower>(entity));
+  if (registry.all_of<InstalledReactionWheels>(entity))
+    addMods(registry.get<InstalledReactionWheels>(entity));
 
   return hash;
 }
@@ -363,6 +378,9 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
     registry.get_or_emplace<InstalledCargo>(entity).modules.push_back(mDef);
   } else if (mDef.hasAttribute(AttributeType::Output)) {
     registry.get_or_emplace<InstalledPower>(entity).modules.push_back(mDef);
+  } else if (mDef.hasAttribute(AttributeType::TurnRate)) {
+    registry.get_or_emplace<InstalledReactionWheels>(entity).modules.push_back(
+        mDef);
   }
 
   entt::entity payer = entity;
@@ -374,8 +392,7 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
   }
   if (registry.valid(payer) && registry.all_of<CreditsComponent>(payer)) {
     auto &credits = registry.get<CreditsComponent>(payer);
-    float price = EconomyManager::instance().calculatePrice(
-        moduleKey, 1.0f, eco.getTotalPopulation(), false);
+    float price = mDef.basePrice > 0.f ? mDef.basePrice : 500.0f;
     credits.amount -= (price + 50.0f);
     // Add to first faction as proxy
     if (!eco.factionData.empty()) {
@@ -409,6 +426,8 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
     addVal(registry.get<InstalledCargo>(entity).modules);
   if (registry.all_of<InstalledPower>(entity))
     addVal(registry.get<InstalledPower>(entity).modules);
+  if (registry.all_of<InstalledReactionWheels>(entity))
+    addVal(registry.get<InstalledReactionWheels>(entity).modules);
   return total;
 }
 
@@ -452,7 +471,6 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
       if (m.hasAttribute(AttributeType::Thrust))
         ie.totalThrust +=
             getMult(m.getAttributeTier(AttributeType::Thrust)) * 8000.0f;
-      ie.totalRotSpeed += 4000.0f;
     }
   }
   if (registry.all_of<InstalledWeapons>(entity)) {
@@ -532,14 +550,37 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
     sumModules(registry.get<InstalledCommand>(entity).modules);
   }
 
+  if (registry.all_of<InstalledReactionWheels>(entity)) {
+    auto &irw = registry.get<InstalledReactionWheels>(entity);
+    irw.totalTurnRate = 0;
+    sumModules(irw.modules);
+    for (const auto &m : irw.modules) {
+      if (m.name.empty() || m.name == "Empty")
+        continue;
+      if (m.hasAttribute(AttributeType::TurnRate))
+        irw.totalTurnRate +=
+            getMult(m.getAttributeTier(AttributeType::TurnRate)) * 20000.0f;
+    }
+  }
+
   registry.emplace_or_replace<ShipStats>(entity, stats);
 
   if (registry.all_of<InertialBody>(entity)) {
     auto &ib = registry.get<InertialBody>(entity);
     if (registry.all_of<InstalledEngines>(entity)) {
       ib.thrustForce = registry.get<InstalledEngines>(entity).totalThrust;
-      ib.rotationSpeed = registry.get<InstalledEngines>(entity).totalRotSpeed;
     }
+
+    // Calculate rotation speed from reaction wheels (and a base minimum)
+    // divided by mass
+    float baseTurnRate = 50000.0f; // Minimum rotational force
+    float wheelTurnRate = 0.0f;
+    if (registry.all_of<InstalledReactionWheels>(entity)) {
+      wheelTurnRate =
+          registry.get<InstalledReactionWheels>(entity).totalTurnRate;
+    }
+    ib.rotationSpeed = (baseTurnRate + wheelTurnRate) / stats.totalMass;
+
     // Initial mass calculation
     b2MassData md;
     md.mass = stats.totalMass;
