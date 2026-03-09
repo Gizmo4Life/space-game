@@ -101,7 +101,7 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
           makeModule(ModuleCategory::Engine, AttributeType::Thrust, slot.size));
     } else if (slot.role == SlotRole::Command) {
       bp.modules.push_back(makeModule(ModuleCategory::Command,
-                                      AttributeType::Command, slot.size));
+                                      AttributeType::Efficiency, slot.size));
     } else if (slot.role == SlotRole::Hardpoint) {
       if (fData->dna.aggression > 0.3f || role == "Combat") {
         bp.modules.push_back(
@@ -125,9 +125,9 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
     bp.modules.push_back(
         makeModule(ModuleCategory::Utility, AttributeType::Volume, sizeTier));
   }
-  // Battery
+  // Battery (stored power reserve)
   bp.modules.push_back(
-      makeModule(ModuleCategory::Battery, AttributeType::Battery, sizeTier));
+      makeModule(ModuleCategory::Battery, AttributeType::Capacity, sizeTier));
 
   // 3. Simple volume/power balancing pass
   auto recomputeTotals = [&](float &totalVol, float &totalPower) {
@@ -233,19 +233,27 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
     }
   }
 
-  // 2. Internals (beyond slot count)
+  // 2. Internals (beyond slot count) — dispatch by category, not attributes
   for (size_t idx = bp.hull.slots.size(); idx < bp.modules.size(); ++idx) {
     const auto &m = bp.modules[idx];
     if (isEmpty(m))
       continue;
-    if (m.hasAttribute(AttributeType::Capacity))
+    switch (m.category) {
+    case ModuleCategory::Shield:
       is.modules.push_back(m);
-    else if (m.hasAttribute(AttributeType::Volume))
+      break;
+    case ModuleCategory::Utility:
       ic.modules.push_back(m);
-    else if (m.hasAttribute(AttributeType::Output))
+      break;
+    case ModuleCategory::Reactor:
       ip.modules.push_back(m);
-    else if (m.hasAttribute(AttributeType::Battery))
+      break;
+    case ModuleCategory::Battery:
       ib.modules.push_back(m);
+      break;
+    default:
+      break; // Engine/Weapon/Command should not appear here
+    }
   }
 
   registry.emplace_or_replace<InstalledEngines>(entity, ie);
@@ -512,9 +520,9 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
     for (const auto &m : ib.modules) {
       if (m.name.empty() || m.name == "Empty")
         continue;
-      if (m.hasAttribute(AttributeType::Battery))
+      if (m.hasAttribute(AttributeType::Capacity))
         ib.capacity +=
-            getMult(m.getAttributeTier(AttributeType::Battery)) * 500.0f;
+            getMult(m.getAttributeTier(AttributeType::Capacity)) * 500.0f;
     }
     stats.batteryCapacity = ib.capacity;
     stats.batteryLevel = ib.capacity;

@@ -20,6 +20,7 @@ private:
   entt::entity targetShip_ = entt::null;
   int selectedOutfitterIndex_ = 0;
   bool outfitterMarketMode_ = false;
+  int outfitterTab_ = 0; // 0 = Modules, 1 = Ammo
 };
 
 } // namespace space

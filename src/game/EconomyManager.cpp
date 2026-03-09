@@ -120,6 +120,10 @@ void EconomyManager::init() {
         r.inputs[resKey(Resource::Powercells)] += 2.0f * multiplier;
         r.inputs[resKey(Resource::Metals)] += 1.0f * multiplier;
         break;
+      case ModuleCategory::Ammo:
+        r.inputs[resKey(Resource::Metals)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::ManufacturingGoods)] += 1.0f * multiplier;
+        break;
       }
 
       float sizeScale =

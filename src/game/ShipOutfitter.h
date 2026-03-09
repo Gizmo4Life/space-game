@@ -40,6 +40,8 @@ public:
   void saveProceduralHulls() const;
   void loadProceduralHulls();
 
+  void populateShop(entt::registry &registry, entt::entity planet) const;
+
 private:
   ShipOutfitter() = default;
 

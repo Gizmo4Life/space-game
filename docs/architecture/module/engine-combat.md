@@ -11,13 +11,16 @@ Ship-to-ship engagement, projectile lifecycles, and damage resolution.
 
 ## 1. Physical Scope
 - **Path:** `/src/engine/combat/` — `WeaponSystem.h/.cpp`
-- **Components:** `/src/game/components/WeaponComponent.h`, `ShipStats.h`, `AmmoComponent.h`
+- **Components:** `/src/game/components/WeaponComponent.h`, `ShipStats.h`, `InstalledModules.h` (`InstalledAmmo`), `ShipModule.h` (`AmmoDef`, `WeaponType`)
 - **Ownership:** Core Engine Team
 
-## 2. Tiered Weapon Mechanics
-- **TIER 1: Energy**: No ammo requirement. Draws from `batteryLevel`.
-- **TIER 2: Projectile**: Ballistic (no self-acceleration). Uses `AmmoMagazine` (3 types: Kinetic, Explosive, EMP).
-- **TIER 3: Missile**: Self-propelled (acceleration trait). Uses `AmmoMagazine` (9 types: Kinetic/Explosive/EMP × Dumb/Heat-Seeking/Remote).
+## 2. Capability Alignment
+- [Capability: Combat](/docs/architecture/capability/combat.md) (T2)
+
+## 3. Tiered Weapon Mechanics
+- **Energy (`WeaponType::Energy`)**: No ammo requirement. Draws from `batteryLevel`. Attributes: Range, Accuracy, ROF, Efficiency.
+- **Projectile (`WeaponType::Projectile`)**: Ballistic (no self-acceleration). Consumes `AmmoStack` matching the weapon's `Caliber`. Ammo defines `Warhead` (Kinetic, Explosive, EMP) and `Mass/Volume`. 
+- **Missile (`WeaponType::Missile`)**: Self-propelled (acceleration trait). Consumes `AmmoStack` matching `Caliber`. Ammo defines `Warhead`, `Range`, and `Guidance` (Unguided, Heat-Seeking, Fly-by-wire).
 
 ## 3. Derelict & EMP State
 - **Staffing**: Vessels with manned components (Cockpit/Bridge) become derelict if unstaffed.
@@ -25,8 +28,8 @@ Ship-to-ship engagement, projectile lifecycles, and damage resolution.
 - **Control Block**: Derelict vessels cannot thrust, rotate, or fire weapons.
 
 ## 4. Pattern Composition
-- [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `WeaponComponent`, `ProjectileComponent`, `AmmoMagazine`.
-- [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `WeaponSystem::update` handles ammo consumption and EMP recovery.
+- [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `WeaponComponent`, `ProjectileComponent`, `InstalledAmmo`
+- [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `WeaponSystem::update` handles ammo consumption, cooldown tracking, and EMP recovery.
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P) — `combat.weapon.fire`, `combat.collision.resolve`
 - [kinematics-newtonian-2d](/docs/developer/pattern/kinematics-newtonian-2d.md) (P) — Projectile launch alignment (-Y forward)
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)

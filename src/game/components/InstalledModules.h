@@ -71,4 +71,25 @@ struct InstalledBatteries {
   float current = 0.f;
 };
 
+struct InstalledAmmo {
+  std::vector<ModuleDef> racks;     // The ammo storage modules
+  std::vector<AmmoStack> inventory; // Actual ammunition stored
+
+  float usedVolume() const {
+    float total = 0.0f;
+    for (const auto &stack : inventory) {
+      total += stack.type.volumePerRound * stack.count;
+    }
+    return total;
+  }
+
+  float totalCapacity() const {
+    float total = 0.0f;
+    for (const auto &rack : racks) {
+      total += rack.volumeOccupied;
+    }
+    return total;
+  }
+};
+
 } // namespace space

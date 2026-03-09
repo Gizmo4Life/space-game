@@ -21,6 +21,8 @@ public:
 
   ModuleDef generateRandomModule(ModuleCategory category, Tier sizeTier);
 
+  AmmoDef generateAmmo(WeaponType weaponType, Tier caliberTier);
+
 private:
   ModuleGenerator() = default;
 };

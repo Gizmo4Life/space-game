@@ -8,14 +8,14 @@ pillar: architecture
 # Capability: Combat
 
 ## 1. Business Intent
-Enable ship-to-ship engagement through projectile and beam-based weapon systems. This capability manages the lifecycle of projectiles, damage calculations, and health state permanence.
+Enable multi-layered ship-to-ship engagement through distinct weapon subtypes (Energy, Projectile, Missile). This capability manages the lifecycle of projectiles, dynamic ammunition consumption (`AmmoDef`), damage calculations from tiered warheads, and health state permanence.
 
 ## 2. Orchestration Flow
-1. **Weapon Fire:** `WeaponSystem::fire` checks cooldown and energy, deducts from `ShipStats`, spawns a `ProjectileComponent` entity with a Box2D bullet body.
+1. **Weapon Fire:** `WeaponSystem::fire` checks cooldowns and deducts resources. Energy weapons draw from `ShipStats` battery; Projectiles and Missiles consume specific matching `AmmoStack` inventory from `InstalledAmmo`. Spawns a `ProjectileComponent` entity with a Box2D bullet body.
 2. **Trajectory Calculation:** Projectiles receive initial velocity from owner orientation along the +X forward axis. Thrust and weapon firing are aligned to this same axis for intuitive control.
-3. **Hit Verification:** `WeaponSystem::handleCollisions` performs distance-based proximity checks between projectiles and ships (excluding owner).
-4. **Damage Resolution:** Deducts damage from `ShipStats.currentHull`; destroys projectile on hit.
-5. **TTL Cleanup:** Expired projectiles are destroyed each tick.
+3. **Hit Verification:** `WeaponSystem::handleCollisions` performs distance-based proximity checks between projectiles and ships (excluding owner). Missiles optionally utilize `AttributeType::Guidance` for mid-flight targeting adjustments.
+4. **Damage Resolution:** Deducts damage from `ShipStats.currentHull` based on weapon damage and Ammo payload (`Tier::Kinetic/Explosive/EMP`). Destroys projectile on hit.
+5. **TTL Cleanup:** Expired projectiles (or those reaching `Range` limit) are destroyed each tick.
 
 ## 3. Data Flow & Integrity
 - **Trigger:** Player "Fire" action or AI combat behavior.

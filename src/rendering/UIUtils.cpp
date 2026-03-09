@@ -59,6 +59,8 @@ std::string getAttributeName(AttributeType type) {
     return "Warhead";
   case AttributeType::Range:
     return "Range";
+  case AttributeType::Guidance:
+    return "Guidance";
   case AttributeType::Accuracy:
     return "Accuracy";
   case AttributeType::Capacity:

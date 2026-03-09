@@ -7,6 +7,7 @@ namespace space {
 
 enum class Tier { T1 = 1, T2 = 2, T3 = 3 };
 enum class VisualStyle { Triangle, Square, Circular, Sleek, Polygon };
+enum class WeaponType { Energy, Projectile, Missile };
 
 enum class AttributeType {
   Size,
@@ -22,8 +23,7 @@ enum class AttributeType {
   Regen,
   Volume,
   Output,
-  Command,
-  Battery
+  Guidance // Missile ammo targeting: T1=unguided, T2=heat-seek, T3=fly-by-wire
 };
 
 enum class ModuleCategory {
@@ -33,7 +33,8 @@ enum class ModuleCategory {
   Utility,
   Reactor,
   Command,
-  Battery
+  Battery,
+  Ammo // Physical storage rack for ammunition
 };
 
 enum class LayoutPattern { Symmetrical, Radial, Asymmetrical, Alternating };

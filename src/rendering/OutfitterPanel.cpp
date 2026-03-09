@@ -58,25 +58,38 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
         kp->code == sf::Keyboard::Key::S) {
       selectedOutfitterIndex_++;
     }
+    if (kp->code == sf::Keyboard::Key::Z) {
+      outfitterTab_ = (outfitterTab_ + 1) % 2;
+    }
     if (kp->code == sf::Keyboard::Key::Enter ||
         kp->code == sf::Keyboard::Key::B) {
       if (outfitterMarketMode_) {
-        std::vector<ModuleDef> shopModules;
-        if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-          shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
-        }
-        if (selectedOutfitterIndex_ >= 0 &&
-            selectedOutfitterIndex_ < (int)shopModules.size()) {
-          const auto &mdef = shopModules[selectedOutfitterIndex_];
-          ProductKey pk{ProductType::Module, (uint32_t)selectedOutfitterIndex_,
-                        Tier::T1}; // Default T1 for registry lookup
-
-          // For Engines/Weapons, we need a slot. For now, try slot 0.
-          // In a full UI, the player would select a slot first.
-          entt::entity target =
-              registry.valid(targetShip_) ? targetShip_ : playerEntity_;
-          ShipOutfitter::instance().refitModule(registry, target, planetEntity_,
-                                                pk, 0);
+        // Module Tab
+        if (outfitterTab_ == 0) {
+          std::vector<ModuleDef> shopModules;
+          if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+            shopModules =
+                registry.get<PlanetEconomy>(planetEntity_).shopModules;
+          }
+          if (selectedOutfitterIndex_ >= 0 &&
+              selectedOutfitterIndex_ < (int)shopModules.size()) {
+            ProductKey pk{ProductType::Module,
+                          (uint32_t)selectedOutfitterIndex_, Tier::T1};
+            entt::entity target =
+                registry.valid(targetShip_) ? targetShip_ : playerEntity_;
+            ShipOutfitter::instance().refitModule(registry, target,
+                                                  planetEntity_, pk, 0);
+          }
+        } else {
+          // Ammo Tab
+          std::vector<AmmoDef> shopAmmo;
+          if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+            shopAmmo = registry.get<PlanetEconomy>(planetEntity_).shopAmmo;
+          }
+          if (selectedOutfitterIndex_ >= 0 &&
+              selectedOutfitterIndex_ < (int)shopAmmo.size()) {
+            // TODO: call ShipOutfitter ammo refit when implemented
+          }
         }
       }
     }
@@ -163,39 +176,120 @@ void OutfitterPanel::render(sf::RenderWindow &window,
   y += 10.f;
 
   std::vector<ModuleDef> allInstalled;
-  auto collect = [&](const std::vector<ModuleDef> &modules) {
-    for (const auto &m : modules)
-      if (!m.name.empty() && m.name != "Empty")
-        allInstalled.push_back(m);
-  };
-  if (registry.all_of<InstalledEngines>(targetShip_))
-    collect(registry.get<InstalledEngines>(targetShip_).modules);
-  if (registry.all_of<InstalledWeapons>(targetShip_))
-    collect(registry.get<InstalledWeapons>(targetShip_).modules);
-  if (registry.all_of<InstalledShields>(targetShip_))
-    collect(registry.get<InstalledShields>(targetShip_).modules);
-  if (registry.all_of<InstalledCargo>(targetShip_))
-    collect(registry.get<InstalledCargo>(targetShip_).modules);
-  if (registry.all_of<InstalledPower>(targetShip_))
-    collect(registry.get<InstalledPower>(targetShip_).modules);
+  if (outfitterTab_ == 0) {
+    auto collect = [&](const std::vector<ModuleDef> &modules) {
+      for (const auto &m : modules)
+        if (!m.name.empty() && m.name != "Empty")
+          allInstalled.push_back(m);
+    };
+    if (registry.all_of<InstalledEngines>(targetShip_))
+      collect(registry.get<InstalledEngines>(targetShip_).modules);
+    if (registry.all_of<InstalledWeapons>(targetShip_))
+      collect(registry.get<InstalledWeapons>(targetShip_).modules);
+    if (registry.all_of<InstalledShields>(targetShip_))
+      collect(registry.get<InstalledShields>(targetShip_).modules);
+    if (registry.all_of<InstalledCargo>(targetShip_))
+      collect(registry.get<InstalledCargo>(targetShip_).modules);
+    if (registry.all_of<InstalledPower>(targetShip_))
+      collect(registry.get<InstalledPower>(targetShip_).modules);
+  }
 
   // Left: Player Modules
   float leftX = x;
   float rightX = rect.position.x + 400.f;
   float startY = y;
 
-  dtext("Installed Modules", 15, sf::Color::Yellow);
-  if (allInstalled.empty()) {
-    dtext("Empty", 14, sf::Color(150, 150, 150));
-  } else {
-    for (int i = 0; i < (int)allInstalled.size(); ++i) {
-      bool sel = (!outfitterMarketMode_ && i == selectedOutfitterIndex_);
-      const auto &mdef = allInstalled[i];
+  if (outfitterTab_ == 0) {
+    dtext("Installed Modules", 15, sf::Color::Yellow);
+    if (allInstalled.empty()) {
+      dtext("Empty", 14, sf::Color(150, 150, 150));
+    } else {
+      for (int i = 0; i < (int)allInstalled.size(); ++i) {
+        bool sel = (!outfitterMarketMode_ && i == selectedOutfitterIndex_);
+        const auto &mdef = allInstalled[i];
 
-      std::string label = (sel ? "> " : "  ") + mdef.name;
+        std::string label = (sel ? "> " : "  ") + mdef.name;
+        sf::Text t(*font, label, 14);
+        t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
+        t.setPosition({leftX, y});
+        window.draw(t);
+        y += 18.f;
+
+        std::string statsLine = "    Vol: " + fmt(mdef.volumeOccupied, 1) +
+                                "  Mass: " + fmt(mdef.mass, 1) +
+                                "  Power: " + fmt(mdef.powerDraw, 1) + " GW";
+        sf::Text st(*font, statsLine, 12);
+        st.setFillColor(sf::Color(160, 160, 160));
+        st.setPosition({leftX, y});
+        window.draw(st);
+        y += 18.f;
+
+        if (sel) {
+          for (const auto &attr : mdef.attributes) {
+            sf::Text labelText(*font,
+                               "    " + getAttributeName(attr.type) + ": ", 12);
+            labelText.setFillColor(sf::Color(180, 180, 180));
+            labelText.setPosition({leftX, y});
+            window.draw(labelText);
+
+            sf::Text starText(*font, getTierStars(attr.tier), 12);
+            starText.setFillColor(sf::Color::Yellow);
+            starText.setPosition({leftX + 130.f, y});
+            window.draw(starText);
+
+            y += 16.f;
+          }
+        }
+      }
+    }
+  } else {
+    dtext("Ammunition Inventory", 15, sf::Color::Yellow);
+    if (registry.all_of<InstalledAmmo>(targetShip_)) {
+      auto &ia = registry.get<InstalledAmmo>(targetShip_);
+      if (ia.inventory.empty()) {
+        dtext("No ammunition stored.", 14, sf::Color(150, 150, 150));
+      } else {
+        for (size_t i = 0; i < ia.inventory.size(); ++i) {
+          auto &stack = ia.inventory[i];
+          dtext("  " + std::to_string(stack.count) + "x " + stack.type.name, 14,
+                sf::Color::White);
+        }
+      }
+      y += 10.f;
+      dtext(fmt(ia.usedVolume(), 1) + "/" + fmt(ia.totalCapacity(), 1) +
+                " units used",
+            12, sf::Color(160, 160, 160));
+    } else {
+      dtext("No Ammo Racks Installed.", 14, sf::Color::Red);
+    }
+  }
+
+  // Right: Market Modules
+  y = startY;
+  x = rightX;
+  if (outfitterTab_ == 0) {
+    dtext("Planet Market (Modules)", 15, sf::Color::Yellow);
+    std::vector<ModuleDef> shopModules;
+    if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+      shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
+    }
+    for (int i = 0; i < (int)shopModules.size(); ++i) {
+      bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
+      const auto &mdef = shopModules[i];
+      ProductKey pk{ProductType::Module, (uint32_t)i, Tier::T1};
+
+      float price = 500.f;
+      if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+        auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+        price = EconomyManager::instance().calculatePrice(
+            pk, eco.marketStockpile[pk], eco.getTotalPopulation(), false);
+      }
+
+      std::string label =
+          (sel ? "> " : "  ") + mdef.name + " $" + fmt(price, 0);
       sf::Text t(*font, label, 14);
       t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
-      t.setPosition({leftX, y});
+      t.setPosition({x, y});
       window.draw(t);
       y += 18.f;
 
@@ -204,7 +298,7 @@ void OutfitterPanel::render(sf::RenderWindow &window,
                               "  Power: " + fmt(mdef.powerDraw, 1) + " GW";
       sf::Text st(*font, statsLine, 12);
       st.setFillColor(sf::Color(160, 160, 160));
-      st.setPosition({leftX, y});
+      st.setPosition({x, y});
       window.draw(st);
       y += 18.f;
 
@@ -213,72 +307,42 @@ void OutfitterPanel::render(sf::RenderWindow &window,
           sf::Text labelText(*font, "    " + getAttributeName(attr.type) + ": ",
                              12);
           labelText.setFillColor(sf::Color(180, 180, 180));
-          labelText.setPosition({leftX, y});
+          labelText.setPosition({x, y});
           window.draw(labelText);
 
           sf::Text starText(*font, getTierStars(attr.tier), 12);
           starText.setFillColor(sf::Color::Yellow);
-          starText.setPosition({leftX + 130.f, y});
+          starText.setPosition({x + 130.f, y});
           window.draw(starText);
-
           y += 16.f;
         }
       }
     }
-  }
-
-  // Right: Market Modules
-  y = startY;
-  x = rightX;
-  dtext("Planet Market", 15, sf::Color::Yellow);
-
-  // For now, list global registry modules as a test market
-  std::vector<ModuleDef> shopModules;
-  if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-    shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
-  }
-  for (int i = 0; i < (int)shopModules.size(); ++i) {
-    bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
-    const auto &mdef = shopModules[i];
-    ProductKey pk{ProductType::Module, (uint32_t)i, Tier::T1}; // Placeholder
-
-    float price = 500.f; // Base Price
+  } else {
+    dtext("Planet Market (Ammonition)", 15, sf::Color::Yellow);
+    std::vector<AmmoDef> shopAmmo;
     if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-      auto &eco = registry.get<PlanetEconomy>(planetEntity_);
-      price = EconomyManager::instance().calculatePrice(
-          pk, eco.marketStockpile[pk], eco.getTotalPopulation(), false);
+      shopAmmo = registry.get<PlanetEconomy>(planetEntity_).shopAmmo;
     }
+    for (int i = 0; i < (int)shopAmmo.size(); ++i) {
+      bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
+      const auto &ammo = shopAmmo[i];
 
-    std::string label = (sel ? "> " : "  ") + mdef.name + " $" + fmt(price, 0);
-    sf::Text t(*font, label, 14);
-    t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
-    t.setPosition({x, y});
-    window.draw(t);
-    y += 18.f;
+      std::string label =
+          (sel ? "> " : "  ") + ammo.name + " $" + fmt(ammo.basePrice, 0);
+      sf::Text t(*font, label, 14);
+      t.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);
+      t.setPosition({x, y});
+      window.draw(t);
+      y += 18.f;
 
-    std::string statsLine = "    Vol: " + fmt(mdef.volumeOccupied, 1) +
-                            "  Mass: " + fmt(mdef.mass, 1) +
-                            "  Power: " + fmt(mdef.powerDraw, 1) + " GW";
-    sf::Text st(*font, statsLine, 12);
-    st.setFillColor(sf::Color(160, 160, 160));
-    st.setPosition({x, y});
-    window.draw(st);
-    y += 18.f;
-
-    if (sel) {
-      for (const auto &attr : mdef.attributes) {
-        sf::Text labelText(*font, "    " + getAttributeName(attr.type) + ": ",
-                           12);
-        labelText.setFillColor(sf::Color(180, 180, 180));
-        labelText.setPosition({x, y});
-        window.draw(labelText);
-
-        sf::Text starText(*font, getTierStars(attr.tier), 12);
-        starText.setFillColor(sf::Color::Yellow);
-        starText.setPosition({x + 130.f, y});
-        window.draw(starText);
-        y += 16.f;
-      }
+      std::string statsLine = "    Vol: " + fmt(ammo.volumePerRound, 1) +
+                              "  Mass: " + fmt(ammo.massPerRound, 1);
+      sf::Text st(*font, statsLine, 12);
+      st.setFillColor(sf::Color(160, 160, 160));
+      st.setPosition({x, y});
+      window.draw(st);
+      y += 18.f;
     }
   }
 

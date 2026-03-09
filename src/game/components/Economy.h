@@ -50,6 +50,7 @@ struct PlanetEconomy {
   std::map<ProductKey, float> marketStockpile; // Aggregate supply for trade
   std::map<ProductKey, float> currentPrices;
   std::vector<ModuleDef> shopModules; // Procedurally generated local modules
+  std::vector<AmmoDef> shopAmmo;      // Procedurally generated local ammunition
 
   // Base consumption per 1k population (Global reference)
   std::map<Resource, float> baseConsumption;

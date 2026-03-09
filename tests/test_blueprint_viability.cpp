@@ -275,7 +275,8 @@ TEST_CASE("Minimal T1 ship is viable", "[blueprint][scale]") {
   bp.role = "General";
 
   // Slot modules: command, engine, hardpoint (empty — just checking viability)
-  bp.modules.push_back(makeT1(ModuleCategory::Command, AttributeType::Command));
+  bp.modules.push_back(
+      makeT1(ModuleCategory::Command, AttributeType::Efficiency));
   bp.modules.push_back(makeT1(ModuleCategory::Engine, AttributeType::Thrust));
   bp.modules.push_back(ModuleDef{}); // empty hardpoint
 

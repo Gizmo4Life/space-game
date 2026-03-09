@@ -80,6 +80,7 @@ add_executable(SpaceGameTests
     tests/test_kinematics.cpp
     tests/test_gravity.cpp
     tests/test_world_loader.cpp
+    tests/test_ammo.cpp
 )
 target_include_directories(SpaceGameTests PRIVATE src)
 target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
