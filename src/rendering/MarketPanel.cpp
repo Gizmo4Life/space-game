@@ -3,6 +3,7 @@
 #include "game/EconomyManager.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
+#include "game/components/PlayerComponent.h"
 
 namespace space {
 
@@ -11,6 +12,14 @@ MarketPanel::MarketPanel(entt::entity planet, entt::entity player)
 
 void MarketPanel::handleEvent(const sf::Event &event, entt::registry &registry,
                               b2WorldId) {
+  auto playerView = registry.view<PlayerComponent>();
+  for (auto e : playerView) {
+    if (playerView.get<PlayerComponent>(e).isFlagship) {
+      playerEntity_ = e;
+      break;
+    }
+  }
+
   if (const auto *kp = event.getIf<sf::Event::KeyPressed>()) {
     int maxRes = static_cast<int>(Resource::Refinery);
     if (kp->code == sf::Keyboard::Key::Up || kp->code == sf::Keyboard::Key::W) {
@@ -36,6 +45,14 @@ void MarketPanel::handleEvent(const sf::Event &event, entt::registry &registry,
 
 void MarketPanel::render(sf::RenderWindow &window, entt::registry &registry,
                          const sf::Font *font, sf::FloatRect rect) {
+  auto playerView = registry.view<PlayerComponent>();
+  for (auto e : playerView) {
+    if (playerView.get<PlayerComponent>(e).isFlagship) {
+      playerEntity_ = e;
+      break;
+    }
+  }
+
   if (!font || !registry.valid(planetEntity_))
     return;
 

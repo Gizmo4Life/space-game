@@ -639,6 +639,12 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
 
       auto &trans = registry.get<TransformComponent>(planet);
 
+      // If the player doesn't have a ship (no HullDef), ANY purchase becomes
+      // the flagship
+      if (!registry.all_of<HullDef>(player)) {
+        asFlagship = true;
+      }
+
       if (asFlagship) {
         // 1. Spawn the new ship as the new flagship
         auto newFlagship = NPCShipManager::instance().spawnShip(
@@ -657,15 +663,26 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
         registry.emplace_or_replace<NameComponent>(
             newFlagship, "Player Ship (" + bid.hull.className + ")");
 
-        // 3. The old ship becomes an escort
+        // 3. The old ship becomes an escort (unless it was just a shipless
+        // dummy)
         registry.remove<PlayerComponent>(player);
-        auto &oldNpc = registry.emplace_or_replace<NPCComponent>(player);
-        oldNpc.isPlayerFleet = true;
-        oldNpc.leaderEntity = newFlagship;
-        oldNpc.state = AIState::Traveling;
+        if (registry.all_of<HullDef>(player)) {
+          auto &oldNpc = registry.emplace_or_replace<NPCComponent>(player);
+          oldNpc.isPlayerFleet = true;
+          oldNpc.leaderEntity = newFlagship;
+          oldNpc.state = AIState::Traveling;
+          std::cout
+              << "[Economy] FLAGSHIP SWAPPED. Old ship joined the fleet.\n";
+        } else {
+          // Player was shipless, safe to destroy the dummy entity
+          registry.destroy(player);
+          std::cout
+              << "[Economy] SHIPLESS PLAYER BOUGHT FIRST SHIP (FLAGSHIP).\n";
+        }
 
         // Clean up NPC stats from the new flagship if any (spawnShip adds it)
-        if (registry.all_of<NPCComponent>(newFlagship)) {
+        if (registry.valid(newFlagship) &&
+            registry.all_of<NPCComponent>(newFlagship)) {
           registry.remove<NPCComponent>(newFlagship);
         }
 

@@ -19,6 +19,7 @@
 #include "game/components/Economy.h"
 #include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
+#include "game/components/PlayerComponent.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WorldConfig.h"
@@ -138,8 +139,18 @@ int main() {
     // ── Normal gameplay
     // ───────────────────────────────────────────────────────
 
+    // Refresh playerEntity to the active flagship
+    auto playerView = registry.view<PlayerComponent>();
+    for (auto e : playerView) {
+      if (playerView.get<PlayerComponent>(e).isFlagship) {
+        playerEntity = e;
+        break;
+      }
+    }
+
     // 'L': find nearest planet and open landing screen
-    if (lHeld) {
+    if (lHeld && registry.valid(playerEntity) &&
+        registry.all_of<TransformComponent>(playerEntity)) {
       lHeld = false; // consume
       auto &pTrans = registry.get<TransformComponent>(playerEntity);
       auto eView = registry.view<PlanetEconomy, TransformComponent>();
@@ -162,19 +173,21 @@ int main() {
     }
 
     // Ship controls
-    if (wHeld)
-      KinematicsSystem::applyThrust(registry, playerEntity, 1.0f);
-    if (sHeld)
-      KinematicsSystem::applyThrust(registry, playerEntity, -0.6f);
+    if (registry.valid(playerEntity)) {
+      if (wHeld)
+        KinematicsSystem::applyThrust(registry, playerEntity, 1.0f);
+      if (sHeld)
+        KinematicsSystem::applyThrust(registry, playerEntity, -0.6f);
 
-    float rotDir = 0.0f;
-    if (aHeld)
-      rotDir -= 1.0f;
-    if (dHeld)
-      rotDir += 1.0f;
-    KinematicsSystem::applyRotation(registry, playerEntity, rotDir);
-    if (spaceHeld)
-      WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
+      float rotDir = 0.0f;
+      if (aHeld)
+        rotDir -= 1.0f;
+      if (dHeld)
+        rotDir += 1.0f;
+      KinematicsSystem::applyRotation(registry, playerEntity, rotDir);
+      if (spaceHeld)
+        WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
+    }
 
     // Input Telemetry
     {
@@ -202,25 +215,38 @@ int main() {
     AsteroidSystem::update(registry, physics.getWorldId(), dt);
 
     // World Wrap
-    auto &inertial = registry.get<InertialBody>(playerEntity);
-    b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
-    b2Vec2 wrapped = pos;
-    float limit = WorldConfig::WORLD_HALF_SIZE / WorldConfig::WORLD_SCALE;
-    if (pos.x < -limit)
-      wrapped.x = limit;
-    else if (pos.x > limit)
-      wrapped.x = -limit;
-    if (pos.y < -limit)
-      wrapped.y = limit;
-    else if (pos.y > limit)
-      wrapped.y = -limit;
-    if (wrapped.x != pos.x || wrapped.y != pos.y)
-      b2Body_SetTransform(inertial.bodyId, wrapped,
-                          b2Body_GetRotation(inertial.bodyId));
+    if (registry.valid(playerEntity) &&
+        registry.all_of<InertialBody>(playerEntity)) {
+      auto &inertial = registry.get<InertialBody>(playerEntity);
+      if (b2Body_IsValid(inertial.bodyId)) {
+        b2Vec2 pos = b2Body_GetPosition(inertial.bodyId);
+        b2Vec2 wrapped = pos;
+        float limit = WorldConfig::WORLD_HALF_SIZE / WorldConfig::WORLD_SCALE;
+        if (pos.x < -limit)
+          wrapped.x = limit;
+        else if (pos.x > limit)
+          wrapped.x = -limit;
+        if (pos.y < -limit)
+          wrapped.y = limit;
+        else if (pos.y > limit)
+          wrapped.y = -limit;
+        if (wrapped.x != pos.x || wrapped.y != pos.y)
+          b2Body_SetTransform(inertial.bodyId, wrapped,
+                              b2Body_GetRotation(inertial.bodyId));
 
-    // Camera Follow
-    cameraView.setCenter(
-        {pos.x * WorldConfig::SHIP_SCALE, pos.y * WorldConfig::SHIP_SCALE});
+        // Camera Follow
+        cameraView.setCenter(
+            {pos.x * WorldConfig::SHIP_SCALE, pos.y * WorldConfig::SHIP_SCALE});
+      }
+    } else if (registry.valid(playerEntity) &&
+               registry.all_of<TransformComponent>(playerEntity)) {
+      auto &trans = registry.get<TransformComponent>(playerEntity);
+      float px = trans.position.x / WorldConfig::WORLD_SCALE;
+      float py = trans.position.y / WorldConfig::WORLD_SCALE;
+      cameraView.setCenter(
+          {px * WorldConfig::SHIP_SCALE, py * WorldConfig::SHIP_SCALE});
+    }
+
     renderer.getWindow().setView(cameraView);
 
     renderer.clear();

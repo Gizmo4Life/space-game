@@ -158,8 +158,12 @@ void WeaponSystem::handleCollisions(::entt::registry &registry,
 
 entt::entity WeaponSystem::fire(::entt::registry &registry, entt::entity owner,
                                 b2WorldId worldId) {
-  if (registry.all_of<WeaponComponent, TransformComponent, InertialBody>(
-          owner)) {
+  if (!registry.valid(owner) || !registry.all_of<WeaponComponent>(owner)) {
+    return entt::null;
+  }
+
+  if (registry.all_of<TransformComponent, InertialBody>(owner) &&
+      registry.all_of<ShipStats>(owner)) {
     auto &stats = registry.get<ShipStats>(owner);
     if (stats.isDerelict)
       return entt::null;

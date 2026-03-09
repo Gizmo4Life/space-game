@@ -67,14 +67,14 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
                                                playerEntity_, bid, worldId,
                                                buyToFleet, buyAsFlagship)) {
 
-          if (buyAsFlagship) {
-            // Find the NEW flagship to update playerEntity_
-            auto playerView = registry.view<PlayerComponent>();
-            for (auto entity : playerView) {
-              if (playerView.get<PlayerComponent>(entity).isFlagship) {
-                playerEntity_ = entity;
-                break;
-              }
+          // Update playerEntity_ to the active flagship. This handles
+          // 'buyAsFlagship' as well as implicit flagship assignment for
+          // shipless players
+          auto playerView = registry.view<PlayerComponent>();
+          for (auto entity : playerView) {
+            if (playerView.get<PlayerComponent>(entity).isFlagship) {
+              playerEntity_ = entity;
+              break;
             }
           }
 
