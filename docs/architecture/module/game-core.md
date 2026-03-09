@@ -10,7 +10,7 @@ pillar: architecture
 Procedural world generation, player spawning, and modular vessel outfitting management.
 
 ## 1. Physical Scope
-- **Path:** `/src/game/` — `WorldLoader.h/.cpp`, `ShipOutfitter.h/.cpp`, `components/ShipConfig.h`
+- **Path:** `/src/game/` — `WorldLoader.h/.cpp`, `ShipOutfitter.h/.cpp`, `components/ShipConfig.h`, `components/ModuleGenerator.h/.cpp`
 - **Components:** `HullDef`, `ShipModule`, `ShipStats`, `ShipConfig`, `AmmoDef`, `InstalledAmmo`
 - **Ownership:** Core Engine Team
 
@@ -20,6 +20,7 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 
 ## 3. Key Systems
 - **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses a **Unified Slot System** where modules are mapped to `SlotRole` types. Handles technical validation: ensure at least one `Command` slot is present, manages power balance, and enforces volume bounds for `AmmoMagazine` (T3 ammo consumes 5 units, T2 consumes 1). Also generates procedural ammunition and ammo racks to populate local markets.
+- **ModuleGenerator**: Procedural factory for creating `ModuleDef` and `AmmoDef` variants. Scales attributes (Mass, Volume, Thrust, Output) based on Tier and Faction DNA.
 - **PowerSystem**: Manages energy production via Isotope Reactors (exponential fuel decay) and buffer storage in Batteries. Updates `batteryLevel` for energy weapon draw.
 - **ShipConfig**: Static registry of hull definitions and default outfits. Replaces hardcoded mappings within the outfitter to allow for data-driven ship balancing.
 - **ModuleRegistry**: Singleton catalogue for all available ship modules.
@@ -30,6 +31,7 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 - [tiered-utility-allocation](/docs/developer/pattern/tiered-utility-allocation.md) (P) — Scaling slot counts by vessel tier
 - [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P) — Star system seeding with orbital pre-calculation
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `ShipOutfitter::instance()`
+- [cpp-interface-segregation](/docs/developer/pattern/cpp-interface-segregation.md) (P) — Used by outfitting UI panels to support off-screen rendering targets.
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `HullDef`, `ShipModule`, `ShipStats` PODs
 
 ## 5. Telemetry & Observability

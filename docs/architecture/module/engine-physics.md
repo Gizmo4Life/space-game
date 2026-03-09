@@ -11,7 +11,7 @@ Newtonian kinematics, gravity wells, orbital mechanics, and Box2D world manageme
 
 ## 1. Physical Scope
 - **Path:** `/src/engine/physics/`
-- **Systems:** `KinematicsSystem`, `GravitySystem`, `OrbitalSystem`, `PhysicsEngine`
+- **Systems:** `KinematicsSystem`, `GravitySystem`, `OrbitalSystem`, `PhysicsEngine`, `AsteroidSystem`, `CollisionSystem`, `PowerSystem`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
@@ -24,6 +24,9 @@ Newtonian kinematics, gravity wells, orbital mechanics, and Box2D world manageme
 - **Dynamic Mass & Stats**: Ship mass is calculated as `Base Hull + Modules + Fuel + Cargo + Ammo`. `ShipStats` also tracks real-time `restingPowerDraw` (GW) and `internalVolumeOccupied` (m³) to ensure viability. T3 missiles are 5x mass/volume of T2 projectiles. See [kinematics-newtonian-2d](/docs/developer/pattern/kinematics-newtonian-2d.md) (P).
 - **GravitySystem**: Iterates `CelestialBody` × `InertialBody` pairs, applies gravitational pull.
 - **OrbitalSystem**: Updates `TransformComponent` via Kepler ellipse equations for moons/planets. See [world-procedural-generation](/docs/developer/pattern/world-procedural-generation.md) (P).
+- **AsteroidSystem**: Spawns and manages life-cycles for `AsteroidBelt` entities using Box2D static bodies.
+- **CollisionSystem**: High-frequency Box2D contact listener. Dispatches damage to `InertialBody` entities and manages projectile impact resolution.
+- **PowerSystem**: Calculates frame-by-frame `batteryLevel` delta based on Reactor output vs. Weapon/Engine draw.
 - **Dual-Scale System:** Two named coordinate scales in `WorldConfig.h`. See [rendering-dual-scale](/docs/developer/pattern/rendering-dual-scale.md) (P).
 
 ## 4. Pattern Composition
@@ -31,6 +34,7 @@ Newtonian kinematics, gravity wells, orbital mechanics, and Box2D world manageme
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `InertialBody`, `OrbitalComponent`, `TransformComponent`
 - [kinematics-newtonian-2d](/docs/developer/pattern/kinematics-newtonian-2d.md) (P) — Gravity and thrust calculations
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `PhysicsEngine`
+- [cpp-type-safe-handles](/docs/developer/pattern/cpp-type-safe-handles.md) (P) — Explicit usage of `b2WorldId` and `b2BodyId` to prevent identity mixing.
 - [rendering-dual-scale](/docs/developer/pattern/rendering-dual-scale.md) (P) — `WORLD_SCALE` / `SHIP_SCALE` coordinate contexts
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 

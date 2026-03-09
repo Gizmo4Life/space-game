@@ -13,10 +13,12 @@ Execution states, incident restoration, and atomic maintenance tasks.
 graph LR
     Ops[Operational] --> Run[Runbook]
     Ops --> Task[Task]
+    Ops --> Span[Span]
 ```
 
 ## Sub-directories
 - [runbook/](runbook/): Incident response flows mapping symptoms to resolutions.
+- [span/](span/): Diagnostics for specific telemetry spans.
 - [task/](task/): Atomic, idempotent commands for system restoration.
 
 ---
