@@ -260,7 +260,7 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     sparams.mode = RenderMode::Schematic;
     sparams.color = faction.color;
     sparams.scale = 1.0f;
-    sparams.viewScale = 50.0f; // Scale up for UI panel
+    sparams.viewScale = 6.0f; // 2x gameplay scale (3.0f)
     ShipRenderer::drawShip(target, bid.hull, previewPos, sparams);
 
     // Calc totals
