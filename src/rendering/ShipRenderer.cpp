@@ -78,10 +78,8 @@ void ShipRenderer::drawPolygonalHull(sf::RenderTarget &target,
   if (hull.slots.empty())
     return;
 
-  // 1. Gather points from slots
-  // We want to trace the "outside" of the slots to form a wedge or organic
-  // shape. We use the viewScale to get points in final pixel space.
-  float s = scale * 1.25f; // Margin factor
+  // Proportional constant: how many pixels of padding relative to viewScale
+  float padding = 6.5f * (viewScale / 5.0f) * scale;
 
   struct HullLevel {
     float y;
@@ -116,20 +114,20 @@ void ShipRenderer::drawPolygonalHull(sf::RenderTarget &target,
             [](const HullLevel &a, const HullLevel &b) { return a.y < b.y; });
 
   // Calculate bow and stern tips
-  float bowY = minY - (8.0f * viewScale * 0.2f);   // Small cap forward
-  float sternY = maxY + (5.0f * viewScale * 0.2f); // Small cap aft
+  float bowY = minY - padding * 0.8f;
+  float sternY = maxY + padding * 0.5f;
 
   std::vector<sf::Vector2f> rightSide;
-  rightSide.push_back({0.0f, bowY * s});
+  rightSide.push_back({0.0f, bowY});
 
   for (const auto &lvl : levels) {
-    // Add point at this level, ensuring at least a minimum width for the
-    // "spine"
-    float width = std::max(lvl.maxX, 5.0f * viewScale) * s;
-    rightSide.push_back({width, lvl.y * s});
+    // Tight trace + minimum central spine for the bridge/cockpit area
+    float spineWidth = 6.0f * (viewScale / 5.0f) * scale;
+    float width = std::max(lvl.maxX + padding, spineWidth);
+    rightSide.push_back({width, lvl.y});
   }
 
-  rightSide.push_back({0.0f, sternY * s});
+  rightSide.push_back({0.0f, sternY});
 
   // Build symmetric hull
   std::vector<sf::Vector2f> hullPoints;
@@ -151,14 +149,15 @@ void ShipRenderer::drawPolygonalHull(sf::RenderTarget &target,
 
   // filled hull
   sf::VertexArray fan(sf::PrimitiveType::TriangleFan, hullPoints.size() + 2);
-  sf::Vector2f center = {0.0f, (bowY + sternY) * 0.5f * s};
+  sf::Vector2f center = {0.0f, (bowY + sternY) * 0.5f};
   fan[0].position = pos + rotateVector(center, rotation);
   if (mode == RenderMode::Schematic) {
     fan[0].color = sf::Color(color.r, color.g, color.b, 60);
   } else {
-    fan[0].color = sf::Color(static_cast<uint8_t>(std::min(255, color.r + 30)),
-                             static_cast<uint8_t>(std::min(255, color.g + 30)),
-                             static_cast<uint8_t>(std::min(255, color.b + 30)));
+    // Lighting effect in center
+    fan[0].color = sf::Color(static_cast<uint8_t>(std::min(255, color.r + 40)),
+                             static_cast<uint8_t>(std::min(255, color.g + 40)),
+                             static_cast<uint8_t>(std::min(255, color.b + 40)));
   }
 
   for (size_t i = 0; i < hullPoints.size(); ++i) {
@@ -183,7 +182,8 @@ void ShipRenderer::drawPolygonalHull(sf::RenderTarget &target,
 void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
                             sf::Vector2f pos, const ShipRenderParams &params) {
   float slotVisScale = params.viewScale;
-  float componentScale = params.scale;
+  // componentScale maps 1.0 at viewScale=5 to appropriate pixel size
+  float componentScale = params.scale * (slotVisScale / 5.0f);
 
   // 1. Connectors
   if (hull.visual.nacelleStyle != NacelleStyle::Integrated) {
@@ -210,8 +210,9 @@ void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
         ring.setOutlineColor(connColor);
         target.draw(ring);
       } else {
-        float thick =
-            (hull.visual.nacelleStyle == NacelleStyle::Pods) ? 2.0f : 1.0f;
+        float thick = (hull.visual.nacelleStyle == NacelleStyle::Pods)
+                          ? 2.5f * componentScale
+                          : 1.2f * componentScale;
         sf::RectangleShape line;
         sf::Vector2f diff = endPos - pos;
         float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
@@ -229,7 +230,7 @@ void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
   // 2. Main Body
   if (hull.visual.bodyStyle == VisualStyle::Polygon) {
     drawPolygonalHull(target, hull, pos, params.rotation, params.color,
-                      componentScale, params.viewScale, params.mode);
+                      params.scale, params.viewScale, params.mode);
   } else {
     drawHullComponent(target, hull.visual.bodyStyle, pos, params.rotation,
                       params.color, componentScale, params.mode);
@@ -254,13 +255,13 @@ void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
     for (const auto &s : hull.slots)
       if (-s.localPos.y * params.viewScale > maxFwd)
         maxFwd = -s.localPos.y * params.viewScale;
-    float bowY = -(maxFwd * 1.25f * componentScale);
+    float bowY = -(maxFwd + 8.0f * componentScale);
 
     sf::CircleShape detail(3.0f * componentScale);
     detail.setFillColor(sf::Color(100, 200, 255, 180));
     detail.setOrigin({3.0f * componentScale, 3.0f * componentScale});
     detail.setPosition(pos +
-                       rotateVector({0.0f, bowY * 0.5f}, params.rotation));
+                       rotateVector({0.0f, bowY * 0.6f}, params.rotation));
     target.draw(detail);
   }
 }
