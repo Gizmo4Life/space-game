@@ -1,5 +1,9 @@
 #include "engine/physics/KinematicsSystem.h"
+#include "game/components/AmmoComponent.h"
+#include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
+#include "game/components/InstalledModules.h"
+#include "game/components/ShipStats.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WorldConfig.h"
 #include <box2d/box2d.h>
@@ -34,6 +38,98 @@ TEST_CASE("KinematicsSystem scales coords correctly", "[physics][kinematics]") {
           Catch::Approx(10.0f * WorldConfig::WORLD_SCALE));
   REQUIRE(transform.position.y ==
           Catch::Approx(20.0f * WorldConfig::WORLD_SCALE));
+
+  b2DestroyWorld(worldId);
+}
+
+TEST_CASE("KinematicsSystem Wet Mass Impact", "[physics][kinematics]") {
+  entt::registry registry;
+  b2WorldDef worldDef = b2DefaultWorldDef();
+  b2WorldId worldId = b2CreateWorld(&worldDef);
+
+  auto entity = registry.create();
+  b2BodyDef bodyDef = b2DefaultBodyDef();
+  bodyDef.type = b2_dynamicBody;
+  b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
+
+  registry.emplace<InertialBody>(entity, bodyId);
+  registry.emplace<TransformComponent>(entity);
+
+  auto &stats = registry.emplace<ShipStats>(entity);
+  stats.massDirty = true;
+
+  auto &hull = registry.emplace<HullDef>(entity);
+  hull.baseMass = 100.0f;
+  hull.massMultiplier = 1.0f;
+
+  SECTION("Base mass calculation") {
+    KinematicsSystem::update(registry, 0.01f);
+    REQUIRE((stats.totalMass == 100.0f));
+
+    b2MassData mass = b2Body_GetMassData(bodyId);
+    REQUIRE((mass.mass == 100.0f));
+  }
+
+  SECTION("Adding fuel increases wet mass") {
+    auto &fuel = registry.emplace<InstalledFuel>(entity);
+    fuel.level = 50.0f; // 50kg extra
+    stats.massDirty = true;
+
+    KinematicsSystem::update(registry, 0.01f);
+    REQUIRE((stats.totalMass == 150.0f));
+
+    b2MassData mass = b2Body_GetMassData(bodyId);
+    REQUIRE((mass.mass == 150.0f));
+  }
+
+  SECTION("Adding ammo increases wet mass") {
+    auto &mag = registry.emplace<AmmoMagazine>(entity);
+    AmmoType type = {WarheadType::Kinetic, GuidanceType::Dumb,
+                     false}; // T2 = 1kg
+    mag.storedAmmo[type] = 100;
+    stats.massDirty = true;
+
+    KinematicsSystem::update(registry, 0.01f);
+    REQUIRE((stats.totalMass == 200.0f)); // 100 base + 100 ammo
+  }
+
+  b2DestroyWorld(worldId);
+}
+
+TEST_CASE("KinematicsSystem Apply Force", "[physics][kinematics]") {
+  entt::registry registry;
+  b2WorldDef worldDef = b2DefaultWorldDef();
+  worldDef.gravity = {0.0f, 0.0f};
+  b2WorldId worldId = b2CreateWorld(&worldDef);
+
+  auto entity = registry.create();
+  b2BodyDef bodyDef = b2DefaultBodyDef();
+  bodyDef.type = b2_dynamicBody;
+  b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
+
+  auto &inertial = registry.emplace<InertialBody>(entity, bodyId);
+  inertial.thrustForce = 1000.0f;
+
+  registry.emplace<TransformComponent>(entity);
+  auto &stats = registry.emplace<ShipStats>(entity);
+  stats.isDerelict = false;
+  stats.massDirty = true;
+
+  auto &hull = registry.emplace<HullDef>(entity);
+  hull.baseMass = 100.0f;
+  hull.massMultiplier = 1.0f;
+
+  // Initialize mass
+  KinematicsSystem::update(registry, 0.01f);
+
+  KinematicsSystem::applyThrust(registry, entity, 1.0f); // Max thrust
+
+  // F = ma -> 1000N = 100kg * a -> a = 10m/s^2
+  // After 0.1s, v = at = 10 * 0.1 = 1.0m/s
+  b2World_Step(worldId, 0.1f, 4);
+
+  b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
+  REQUIRE((vel.x == Catch::Approx(1.0f).margin(0.1f)));
 
   b2DestroyWorld(worldId);
 }

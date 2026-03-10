@@ -1,21 +1,11 @@
 #include "game/NPCShipManager.h"
-#include "engine/combat/WeaponSystem.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
-#include "game/components/CargoComponent.h"
-#include "game/components/CelestialBody.h"
 #include "game/components/Economy.h"
-#include "game/components/Faction.h"
-#include "game/components/HullGenerator.h"
 #include "game/components/InertialBody.h"
-#include "game/components/InstalledModules.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
-#include "game/components/PlayerComponent.h"
-#include "game/components/ShipModule.h"
-#include "game/components/ShipStats.h"
-#include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
 #include "game/components/WorldConfig.h"
@@ -27,7 +17,6 @@
 #include <box2d/box2d.h>
 #include <cmath>
 #include <iostream>
-#include <random>
 #include <vector>
 
 namespace space {
@@ -219,6 +208,7 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
   b2Polygon dynamicBox = b2MakeBox(0.5f, 0.3f);
   b2ShapeDef shapeDef = b2DefaultShapeDef();
   shapeDef.density = 1.0f;
+  shapeDef.enableContactEvents = true;
   shapeDef.filter.maskBits = 0;
   b2CreatePolygonShape(bodyId, &shapeDef, &dynamicBox);
 

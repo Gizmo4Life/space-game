@@ -22,6 +22,11 @@ Enable multi-layered ship-to-ship engagement through distinct weapon subtypes (E
 - **Output:** Projectile entities in the world; entity health status changes.
 - **Consistency:** ACID compliance on final health state changes to prevent "ghost kills."
 
-## 4. Operational Context
+## 4. Verification Protocol
+- **Automated Tests:** `test_weapons.cpp` verifies projectile spawning, resource costs, and missile guidance logic.
+- **Physics Validation:** `test_collisions.cpp` ensures physical impact damage between ships is calculated and attributed correctly.
+- **Regression Check:** Focus on `WeaponMode::Active` state and `enableContactEvents=true` in shape definitions to prevent silent collision failure.
+
+## 5. Operational Context
 - **Primary Module:** [engine-combat](/docs/architecture/module/engine-combat.md) (T3)
 - **Critical Failure Metric:** Hit registration latency exceeding 200ms or health desync.

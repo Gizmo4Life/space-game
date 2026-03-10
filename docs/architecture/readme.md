@@ -42,4 +42,10 @@ index_map:
   module:
     path: module/
     scope: Physical code clusters and telemetry.
+  patterns:
+    path: patterns/
+    scope: Specific implementation and verification recipes.
+  standard:
+    path: standard/
+    scope: Governance rules and operational standards.
 ```

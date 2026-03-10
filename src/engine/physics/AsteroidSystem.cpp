@@ -2,7 +2,6 @@
 #include "game/components/AsteroidBelt.h"
 #include "game/components/CelestialBody.h"
 #include "game/components/InertialBody.h"
-#include "game/components/OrbitalComponent.h"
 #include "game/components/PlayerComponent.h"
 #include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
@@ -56,6 +55,7 @@ void AsteroidSystem::fragment(entt::registry &registry, b2WorldId worldId,
     float radius = 0.2f + (childSize / 20.0f);
     b2Circle circle = {{0, 0}, radius};
     b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.enableContactEvents = true;
     b2CreateCircleShape(bodyId, &shapeDef, &circle);
 
     float childMass =
@@ -81,7 +81,9 @@ void AsteroidSystem::fragment(entt::registry &registry, b2WorldId worldId,
     if (vSize < 4)
       vSize = 4;
     sf::Image img({vSize, vSize}, color);
-    texture->loadFromImage(img);
+    if (!texture->loadFromImage(img)) {
+      // Handle error
+    }
 
     SpriteComponent sc;
     sc.texture = texture;
@@ -177,6 +179,7 @@ void AsteroidSystem::update(entt::registry &registry, b2WorldId worldId,
       float radius = 0.2f + (rand() % 5) * 0.1f;
       b2Circle circle = {{0, 0}, radius};
       b2ShapeDef shapeDef = b2DefaultShapeDef();
+      shapeDef.enableContactEvents = true;
       b2CreateCircleShape(bodyId, &shapeDef, &circle);
 
       unsigned int asteroidSize = 8 + (rand() % 16);
@@ -212,7 +215,9 @@ void AsteroidSystem::update(entt::registry &registry, b2WorldId worldId,
           belt.isIcy ? sf::Color(180, 220, 255) : sf::Color(100, 90, 80);
       unsigned int vSize = asteroidSize;
       sf::Image img({vSize, vSize}, color);
-      texture->loadFromImage(img);
+      if (!texture->loadFromImage(img)) {
+        // Handle error if needed
+      }
 
       SpriteComponent sc;
       sc.texture = texture;

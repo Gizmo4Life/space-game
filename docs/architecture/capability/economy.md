@@ -109,6 +109,11 @@ Factions compete via supply-adjusted bids; player buys from cheapest bidder via 
 - **Dynamic Scarcity:** Buying a ship type increases its `hullClassScarcity` (up to 5.0x), raising future prices. Selling a ship decreases scarcity (down to 0.5x), lowering prices.
 - **Shipyard Sell Menu:** Player can toggle [Tab] to sell fleet members at current market valuation. Revenue is attributed to the originating `originFactionId`.
 
-## 8. Operational Context
+## 8. Verification Protocol
+- **Market Scarcity:** `test_economy.cpp` verifies that ship bid pricing reacts deterministically to supply scarcity.
+- **Mission Lifecycle:** `test_npc_missions.cpp` validates that mission success/failure correctly updates faction statistics (`MissionStats`) and K/D value ratios.
+- **Deterministic Simulation:** Verification ensures that concurrent planetary production does not create credit leakage or inventory desync.
+
+## 9. Operational Context
 - **Primary Modules:** [game-economy](/docs/architecture/module/game-economy.md), [game-factions](/docs/architecture/module/game-factions.md), [game-npc](/docs/architecture/module/game-npc.md)
 - **Critical Failure Metric:** Price oscillation exceeding 50 % per tick, or population collapse to zero.

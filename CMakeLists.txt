@@ -85,6 +85,9 @@ if (BUILD_TESTING)
         tests/test_ammo.cpp
         tests/test_economy.cpp
         tests/test_shipless_player.cpp
+        tests/test_weapons.cpp
+        tests/test_collisions.cpp
+        tests/test_npc_missions.cpp
     )
     target_include_directories(SpaceGameTests PRIVATE src)
     target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)

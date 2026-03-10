@@ -1,3 +1,4 @@
+#include "game/components/Economy.h"
 #include "game/components/GameTypes.h"
 #include <SFML/System/Vector2.hpp>
 #include <entt/entt.hpp>
