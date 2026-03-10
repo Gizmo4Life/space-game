@@ -210,9 +210,9 @@ void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
         ring.setOutlineColor(connColor);
         target.draw(ring);
       } else {
-        float thick = (hull.visual.nacelleStyle == NacelleStyle::Pods)
-                          ? 2.5f * componentScale
-                          : 1.2f * componentScale;
+        float baseThick =
+            (hull.visual.nacelleStyle == NacelleStyle::Pods) ? 2.5f : 1.2f;
+        float thick = std::max(1.0f, baseThick * componentScale);
         sf::RectangleShape line;
         sf::Vector2f diff = endPos - pos;
         float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);

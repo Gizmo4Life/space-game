@@ -205,7 +205,7 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
   bodyDef.userData = (void *)(uintptr_t)entity;
   b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
 
-  b2Polygon dynamicBox = b2MakeBox(0.5f, 0.3f);
+  b2Polygon dynamicBox = b2MakeBox(1.5f, 1.0f);
   b2ShapeDef shapeDef = b2DefaultShapeDef();
   shapeDef.density = 1.0f;
   shapeDef.enableContactEvents = true;
