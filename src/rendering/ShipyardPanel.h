@@ -28,10 +28,6 @@ private:
   int selectedBidIndex_ = 0;
   std::set<size_t> expandedModules_;
   float moduleScrollY_ = 0.f;
-
-  void drawShipBlueprint(sf::RenderTarget &target, const HullDef &hull,
-                         sf::Vector2f pos, float scale,
-                         const FactionData &faction);
 };
 
 } // namespace space

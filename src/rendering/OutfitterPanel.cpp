@@ -1,9 +1,11 @@
 #include "OutfitterPanel.h"
+#include "ShipRenderer.h"
 #include "UIUtils.h"
 #include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
+#include "game/components/Faction.h"
 #include "game/components/GameTypes.h"
 #include "game/components/HullDef.h"
 #include "game/components/InstalledModules.h"
@@ -211,6 +213,23 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
 
     dtext("Credits: $" + fmt(pCredits->amount, 0), 16,
           sf::Color(100, 255, 100));
+
+    // Ship Blueprint Preview
+    const auto &hdef = registry.get<HullDef>(targetShip_);
+    uint32_t factionId = 0;
+    if (registry.all_of<Faction>(targetShip_)) {
+      factionId = registry.get<Faction>(targetShip_).getMajorityFaction();
+    }
+    const auto &faction = FactionManager::instance().getFaction(factionId);
+
+    sf::Vector2f previewPos = {rect.position.x + 280.f,
+                               rect.position.y + 100.f};
+    ShipRenderParams sparams;
+    sparams.mode = RenderMode::Schematic;
+    sparams.color = faction.color;
+    sparams.scale = 3.5f;
+    sparams.viewScale = 1.0f;
+    ShipRenderer::drawShip(target, hdef, previewPos, sparams);
   } else {
     dtext("Credits: N/A", 16, sf::Color(150, 150, 150));
   }

@@ -22,9 +22,15 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
 - **MainRenderer**: Owns the `sf::RenderWindow`, handles SFML lifecycle (open/close/clear/display).
 - **RenderSystem::update**: Four-pass rendering pipeline:
   1. **Background layer** — Static/orbital entities (`TransformComponent` + `SpriteComponent`).
-  2. **Foreground layer** — Physics bodies (`InertialBody`). Ships are rendered procedurally using their `HullDef` component.
+  2. **Foreground layer** — Physics bodies (`InertialBody`). Ships are rendered using the unified `ShipRenderer` utility.
   3. **UI layer** — Offscreen indicators for `CelestialBody` and `NPCComponent` entities with distance labels.
   4. **Projectile layer** — `ProjectileComponent` bullets.
+
+## 4. ShipRenderer Utility
+The `space::ShipRenderer` utility serves as the single source of truth for all ship visuals:
+- **Game Mode**: High-fidelity, solid rendering with physics-driven rotation and cockpit details.
+- **Schematic Mode**: High-contrast, translucent blueprints with prominent outlines, used in `ShipyardPanel` and `OutfitterPanel`.
+- **Scaling Symmetry**: Ensures that procedural hull features (like the encompassing profile) are visually identical in both the world and the UI.
 - **LandingScreen**: See [game-ui module](/docs/architecture/module/game-ui.md) — pause overlay with planet info + ship market.
 
 ## 4. Pattern Composition

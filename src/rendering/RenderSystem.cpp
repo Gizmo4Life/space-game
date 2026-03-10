@@ -1,4 +1,5 @@
 #include "RenderSystem.h"
+#include "ShipRenderer.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/components/CelestialBody.h"
@@ -17,9 +18,6 @@
 #include "game/components/WeaponComponent.h"
 #include "game/components/WorldConfig.h"
 #include <SFML/Graphics.hpp>
-#include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/ConvexShape.hpp>
-#include <SFML/Graphics/Text.hpp>
 #include <cmath>
 #include <iostream>
 #include <opentelemetry/trace/provider.h>
@@ -27,162 +25,6 @@
 #include <vector>
 
 namespace space {
-
-static sf::Vector2f rotateVector(sf::Vector2f vec, float degrees) {
-  float rad = degrees * 3.14159f / 180.0f;
-  return {vec.x * cos(rad) - vec.y * sin(rad),
-          vec.x * sin(rad) + vec.y * cos(rad)};
-}
-
-static void drawHullComponent(sf::RenderTarget &target, VisualStyle style,
-                              sf::Vector2f pos, float rotation, sf::Color color,
-                              float scale) {
-  static sf::ConvexShape triangle(3);
-  static sf::RectangleShape rect;
-  static sf::CircleShape circle;
-  static sf::ConvexShape sleek(4);
-  static bool initialized = false;
-
-  if (!initialized) {
-    triangle.setOutlineThickness(1.0f);
-    triangle.setOutlineColor(sf::Color(50, 50, 50));
-
-    rect.setOutlineThickness(1.0f);
-    rect.setOutlineColor(sf::Color(50, 50, 50));
-
-    circle.setOutlineThickness(1.0f);
-    circle.setOutlineColor(sf::Color(50, 50, 50));
-
-    sleek.setOutlineThickness(1.0f);
-    sleek.setOutlineColor(sf::Color(50, 50, 50));
-    initialized = true;
-  }
-
-  if (style == VisualStyle::Triangle) {
-    triangle.setPoint(0, {0, -8 * scale});
-    triangle.setPoint(1, {-7 * scale, 7 * scale});
-    triangle.setPoint(2, {7 * scale, 7 * scale});
-    triangle.setFillColor(color);
-    triangle.setPosition(pos);
-    triangle.setRotation(sf::degrees(rotation));
-    target.draw(triangle);
-  } else if (style == VisualStyle::Square) {
-    rect.setSize({14 * scale, 14 * scale});
-    rect.setOrigin({7 * scale, 7 * scale});
-    rect.setFillColor(color);
-    rect.setPosition(pos);
-    rect.setRotation(sf::degrees(rotation));
-    target.draw(rect);
-  } else if (style == VisualStyle::Circular) {
-    circle.setRadius(7 * scale);
-    circle.setOrigin({7 * scale, 7 * scale});
-    circle.setFillColor(color);
-    circle.setPosition(pos);
-    circle.setRotation(sf::degrees(rotation));
-    target.draw(circle);
-  } else if (style == VisualStyle::Sleek) {
-    sleek.setPoint(0, {0, -10 * scale});
-    sleek.setPoint(1, {-5 * scale, 3 * scale});
-    sleek.setPoint(2, {0, 7 * scale});
-    sleek.setPoint(3, {5 * scale, 3 * scale});
-    sleek.setFillColor(color);
-    sleek.setPosition(pos);
-    sleek.setRotation(sf::degrees(rotation));
-    target.draw(sleek);
-  } else if (style == VisualStyle::Polygon) {
-    // Specialized hull drawing handles this below
-  }
-}
-
-static void drawPolygonalHull(sf::RenderTarget &target, const HullDef &hull,
-                              sf::Vector2f pos, float rotation,
-                              sf::Color color) {
-  // Compute bounding radius from slot positions to determine hull scale
-  float maxR = 10.0f;
-  float maxFwd = 10.0f; // most negative Y (bow)
-  float maxAft = 5.0f;  // most positive Y (stern)
-  for (const auto &slot : hull.slots) {
-    float sx = std::abs(slot.localPos.x);
-    float sy = slot.localPos.y;
-    float r = std::sqrt(sx * sx + sy * sy);
-    if (r > maxR)
-      maxR = r;
-    if (-sy > maxFwd)
-      maxFwd = -sy;
-    if (sy > maxAft)
-      maxAft = sy;
-  }
-
-  // Scale factor to make hull visually encapsulate all slots
-  float scale = 1.3f;
-  float halfW = maxR * scale * 0.8f; // half-width at widest point
-  float bowY = -(maxFwd * scale);    // bow tip (negative Y = forward)
-  float sternY = maxAft * scale;     // stern (positive Y = aft)
-  float midY = bowY * 0.3f;          // widest point, slightly forward of center
-
-  // Build right-side profile points (will be mirrored for left side)
-  // Points go clockwise from bow tip
-  std::vector<sf::Vector2f> rightProfile = {
-      {0.0f, bowY},                  // 0: bow tip (centerline)
-      {halfW * 0.4f, bowY * 0.5f},   // 1: bow shoulder
-      {halfW, midY},                 // 2: widest beam
-      {halfW * 0.9f, sternY * 0.3f}, // 3: aft taper
-      {halfW * 0.7f, sternY * 0.7f}, // 4: aft quarter
-      {halfW * 0.5f, sternY},        // 5: stern corner
-      {0.0f, sternY * 0.9f},         // 6: stern center
-  };
-
-  // Build full symmetric hull: right side + mirrored left side
-  std::vector<sf::Vector2f> hullPoints;
-  // Right side (bow to stern)
-  for (size_t i = 0; i < rightProfile.size(); ++i) {
-    hullPoints.push_back(rightProfile[i]);
-  }
-  // Left side (stern back to bow, mirrored X)
-  for (int i = static_cast<int>(rightProfile.size()) - 2; i >= 1; --i) {
-    hullPoints.push_back({-rightProfile[i].x, rightProfile[i].y});
-  }
-
-  if (hullPoints.size() < 3)
-    return;
-
-  // Draw filled hull (TriangleFan from center)
-  sf::VertexArray fan(sf::PrimitiveType::TriangleFan, hullPoints.size() + 2);
-  sf::Vector2f center = {0.0f, (bowY + sternY) * 0.3f};
-  fan[0].position = pos + rotateVector(center, rotation);
-  fan[0].color = sf::Color(static_cast<uint8_t>(std::min(255, color.r + 30)),
-                           static_cast<uint8_t>(std::min(255, color.g + 30)),
-                           static_cast<uint8_t>(std::min(255, color.b + 30)));
-
-  for (size_t i = 0; i < hullPoints.size(); ++i) {
-    sf::Vector2f rotatedP = rotateVector(hullPoints[i], rotation);
-    fan[i + 1].position = pos + rotatedP;
-    fan[i + 1].color = color;
-  }
-  fan[hullPoints.size() + 1] = fan[1]; // close the fan
-  target.draw(fan);
-
-  // Outline
-  sf::VertexArray outline(sf::PrimitiveType::LineStrip, hullPoints.size() + 1);
-  sf::Color outlineColor(static_cast<uint8_t>(color.r * 0.4f),
-                         static_cast<uint8_t>(color.g * 0.4f),
-                         static_cast<uint8_t>(color.b * 0.4f));
-  for (size_t i = 0; i < hullPoints.size(); ++i) {
-    outline[i].position = pos + rotateVector(hullPoints[i], rotation);
-    outline[i].color = outlineColor;
-  }
-  outline[hullPoints.size()].position =
-      pos + rotateVector(hullPoints[0], rotation);
-  outline[hullPoints.size()].color = outlineColor;
-  target.draw(outline);
-
-  // Cockpit detail (centered, near bow)
-  sf::CircleShape detail(3.0f);
-  detail.setFillColor(sf::Color(100, 200, 255, 180));
-  detail.setOrigin({3.0f, 3.0f});
-  detail.setPosition(pos + rotateVector({0.0f, bowY * 0.5f}, rotation));
-  target.draw(detail);
-}
 
 static void drawHUD(entt::registry &registry, entt::entity player,
                     sf::RenderTarget &target, const sf::Font *font) {
@@ -469,68 +311,12 @@ void RenderSystem::update(entt::registry &registry, sf::RenderTarget &target,
                             .color;
           }
 
-          // 1. Draw Connectors (Connections)
-          auto drawConnectors = [&](const std::vector<MountSlot> &slots) {
-            if (hull.visual.nacelleStyle == NacelleStyle::Integrated)
-              return;
-
-            for (const auto &slot : slots) {
-              if (slot.localPos.x == 0 && slot.localPos.y == 0)
-                continue;
-              sf::Vector2f startPos = pixelPos;
-              sf::Vector2f endPos =
-                  pixelPos + rotateVector(slot.localPos * 5.0f, visualAngle);
-
-              if (hull.visual.nacelleStyle == NacelleStyle::Ring) {
-                sf::CircleShape ring(
-                    std::sqrt(slot.localPos.x * slot.localPos.x +
-                              slot.localPos.y * slot.localPos.y) *
-                    5.0f);
-                ring.setOrigin({ring.getRadius(), ring.getRadius()});
-                ring.setPosition(pixelPos);
-                ring.setFillColor(sf::Color::Transparent);
-                ring.setOutlineThickness(1.0f);
-                ring.setOutlineColor(sf::Color(60, 60, 60));
-                target.draw(ring);
-              } else {
-                float thick = (hull.visual.nacelleStyle == NacelleStyle::Pods)
-                                  ? 2.f
-                                  : 1.f;
-                sf::RectangleShape line;
-                sf::Vector2f diff = endPos - pixelPos;
-                float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
-                line.setSize({dist, thick});
-                line.setOrigin({0, thick / 2.f});
-                line.setPosition(pixelPos);
-                line.setRotation(
-                    sf::degrees(std::atan2(diff.y, diff.x) * 180.f / 3.14159f));
-                line.setFillColor(sf::Color(80, 80, 80));
-                target.draw(line);
-              }
-            }
-          };
-          drawConnectors(hull.slots);
-
-          // 2. Draw Main Body
-          if (hull.visual.bodyStyle == VisualStyle::Polygon) {
-            drawPolygonalHull(target, hull, pixelPos, visualAngle, shipColor);
-          } else {
-            drawHullComponent(target, hull.visual.bodyStyle, pixelPos,
-                              visualAngle, shipColor, 1.0f);
-          }
-
-          // 3. Draw Nacelles & Hardpoints
-          for (const auto &slot : hull.slots) {
-            sf::Vector2f offset =
-                rotateVector(slot.localPos * 5.0f, visualAngle);
-            if (slot.role == SlotRole::Engine) {
-              drawHullComponent(target, slot.style, pixelPos + offset,
-                                visualAngle, shipColor, 0.7f);
-            } else if (slot.role == SlotRole::Hardpoint) {
-              drawHullComponent(target, slot.style, pixelPos + offset,
-                                visualAngle, shipColor, 0.5f);
-            }
-          }
+          ShipRenderParams sparams;
+          sparams.mode = RenderMode::Game;
+          sparams.color = shipColor;
+          sparams.rotation = visualAngle;
+          sparams.viewScale = WorldConfig::SHIP_SCALE;
+          ShipRenderer::drawShip(target, hull, pixelPos, sparams);
         } else if (registry.all_of<SpriteComponent>(entity)) {
           auto &spriteComp = registry.get<SpriteComponent>(entity);
           if (spriteComp.sprite) {

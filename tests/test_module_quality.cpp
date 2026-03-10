@@ -1,4 +1,3 @@
-#include "game/EconomyManager.h"
 #include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
 #include "game/components/ModuleGenerator.h"

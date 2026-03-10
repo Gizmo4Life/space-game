@@ -14,6 +14,8 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - Ships cannot exceed their `internalVolume` capacity.
 - Ships must maintain a non-negative `PowerBalance` (Total GW >= 0).
 - UI summarizes available hard points and engine mounts by tier (Small/Medium/Large).
+- **Synced Blueprints**: Every UI panel (Shipyard, Outfitter) now utilizes the unified `ShipRenderer` in `Schematic` mode, ensuring visual consistency between ship specs and the in-game vessel.
+- **Visual Preview**: The `OutfitterPanel` now includes a live ship blueprint preview.
 
 ## 1. Physical Scope
 - **Path:** `/src/rendering/` — `LandingScreen.h/.cpp`, `MarketPanel.h/.cpp`, `ShipyardPanel.h/.cpp`, `OutfitterPanel.h/.cpp`, `InfoPanel.h/.cpp`, `LandingPanel.h`, `UIUtils.h/.cpp`

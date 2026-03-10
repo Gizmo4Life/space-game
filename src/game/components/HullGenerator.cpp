@@ -102,8 +102,8 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
     return std::clamp(count, minCount, maxCount);
   };
 
-  float bodyR = 3.0f + tierInt * 3.0f;
-  float step = 2.5f + tierInt * 0.5f;
+  float bodyR = 2.0f + tierInt * 2.0f;
+  float step = 1.0f + tierInt * 0.5f;
   float minOff = bodyR + 0.1f;
 
   uint8_t nextId = 0;
@@ -158,7 +158,7 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
       int rowIdx = i / 2;
       float row = static_cast<float>(rowIdx);
       pos = {side * (bodyR + step + row * step * 0.5f),
-             -(minOff + row * step * 1.2f)};
+             -(minOff + row * step * 1.0f)};
     }
     slot.localPos = pos;
     hull.slots.push_back(slot);

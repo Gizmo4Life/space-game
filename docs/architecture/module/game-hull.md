@@ -24,7 +24,12 @@ Procedural generation of ship hulls based on Faction DNA, size tiers, and functi
   - **Stern (y > 0.3f)**: Assigned `Engine` role.
   - **Mid/Lateral**: Assigned `Hardpoint` role.
 
-## 4. Viability Enforcement
+## 4. Compact Hull Geometry
+The generator now enforces a more cohesive "monohull" aesthetic:
+- **Tight Spacing**: Slot positions are calculated with reduced `bodyR` and `step` values, bringing components closer to the center.
+- **Encompassing Principle**: The hull polygon is dynamically scaled to ensure it visually encloses all nacelles and hardpoints, eliminating long outriggers.
+
+## 5. Viability Enforcement
 The `ShipBlueprint::validate` and `ShipOutfitter::generateBlueprint` logic now enforces strict operational viability:
 - **Mandatory Modules**: Every ship must have at least one `Command` module and one `Engine` module to be considered airworthy.
 - **Balancing Pass (Power)**: The generator automatically upgrades reactors to ensure `restingPowerDraw` <= 0 (net surplus).

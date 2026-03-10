@@ -1,4 +1,5 @@
 #include "ShipyardPanel.h"
+#include "ShipRenderer.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/EconomyManager.h"
 #include "game/FactionManager.h"
@@ -255,7 +256,12 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
 
     // Preview rendering & Technicals
     sf::Vector2f previewPos = {dx + 120.f, dy + 100.f};
-    drawShipBlueprint(target, bid.hull, previewPos, 4.5f, faction);
+    ShipRenderParams sparams;
+    sparams.mode = RenderMode::Schematic;
+    sparams.color = faction.color;
+    sparams.scale = 4.5f;
+    sparams.viewScale = 1.0f; // Schematic uses internal UI scaling
+    ShipRenderer::drawShip(target, bid.hull, previewPos, sparams);
 
     // Calc totals
     float usedVol = 0.f;
@@ -382,146 +388,6 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     help.setFillColor(sf::Color(150, 150, 150));
     help.setPosition({rect.position.x + 400.f, helpY});
     target.draw(help);
-  }
-}
-
-static void drawHullComp(sf::RenderTarget &target, VisualStyle style,
-                         sf::Vector2f pos, float rotation, sf::Color color,
-                         float scale) {
-  sf::Color outlineColor = color;
-  sf::Color fillColor =
-      sf::Color(color.r, color.g, color.b, 40); // Translucent schematic fill
-
-  if (style == VisualStyle::Triangle) {
-    sf::ConvexShape triangle(3);
-    triangle.setPoint(0, {0, -12 * scale});
-    triangle.setPoint(1, {-10 * scale, 10 * scale});
-    triangle.setPoint(2, {10 * scale, 10 * scale});
-    triangle.setOrigin({0, 0});
-    triangle.setFillColor(fillColor);
-    triangle.setOutlineThickness(1.2f);
-    triangle.setOutlineColor(outlineColor);
-    triangle.setPosition(pos);
-    triangle.setRotation(sf::degrees(rotation));
-    target.draw(triangle);
-  } else if (style == VisualStyle::Square) {
-    sf::RectangleShape rect({20 * scale, 20 * scale});
-    rect.setOrigin({10 * scale, 10 * scale});
-    rect.setFillColor(fillColor);
-    rect.setOutlineThickness(1.2f);
-    rect.setOutlineColor(outlineColor);
-    rect.setPosition(pos);
-    rect.setRotation(sf::degrees(rotation));
-    target.draw(rect);
-  } else if (style == VisualStyle::Circular) {
-    sf::CircleShape circle(10 * scale);
-    circle.setOrigin({10 * scale, 10 * scale});
-    circle.setFillColor(fillColor);
-    circle.setOutlineThickness(1.2f);
-    circle.setOutlineColor(outlineColor);
-    circle.setPosition(pos);
-    circle.setRotation(sf::degrees(rotation));
-    target.draw(circle);
-  } else if (style == VisualStyle::Sleek) {
-    sf::ConvexShape sleek(4);
-    sleek.setPoint(0, {0, -15 * scale});
-    sleek.setPoint(1, {-8 * scale, 5 * scale});
-    sleek.setPoint(2, {0, 10 * scale});
-    sleek.setPoint(3, {8 * scale, 5 * scale});
-    sleek.setOrigin({0, 0});
-    sleek.setFillColor(fillColor);
-    sleek.setOutlineThickness(1.2f);
-    sleek.setOutlineColor(outlineColor);
-    sleek.setPosition(pos);
-    sleek.setRotation(sf::degrees(rotation));
-    target.draw(sleek);
-  } else if (style == VisualStyle::Polygon) {
-    sf::ConvexShape poly(6);
-    for (int i = 0; i < 6; ++i) {
-      float angle = i * 60.f * 3.14159f / 180.f;
-      poly.setPoint(i, {cosf(angle) * 11 * scale, sinf(angle) * 11 * scale});
-    }
-    poly.setOrigin({0, 0});
-    poly.setFillColor(fillColor);
-    poly.setOutlineThickness(1.2f);
-    poly.setOutlineColor(outlineColor);
-    poly.setPosition(pos);
-    poly.setRotation(sf::degrees(rotation));
-    target.draw(poly);
-  }
-}
-
-void ShipyardPanel::drawShipBlueprint(sf::RenderTarget &target,
-                                      const HullDef &hull, sf::Vector2f pos,
-                                      float scale, const FactionData &faction) {
-  NacelleStyle nacelleStyle = faction.dna.visual.nacelleStyle;
-  HullConnectivity connectivity = faction.dna.visual.hullConnectivity;
-
-  // Use the faction's color for schematic outlines
-  sf::Color schematicColor = faction.color;
-  schematicColor.a = 255;
-
-  // Subtle connectors for schematic look
-  sf::Color connectorColor =
-      sf::Color(schematicColor.r, schematicColor.g, schematicColor.b, 120);
-
-  auto drawConnectors = [&](const std::vector<MountSlot> &slots) {
-    if (nacelleStyle == NacelleStyle::Integrated)
-      return;
-
-    for (const auto &slot : slots) {
-      if (slot.localPos.x == 0 && slot.localPos.y == 0)
-        continue;
-
-      sf::Vector2f endPos =
-          pos + rotateVector(slot.localPos * scale * 12.0f, 0.f);
-
-      if (nacelleStyle == NacelleStyle::Ring) {
-        sf::CircleShape ring(std::sqrt(slot.localPos.x * slot.localPos.x +
-                                       slot.localPos.y * slot.localPos.y) *
-                             scale * 12.0f);
-        ring.setOrigin({ring.getRadius(), ring.getRadius()});
-        ring.setPosition(pos);
-        ring.setFillColor(sf::Color::Transparent);
-        ring.setOutlineThickness(0.8f);
-        ring.setOutlineColor(connectorColor);
-        target.draw(ring);
-      } else {
-        // Schematic lines for outriggers/pods
-        float thick = (nacelleStyle == NacelleStyle::Pods) ? 2.0f : 1.0f;
-        if (connectivity == HullConnectivity::Skeletal)
-          thick *= 0.5f;
-
-        sf::RectangleShape line;
-        sf::Vector2f diff = endPos - pos;
-        float dist = std::sqrt(diff.x * diff.x + diff.y * diff.y);
-        line.setSize({dist, thick});
-        line.setOrigin({0, thick / 2.f});
-        line.setPosition(pos);
-        line.setRotation(
-            sf::degrees(std::atan2(diff.y, diff.x) * 180.f / 3.14159f));
-        line.setFillColor(connectorColor);
-        target.draw(line);
-      }
-    }
-  };
-
-  drawConnectors(hull.slots);
-
-  // Main body
-  drawHullComp(target, hull.visual.bodyStyle, pos, 0.f, schematicColor, scale);
-
-  // Module nacelles / pods
-  for (const auto &slot : hull.slots) {
-    if (slot.role == SlotRole::Engine) {
-      sf::Vector2f offset = rotateVector(slot.localPos * scale * 12.0f, 0.f);
-      drawHullComp(target, slot.style, pos + offset, 0.f, schematicColor,
-                   scale * 0.7f);
-    } else if (slot.role == SlotRole::Hardpoint) {
-      sf::Vector2f offset = rotateVector(slot.localPos * scale * 12.0f, 0.f);
-      drawHullComp(target, slot.style, pos + offset, 0.f, schematicColor,
-                   scale * 0.5f);
-    }
   }
 }
 

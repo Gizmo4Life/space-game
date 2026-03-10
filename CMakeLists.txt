@@ -39,6 +39,7 @@ set(CORE_SOURCES
     src/rendering/ShipyardPanel.cpp
     src/rendering/OutfitterPanel.cpp
     src/rendering/MarketPanel.cpp
+    src/rendering/ShipRenderer.cpp
     src/game/WorldLoader.cpp
     src/game/FactionManager.cpp
     src/game/EconomyManager.cpp
@@ -91,6 +92,7 @@ if (BUILD_TESTING)
         tests/test_ship_alignment.cpp
         tests/test_spawn_variety.cpp
         tests/test_module_quality.cpp
+        tests/verify_hull_geometry.cpp
     )
     target_include_directories(SpaceGameTests PRIVATE src)
     target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
