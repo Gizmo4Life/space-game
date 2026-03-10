@@ -75,46 +75,69 @@ void ShipRenderer::drawPolygonalHull(sf::RenderTarget &target,
                                      float rotation, sf::Color color,
                                      float scale, float viewScale,
                                      RenderMode mode) {
-  // Logic from RenderSystem.cpp, unified with mode support
-  float maxSX = 10.0f;
-  float maxSY_Forward = 10.0f;
-  float maxSY_Aft = 5.0f;
+  if (hull.slots.empty())
+    return;
+
+  // 1. Gather points from slots
+  // We want to trace the "outside" of the slots to form a wedge or organic
+  // shape. We use the viewScale to get points in final pixel space.
+  float s = scale * 1.25f; // Margin factor
+
+  struct HullLevel {
+    float y;
+    float maxX;
+  };
+  std::vector<HullLevel> levels;
+
+  float minY = 9999.0f;
+  float maxY = -9999.0f;
+
   for (const auto &slot : hull.slots) {
-    float sx = std::abs(slot.localPos.x) * viewScale;
     float sy = slot.localPos.y * viewScale;
-    if (sx > maxSX)
-      maxSX = sx;
-    if (-sy > maxSY_Forward)
-      maxSY_Forward = -sy;
-    if (sy > maxSY_Aft)
-      maxSY_Aft = sy;
+    float sx = std::abs(slot.localPos.x) * viewScale;
+
+    minY = std::min(minY, sy);
+    maxY = std::max(maxY, sy);
+
+    bool found = false;
+    for (auto &lvl : levels) {
+      if (std::abs(lvl.y - sy) < 0.1f) {
+        lvl.maxX = std::max(lvl.maxX, sx);
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+      levels.push_back({sy, sx});
   }
 
-  // Visual margin
-  float s = 1.25f * scale;
-  if (mode == RenderMode::Schematic)
-    s *= 2.5f; // Adjustment for UI preview size
+  // Sort levels by Y (forward to aft)
+  std::sort(levels.begin(), levels.end(),
+            [](const HullLevel &a, const HullLevel &b) { return a.y < b.y; });
 
-  float halfW = maxSX * s;
-  float bowY = -(maxSY_Forward * s);
-  float sternY = maxSY_Aft * s;
-  float midY = bowY * 0.3f;
+  // Calculate bow and stern tips
+  float bowY = minY - (8.0f * viewScale * 0.2f);   // Small cap forward
+  float sternY = maxY + (5.0f * viewScale * 0.2f); // Small cap aft
 
-  std::vector<sf::Vector2f> rightProfile = {
-      {0.0f, bowY},
-      {halfW * 0.6f, bowY * 0.6f},
-      {halfW, midY},
-      {halfW * 0.95f, sternY * 0.3f},
-      {halfW * 0.85f, sternY * 0.7f},
-      {halfW * 0.7f, sternY},
-      {0.0f, sternY * 0.95f},
-  };
+  std::vector<sf::Vector2f> rightSide;
+  rightSide.push_back({0.0f, bowY * s});
 
+  for (const auto &lvl : levels) {
+    // Add point at this level, ensuring at least a minimum width for the
+    // "spine"
+    float width = std::max(lvl.maxX, 5.0f * viewScale) * s;
+    rightSide.push_back({width, lvl.y * s});
+  }
+
+  rightSide.push_back({0.0f, sternY * s});
+
+  // Build symmetric hull
   std::vector<sf::Vector2f> hullPoints;
-  for (size_t i = 0; i < rightProfile.size(); ++i)
-    hullPoints.push_back(rightProfile[i]);
-  for (int i = (int)rightProfile.size() - 2; i >= 1; --i)
-    hullPoints.push_back({-rightProfile[i].x, rightProfile[i].y});
+  for (const auto &p : rightSide)
+    hullPoints.push_back(p);
+  for (int i = (int)rightSide.size() - 2; i >= 1; --i) {
+    hullPoints.push_back({-rightSide[i].x, rightSide[i].y});
+  }
 
   sf::Color fillColor = (mode == RenderMode::Schematic)
                             ? sf::Color(color.r, color.g, color.b, 40)
@@ -128,7 +151,7 @@ void ShipRenderer::drawPolygonalHull(sf::RenderTarget &target,
 
   // filled hull
   sf::VertexArray fan(sf::PrimitiveType::TriangleFan, hullPoints.size() + 2);
-  sf::Vector2f center = {0.0f, (bowY + sternY) * 0.3f};
+  sf::Vector2f center = {0.0f, (bowY + sternY) * 0.5f * s};
   fan[0].position = pos + rotateVector(center, rotation);
   if (mode == RenderMode::Schematic) {
     fan[0].color = sf::Color(color.r, color.g, color.b, 60);
@@ -159,10 +182,8 @@ void ShipRenderer::drawPolygonalHull(sf::RenderTarget &target,
 
 void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
                             sf::Vector2f pos, const ShipRenderParams &params) {
-  float combinedScale = params.scale;
   float slotVisScale = params.viewScale;
-  if (params.mode == RenderMode::Schematic)
-    slotVisScale *= params.scale * 12.0f;
+  float componentScale = params.scale;
 
   // 1. Connectors
   if (hull.visual.nacelleStyle != NacelleStyle::Integrated) {
@@ -208,10 +229,10 @@ void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
   // 2. Main Body
   if (hull.visual.bodyStyle == VisualStyle::Polygon) {
     drawPolygonalHull(target, hull, pos, params.rotation, params.color,
-                      params.scale, params.viewScale, params.mode);
+                      componentScale, params.viewScale, params.mode);
   } else {
     drawHullComponent(target, hull.visual.bodyStyle, pos, params.rotation,
-                      params.color, params.scale, params.mode);
+                      params.color, componentScale, params.mode);
   }
 
   // 3. Nacelles / Hardpoints
@@ -220,10 +241,10 @@ void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
         rotateVector(slot.localPos * slotVisScale, params.rotation);
     if (slot.role == SlotRole::Engine) {
       drawHullComponent(target, slot.style, pos + offset, params.rotation,
-                        params.color, params.scale * 0.7f, params.mode);
+                        params.color, componentScale * 0.7f, params.mode);
     } else if (slot.role == SlotRole::Hardpoint) {
       drawHullComponent(target, slot.style, pos + offset, params.rotation,
-                        params.color, params.scale * 0.5f, params.mode);
+                        params.color, componentScale * 0.5f, params.mode);
     }
   }
 
@@ -233,11 +254,11 @@ void ShipRenderer::drawShip(sf::RenderTarget &target, const HullDef &hull,
     for (const auto &s : hull.slots)
       if (-s.localPos.y * params.viewScale > maxFwd)
         maxFwd = -s.localPos.y * params.viewScale;
-    float bowY = -(maxFwd * 1.25f * params.scale);
+    float bowY = -(maxFwd * 1.25f * componentScale);
 
-    sf::CircleShape detail(3.0f * params.scale);
+    sf::CircleShape detail(3.0f * componentScale);
     detail.setFillColor(sf::Color(100, 200, 255, 180));
-    detail.setOrigin({3.0f * params.scale, 3.0f * params.scale});
+    detail.setOrigin({3.0f * componentScale, 3.0f * componentScale});
     detail.setPosition(pos +
                        rotateVector({0.0f, bowY * 0.5f}, params.rotation));
     target.draw(detail);

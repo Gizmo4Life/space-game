@@ -227,8 +227,8 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
     ShipRenderParams sparams;
     sparams.mode = RenderMode::Schematic;
     sparams.color = faction.color;
-    sparams.scale = 3.5f;
-    sparams.viewScale = 1.0f;
+    sparams.scale = 1.0f;
+    sparams.viewScale = 40.0f; // Scale for Outfitter layout
     ShipRenderer::drawShip(target, hdef, previewPos, sparams);
   } else {
     dtext("Credits: N/A", 16, sf::Color(150, 150, 150));
