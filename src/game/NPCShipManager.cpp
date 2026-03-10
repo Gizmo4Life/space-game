@@ -198,8 +198,8 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
   // Create Box2D physics body
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
-  bodyDef.linearDamping = 0.5f;
-  bodyDef.angularDamping = 2.0f;
+  bodyDef.linearDamping = 0.0f;
+  bodyDef.angularDamping = 0.5f;
   bodyDef.position = {position.x / WorldConfig::WORLD_SCALE,
                       position.y / WorldConfig::WORLD_SCALE};
   bodyDef.userData = (void *)(uintptr_t)entity;

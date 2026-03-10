@@ -302,8 +302,8 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
-  bodyDef.linearDamping = 0.5f;
-  bodyDef.angularDamping = 2.0f;
+  bodyDef.linearDamping = 0.0f;
+  bodyDef.angularDamping = 0.5f;
 
   auto &fm = FactionManager::instance();
   auto allFactions = fm.getAllFactions();
