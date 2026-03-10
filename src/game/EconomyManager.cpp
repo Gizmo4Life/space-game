@@ -248,7 +248,10 @@ void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
 
   float availableLabor = fEco.populationCount * 0.1f;
   for (const auto &product : productionPriority) {
-    if (fEco.factories.count(product) == 0 || availableLabor <= 0)
+    if (fEco.factories.count(product) == 0) {
+      continue;
+    }
+    if (availableLabor <= 0)
       continue;
     auto it = recipes.find(product);
     if (it == recipes.end())

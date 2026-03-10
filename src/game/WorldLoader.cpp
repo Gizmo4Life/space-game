@@ -303,7 +303,7 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   b2BodyDef bodyDef = b2DefaultBodyDef();
   bodyDef.type = b2_dynamicBody;
   bodyDef.linearDamping = 0.0f;
-  bodyDef.angularDamping = 0.5f;
+  bodyDef.angularDamping = 2.5f;
 
   auto &fm = FactionManager::instance();
   auto allFactions = fm.getAllFactions();
@@ -455,10 +455,11 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     // Ensure variety in module production across the galaxy
     // Each faction on each planet picks 5 random modules to specialize in
     for (int i = 0; i < 5; ++i) {
-      ModuleCategory randCat = static_cast<ModuleCategory>(rand() % 7);
+      ModuleCategory randCat = static_cast<ModuleCategory>(rand() % 9);
       ModuleDef newDef =
           ModuleGenerator::instance().generateRandomModule(randCat, Tier::T1);
-      ProductKey pk{ProductType::Module, (uint32_t)(rand() % 10000), Tier::T1};
+      ProductKey pk{ProductType::Module, static_cast<uint32_t>(randCat),
+                    Tier::T1};
 
       auto *globalDataPtr = FactionManager::instance().getFactionPtr(fid);
       if (globalDataPtr) {
@@ -469,8 +470,8 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
       if (fEco.populationCount > 15.0f) {
         ModuleDef advancedDef =
             ModuleGenerator::instance().generateRandomModule(randCat, Tier::T2);
-        ProductKey advancedPk{ProductType::Module, (uint32_t)(rand() % 10000),
-                              Tier::T2};
+        ProductKey advancedPk{ProductType::Module,
+                              static_cast<uint32_t>(randCat), Tier::T2};
         if (globalDataPtr) {
           globalDataPtr->factionDesigns[advancedPk] = advancedDef;
         }
