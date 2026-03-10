@@ -19,7 +19,7 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 - [Capability: Navigation](/docs/architecture/capability/navigation.md) (T2)
 
 ## 3. Key Systems
-- **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses a **Unified Slot System** where modules are mapped to `SlotRole` types. Handles technical validation: ensure at least one `Command` slot is present, manages power balance, and enforces volume bounds for `AmmoMagazine` (T3 ammo consumes 5 units, T2 consumes 1). Also generates procedural ammunition and ammo racks to populate local markets.
+- **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses a **Unified Slot System** where modules are mapped to `SlotRole` types. Handles technical validation: ensure at least one `Command` slot is present, manages power balance, and enforces volume bounds for `AmmoMagazine`. Implement relaxed **Module Tier Logic** (70% match for non-elites) and **Attribute Variance** (15% chance to roll +1 tier) to ensure competitive common vessels. Also calculates `rotationSpeed` using a balanced `baseTurnRate` (1500) for softer steering feel.
 - **ModuleGenerator**: Procedural factory for creating `ModuleDef` and `AmmoDef` variants. Scales attributes (Mass, Volume, Thrust, Output) based on Tier and Faction DNA.
 - **PowerSystem**: Manages energy production via Isotope Reactors (exponential fuel decay) and buffer storage in Batteries. Updates `batteryLevel` for energy weapon draw.
 - **ShipConfig**: Static registry of hull definitions and default outfits. Replaces hardcoded mappings within the outfitter to allow for data-driven ship balancing.

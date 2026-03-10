@@ -37,6 +37,15 @@ struct ModuleDef {
         return attr.tier;
     return Tier::T1;
   }
+
+  int countHighTierAttributes(Tier threshold = Tier::T3) const {
+    int count = 0;
+    for (const auto &attr : attributes) {
+      if (attr.tier >= threshold && attr.type != AttributeType::Size)
+        count++;
+    }
+    return count;
+  }
 };
 
 struct AmmoDef {

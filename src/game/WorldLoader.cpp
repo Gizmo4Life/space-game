@@ -1,32 +1,22 @@
 #include "WorldLoader.h"
 #include "engine/telemetry/Telemetry.h"
-#include "game/EconomyManager.h"
 #include "game/FactionManager.h"
-#include "game/NPCShipManager.h"
-#include "game/ShipOutfitter.h"
-#include "game/components/AsteroidBelt.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/CelestialBody.h"
 #include "game/components/Economy.h"
 #include "game/components/Faction.h"
-#include "game/components/HullDef.h"
-#include "game/components/InertialBody.h"
-#include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
 #include "game/components/ModuleGenerator.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/OrbitalComponent.h"
 #include "game/components/PlayerComponent.h"
-#include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
-#include "game/components/WeaponComponent.h"
 #include "game/components/WorldConfig.h"
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
 #include <memory>
 #include <opentelemetry/trace/provider.h>
 #include <string>
@@ -104,9 +94,9 @@ void WorldLoader::loadStars(entt::registry &registry, int count) {
     sc.texture = texture;
     sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
     int scatter = static_cast<int>(WorldConfig::WORLD_HALF_SIZE * 2);
-    sc.sprite->setPosition(
-        {static_cast<float>(rand() % scatter - scatter / 2),
-         static_cast<float>(rand() % scatter - scatter / 2)});
+    float scX = static_cast<float>(rand() % scatter - scatter / 2);
+    float scY = static_cast<float>(rand() % scatter - scatter / 2);
+    sc.sprite->setPosition({scX, scY});
     registry.emplace<SpriteComponent>(star, sc);
   }
 }
@@ -316,35 +306,33 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   bodyDef.angularDamping = 2.0f;
 
   auto &fm = FactionManager::instance();
-  auto factions = fm.getAllFactions();
-  uint32_t playerFactionId = 0;
-  for (const auto &kv : factions) {
-    if (kv.first != 0 &&
-        kv.first != 1) { // 0 is independent, 1 is player fallback
-      playerFactionId = kv.first;
-      break;
+  auto allFactions = fm.getAllFactions();
+  std::vector<uint32_t> viableFactions;
+  for (const auto &kv : allFactions) {
+    if (kv.first >= 2) { // 0 is independent, 1 is player fallback
+      viableFactions.push_back(kv.first);
     }
   }
-  if (playerFactionId == 0)
-    playerFactionId = fm.getRandomFactionId();
+
+  uint32_t playerFactionId =
+      viableFactions.empty() ? fm.getRandomFactionId()
+                             : viableFactions[rand() % viableFactions.size()];
 
   sf::Vector2f spawnPos(900.0f, 900.0f);
   auto view = registry.view<PlanetEconomy, TransformComponent>();
 
-  entt::entity targetBody = entt::null;
-  float maxPop = -1.0f;
+  std::vector<entt::entity> viablePlanets;
   for (auto entity : view) {
     auto &eco = view.get<PlanetEconomy>(entity);
     if (eco.factionData.count(playerFactionId)) {
-      float pop = eco.factionData.at(playerFactionId).populationCount;
-      if (pop > maxPop) {
-        maxPop = pop;
-        targetBody = entity;
-      }
+      viablePlanets.push_back(entity);
     }
   }
 
-  if (targetBody == entt::null && view.begin() != view.end()) {
+  entt::entity targetBody = entt::null;
+  if (!viablePlanets.empty()) {
+    targetBody = viablePlanets[rand() % viablePlanets.size()];
+  } else if (view.begin() != view.end()) {
     targetBody = view.front();
   }
 

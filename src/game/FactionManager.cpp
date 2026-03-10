@@ -65,12 +65,16 @@ void FactionManager::init() {
   for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
     TierDNA &tdna = civ.dna.tierDNA[t];
     tdna.fleetScale = (t == Tier::T1) ? 0.8f : 0.2f;
-    tdna.specialization = 0.2f;
-    tdna.prefVolume = 0.7f;
-    tdna.hardpointDensities[Tier::T1] = 0.1f;
-    tdna.mountDensities[Tier::T1] = 0.3f;
+    tdna.specialization = 0.5f;
+    tdna.hardpointDensities[Tier::T1] = 0.2f;
+    tdna.mountDensities[Tier::T1] = 0.4f;
+    tdna.prefVolume = 0.9f;
+    tdna.prefDurability = 0.2f;
   }
-  civ.dna.namingScheme = NamingScheme::Celestial;
+  civ.dna.visual.bodyStyle = VisualStyle::Square;
+  civ.dna.visual.nacelleStyle = NacelleStyle::Integrated;
+  civ.dna.visual.layoutPattern = LayoutPattern::Symmetrical;
+  civ.dna.namingScheme = NamingScheme::Avian;
   generateShipLines(civ);
   factions[0] = civ;
 
@@ -115,13 +119,15 @@ void FactionManager::init() {
     data.dna.industrialism = (rand() % 100) * 0.01f;
     data.dna.commercialism = (rand() % 100) * 0.01f;
     data.dna.cooperation = (rand() % 100) * 0.01f;
-    data.dna.namingScheme = static_cast<NamingScheme>(rand() % 7);
+    data.dna.namingScheme = static_cast<NamingScheme>(rand() % 11);
 
     data.dna.visual.layoutPattern = static_cast<LayoutPattern>(rand() % 4);
     data.dna.visual.nacelleStyle = static_cast<NacelleStyle>(rand() % 4);
     data.dna.visual.hullConnectivity =
         static_cast<HullConnectivity>(rand() % 3);
-    data.dna.visual.bodyStyle = static_cast<VisualStyle>(rand() % 5);
+    // User preference: default to Polygon for better aesthetics, but allow
+    // variety
+    data.dna.visual.bodyStyle = VisualStyle::Polygon;
 
     for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
       TierDNA &tdna = data.dna.tierDNA[t];
@@ -314,11 +320,13 @@ void FactionManager::adjustRelationship(uint32_t idA, uint32_t idB,
 
 std::string FactionManager::generateFactionName() {
   static const std::vector<std::string> adjectives = {
-      "Nova",  "Void", "Galactic", "United",    "Crimson",
-      "Solar", "Deep", "Zenith",   "Forbidden", "Iron"};
+      "Obsidian", "Storm",   "Iron",     "Swift",  "Cloud",
+      "Steel",    "Apex",    "Primal",   "Modern", "Shadow",
+      "Gale",     "Granite", "Resolute", "Stable", "Active"};
   static const std::vector<std::string> nouns = {
-      "Syndicate", "Alliance", "Hegemony", "Collective", "Directorate",
-      "Cartel",    "Dominion", "Order",    "Vanguard",   "Remnant"};
+      "Collective",  "Compact", "Syndicate", "Alliance", "Hegemony",
+      "Directorate", "Cartel",  "Dominion",  "Order",    "Vanguard",
+      "Consortium",  "Systems", "Dynamics",  "Works",    "Forge"};
 
   return adjectives[rand() % adjectives.size()] + " " +
          nouns[rand() % nouns.size()];
@@ -347,7 +355,19 @@ std::string FactionManager::generateShipLineName(NamingScheme scheme,
         "Kraken", "Sphinx", "Wyvern", "Gorgon"}},
       {NamingScheme::Celestial,
        {"Pulsar", "Quasar", "Nebula", "Comet", "Meteor", "Asteroid", "Galaxy",
-        "Zenith", "Nadir", "Eclipse"}}};
+        "Zenith", "Nadir", "Eclipse"}},
+      {NamingScheme::Avian,
+       {"Sparrow", "Falcon", "Eagle", "Raven", "Owl", "Swift", "Kestrel",
+        "Merlin", "Harrier", "Vulture"}},
+      {NamingScheme::Geological,
+       {"Basalt", "Granite", "Obsidian", "Quartz", "Shale", "Flint", "Marble",
+        "Slate", "Chert", "Gneiss"}},
+      {NamingScheme::Meteorological,
+       {"Storm", "Gale", "Tempest", "Cyclone", "Typhoon", "Blizzard", "Thunder",
+        "Frost", "Mist", "Haze"}},
+      {NamingScheme::Mechanical,
+       {"Gear", "Piston", "Dynamo", "Turbine", "Valve", "Crank", "Bellows",
+        "Spring", "Toggle", "Ratchet"}}};
 
   auto it = schemeNames.find(scheme);
   if (it == schemeNames.end())

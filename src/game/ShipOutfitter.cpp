@@ -6,28 +6,23 @@
 #include "game/components/HullGenerator.h"
 #include "game/components/ShipModule.h"
 #include <algorithm>
-#include <cmath>
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <random>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <vector>
 
 #include <entt/entt.hpp>
 #include <opentelemetry/trace/provider.h>
 
 #include "engine/telemetry/Telemetry.h"
-#include "game/EconomyManager.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/InertialBody.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
 #include "game/components/ModuleGenerator.h"
-#include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
 #include "game/components/ShipStats.h"
 
@@ -73,30 +68,44 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
 
   auto &gen = ModuleGenerator::instance();
 
-  // Apply tier reduction for non-elite ships
+  // Non-elite ships can now match the hull tier (no longer strictly downgraded)
   auto effectiveTier = [&](Tier t) -> Tier {
     if (isElite)
+      return t;
+    // 70% chance to match the tier, 30% chance for a slight downgrade
+    if (rand() % 100 < 70)
       return t;
     return static_cast<Tier>(std::max(1, static_cast<int>(t) - 1));
   };
 
   // Generates a ModuleDef for the requested attribute + tier, checking faction
   // standards first
-  auto makeModule = [&](ModuleCategory cat, AttributeType attr,
+  auto makeModule = [&](ModuleCategory cat, AttributeType mainAttr,
                         Tier slotSize) -> ModuleDef {
-    Tier t = effectiveTier(slotSize);
+    Tier baseT = effectiveTier(slotSize);
 
     // Check if the faction has a standard design for this category and tier
-    ProductKey pk{ProductType::Module, static_cast<uint32_t>(cat), t};
+    ProductKey pk{ProductType::Module, static_cast<uint32_t>(cat), baseT};
     if (fData->factionDesigns.count(pk)) {
       return fData->factionDesigns.at(pk);
     }
 
+    auto rollT = [&](Tier target) {
+      int r = rand() % 100;
+      if (r < 70)
+        return target; // 70% match
+      if (r < 85)
+        return static_cast<Tier>(
+            std::max(1, static_cast<int>(target) - 1)); // 15% lower
+      return static_cast<Tier>(
+          std::min(3, static_cast<int>(target) + 1)); // 15% higher
+    };
+
     return gen.generate(cat,
-                        {{attr, t},
-                         {AttributeType::Size, t},
-                         {AttributeType::Mass, t},
-                         {AttributeType::Volume, t}},
+                        {{mainAttr, rollT(baseT)},
+                         {AttributeType::Size, baseT},
+                         {AttributeType::Mass, rollT(baseT)},
+                         {AttributeType::Volume, rollT(baseT)}},
                         0.0f, 0.0f, 1.0f, 0.0f);
   };
 
@@ -573,7 +582,7 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
 
     // Calculate rotation speed from reaction wheels (and a base minimum)
     // divided by mass
-    float baseTurnRate = 5000.0f; // Minimum rotational force
+    float baseTurnRate = 500.0f; // Minimum rotational force
     float wheelTurnRate = 0.0f;
     if (registry.all_of<InstalledReactionWheels>(entity)) {
       wheelTurnRate =

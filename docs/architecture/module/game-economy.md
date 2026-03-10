@@ -36,7 +36,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [economy-resource-chain](/docs/developer/pattern/economy-resource-chain.md) (P) — Three-tier production chain (Basic -> Refined -> Modular)
 - [dna-weighted-infrastructure-expansion](/docs/developer/pattern/dna-weighted-infrastructure-expansion.md) (P) — Faction factory construction based on "Need" and DNA axis bias
 - [economy-dynamic-pricing](/docs/developer/pattern/economy-dynamic-pricing.md) (P) — Dynamic assignment of `basePrice` utilizing material costs
-- [economy-faction-standards](/docs/developer/pattern/economy-faction-standards.md) (P) — Modular designs compete to become faction standards. Best variants go to `FactionData`, inferior to local scrap yard.
+- [economy-faction-standards](/docs/developer/pattern/economy-faction-standards.md) (P) — Modular designs compete to become faction standards. Best variants go to `FactionData`, inferior to local scrap yard. Includes **Exceptional** module retention (2+ T3 attributes kept for fleets).
 - [economy-arbitrage-logic](/docs/developer/pattern/economy-arbitrage-logic.md) (P) — AI traders move goods between planets based on price differentials and faction DNA
 - [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model using `Tier` for tiered pricing
 - [economy-refit-fee](/docs/developer/pattern/economy-refit-fee.md) (P) — Installation costs for player refits

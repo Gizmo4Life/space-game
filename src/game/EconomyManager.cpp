@@ -1,10 +1,8 @@
 #include "EconomyManager.h"
 #include <algorithm>
-#include <cmath>
 #include <iostream>
 #include <map>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include <entt/entt.hpp>
@@ -17,7 +15,6 @@
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/GameTypes.h"
-#include "game/components/HullGenerator.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
 #include "game/components/ModuleGenerator.h"
@@ -323,35 +320,34 @@ void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
             }
             generated.basePrice = truePrice * 1.25f;
 
-            int genScore = 0;
-            for (const auto &attr : generated.attributes)
-              genScore += static_cast<int>(attr.tier);
-
+            bool isExceptional =
+                (generated.countHighTierAttributes(Tier::T3) >= 2);
             auto *fData = FactionManager::instance().getFactionPtr(factionId);
-            bool isNewStandard = true;
-            if (fData && fData->factionDesigns.count(product)) {
-              int currentScore = 0;
-              for (const auto &attr : fData->factionDesigns[product].attributes)
-                currentScore += static_cast<int>(attr.tier);
-              if (genScore <= currentScore) {
-                isNewStandard = false;
-              }
+
+            bool keepForFaction = isExceptional;
+            // If very commercial and have enough stock, maybe sell it anyway to
+            // "corner the market"
+            if (isExceptional && fData && fData->dna.commercialism > 0.8f &&
+                fEco.shopModules.size() > 3) {
+              if (rand() % 100 < 30)
+                keepForFaction = false;
             }
 
-            if (isNewStandard && fData) {
+            if (keepForFaction && fData) {
               if (fData->factionDesigns.count(product)) {
+                // Old design pushed to market
                 fEco.shopModules.push_back(fData->factionDesigns[product]);
               }
               fData->factionDesigns[product] = generated;
-              std::cout << "[Economy] Faction invented new standard module for "
-                           "category "
-                        << product.id << "\n";
+              std::cout << "[Economy] Faction " << factionId
+                        << " KEPT exceptional module: " << generated.name
+                        << "\n";
             } else {
               generated.originFactionId = factionId;
               fEco.shopModules.push_back(generated);
 
               // List excess on planetary market
-              if (fEco.shopModules.size() > 5) {
+              if (fEco.shopModules.size() > 8) {
                 eco.shopModules.push_back(fEco.shopModules.front());
                 fEco.shopModules.erase(fEco.shopModules.begin());
               }
@@ -683,8 +679,6 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
 
     for (const auto &bp : fData->blueprints) {
       // Check if the planet's economy supports this tier/role
-      // (Simplified: if the fleetPool has ANY count for this tier, we show
-      // all blueprints of that tier)
       bool tierInPool = false;
       for (auto const &[key, count] : fEco.fleetPool) {
         if (key.first == bp.hull.sizeTier && count > 0) {
@@ -694,6 +688,22 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
       }
 
       if (tierInPool) {
+        // Scarcity/Availability Balancing:
+        // Use the faction's local population share to decide IF we show the
+        // bid. Civilian faction (0) is everywhere, but shouldn't drown out
+        // locals.
+        float localPop = fEco.populationCount;
+        float totalPop = eco.getTotalPopulation();
+        float share = localPop / (totalPop + 0.1f);
+
+        // Civilian bias reduction: Civilian ships only appear if they have a
+        // decent foothold, or as a fallback if the local faction is very small.
+        float appearanceThreshold = (fId == 0) ? 0.3f : 0.05f;
+        if (share < appearanceThreshold && fId == 0) {
+          if (totalPop > 10.0f)
+            continue;
+        }
+
         // Generate market-compliant blueprint (isElite = false)
         ShipBlueprint marketBP = ShipOutfitter::instance().generateBlueprint(
             fId, bp.hull.sizeTier, bp.role, bp.lineIndex, false);

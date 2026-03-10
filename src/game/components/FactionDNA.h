@@ -29,7 +29,7 @@ struct FactionDNA {
   float commercialism = 0.5f; // 0: Internal Supply, 1: Profit Trade
   float cooperation = 0.5f;   // 0: Xenophobic/Isolated, 1: Diplomatic/Allies
 
-  NamingScheme namingScheme = NamingScheme::Celestial;
+  NamingScheme namingScheme = NamingScheme::Avian;
 
   // Per-Tier Design (T1, T2, T3)
   std::map<Tier, TierDNA> tierDNA;

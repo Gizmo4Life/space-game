@@ -142,7 +142,9 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
     MountSlot slot;
     slot.id = nextId++;
     slot.size = dominantHPTier;
-    slot.style = hull.visual.bodyStyle;
+    // User preference: allow mix-and-match variety
+    slot.style = (rand() % 100 < 30) ? static_cast<VisualStyle>(rand() % 5)
+                                     : hull.visual.bodyStyle;
     slot.role = SlotRole::Hardpoint;
 
     sf::Vector2f pos;
@@ -153,7 +155,8 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
     } else {
       // Symmetrical default — ensure >= 5.0 unit spacing
       float side = (i % 2 == 0) ? 1.0f : -1.0f;
-      float row = static_cast<float>(i / 2);
+      int rowIdx = i / 2;
+      float row = static_cast<float>(rowIdx);
       pos = {side * (bodyR + step + row * step * 0.5f),
              -(minOff + row * step * 1.2f)};
     }
@@ -179,7 +182,9 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
     MountSlot slot;
     slot.id = nextId++;
     slot.size = dominantEngTier;
-    slot.style = hull.visual.bodyStyle;
+    // User preference: allow mix-and-match variety
+    slot.style = (rand() % 100 < 30) ? static_cast<VisualStyle>(rand() % 5)
+                                     : hull.visual.bodyStyle;
     slot.role = SlotRole::Engine;
 
     // Ensure >= 5.0 unit spacing between engines
@@ -189,7 +194,8 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
       pos = {0.0f, minOff + i * engStep};
     } else {
       float side = (i % 2 == 0) ? 1.0f : -1.0f;
-      float row = static_cast<float>(i / 2);
+      int rowIdx = i / 2;
+      float row = static_cast<float>(rowIdx);
       pos = {side * (bodyR + step + row * step * 0.5f), minOff + row * engStep};
     }
     slot.localPos = pos;

@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
+#include <ctime>
 #include <entt/entt.hpp>
 
 #include "engine/combat/WeaponSystem.h"
@@ -14,13 +15,10 @@
 #include "game/EconomyManager.h"
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
-#include "game/ShipOutfitter.h"
 #include "game/WorldLoader.h"
 #include "game/components/Economy.h"
-#include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
 #include "game/components/PlayerComponent.h"
-#include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WorldConfig.h"
 #include "rendering/LandingScreen.h"
@@ -29,6 +27,7 @@
 
 int main() {
   using namespace space;
+  srand(static_cast<unsigned int>(time(NULL)));
 
   // --- Telemetry ---
   Telemetry::instance().init();

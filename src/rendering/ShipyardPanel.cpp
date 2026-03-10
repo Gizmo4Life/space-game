@@ -5,8 +5,6 @@
 #include "game/ShipOutfitter.h"
 #include "game/components/GameTypes.h"
 #include "game/components/HullDef.h"
-#include "game/components/HullGenerator.h"
-#include "game/components/InstalledModules.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
@@ -192,8 +190,11 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
         const auto &bid = currentBids_[i];
         bool sel = (i == selectedBidIndex_);
         sf::Color col = sel ? sf::Color::Cyan : sf::Color::White;
+        const auto &faction =
+            FactionManager::instance().getFaction(bid.factionId);
         std::string label = (sel ? "> " : "  ") + tierName(bid.tier) + " " +
-                            bid.hullName + " - $" + fmt(bid.price, 0);
+                            bid.hullName + " [" + faction.name + "] - $" +
+                            fmt(bid.price, 0);
         sf::Text t(*font, label, 16);
         t.setFillColor(col);
         t.setPosition({x, y});
@@ -245,7 +246,8 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     float dx = rect.position.x + 400.f;
     float dy = detailY;
     const auto &faction = FactionManager::instance().getFaction(bid.factionId);
-    dtext(dx, dy, bid.hullName, 24, sf::Color::Yellow);
+    dtext(dx, dy, bid.hullName + " (" + bid.hull.className + ")", 24,
+          sf::Color::Yellow);
     dtext(dx, dy, "Tier: " + tierName(bid.tier), 16, sf::Color(200, 200, 200));
     dtext(dx, dy, "Seller: " + faction.name, 16, sf::Color(200, 200, 255));
     dtext(dx, dy, "Price: $" + fmt(bid.price, 0), 18, sf::Color(100, 255, 100));
@@ -433,6 +435,19 @@ static void drawHullComp(sf::RenderTarget &target, VisualStyle style,
     sleek.setPosition(pos);
     sleek.setRotation(sf::degrees(rotation));
     target.draw(sleek);
+  } else if (style == VisualStyle::Polygon) {
+    sf::ConvexShape poly(6);
+    for (int i = 0; i < 6; ++i) {
+      float angle = i * 60.f * 3.14159f / 180.f;
+      poly.setPoint(i, {cosf(angle) * 11 * scale, sinf(angle) * 11 * scale});
+    }
+    poly.setOrigin({0, 0});
+    poly.setFillColor(fillColor);
+    poly.setOutlineThickness(1.2f);
+    poly.setOutlineColor(outlineColor);
+    poly.setPosition(pos);
+    poly.setRotation(sf::degrees(rotation));
+    target.draw(poly);
   }
 }
 
@@ -442,8 +457,8 @@ void ShipyardPanel::drawShipBlueprint(sf::RenderTarget &target,
   NacelleStyle nacelleStyle = faction.dna.visual.nacelleStyle;
   HullConnectivity connectivity = faction.dna.visual.hullConnectivity;
 
-  // Use a neutral blueprint cyan for schematic outlines
-  sf::Color schematicColor = sf::Color(100, 220, 255);
+  // Use the faction's color for schematic outlines
+  sf::Color schematicColor = faction.color;
   schematicColor.a = 255;
 
   // Subtle connectors for schematic look

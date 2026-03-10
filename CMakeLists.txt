@@ -88,6 +88,9 @@ if (BUILD_TESTING)
         tests/test_weapons.cpp
         tests/test_collisions.cpp
         tests/test_npc_missions.cpp
+        tests/test_ship_alignment.cpp
+        tests/test_spawn_variety.cpp
+        tests/test_module_quality.cpp
     )
     target_include_directories(SpaceGameTests PRIVATE src)
     target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)

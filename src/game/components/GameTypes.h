@@ -85,7 +85,11 @@ enum class NamingScheme {
   Insects,
   Felines,
   Mythical,
-  Celestial
+  Celestial,
+  Avian,
+  Geological,
+  Meteorological,
+  Mechanical
 };
 
 using ShipOutfitHash = uint64_t;
