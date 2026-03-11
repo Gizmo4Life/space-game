@@ -1,0 +1,15 @@
+build/
+bin/
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+*.log
+.DS_Store
+.cache/
+.agent/
+.agents/
+compile_commands.json
+CMakeFiles/
+CMakeCache.txt

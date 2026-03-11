@@ -17,7 +17,8 @@ The fastest way to launch the game with full observability (SigNoz/Jaeger) is vi
     ```bash
     docker-compose up --build -d
     ```
-4.  **Access**:
+4.  **Note**: The Docker environment follows the [Docker Orchestration Standard](/docs/governance/standard/docker-orchestration.md) and handles all dependency pinning (SFML 3.0, Box2D 3.0) via source builds in the container.
+5.  **Access**:
     - **Game**: Window will launch via X11.
     - **SigNoz (Dashboards)**: [http://localhost:3301](http://localhost:3301)
     - **Jaeger (Traces)**: [http://localhost:16686](http://localhost:16686)

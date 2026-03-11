@@ -39,6 +39,7 @@ Before starting any significant change, ensure the baseline environment is healt
 ## 4. Validation
 - **Action:** Run all unit tests and verify 100% pass rate for new logic.
 - **Action:** For performance-critical systems (Physics, AI, Rendering), verify no regression against baseline metrics using internal telemetry.
+- **Action:** Run the [Protocol Turbo Script](/scripts/governance/protocol-turbo.sh) to automate the build-test-fix cycle. This script enforces the [Docker Orchestration Standard](../standard/docker-orchestration.md) by detecting known infrastructure regressions (e.g., host leaks, library mismatches).
 - **Action:** Perform a final **Drift Analysis** to ensure documentation and code are perfectly synchronized.
 - **Action:** Execute [Documentation Validation](documentation-validation.md).
 

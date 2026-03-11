@@ -16,7 +16,16 @@ find_package(box2d CONFIG REQUIRED)
 # EnTT
 find_package(EnTT CONFIG REQUIRED)
 
-# OpenTelemetry (brew-installed)
+# nlohmann JSON (required by OpenTelemetry's exported targets)
+find_package(nlohmann_json REQUIRED)
+
+# CURL (required by OpenTelemetry's exported targets)
+find_package(CURL REQUIRED)
+
+# Protobuf (required by OpenTelemetry's exported targets)
+find_package(Protobuf REQUIRED)
+
+# OpenTelemetry
 find_package(opentelemetry-cpp CONFIG REQUIRED)
 
 # --- Core Game Library (shared between game and tests) ---

@@ -2,6 +2,7 @@
 #include "GameTypes.h"
 #include <SFML/System/Vector2.hpp>
 #include <algorithm> // For std::count_if
+#include <cmath>     // For std::sqrt
 #include <cstdint>
 #include <map>
 #include <string>
