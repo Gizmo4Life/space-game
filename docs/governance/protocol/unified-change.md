@@ -48,3 +48,4 @@ A task is considered **DONE** only when:
 2. **100% Test Pass Rate**: All unit, integration, and regression tests pass with zero failures.
 3. **Clean Linter Findings**: All modified files have zero linter errors or warnings as defined in the [Coding Standards](../standard/coding-standards.md).
 4. **Verified Documentation**: T3 modules, Signpost Readmes, and architecture diagrams are updated and pass [Documentation Validation](documentation-validation.md).
+5. **Observability Assets**: Diagnostic Dashboard manifests (.md and .json export) and Span Runbooks are present, linked, and pass drift analysis.

@@ -85,6 +85,9 @@ static sf::Color getPlanetColor(CelestialType type) {
 }
 
 void WorldLoader::loadStars(entt::registry &registry, int count) {
+  auto span = Telemetry::instance().tracer()->StartSpan("game.world.gen.stars");
+  span->SetAttribute("star.count", count);
+
   for (int i = 0; i < count; ++i) {
     auto star = registry.create();
     auto texture = std::make_shared<sf::Texture>();
@@ -100,6 +103,7 @@ void WorldLoader::loadStars(entt::registry &registry, int count) {
     sc.sprite->setPosition({scX, scY});
     registry.emplace<SpriteComponent>(star, sc);
   }
+  span->End();
 }
 
 void WorldLoader::generateStarSystem(entt::registry &registry,
@@ -182,6 +186,15 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
       registry.emplace<OrbitalComponent>(moon, parent, binSMA, binSMA, period,
                                          (rand() % 628) * 0.01f, 0.0f);
 
+      // Telemetry: celestial body generation
+      auto bodySpan = Telemetry::instance().tracer()->StartSpan(
+          "game.world.gen.celestial_body");
+      bodySpan->SetAttribute("body.name",
+                             registry.get<NameComponent>(moon).name);
+      bodySpan->SetAttribute("body.type", (int)type);
+      bodySpan->SetAttribute("body.mass", moonMass);
+      bodySpan->SetAttribute("body.is_moon", true);
+
       auto &orb = registry.get<OrbitalComponent>(moon);
       sf::Vector2f parentPos(0, 0);
       if (registry.valid(parent) &&
@@ -213,6 +226,7 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
       registry.emplace<SpriteComponent>(moon, sc);
 
       seedEconomy(registry, moon, type, 0.2f);
+      bodySpan->End();
     }
     return;
   }
@@ -252,6 +266,15 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
     period *= 0.2f;
     registry.emplace<OrbitalComponent>(planet, parent, binSMA, binSMA, period,
                                        (rand() % 628) * 0.01f, 0.0f);
+
+    // Telemetry: celestial body generation
+    auto bodySpan = Telemetry::instance().tracer()->StartSpan(
+        "game.world.gen.celestial_body");
+    bodySpan->SetAttribute("body.name",
+                           registry.get<NameComponent>(planet).name);
+    bodySpan->SetAttribute("body.type", (int)type);
+    bodySpan->SetAttribute("body.mass", mass);
+    bodySpan->SetAttribute("body.is_moon", false);
 
     auto &orb = registry.get<OrbitalComponent>(planet);
     sf::Vector2f parentPos(0, 0);
@@ -294,6 +317,7 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
       generateOrbitalSystem(registry, worldId, planet, mass * 0.1f,
                             radius * 3.0f, radius * 12.0f, true);
     }
+    bodySpan->End();
   }
 }
 
@@ -357,6 +381,13 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
   f.allegiances[playerFactionId] = 1.0f;
   registry.emplace_or_replace<Faction>(ship, f);
 
+  // Telemetry: player spawn
+  auto spawnSpan =
+      Telemetry::instance().tracer()->StartSpan("game.world.gen.player_spawn");
+  spawnSpan->SetAttribute("player.faction_id", (int)playerFactionId);
+  spawnSpan->SetAttribute("player.spawn_planet", (int)targetBody);
+  spawnSpan->End();
+
   return ship;
 }
 
@@ -381,6 +412,12 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
   }
 
   registry.emplace<Faction>(body, f);
+
+  // Telemetry: economy seeding
+  auto ecoSpan =
+      Telemetry::instance().tracer()->StartSpan("game.world.gen.economy_seed");
+  ecoSpan->SetAttribute("body.entity", (int)body);
+  ecoSpan->SetAttribute("faction.allegiance_count", (int)f.allegiances.size());
 
   PlanetEconomy eco;
   // Baseline scarcity for common hull classes
@@ -513,6 +550,7 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     eco.factionData[fid] = fEco;
   }
   registry.emplace<PlanetEconomy>(body, eco);
+  ecoSpan->End();
 }
 
 } // namespace space

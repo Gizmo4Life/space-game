@@ -1,0 +1,115 @@
+{
+    "uuid": "global-health-dashboard",
+    "title": "Global System Health",
+    "description": "Consolidated view of critical T2 Capabilities: Combat, Economy, Rendering, and World Generation.",
+    "tags": [
+        "game",
+        "health",
+        "t2"
+    ],
+    "widgets": [
+        {
+            "name": "Rendering Latency (P99)",
+            "description": "P99 Latency for render.update",
+            "query": "SELECT quantileAppox(0.99)(durationNano) / 1000000 AS p99_latency_ms FROM signoz_index.traces WHERE serviceName = 'SpaceGame' AND name = 'render.update' GROUP BY time",
+            "type": "graph",
+            "thresholds": {
+                "critical": 16.6,
+                "warning": 12.0
+            }
+        },
+        {
+            "name": "Combat Latency (P99)",
+            "description": "P99 Latency for combat.weapon.fire",
+            "query": "SELECT quantileAppox(0.99)(durationNano) / 1000000 AS p99_latency_ms FROM signoz_index.traces WHERE serviceName = 'SpaceGame' AND name = 'combat.weapon.fire' GROUP BY time",
+            "type": "graph",
+            "thresholds": {
+                "critical": 5.0,
+                "warning": 3.0
+            }
+        },
+        {
+            "name": "Economy Error Rate",
+            "description": "Transaction Error Rate for economy.buy_ship",
+            "query": "SELECT countIf(statusCode = 2) * 100.0 / count(*) AS error_rate_percent FROM signoz_index.traces WHERE serviceName = 'SpaceGame' AND name = 'economy.buy_ship' GROUP BY time",
+            "type": "graph",
+            "thresholds": {
+                "critical": 1.0,
+                "warning": 0.1
+            }
+        },
+        {
+            "name": "NPC Mission Throughput",
+            "description": "Successful mission outcomes per minute",
+            "query": "SELECT count(*) AS outcomes_per_min FROM signoz_index.traces WHERE serviceName = 'SpaceGame' AND name = 'game.npc.mission.outcome' AND attributes['mission.success'] = true GROUP BY time",
+            "type": "graph",
+            "thresholds": {
+                "warning": 1.0
+            }
+        },
+        {
+            "name": "World Gen Performance (P95)",
+            "description": "Duration of top-level World Load",
+            "query": "SELECT quantileAppox(0.95)(durationNano) / 1000000 AS p95_load_time_ms FROM signoz_index.traces WHERE serviceName = 'SpaceGame' AND name = 'game.core.world.load' GROUP BY time",
+            "type": "graph",
+            "thresholds": {
+                "critical": 1500,
+                "warning": 800
+            }
+        },
+        {
+            "name": "Universe Density",
+            "description": "Total Celestial Bodies per System",
+            "query": "SELECT countIf(name = 'game.world.gen.celestial_body') AS total_bodies FROM signoz_index.traces WHERE serviceName = 'SpaceGame' GROUP BY time",
+            "type": "graph",
+            "thresholds": {
+                "critical": 5,
+                "warning": 10
+            }
+        }
+    ],
+    "layout": [
+        {
+            "id": 0,
+            "x": 0,
+            "y": 0,
+            "w": 6,
+            "h": 4
+        },
+        {
+            "id": 1,
+            "x": 6,
+            "y": 0,
+            "w": 6,
+            "h": 4
+        },
+        {
+            "id": 2,
+            "x": 0,
+            "y": 4,
+            "w": 6,
+            "h": 4
+        },
+        {
+            "id": 3,
+            "x": 6,
+            "y": 4,
+            "w": 6,
+            "h": 4
+        },
+        {
+            "id": 4,
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 4
+        },
+        {
+            "id": 5,
+            "x": 0,
+            "y": 12,
+            "w": 12,
+            "h": 4
+        }
+    ]
+}

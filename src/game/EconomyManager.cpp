@@ -684,6 +684,15 @@ void EconomyManager::tryAssembleShips(uint32_t factionId, FactionEconomy &fEco,
       }
       fEco.parkedShips.push_back(bp);
       hIt = fEco.scrapyardHulls.erase(hIt);
+
+      // Telemetry: Ship Assembly
+      auto assemblySpan = space::Telemetry::instance().tracer()->StartSpan(
+          "game.economy.ship_assembly");
+      assemblySpan->SetAttribute("economy.faction_id", (int)factionId);
+      assemblySpan->SetAttribute("economy.hull_class", hull.className);
+      assemblySpan->SetAttribute("economy.size_tier", (int)hull.sizeTier);
+      assemblySpan->End();
+
       std::cout << "[Economy] Faction " << factionId
                 << " ASSEMBLED a ship: " << hull.className << "\n";
     } else {
@@ -861,6 +870,15 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
   registry.get<CreditsComponent>(player).amount -= bid.price;
   fEco.credits += bid.price;
 
+  // Telemetry: Ship Purchase
+  auto tradeSpan = space::Telemetry::instance().tracer()->StartSpan(
+      "game.economy.transaction");
+  tradeSpan->SetAttribute("economy.transaction_type", "purchase");
+  tradeSpan->SetAttribute("economy.faction_id", (int)bid.factionId);
+  tradeSpan->SetAttribute("economy.price", bid.price);
+  tradeSpan->SetAttribute("economy.hull_class", bid.blueprint.hull.className);
+  tradeSpan->End();
+
   // Scarcity impact
   float scarcity = eco.hullClassScarcity.count(bid.blueprint.hull.className)
                        ? eco.hullClassScarcity[bid.blueprint.hull.className]
@@ -941,6 +959,15 @@ bool EconomyManager::sellShip(entt::registry &registry, entt::entity planet,
 
   auto &playerCredits = registry.get<CreditsComponent>(player);
   playerCredits.amount += sellPrice;
+
+  // Telemetry: Ship Sale
+  auto saleSpan = space::Telemetry::instance().tracer()->StartSpan(
+      "game.economy.transaction");
+  saleSpan->SetAttribute("economy.transaction_type", "sale");
+  saleSpan->SetAttribute("economy.price", sellPrice);
+  saleSpan->SetAttribute("economy.hull_class",
+                         registry.get<HullDef>(shipToSell).className);
+  saleSpan->End();
 
   if (registry.all_of<PlanetEconomy>(planet)) {
     auto &eco = registry.get<PlanetEconomy>(planet);
@@ -1032,6 +1059,15 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     credits.amount -= totalCost;
     cargo.inventory[res] += delta;
 
+    // Telemetry: Commodity Purchase
+    auto tradeSpan = space::Telemetry::instance().tracer()->StartSpan(
+        "game.economy.transaction");
+    tradeSpan->SetAttribute("economy.transaction_type", "commodity_buy");
+    tradeSpan->SetAttribute("economy.resource_id", (int)res);
+    tradeSpan->SetAttribute("economy.quantity", delta);
+    tradeSpan->SetAttribute("economy.price_total", totalCost);
+    tradeSpan->End();
+
     // Deduct from aggregate stockpile and pay factions
     float remaining = delta;
     for (auto &[fid, fEco] : eco.factionData) {
@@ -1066,6 +1102,16 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     if (bestFid != 0) {
       eco.factionData[bestFid].stockpile[pk] += amountToSell;
       eco.marketStockpile[pk] += amountToSell;
+
+      // Telemetry: Commodity Sale
+      auto tradeSpan = space::Telemetry::instance().tracer()->StartSpan(
+          "game.economy.transaction");
+      tradeSpan->SetAttribute("economy.transaction_type", "commodity_sell");
+      tradeSpan->SetAttribute("economy.resource_id", (int)res);
+      tradeSpan->SetAttribute("economy.quantity", amountToSell);
+      tradeSpan->SetAttribute("economy.price_total", totalGain);
+      tradeSpan->SetAttribute("economy.buying_faction", (int)bestFid);
+      tradeSpan->End();
     }
     return true;
   }

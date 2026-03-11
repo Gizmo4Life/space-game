@@ -152,6 +152,20 @@ void NPCShipManager::processMissions(entt::registry &registry, float dt) {
     if (aliveCount == 0 || allArrived) {
       it->record.success = allArrived;
 
+      // Telemetry: Mission Outcome
+      auto outcomeSpan = space::Telemetry::instance().tracer()->StartSpan(
+          "game.npc.mission.outcome");
+      outcomeSpan->SetAttribute("mission.id", (int)it->record.missionId);
+      outcomeSpan->SetAttribute("mission.type", (int)it->record.type);
+      outcomeSpan->SetAttribute("mission.faction_id",
+                                (int)it->record.factionId);
+      outcomeSpan->SetAttribute("mission.success", allArrived);
+      outcomeSpan->SetAttribute("mission.value_lost",
+                                it->record.totalValueLost);
+      outcomeSpan->SetAttribute("mission.value_killed",
+                                it->record.totalValueKilled);
+      outcomeSpan->End();
+
       // Finalize record and move to global stats
       auto *fData =
           FactionManager::instance().getFactionPtr(it->record.factionId);
@@ -225,6 +239,15 @@ entt::entity NPCShipManager::spawnShip(
       hull.className + "-" + std::to_string(static_cast<uint32_t>(entity)));
 
   npc.outfitHash = outfitter.calculateOutfitHash(registry, entity);
+
+  // Telemetry: NPC Spawn
+  auto spawnSpan =
+      space::Telemetry::instance().tracer()->StartSpan("game.npc.spawn");
+  spawnSpan->SetAttribute("npc.entity_id", (int)entity);
+  spawnSpan->SetAttribute("npc.faction_id", (int)factionId);
+  spawnSpan->SetAttribute("npc.size_tier", (int)sizeTier);
+  spawnSpan->SetAttribute("npc.role", role);
+  spawnSpan->End();
 
   return entity;
 }
