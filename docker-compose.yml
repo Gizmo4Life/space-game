@@ -1,55 +1,89 @@
-services:
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    ports:
-      - "16686:16686" # UI
-      - "4317:4317" # OTLP gRPC
-      - "4318:4318" # OTLP HTTP
+# =============================================================================
+# SpaceGame — Docker Compose Orchestration
+# See: docs/governance/standard/docker-orchestration.md
+# =============================================================================
 
-  # SigNoz Backend
+services:
+  # ---------------------------------------------------------------------------
+  # Jaeger — Distributed tracing backend (UI only, OTLP via otel-collector)
+  # ---------------------------------------------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:1.76.0
+    restart: unless-stopped
+    ports:
+      - "16686:16686" # Jaeger UI
+
+  # ---------------------------------------------------------------------------
+  # ClickHouse — SigNoz storage backend
+  # ---------------------------------------------------------------------------
   clickhouse:
     image: clickhouse/clickhouse-server:24.1-alpine
+    restart: unless-stopped
     volumes:
       - clickhouse_data:/var/lib/clickhouse
     healthcheck:
-      test: [ "CMD", "wget", "--spider", "-q", "localhost:8123/ping" ]
-      interval: 3s
+      test: [ "CMD", "clickhouse-client", "--query", "SELECT 1" ]
+      interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 15
+      start_period: 10s
 
+  # ---------------------------------------------------------------------------
+  # SigNoz Query Service — Observability dashboard backend
+  # ---------------------------------------------------------------------------
   signoz-query-service:
     image: signoz/query-service:0.38.0
     container_name: signoz-query-service
-    command: [ "-config=/etc/signoz/connection.yaml" ]
+    restart: unless-stopped
+    environment:
+      - STORAGE=clickhouse
+      - ClickHouseUrl=tcp://clickhouse:9000
+      - GODEBUG=netdns=go
     depends_on:
       clickhouse:
         condition: service_healthy
     ports:
-      - "3301:3301" # UI
+      - "3301:3301" # SigNoz UI
     volumes:
-      - ./signoz-connection.yaml:/etc/signoz/connection.yaml
+      - signoz_data:/var/lib/signoz
 
+  # ---------------------------------------------------------------------------
+  # OTel Collector — Canonical OTLP ingestion endpoint
+  # All services emit traces here; collector fans out to backends.
+  # ---------------------------------------------------------------------------
   otel-collector:
     image: signoz/signoz-otel-collector:0.88.0
+    restart: unless-stopped
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
     depends_on:
-      - signoz-query-service
-      - jaeger
+      clickhouse:
+        condition: service_healthy
+      signoz-query-service:
+        condition: service_started
+      jaeger:
+        condition: service_started
     ports:
       - "4317:4317" # OTLP gRPC
       - "4318:4318" # OTLP HTTP
 
+  # ---------------------------------------------------------------------------
+  # Game — SpaceGame build validation only (run natively on macOS for gameplay)
+  # Use: docker compose --profile game build   (validate the Dockerfile builds)
+  # The game itself should be run natively: OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 ./build/SpaceGame
+  # ---------------------------------------------------------------------------
   game:
+    profiles: [ "game" ]
     build: .
+    restart: "no"
     depends_on:
-      - otel-collector
+      otel-collector:
+        condition: service_started
     environment:
       - DISPLAY=host.docker.internal:0
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-    # Requires XQuartz on macOS host
-    network_mode: host
 
 volumes:
   clickhouse_data:
+  signoz_data:

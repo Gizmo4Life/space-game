@@ -11,6 +11,7 @@
 #include <opentelemetry/sdk/trace/tracer_provider_factory.h>
 #include <opentelemetry/trace/provider.h>
 
+#include <cstdlib>
 #include <iostream>
 
 namespace trace_api = opentelemetry::trace;
@@ -33,9 +34,15 @@ void Telemetry::init(const std::string &serviceName,
   // --- Try OTLP/HTTP exporter (for Jaeger / any OTEL collector) ---
   std::unique_ptr<trace_sdk::SpanExporter> exporter;
 
+  // Respect the standard OTel env var, fall back to the passed-in default
+  std::string endpoint = otlpEndpoint;
+  if (const char *envEndpoint = std::getenv("OTEL_EXPORTER_OTLP_ENDPOINT")) {
+    endpoint = envEndpoint;
+  }
+
   try {
     otlp::OtlpHttpExporterOptions opts;
-    opts.url = otlpEndpoint + "/v1/traces";
+    opts.url = endpoint + "/v1/traces";
     exporter = otlp::OtlpHttpExporterFactory::Create(opts);
     std::cout << "[Telemetry] OTLP/HTTP exporter -> " << opts.url << "\n";
   } catch (...) {

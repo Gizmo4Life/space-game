@@ -1,15 +1,40 @@
+# =============================================================================
+# .dockerignore — Prevent host artifacts from leaking into container context
+# Pattern: docker-host-isolation
+# =============================================================================
+
+# Build artifacts (CRITICAL: prevents CMakeCache collision)
 build/
 bin/
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+
+# Version control
 .git/
 .gitignore
+
+# Docker self-reference
 .dockerignore
 Dockerfile
 docker-compose.yml
-*.log
-.DS_Store
-.cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Agent and tooling
 .agent/
 .agents/
+.gemini/
+.cache/
+
+# macOS
+.DS_Store
+
+# Logs and generated files
+*.log
 compile_commands.json
-CMakeFiles/
-CMakeCache.txt
