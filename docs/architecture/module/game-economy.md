@@ -19,11 +19,12 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [Capability: Ship Modular System](/docs/architecture/capability/ship-modular-system.md) (T1) — Refit Fees
 
 ## 3. Key Systems
-- **EconomyManager**: Orchestrates planetary markets and the ship inventory.
-  - **Dynamic Pricing**: Uses factory supply nodes and `hullClassScarcity` to adjust prices.
-  - **Ship Transactions**: `buyShip` and `sellModularShip` handle vessel ownership and fleet management. Includes atomic flagship swapping and escort assignment.
-  - **Competitive Bidding**: Factions list hulls via `DetailedHullBid`. Player buys from specific factions, affecting their individual `credits` and planetary `hullClassScarcity`.
-  - **Scrapyard Management**: Factions store salvaged and obsolete inventory in `scrapyardModules` and `scrapyardHulls`, selling them at a distance from "Standard" designs.
+- **EconomyManager**: Orchestrates planetary markets and the persistent ship inventory.
+  - **Dynamic Pricing**: Uses factory supply nodes and `hullClassScarcity` to adjust prices. Prices are clamped between 0.1x and 10x of the base price.
+  - **Ship Transactions**: `buyShip` and `sellShip` handle vessel ownership. Buying a ship consumes it from the persistent `parkedShips` inventory. Selling a ship adds its hull back to the `scrapyardHulls`.
+  - **Competitive Bidding**: Factions list hulls via `DetailedHullBid`. These bids are now generated directly from the `parkedShips` vector, ensuring the shipyard displays actual physical inventory.
+  - **Scrapyard Management**: Factions store salvaged and obsolete inventory in `scrapyardModules` and `scrapyardHulls`.
+  - **Ship Assembly**: `tryAssembleShips` greedily combines `scrapyardHulls` and `shopModules` into `ShipBlueprint` objects, which are then added to `parkedShips` for sale. This system ensures that faction production of parts eventually results in available ships.
   - **Resource Trading**: `executeTrade` manages commodity buy/sell between player cargo and aggregate planetary stockpiles.
 - **TradeManager**: Lightweight singleton for executing fine-grained cargo transactions within the UI.
 

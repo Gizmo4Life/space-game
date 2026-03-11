@@ -68,7 +68,7 @@ target_include_directories(SpaceGame PRIVATE src)
 target_link_libraries(SpaceGame PRIVATE SpaceGameCore)
 
 # --- Tests (Catch2 via FetchContent) ---
-option(BUILD_TESTING "Build the testing tree." OFF)
+option(BUILD_TESTING "Build the testing tree." ON)
 if (BUILD_TESTING)
     include(FetchContent)
     FetchContent_Declare(
@@ -85,6 +85,7 @@ if (BUILD_TESTING)
         tests/test_world_loader.cpp
         tests/test_ammo.cpp
         tests/test_economy.cpp
+        tests/test_world_seeding.cpp
         tests/test_shipless_player.cpp
         tests/test_weapons.cpp
         tests/test_collisions.cpp

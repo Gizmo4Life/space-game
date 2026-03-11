@@ -17,6 +17,12 @@ Procedural faction generation, bilateral relationship tracking, per-faction cred
 ## 2. Capability Alignment
 - [Capability: Economy](/docs/architecture/capability/economy.md) (T2)
 
+## 3. Operational Inventories
+Factions maintain local physical inventories on each planet they occupy via the `FactionEconomy` component:
+- **Scrapyard**: Stores `scrapyardHulls` and `scrapyardModules` produced by local factories or salvaged.
+- **Parked Ships**: A persistent vector of `ShipBlueprint` objects (`parkedShips`) representing fully assembled vessels available for the market or fleet deployment.
+- **Ship Assembly**: Factions use local resources to "kit out" hulls from the scrapyard, moving them to the parked inventory once operational viability is met.
+
 ## 3. Pattern Composition
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `Faction` component
 - [faction-dna-genetic-profile](/docs/developer/pattern/faction-dna-genetic-profile.md) (P) — Multi-axis strategic DNA (Aggressive, Industrial, Commercial, Cooperative)

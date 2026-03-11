@@ -15,6 +15,7 @@
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/GameTypes.h"
+#include "game/components/HullGenerator.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
 #include "game/components/ModuleGenerator.h"
@@ -298,14 +299,22 @@ void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
       }
 
       if (product.type == ProductType::Hull) {
-        // Hulls go directly into the fleet pool as integer units
+        // Hulls go into the scrapyard as physical units
         fEco.stockpile[product] += finalOutput;
         if (fEco.stockpile[product] >= 1.0f) {
           int count = static_cast<int>(fEco.stockpile[product]);
-          fEco.fleetPool[{product.tier, "General"}] += count;
           fEco.stockpile[product] -= static_cast<float>(count);
-          std::cout << "[Economy] Produced " << count << " T"
-                    << static_cast<int>(product.tier) << " hulls!\n";
+
+          auto *fData = FactionManager::instance().getFactionPtr(factionId);
+          for (int i = 0; i < count; i++) {
+            HullDef h = HullGenerator::generateHull(fData->dna, product.tier,
+                                                    "General", i);
+            fEco.scrapyardHulls.push_back(h);
+            std::cout << "[Economy] Faction " << factionId << " produced T"
+                      << (int)product.tier << " hull: " << h.className << "\n";
+          }
+          // Attempt to assemble ships if we have hulls and modules
+          tryAssembleShips(factionId, fEco, eco);
         }
       } else if (product.type == ProductType::Module) {
         fEco.stockpile[product] += finalOutput;
@@ -356,6 +365,8 @@ void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
               }
             }
           }
+          // Attempt to assemble ships if we have hulls and modules
+          tryAssembleShips(factionId, fEco, eco);
         }
       } else if (product.type == ProductType::Ammo) {
         fEco.stockpile[product] += finalOutput;
@@ -408,6 +419,96 @@ void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
 
       availableLabor -= finalOutput * recipe.laborRequired;
       deltaSpan->End();
+    }
+  }
+}
+
+void EconomyManager::tryExpandInfrastructure(uint32_t factionId,
+                                             FactionEconomy &fEco,
+                                             float deltaTime) {
+  // Expansion check: Once every simulated time unit (rare)
+  if (rand() % 100 != 0)
+    return;
+
+  ProductKey mgKey = {ProductType::Resource,
+                      static_cast<uint32_t>(Resource::ManufacturingGoods)};
+
+  for (const auto &pk : productionPriority) {
+    if (fEco.factories.count(pk) > 0)
+      continue;
+
+    // Variety: Scale costs based on Tier and Faction Industrialism
+    float tierMult = (pk.tier == Tier::T1)   ? 1.0f
+                     : (pk.tier == Tier::T2) ? 4.0f
+                                             : 12.0f;
+    float constructionCost = 5000.0f * tierMult;
+    float goodsRequired = 50.0f * tierMult;
+
+    // Industrial factions are more efficient at building
+    constructionCost *= (1.2f - fEco.dna.industrialism * 0.4f);
+    goodsRequired *= (1.2f - fEco.dna.industrialism * 0.4f);
+
+    if (fEco.credits < constructionCost ||
+        fEco.stockpile[mgKey] < goodsRequired)
+      continue;
+
+    // "Need" check: Is an input for an existing factory missing?
+    bool needed = false;
+    for (auto const &pair : fEco.factories) {
+      const ProductKey &prod = pair.first;
+      int count = pair.second;
+      auto recipeIt = recipes.find(prod);
+      if (recipeIt != recipes.end() && recipeIt->second.inputs.count(pk)) {
+        if (fEco.stockpile[pk] < 5.0f) { // Low stockpile for needed input
+          needed = true;
+          break;
+        }
+      }
+    }
+
+    // Strategy alignment using DNA weights
+    float alignment = 0.0f;
+    if (pk.type == ProductType::Module) {
+      if (pk.id >= 3 && pk.id <= 8)
+        alignment = fEco.dna.aggression; // Weapons/Shields
+      else if (pk.id <= 2 || (pk.id >= 12 && pk.id <= 14))
+        alignment = fEco.dna.industrialism; // Engines/Power
+      else if (pk.id >= 9 && pk.id <= 11)
+        alignment = fEco.dna.commercialism; // Utility/Cargo
+    } else if (pk.type == ProductType::Resource) {
+      if (pk.id >= static_cast<uint32_t>(Resource::Food))
+        alignment = fEco.dna.commercialism;
+      else
+        alignment = fEco.dna.industrialism; // Base resources
+    } else if (pk.type == ProductType::Hull) {
+      // Aggression and Industrialism drive shipbuilding capacity
+      alignment = std::max(fEco.dna.aggression, fEco.dna.industrialism);
+    }
+
+    // Weighted roll for expansion: needed items get a massive boost
+    float chance = (alignment * 0.2f) + (needed ? 0.8f : 0.0f);
+    if ((static_cast<float>(rand() % 100) / 100.0f) < chance) {
+      // Telemetry: Instrument factory construction
+      auto span = space::Telemetry::instance().tracer()->StartSpan(
+          "game.economy.factory.build");
+      span->SetAttribute("economy.product_type", static_cast<int>(pk.type));
+      span->SetAttribute("economy.product_id", static_cast<int>(pk.id));
+      span->SetAttribute("economy.product_tier", static_cast<int>(pk.tier));
+      span->SetAttribute("economy.cost_credits", constructionCost);
+      span->SetAttribute("economy.cost_goods", goodsRequired);
+
+      fEco.factories[pk] = 1;
+      fEco.credits -= constructionCost;
+      fEco.stockpile[mgKey] -= goodsRequired;
+
+      std::cout << "[Economy] Faction built NEW T" << static_cast<int>(pk.tier)
+                << " FACTORY for "
+                << (pk.type == ProductType::Module ? "Module " : "Resource ")
+                << pk.id << " (Cost: " << constructionCost << " credits + "
+                << goodsRequired << " Mfg Goods)\n";
+
+      span->End();
+      return;
     }
   }
 }
@@ -513,92 +614,80 @@ void EconomyManager::reEvaluateTraderLogic(entt::registry &registry,
   // TODO: Logic for NPCs deciding to buy/sell excess to other planets
 }
 
-void EconomyManager::tryExpandInfrastructure(uint32_t factionId,
-                                             FactionEconomy &fEco,
-                                             float deltaTime) {
-  // Expansion check: Once every simulated time unit (rare)
-  if (rand() % 100 != 0)
+void EconomyManager::tryAssembleShips(uint32_t factionId, FactionEconomy &fEco,
+                                      PlanetEconomy &eco) {
+  if (fEco.scrapyardHulls.empty())
     return;
 
-  ProductKey mgKey = {ProductType::Resource,
-                      static_cast<uint32_t>(Resource::ManufacturingGoods)};
+  auto *fData = FactionManager::instance().getFactionPtr(factionId);
+  if (!fData)
+    return;
 
-  for (const auto &pk : productionPriority) {
-    if (fEco.factories.count(pk) > 0)
-      continue;
+  // Greedily assemble ships from available hulls and modules
+  auto hIt = fEco.scrapyardHulls.begin();
+  while (hIt != fEco.scrapyardHulls.end()) {
+    const auto &hull = *hIt;
+    ShipBlueprint bp;
+    bp.hull = hull;
+    bp.role = "General"; // Default
+    bp.lineIndex = 0;    // Default
 
-    // Variety: Scale costs based on Tier and Faction Industrialism
-    float tierMult = (pk.tier == Tier::T1)   ? 1.0f
-                     : (pk.tier == Tier::T2) ? 4.0f
-                                             : 12.0f;
-    float constructionCost = 5000.0f * tierMult;
-    float goodsRequired = 50.0f * tierMult;
+    bool possible = true;
+    for (const auto &slot : hull.slots) {
+      ModuleCategory cat = ModuleCategory::Utility;
+      if (slot.role == SlotRole::Engine)
+        cat = ModuleCategory::Engine;
+      else if (slot.role == SlotRole::Hardpoint)
+        cat = ModuleCategory::Weapon;
+      else if (slot.role == SlotRole::Command)
+        cat = ModuleCategory::Command;
 
-    // Industrial factions are more efficient at building
-    constructionCost *= (1.2f - fEco.dna.industrialism * 0.4f);
-    goodsRequired *= (1.2f - fEco.dna.industrialism * 0.4f);
+      auto mIt = std::find_if(fEco.shopModules.begin(), fEco.shopModules.end(),
+                              [&](const ModuleDef &m) {
+                                return m.category == cat &&
+                                       m.getAttributeTier(
+                                           AttributeType::Size) <= slot.size;
+                              });
 
-    if (fEco.credits < constructionCost ||
-        fEco.stockpile[mgKey] < goodsRequired)
-      continue;
-
-    // "Need" check: Is an input for an existing factory missing?
-    bool needed = false;
-    for (auto const &pair : fEco.factories) {
-      const ProductKey &prod = pair.first;
-      int count = pair.second;
-      auto recipeIt = recipes.find(prod);
-      if (recipeIt != recipes.end() && recipeIt->second.inputs.count(pk)) {
-        if (fEco.stockpile[pk] < 5.0f) { // Low stockpile for needed input
-          needed = true;
-          break;
-        }
+      if (mIt != fEco.shopModules.end()) {
+        bp.modules.push_back(*mIt);
+        // We'll remove these if assembly is successful
+      } else {
+        possible = false;
+        break;
       }
     }
 
-    // Strategy alignment using DNA weights
-    float alignment = 0.0f;
-    if (pk.type == ProductType::Module) {
-      if (pk.id >= 3 && pk.id <= 8)
-        alignment = fEco.dna.aggression; // Weapons/Shields
-      else if (pk.id <= 2 || (pk.id >= 12 && pk.id <= 14))
-        alignment = fEco.dna.industrialism; // Engines/Power
-      else if (pk.id >= 9 && pk.id <= 11)
-        alignment = fEco.dna.commercialism; // Utility/Cargo
-    } else if (pk.type == ProductType::Resource) {
-      if (pk.id >= static_cast<uint32_t>(Resource::Food))
-        alignment = fEco.dna.commercialism;
-      else
-        alignment = fEco.dna.industrialism; // Base resources
-    } else if (pk.type == ProductType::Hull) {
-      // Aggression and Industrialism drive shipbuilding capacity
-      alignment = std::max(fEco.dna.aggression, fEco.dna.industrialism);
+    if (possible) {
+      // Add internals (Reactor is mandatory)
+      auto rIt = std::find_if(
+          fEco.shopModules.begin(), fEco.shopModules.end(),
+          [&](const ModuleDef &m) {
+            return m.category == ModuleCategory::Reactor &&
+                   m.getAttributeTier(AttributeType::Size) <= hull.sizeTier;
+          });
+      if (rIt != fEco.shopModules.end()) {
+        bp.modules.push_back(*rIt);
+      } else {
+        possible = false;
+      }
     }
 
-    // Weighted roll for expansion: needed items get a massive boost
-    float chance = (alignment * 0.2f) + (needed ? 0.8f : 0.0f);
-    if ((static_cast<float>(rand() % 100) / 100.0f) < chance) {
-      // Telemetry: Instrument factory construction
-      auto span = space::Telemetry::instance().tracer()->StartSpan(
-          "game.economy.factory.build");
-      span->SetAttribute("economy.product_type", static_cast<int>(pk.type));
-      span->SetAttribute("economy.product_id", static_cast<int>(pk.id));
-      span->SetAttribute("economy.product_tier", static_cast<int>(pk.tier));
-      span->SetAttribute("economy.cost_credits", constructionCost);
-      span->SetAttribute("economy.cost_goods", goodsRequired);
-
-      fEco.factories[pk] = 1;
-      fEco.credits -= constructionCost;
-      fEco.stockpile[mgKey] -= goodsRequired;
-
-      std::cout << "[Economy] Faction built NEW T" << static_cast<int>(pk.tier)
-                << " FACTORY for "
-                << (pk.type == ProductType::Module ? "Module " : "Resource ")
-                << pk.id << " (Cost: " << constructionCost << " credits + "
-                << goodsRequired << " Mfg Goods)\n";
-
-      span->End();
-      return;
+    if (possible) {
+      // Success! Remove used parts
+      for (const auto &mUsed : bp.modules) {
+        auto mIt = std::find_if(
+            fEco.shopModules.begin(), fEco.shopModules.end(),
+            [&](const ModuleDef &m) { return m.name == mUsed.name; });
+        if (mIt != fEco.shopModules.end())
+          fEco.shopModules.erase(mIt);
+      }
+      fEco.parkedShips.push_back(bp);
+      hIt = fEco.scrapyardHulls.erase(hIt);
+      std::cout << "[Economy] Faction " << factionId
+                << " ASSEMBLED a ship: " << hull.className << "\n";
+    } else {
+      ++hIt;
     }
   }
 }
@@ -614,7 +703,51 @@ float EconomyManager::calculatePrice(ProductKey pk, float currentStock,
     tierMultiplier = 25.0f;
 
   if (pk.type == ProductType::Resource) {
-    base = 10.0f * tierMultiplier;
+    switch (static_cast<Resource>(pk.id)) {
+    case Resource::Water:
+      base = 15.0f;
+      break;
+    case Resource::Crops:
+      base = 20.0f;
+      break;
+    case Resource::Hydrocarbons:
+      base = 25.0f;
+      break;
+    case Resource::Metals:
+      base = 50.0f;
+      break;
+    case Resource::RareMetals:
+      base = 200.0f;
+      break;
+    case Resource::Isotopes:
+      base = 300.0f;
+      break;
+    case Resource::Food:
+      base = 40.0f;
+      break;
+    case Resource::Plastics:
+      base = 60.0f;
+      break;
+    case Resource::ManufacturingGoods:
+      base = 100.0f;
+      break;
+    case Resource::Electronics:
+      base = 150.0f;
+      break;
+    case Resource::Fuel:
+      base = 30.0f;
+      break;
+    case Resource::Powercells:
+      base = 50.0f;
+      break;
+    case Resource::Weapons:
+      base = 500.0f;
+      break;
+    default:
+      base = 10.0f;
+      break;
+    }
+    base *= tierMultiplier;
   } else if (pk.type == ProductType::Module) {
     base = 500.0f * tierMultiplier;
   } else if (pk.type == ProductType::Hull) {
@@ -622,18 +755,17 @@ float EconomyManager::calculatePrice(ProductKey pk, float currentStock,
   }
 
   // Supply/Demand curve
-  float stockFactor = 1.0f;
-  if (currentStock < population * 0.05f)
-    stockFactor = 3.0f;
-  else if (currentStock > population * 0.5f)
-    stockFactor = 0.5f;
+  float popScale = population / 1000.0f;
+  float supplyRate = currentStock / (popScale + 1.0f);
+  float demandFactor = 1.0f / (supplyRate + 0.1f);
 
-  float finalPrice = base * stockFactor;
+  float finalPrice = base * demandFactor;
+  if (isAtWar && pk.type == ProductType::Resource &&
+      pk.id == static_cast<uint32_t>(Resource::Weapons)) {
+    finalPrice *= 2.0f;
+  }
 
-  // Faction Cut & Market Markup (20% fee for used car feel)
-  finalPrice *= 1.25f; // Base market fee
-
-  return finalPrice;
+  return std::max(base * 0.1f, std::min(base * 10.0f, finalPrice));
 }
 
 std::vector<ShipOffer> EconomyManager::getShipOffers(entt::registry &registry,
@@ -675,77 +807,27 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
     return bids;
 
   auto &eco = registry.get<PlanetEconomy>(planet);
-  for (auto const &[fId, fEco] : eco.factionData) {
-    auto *fData = FactionManager::instance().getFactionPtr(fId);
-    if (!fData)
-      continue;
+  for (auto &[fId, fEco] : eco.factionData) {
+    for (const auto &ship : fEco.parkedShips) {
+      DetailedHullBid bid;
+      bid.factionId = fId;
+      bid.blueprint = ship;
 
-    for (const auto &bp : fData->blueprints) {
-      // Check if the planet's economy supports this tier/role
-      bool tierInPool = false;
-      for (auto const &[key, count] : fEco.fleetPool) {
-        if (key.first == bp.hull.sizeTier && count > 0) {
-          tierInPool = true;
-          break;
-        }
+      // Price is sum of parts + profit margin
+      float totalPrice = ship.hull.baseMass * 100.0f; // Rough hull price
+      for (const auto &m : ship.modules) {
+        if (m.name != "Empty")
+          totalPrice += m.basePrice;
       }
 
-      if (tierInPool) {
-        // Scarcity/Availability Balancing:
-        // Use the faction's local population share to decide IF we show the
-        // bid. Civilian faction (0) is everywhere, but shouldn't drown out
-        // locals.
-        float localPop = fEco.populationCount;
-        float totalPop = eco.getTotalPopulation();
-        float share = localPop / (totalPop + 0.1f);
-
-        // Civilian bias reduction: Civilian ships only appear if they have a
-        // decent foothold, or as a fallback if the local faction is very small.
-        float appearanceThreshold = (fId == 0) ? 0.3f : 0.05f;
-        if (share < appearanceThreshold && fId == 0) {
-          if (totalPop > 10.0f)
-            continue;
-        }
-
-        // Generate market-compliant blueprint (isElite = false)
-        ShipBlueprint marketBP = ShipOutfitter::instance().generateBlueprint(
-            fId, bp.hull.sizeTier, bp.role, bp.lineIndex, false);
-
-        // Hull price influenced by scarcity
-        ProductKey hullPK{ProductType::Hull, 0, marketBP.hull.sizeTier};
-        float baseHullPrice =
-            calculatePrice(hullPK, eco.marketStockpile[hullPK],
-                           eco.getTotalPopulation(), false);
-
-        float scarcity = eco.hullClassScarcity.count(marketBP.hull.className)
-                             ? eco.hullClassScarcity[marketBP.hull.className]
-                             : 1.0f;
-
-        float totalPrice = 0.0f;
-        totalPrice += baseHullPrice * scarcity;
-
-        // Module prices: estimate based on tier
-        for (const auto &m : marketBP.modules) {
-          if (m.name.empty() || m.name == "Empty")
-            continue;
-          Tier t = m.getAttributeTier(AttributeType::Size);
-          totalPrice += 500.0f * static_cast<float>(t);
-        }
-
-        DetailedHullBid bid;
-        bid.factionId = fId;
-        bid.tier = marketBP.hull.sizeTier;
-        bid.role = marketBP.role;
-        bid.price = totalPrice;
-        bid.hull = marketBP.hull;
-        bid.hullName = marketBP.hull.className + " (" + marketBP.role + ")";
-
-        bid.modules = marketBP.modules;
-
-        bids.push_back(bid);
-      }
+      float scarcity = eco.hullClassScarcity.count(ship.hull.className)
+                           ? eco.hullClassScarcity[ship.hull.className]
+                           : 1.0f;
+      bid.price = totalPrice * 1.15f * scarcity;
+      bids.push_back(bid);
     }
   }
+
   return bids;
 }
 
@@ -761,90 +843,80 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
     return false;
 
   auto &fEco = eco.factionData[bid.factionId];
-  auto key = std::make_pair(bid.tier, std::string("General"));
 
-  if (fEco.fleetPool.count(key) && fEco.fleetPool[key] > 0) {
-    if (registry.get<CreditsComponent>(player).amount >= bid.price) {
-      registry.get<CreditsComponent>(player).amount -= bid.price;
-      fEco.fleetPool[key]--;
-      fEco.credits += bid.price;
+  // Find the exact ship in parkedShips
+  auto it = std::find_if(
+      fEco.parkedShips.begin(), fEco.parkedShips.end(), [&](const auto &ship) {
+        // Match by hull and module count for now, unique stats are what matter
+        return ship.hull.className == bid.blueprint.hull.className &&
+               ship.modules.size() == bid.blueprint.modules.size();
+      });
 
-      // Scarcity impact: buying a ship makes it more scarce (higher price)
-      if (registry.all_of<PlanetEconomy>(planet)) {
-        auto &eco = registry.get<PlanetEconomy>(planet);
-        float scarcity = eco.hullClassScarcity.count(bid.hull.className)
-                             ? eco.hullClassScarcity[bid.hull.className]
-                             : 1.0f;
-        eco.hullClassScarcity[bid.hull.className] =
-            std::min(5.0f, scarcity * 1.05f);
-      }
+  if (it == fEco.parkedShips.end())
+    return false;
 
-      auto &trans = registry.get<TransformComponent>(planet);
+  if (registry.get<CreditsComponent>(player).amount < bid.price)
+    return false;
 
-      // If the player doesn't have a ship (no HullDef), ANY purchase becomes
-      // the flagship
-      if (!registry.all_of<HullDef>(player)) {
-        asFlagship = true;
-      }
+  registry.get<CreditsComponent>(player).amount -= bid.price;
+  fEco.credits += bid.price;
 
-      if (asFlagship) {
-        // 1. Spawn the new ship as the new flagship
-        auto newFlagship = NPCShipManager::instance().spawnShip(
-            registry, bid.factionId, trans.position, worldId, bid.tier, false);
+  // Scarcity impact
+  float scarcity = eco.hullClassScarcity.count(bid.blueprint.hull.className)
+                       ? eco.hullClassScarcity[bid.blueprint.hull.className]
+                       : 1.0f;
+  eco.hullClassScarcity[bid.blueprint.hull.className] =
+      std::min(5.0f, scarcity * 1.05f);
 
-        // 2. The new ship gets Player credentials
-        registry.emplace_or_replace<PlayerComponent>(newFlagship);
-        registry.get<PlayerComponent>(newFlagship).isFlagship = true;
+  auto &trans = registry.get<TransformComponent>(planet);
 
-        // Transfer credits to new flagship
-        float currentCredits = registry.get<CreditsComponent>(player).amount;
-        registry.emplace_or_replace<CreditsComponent>(newFlagship,
-                                                      currentCredits);
-
-        // Set name for the new flagship
-        registry.emplace_or_replace<NameComponent>(
-            newFlagship, "Player Ship (" + bid.hull.className + ")");
-
-        // 3. The old ship becomes an escort (unless it was just a shipless
-        // dummy)
-        registry.remove<PlayerComponent>(player);
-        if (registry.all_of<HullDef>(player)) {
-          auto &oldNpc = registry.emplace_or_replace<NPCComponent>(player);
-          oldNpc.isPlayerFleet = true;
-          oldNpc.leaderEntity = newFlagship;
-          oldNpc.state = AIState::Traveling;
-          std::cout
-              << "[Economy] FLAGSHIP SWAPPED. Old ship joined the fleet.\n";
-        } else {
-          // Player was shipless, safe to destroy the dummy entity
-          registry.destroy(player);
-          std::cout
-              << "[Economy] SHIPLESS PLAYER BOUGHT FIRST SHIP (FLAGSHIP).\n";
-        }
-
-        // Clean up NPC stats from the new flagship if any (spawnShip adds it)
-        if (registry.valid(newFlagship) &&
-            registry.all_of<NPCComponent>(newFlagship)) {
-          registry.remove<NPCComponent>(newFlagship);
-        }
-
-        std::cout << "[Economy] FLAGSHIP SWAPPED. Old ship joined the fleet.\n";
-      } else if (addToFleet) {
-        // Spawn as an escort following the current player ship
-        NPCShipManager::instance().spawnShip(registry, bid.factionId,
-                                             trans.position, worldId, bid.tier,
-                                             true, player);
-        std::cout << "[Economy] New escort joined the fleet.\n";
-      } else {
-        // Legacy/Direct replacement (though UI will mostly use B/F now)
-        NPCShipManager::instance().spawnShip(
-            registry, bid.factionId, trans.position, worldId, bid.tier, false);
-      }
-      return true;
-    }
+  // If the player doesn't have a ship, become flagship
+  if (!registry.all_of<HullDef>(player)) {
+    asFlagship = true;
   }
 
-  return false;
+  if (asFlagship) {
+    auto newFlagship = NPCShipManager::instance().spawnShip(
+        registry, bid.factionId, trans.position, worldId,
+        bid.blueprint.hull.sizeTier, false, entt::null, bid.blueprint.role,
+        bid.blueprint.lineIndex);
+
+    ShipOutfitter::instance().applyBlueprint(registry, newFlagship,
+                                             bid.blueprint);
+
+    registry.emplace_or_replace<PlayerComponent>(newFlagship);
+    registry.get<PlayerComponent>(newFlagship).isFlagship = true;
+
+    float currentCredits = registry.get<CreditsComponent>(player).amount;
+    registry.emplace_or_replace<CreditsComponent>(newFlagship, currentCredits);
+
+    registry.emplace_or_replace<NameComponent>(
+        newFlagship, "Player Ship (" + bid.blueprint.hull.className + ")");
+
+    registry.remove<PlayerComponent>(player);
+    if (registry.all_of<HullDef>(player)) {
+      auto &oldNpc = registry.emplace_or_replace<NPCComponent>(player);
+      oldNpc.isPlayerFleet = true;
+      oldNpc.leaderEntity = newFlagship;
+      oldNpc.state = AIState::Traveling;
+    } else {
+      registry.destroy(player);
+    }
+
+    if (registry.valid(newFlagship) &&
+        registry.all_of<NPCComponent>(newFlagship)) {
+      registry.remove<NPCComponent>(newFlagship);
+    }
+  } else if (addToFleet) {
+    auto escort = NPCShipManager::instance().spawnShip(
+        registry, bid.factionId, trans.position, worldId,
+        bid.blueprint.hull.sizeTier, true, player, bid.blueprint.role,
+        bid.blueprint.lineIndex);
+    ShipOutfitter::instance().applyBlueprint(registry, escort, bid.blueprint);
+  }
+
+  fEco.parkedShips.erase(it);
+  return true;
 }
 
 bool EconomyManager::sellShip(entt::registry &registry, entt::entity planet,
@@ -860,18 +932,10 @@ bool EconomyManager::sellShip(entt::registry &registry, entt::entity planet,
     auto &eco = registry.get<PlanetEconomy>(planet);
     std::string className = registry.get<HullDef>(shipToSell).className;
 
-    // Count existing bids of this class to determine scarcity
-    int existingCount = 0;
-    for (const auto &bid : eco.shopModules) {
-      // Modules don't have hull class, wait
-    }
-    // Correct logic: check detailed hull bids or a scarcity map
     float scarcity = eco.hullClassScarcity.count(className)
                          ? eco.hullClassScarcity[className]
                          : 1.0f;
     sellPrice = baseValue * scarcity;
-
-    // Impact: selling a ship increases abundance (lowers scarcity)
     eco.hullClassScarcity[className] = std::max(0.1f, scarcity * 0.9f);
   }
 
@@ -941,7 +1005,6 @@ bool EconomyManager::sellShip(entt::registry &registry, entt::entity planet,
 
   std::cout << "[Economy] Ship SOLD for " << sellPrice << "\n";
   return true;
-  return true;
 }
 
 bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
@@ -1007,5 +1070,4 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     return true;
   }
 }
-
 } // namespace space

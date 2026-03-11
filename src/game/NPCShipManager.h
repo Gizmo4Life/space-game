@@ -32,7 +32,9 @@ public:
   entt::entity spawnShip(entt::registry &registry, uint32_t factionId,
                          sf::Vector2f position, b2WorldId worldId,
                          Tier sizeTier = Tier::T1, bool isPlayerFleet = false,
-                         entt::entity leaderEntity = entt::null);
+                         entt::entity leaderEntity = entt::null,
+                         const std::string &role = "General",
+                         uint32_t lineIndex = 0);
 
   static void recordCombatDeath(entt::registry &registry, entt::entity victim,
                                 entt::entity attacker);

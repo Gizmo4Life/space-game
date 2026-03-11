@@ -1,6 +1,7 @@
 #include "WorldLoader.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
+#include "game/ShipOutfitter.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/CelestialBody.h"
 #include "game/components/Economy.h"
@@ -94,8 +95,8 @@ void WorldLoader::loadStars(entt::registry &registry, int count) {
     sc.texture = texture;
     sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
     int scatter = static_cast<int>(WorldConfig::WORLD_HALF_SIZE * 2);
-    float scX = static_cast<float>(rand() % scatter - scatter / 2);
-    float scY = static_cast<float>(rand() % scatter - scatter / 2);
+    float scX = static_cast<float>(rand() % scatter - scatter / 2.0f);
+    float scY = static_cast<float>(rand() % scatter - scatter / 2.0f);
     sc.sprite->setPosition({scX, scY});
     registry.emplace<SpriteComponent>(star, sc);
   }
@@ -404,6 +405,13 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
       if (count <= 0)
         return;
       fEco.fleetPool[{t, role}] += count;
+
+      // Seed physical ship stock for the shipyard - boost count and variety
+      int initialShips = std::max(2, (count + 1) / 2);
+      for (int i = 0; i < initialShips; ++i) {
+        fEco.parkedShips.push_back(ShipOutfitter::instance().generateBlueprint(
+            fid, t, role, i, false));
+      }
     };
 
     auto rKey = [](Resource r) {
@@ -420,7 +428,7 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
       seedRole(Tier::T2, "Cargo", 1);
     }
     if (fEco.populationCount > 40.0f) {
-      seedRole(Tier::T3, "General", 1);
+      seedRole(Tier::T3, "General", 2);
       seedRole(Tier::T3, "Combat", 1);
     }
 
@@ -453,11 +461,13 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     };
 
     // Ensure variety in module production across the galaxy
-    // Each faction on each planet picks 5 random modules to specialize in
-    for (int i = 0; i < 5; ++i) {
+    // Each faction on each planet picks 8 random modules to specialize in (up
+    // from 5)
+    for (int i = 0; i < 8; ++i) {
       ModuleCategory randCat = static_cast<ModuleCategory>(rand() % 9);
       ModuleDef newDef =
           ModuleGenerator::instance().generateRandomModule(randCat, Tier::T1);
+      newDef.originFactionId = fid;
       ProductKey pk{ProductType::Module, static_cast<uint32_t>(randCat),
                     Tier::T1};
 
@@ -466,16 +476,19 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
         globalDataPtr->factionDesigns[pk] = newDef;
       }
       fEco.factories[pk] += 1;
+      fEco.shopModules.push_back(newDef); // Seed initial module stock
 
       if (fEco.populationCount > 15.0f) {
         ModuleDef advancedDef =
             ModuleGenerator::instance().generateRandomModule(randCat, Tier::T2);
+        advancedDef.originFactionId = fid;
         ProductKey advancedPk{ProductType::Module,
                               static_cast<uint32_t>(randCat), Tier::T2};
         if (globalDataPtr) {
           globalDataPtr->factionDesigns[advancedPk] = advancedDef;
         }
         fEco.factories[advancedPk] += 1;
+        fEco.shopModules.push_back(advancedDef);
       }
     }
 

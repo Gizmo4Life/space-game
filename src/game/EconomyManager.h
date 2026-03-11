@@ -25,12 +25,8 @@ struct ShipOffer {
 
 struct DetailedHullBid {
   uint32_t factionId;
-  Tier tier;
-  std::string role;
   float price;
-  std::vector<ModuleDef> modules;
-  HullDef hull;
-  std::string hullName;
+  ShipBlueprint blueprint;
 };
 
 class EconomyManager {
@@ -74,6 +70,9 @@ public:
 
   const std::map<ProductKey, Recipe> &getRecipes() const { return recipes; }
   const Recipe &getRecipe(ProductKey pk) const { return recipes.at(pk); }
+
+  void tryAssembleShips(uint32_t factionId, FactionEconomy &fEco,
+                        PlanetEconomy &eco);
 
 private:
   EconomyManager() = default;

@@ -179,11 +179,10 @@ void NPCShipManager::processMissions(entt::registry &registry, float dt) {
   }
 }
 
-entt::entity NPCShipManager::spawnShip(entt::registry &registry,
-                                       uint32_t factionId,
-                                       sf::Vector2f position, b2WorldId worldId,
-                                       Tier sizeTier, bool isPlayerFleet,
-                                       entt::entity leaderEntity) {
+entt::entity NPCShipManager::spawnShip(
+    entt::registry &registry, uint32_t factionId, sf::Vector2f position,
+    b2WorldId worldId, Tier sizeTier, bool isPlayerFleet,
+    entt::entity leaderEntity, const std::string &role, uint32_t lineIndex) {
   auto entity = registry.create();
 
   auto &trans = registry.emplace<TransformComponent>(entity);
@@ -216,10 +215,11 @@ entt::entity NPCShipManager::spawnShip(entt::registry &registry,
                                             20.0f);
 
   auto &outfitter = ShipOutfitter::instance();
-  outfitter.applyBlueprint(registry, entity, factionId, sizeTier);
+  outfitter.applyBlueprint(registry, entity, factionId, sizeTier, role,
+                           lineIndex);
   registry.emplace_or_replace<WeaponComponent>(entity);
 
-  const auto &hull = outfitter.getHull(factionId, sizeTier);
+  const auto &hull = outfitter.getHull(factionId, sizeTier, role, lineIndex);
   registry.emplace<NameComponent>(
       entity,
       hull.className + "-" + std::to_string(static_cast<uint32_t>(entity)));

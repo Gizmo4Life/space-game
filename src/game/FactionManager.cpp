@@ -378,9 +378,11 @@ std::string FactionManager::generateShipLineName(NamingScheme scheme,
 }
 
 const ShipBlueprint *FactionData::getBlueprint(Tier tier,
-                                               const std::string &role) const {
+                                               const std::string &role,
+                                               uint32_t lineIndex) const {
   for (const auto &bp : blueprints) {
-    if (bp.hull.sizeTier == tier && bp.role == role)
+    if (bp.hull.sizeTier == tier && bp.role == role &&
+        bp.lineIndex == lineIndex)
       return &bp;
   }
   return nullptr;

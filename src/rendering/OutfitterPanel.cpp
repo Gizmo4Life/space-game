@@ -215,21 +215,23 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
           sf::Color(100, 255, 100));
 
     // Ship Blueprint Preview
-    const auto &hdef = registry.get<HullDef>(targetShip_);
-    uint32_t factionId = 0;
-    if (registry.all_of<Faction>(targetShip_)) {
-      factionId = registry.get<Faction>(targetShip_).getMajorityFaction();
-    }
-    const auto &faction = FactionManager::instance().getFaction(factionId);
+    if (registry.all_of<HullDef>(targetShip_)) {
+      const auto &hdef = registry.get<HullDef>(targetShip_);
+      uint32_t factionId = 0;
+      if (registry.all_of<Faction>(targetShip_)) {
+        factionId = registry.get<Faction>(targetShip_).getMajorityFaction();
+      }
+      const auto &faction = FactionManager::instance().getFaction(factionId);
 
-    sf::Vector2f previewPos = {rect.position.x + 280.f,
-                               rect.position.y + 100.f};
-    ShipRenderParams sparams;
-    sparams.mode = RenderMode::Schematic;
-    sparams.color = faction.color;
-    sparams.scale = 1.0f;
-    sparams.viewScale = 6.0f; // 2x gameplay scale
-    ShipRenderer::drawShip(target, hdef, previewPos, sparams);
+      sf::Vector2f previewPos = {rect.position.x + 280.f,
+                                 rect.position.y + 100.f};
+      ShipRenderParams sparams;
+      sparams.mode = RenderMode::Schematic;
+      sparams.color = faction.color;
+      sparams.scale = 1.0f;
+      sparams.viewScale = 6.0f; // 2x gameplay scale
+      ShipRenderer::drawShip(target, hdef, previewPos, sparams);
+    }
   } else {
     dtext("Credits: N/A", 16, sf::Color(150, 150, 150));
   }

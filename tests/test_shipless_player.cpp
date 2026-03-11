@@ -21,6 +21,7 @@
 #include "game/components/PlayerComponent.h"
 #include "game/components/TransformComponent.h"
 #include "rendering/LandingScreen.h"
+#include "rendering/OutfitterPanel.h"
 #include "rendering/RenderSystem.h"
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <box2d/box2d.h>
@@ -48,9 +49,12 @@ TEST_CASE("Shipless Player Buying Ship as Flagship", "[shipless][economy]") {
   factionEco.populationCount = 1000.0f;
   factionEco.dna = FactionManager::instance().getFaction(factionId).dna;
 
-  // Put a ship bid into the fleet pool
-  auto shipKey = std::make_pair(Tier::T1, std::string("General"));
-  factionEco.fleetPool[shipKey] = 5;
+  // Put a ship into the persistent inventory
+  ShipBlueprint bp;
+  bp.hull.className = "General";
+  bp.hull.sizeTier = Tier::T1;
+  bp.hull.baseMass = 500.0f;
+  factionEco.parkedShips.push_back(bp);
 
   planetEco.factionData[factionId] = factionEco;
   registry.emplace<PlanetEconomy>(planet, planetEco);
@@ -138,8 +142,11 @@ TEST_CASE("Shipless Player Buying Ship to Fleet", "[shipless][economy]") {
   factionEco.populationCount = 1000.0f;
   factionEco.dna = FactionManager::instance().getFaction(factionId).dna;
 
-  auto shipKey = std::make_pair(Tier::T1, std::string("General"));
-  factionEco.fleetPool[shipKey] = 5;
+  ShipBlueprint bp;
+  bp.hull.className = "General";
+  bp.hull.sizeTier = Tier::T1;
+  bp.hull.baseMass = 500.0f;
+  factionEco.parkedShips.push_back(bp);
 
   planetEco.factionData[factionId] = factionEco;
   registry.emplace<PlanetEconomy>(planet, planetEco);
@@ -215,8 +222,12 @@ TEST_CASE("Player with Ship Swaps Flagship", "[economy]") {
   uint32_t factionId = FactionManager::instance().getRandomFactionId();
   factionEco.populationCount = 1000.0f;
   factionEco.dna = FactionManager::instance().getFaction(factionId).dna;
-  auto shipKey = std::make_pair(Tier::T1, std::string("General"));
-  factionEco.fleetPool[shipKey] = 5;
+  ShipBlueprint bp;
+  bp.hull.className = "General";
+  bp.hull.sizeTier = Tier::T1;
+  bp.hull.baseMass = 500.0f;
+  factionEco.parkedShips.push_back(bp);
+
   planetEco.factionData[factionId] = factionEco;
   registry.emplace<PlanetEconomy>(planet, planetEco);
   registry.emplace<TransformComponent>(planet, sf::Vector2f(0.0f, 0.0f));
@@ -267,4 +278,37 @@ TEST_CASE("Player with Ship Swaps Flagship", "[economy]") {
   }
 
   b2DestroyWorld(worldId);
+}
+
+TEST_CASE("Shipless Player in Outfitter Screen", "[shipless][rendering]") {
+  Telemetry::instance().init("test_telemetry");
+  FactionManager::instance().init();
+  EconomyManager::instance().init();
+
+  entt::registry registry;
+  entt::entity planet = registry.create();
+  registry.emplace<PlanetEconomy>(planet);
+  registry.emplace<NameComponent>(planet, "Test Outpost");
+
+  entt::entity player = registry.create();
+  registry.emplace<PlayerComponent>(player).isFlagship = true;
+  registry.emplace<CreditsComponent>(player, 500.0f);
+  registry.emplace<Landed>(player, planet);
+
+  // NO HullDef for player
+
+  sf::RenderTexture rTex;
+  bool resized = rTex.resize({1200, 800});
+  REQUIRE((resized));
+
+  OutfitterPanel outfitter(planet, player);
+  sf::Font font; // Dummy font (render will skip drawing text but execute logic)
+  sf::FloatRect rect({0.f, 0.f}, {800.f, 600.f});
+
+  // This should not crash
+  outfitter.render(rTex, registry, &font, rect);
+
+  // Even if we "switch" to another ship that doesn't exist
+  registry.destroy(player); // Player is gone? render guards should handle
+  outfitter.render(rTex, registry, &font, rect);
 }

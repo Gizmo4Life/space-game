@@ -142,10 +142,10 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
     // Toggle module expansion
     if (kp->code == sf::Keyboard::Key::X && !currentBids_.empty()) {
       const auto &bid = currentBids_[selectedBidIndex_];
-      if (expandedModules_.size() == bid.modules.size()) {
+      if (expandedModules_.size() == bid.blueprint.modules.size()) {
         expandedModules_.clear();
       } else {
-        for (size_t i = 0; i < bid.modules.size(); ++i)
+        for (size_t i = 0; i < bid.blueprint.modules.size(); ++i)
           expandedModules_.insert(i);
       }
     }
@@ -193,9 +193,10 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
         sf::Color col = sel ? sf::Color::Cyan : sf::Color::White;
         const auto &faction =
             FactionManager::instance().getFaction(bid.factionId);
-        std::string label = (sel ? "> " : "  ") + tierName(bid.tier) + " " +
-                            bid.hullName + " [" + faction.name + "] - $" +
-                            fmt(bid.price, 0);
+        std::string label =
+            (sel ? "> " : "  ") + tierName(bid.blueprint.hull.sizeTier) + " " +
+            bid.blueprint.hull.className + " (" + bid.blueprint.role + ") [" +
+            faction.name + "] - $" + fmt(bid.price, 0);
         sf::Text t(*font, label, 16);
         t.setFillColor(col);
         t.setPosition({x, y});
@@ -246,10 +247,37 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
 
     float dx = rect.position.x + 400.f;
     float dy = detailY;
+    // Calc totals
+    float usedVol = 0.f;
+    float powerProduction = 0.f;
+    float powerLoad = 0.f;
+    float totalMass =
+        bid.blueprint.hull.baseMass * bid.blueprint.hull.massMultiplier;
+
+    for (const auto &m : bid.blueprint.modules) {
+      if (m.name.empty() || m.name == "Empty")
+        continue;
+      usedVol += m.volumeOccupied;
+      totalMass += m.mass;
+      if (m.powerDraw < 0)
+        powerProduction -= m.powerDraw; // Production is positive here
+      else
+        powerLoad += m.powerDraw;
+    }
+
     const auto &faction = FactionManager::instance().getFaction(bid.factionId);
-    dtext(dx, dy, bid.hullName + " (" + bid.hull.className + ")", 24,
+    dtext(dx, dy,
+          bid.blueprint.hull.className + " (" + bid.blueprint.role + ")", 24,
           sf::Color::Yellow);
-    dtext(dx, dy, "Tier: " + tierName(bid.tier), 16, sf::Color(200, 200, 200));
+    dtext(dx, dy, "Armor: " + tierName(bid.blueprint.hull.armorTier) + " Alloy",
+          14, sf::Color(180, 180, 180));
+    dtext(dx, dy, "Base HP: " + fmt(bid.blueprint.hull.baseHitpoints, 0), 14,
+          sf::Color(180, 180, 180));
+    dtext(dx, dy, "Internal Vol: " + fmt(bid.blueprint.hull.internalVolume, 1),
+          14, sf::Color(180, 180, 180));
+    dtext(dx, dy, "Used Vol: " + fmt(usedVol, 1), 14,
+          (usedVol > bid.blueprint.hull.internalVolume) ? sf::Color::Red
+                                                        : sf::Color::White);
     dtext(dx, dy, "Seller: " + faction.name, 16, sf::Color(200, 200, 255));
     dtext(dx, dy, "Price: $" + fmt(bid.price, 0), 18, sf::Color(100, 255, 100));
     dy += 10.f;
@@ -261,26 +289,7 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     sparams.color = faction.color;
     sparams.scale = 1.0f;
     sparams.viewScale = 6.0f; // 2x gameplay scale (3.0f)
-    ShipRenderer::drawShip(target, bid.hull, previewPos, sparams);
-
-    // Calc totals
-    float usedVol = 0.f;
-    float powerProduction = 0.f;
-    float powerLoad = 0.f;
-    float totalMass = bid.hull.baseMass * bid.hull.massMultiplier;
-    auto &eco = registry.get<PlanetEconomy>(planetEntity_);
-    auto &fEco = eco.factionData[bid.factionId];
-
-    for (const auto &m : bid.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
-      usedVol += m.volumeOccupied;
-      totalMass += m.mass;
-      if (m.powerDraw < 0)
-        powerProduction -= m.powerDraw; // Production is positive here
-      else
-        powerLoad += m.powerDraw;
-    }
+    ShipRenderer::drawShip(target, bid.blueprint.hull, previewPos, sparams);
 
     float ty = dy + 180.f;
     auto dtech = [&](const std::string &lab, float val, const std::string &unit,
@@ -292,8 +301,10 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
       ty += 18.f;
     };
 
-    dtech("Volume", usedVol, "/" + fmt(bid.hull.internalVolume, 0) + " cubic m",
-          usedVol > bid.hull.internalVolume ? sf::Color::Red : sf::Color::Cyan);
+    dtech("Volume", usedVol,
+          "/" + fmt(bid.blueprint.hull.internalVolume, 0) + " cubic m",
+          usedVol > bid.blueprint.hull.internalVolume ? sf::Color::Red
+                                                      : sf::Color::Cyan);
     dtech("Power", powerProduction - powerLoad, "GW",
           (powerProduction < powerLoad) ? sf::Color::Red
                                         : sf::Color(100, 255, 100));
@@ -301,7 +312,7 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
 
     // Slots Summary
     ty += 5.f;
-    sf::Text slotsText(*font, bid.hull.getSlotSummary(), 13);
+    sf::Text slotsText(*font, bid.blueprint.hull.getSlotSummary(), 13);
     slotsText.setFillColor(sf::Color(180, 180, 180));
     slotsText.setPosition({dx, ty});
     target.draw(slotsText);
@@ -325,8 +336,8 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     auto &eco2 = registry.get<PlanetEconomy>(planetEntity_);
     auto &fEco2 = eco2.factionData[bid.factionId];
 
-    for (size_t i = 0; i < bid.modules.size(); ++i) {
-      const auto &mod = bid.modules[i];
+    for (size_t i = 0; i < bid.blueprint.modules.size(); ++i) {
+      const auto &mod = bid.blueprint.modules[i];
       if (mod.name.empty() || mod.name == "Empty")
         continue;
       bool exp = expandedModules_.count(i);

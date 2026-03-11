@@ -26,7 +26,8 @@ struct FactionData {
   std::map<ProductKey, ModuleDef> factionDesigns;
   std::map<ProductKey, AmmoDef> factionAmmo;
 
-  const ShipBlueprint *getBlueprint(Tier tier, const std::string &role) const;
+  const ShipBlueprint *getBlueprint(Tier tier, const std::string &role,
+                                    uint32_t lineIndex = 0) const;
 };
 
 class FactionManager {

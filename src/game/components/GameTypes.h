@@ -46,6 +46,7 @@ enum class HullConnectivity { Monolithic, Skeletal, Modular };
 struct ModuleAttribute {
   AttributeType type;
   Tier tier;
+  float qualityRoll = 1.0f; // 0.8 to 1.2 for unique stat variance
 };
 
 enum class ProductType { Resource, Hull, Module, Ammo };

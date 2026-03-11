@@ -21,7 +21,11 @@ public:
 
   void applyBlueprint(::entt::registry &registry, ::entt::entity entity,
                       uint32_t factionId, Tier sizeTier,
-                      const std::string &role = "General") const;
+                      const std::string &role = "General",
+                      uint32_t lineIndex = 0) const;
+
+  void applyBlueprint(::entt::registry &registry, ::entt::entity entity,
+                      const ShipBlueprint &bp) const;
 
   ShipBlueprint generateBlueprint(
       uint32_t factionId, Tier sizeTier, const std::string &role,

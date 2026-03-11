@@ -200,26 +200,27 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
 
 void ShipOutfitter::applyBlueprint(entt::registry &registry,
                                    entt::entity entity, uint32_t factionId,
-                                   Tier sizeTier,
-                                   const std::string &role) const {
-  auto span = Telemetry::instance().tracer()->StartSpan(
-      "ShipOutfitter::applyBlueprint");
-
+                                   Tier sizeTier, const std::string &role,
+                                   uint32_t lineIndex) const {
   const auto *fData = FactionManager::instance().getFactionPtr(factionId);
-  if (!fData) {
-    span->End();
+  if (!fData)
     return;
-  }
 
-  const ShipBlueprint *bpPtr = fData->getBlueprint(sizeTier, role);
+  const ShipBlueprint *bpPtr = fData->getBlueprint(sizeTier, role, lineIndex);
   ShipBlueprint localBp;
   if (!bpPtr) {
-    localBp = generateBlueprint(factionId, sizeTier, role);
+    localBp = generateBlueprint(factionId, sizeTier, role, lineIndex);
     bpPtr = &localBp;
   }
 
-  const ShipBlueprint &bp = *bpPtr;
-  size_t idx = 0;
+  applyBlueprint(registry, entity, *bpPtr);
+}
+
+void ShipOutfitter::applyBlueprint(entt::registry &registry,
+                                   entt::entity entity,
+                                   const ShipBlueprint &bp) const {
+  auto span = Telemetry::instance().tracer()->StartSpan(
+      "ShipOutfitter::applyBlueprint(blueprint)");
 
   // Components to populate
   InstalledEngines ie;
@@ -273,7 +274,7 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
       irw.modules.push_back(m);
       break;
     default:
-      break; // Engine/Weapon/Command should not appear here
+      break;
     }
   }
 
@@ -285,8 +286,39 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   registry.emplace_or_replace<InstalledPower>(entity, ip);
   registry.emplace_or_replace<InstalledBatteries>(entity, ib);
   registry.emplace_or_replace<InstalledReactionWheels>(entity, irw);
-  registry.emplace_or_replace<CargoComponent>(entity);
+
+  auto &cargo = registry.emplace_or_replace<CargoComponent>(entity);
   registry.emplace_or_replace<HullDef>(entity, bp.hull);
+
+  // Give some starting ammo if needed
+  InstalledAmmo ia;
+  for (const auto &m : bp.modules) {
+    if (m.category == ModuleCategory::Weapon &&
+        m.weaponType != WeaponType::Energy) {
+      Tier caliber = m.getAttributeTier(AttributeType::Caliber);
+      AmmoDef ammo =
+          ModuleGenerator::instance().generateAmmo(m.weaponType, caliber);
+
+      bool found = false;
+      for (auto &stack : ia.inventory) {
+        if (stack.type.compatibleWeapon == m.weaponType &&
+            stack.type.caliber == caliber) {
+          stack.count += 20;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        ia.inventory.push_back({ammo, 20});
+      }
+
+      std::cout << "[Outfitter] Initialized weapon " << m.name
+                << " with 20 rounds of " << ammo.name << "\n";
+    }
+  }
+  if (!ia.inventory.empty()) {
+    registry.emplace_or_replace<InstalledAmmo>(entity, ia);
+  }
 
   if (!registry.all_of<CreditsComponent>(entity)) {
     registry.emplace<CreditsComponent>(entity, 0.0f);

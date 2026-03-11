@@ -44,6 +44,7 @@ struct FactionEconomy {
 
   std::vector<ModuleDef> scrapyardModules; // Salvaged modules
   std::vector<HullDef> scrapyardHulls;     // Salvaged hulls
+  std::vector<ShipBlueprint> parkedShips;  // Physical ships ready for sale
 
   FactionDNA dna;
   MissionStats stats;

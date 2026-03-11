@@ -17,7 +17,8 @@ public:
   ModuleDef generate(ModuleCategory category,
                      const std::vector<ModuleAttribute> &attributes,
                      float baseVolume, float baseMass, float baseMaint,
-                     float basePower);
+                     float basePower,
+                     WeaponType weaponType = WeaponType::Energy);
 
   ModuleDef generateRandomModule(ModuleCategory category, Tier sizeTier);
 
