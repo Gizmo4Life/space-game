@@ -41,6 +41,30 @@ std::string typeName(CelestialType t) {
   return "Unknown";
 }
 
+std::string moduleCategoryName(ModuleCategory cat) {
+  switch (cat) {
+  case ModuleCategory::Engine:
+    return "Engine";
+  case ModuleCategory::Weapon:
+    return "Weapon";
+  case ModuleCategory::Shield:
+    return "Shield";
+  case ModuleCategory::Utility:
+    return "Utility";
+  case ModuleCategory::Reactor:
+    return "Reactor";
+  case ModuleCategory::Command:
+    return "Command";
+  case ModuleCategory::Battery:
+    return "Battery";
+  case ModuleCategory::Ammo:
+    return "Ammo Rack";
+  case ModuleCategory::ReactionWheel:
+    return "Reaction Wheel";
+  }
+  return "Unknown";
+}
+
 std::string getAttributeName(AttributeType type) {
   switch (type) {
   case AttributeType::Size:

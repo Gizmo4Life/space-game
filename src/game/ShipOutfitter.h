@@ -38,6 +38,9 @@ public:
   bool refitModule(entt::registry &registry, entt::entity entity,
                    entt::entity planet, ProductKey moduleKey, int slotIndex);
 
+  bool sellModule(entt::registry &registry, entt::entity entity,
+                  entt::entity planet, ModuleCategory category, int slotIndex);
+
   float calculateShipValue(entt::registry &registry, entt::entity entity) const;
 
   // Persistent Storage Hooks

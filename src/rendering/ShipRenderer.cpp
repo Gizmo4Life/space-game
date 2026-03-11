@@ -1,5 +1,4 @@
 #include "ShipRenderer.h"
-#include "game/FactionManager.h"
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/ConvexShape.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>

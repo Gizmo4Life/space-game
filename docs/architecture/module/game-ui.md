@@ -15,7 +15,9 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - Ships must maintain a non-negative `PowerBalance` (Total GW >= 0).
 - UI summarizes available hard points and engine mounts by tier (Small/Medium/Large).
 - **Synced Blueprints**: Every UI panel (Shipyard, Outfitter) now utilizes the unified `ShipRenderer` in `Schematic` mode, ensuring visual consistency between ship specs and the in-game vessel.
-- **Visual Preview**: The `OutfitterPanel` now includes a live ship blueprint preview.
+- **Visual Preview**: The `OutfitterPanel` includes a live ship blueprint preview and a dedicated detail pane.
+- **Automatic Scrolling**: Lists in `ShipyardPanel` and `OutfitterPanel` automatically scroll to maintain visibility of the selected item.
+- **Detail Pane Scrolling**: Large blocks of information (module stats, hull specs) in detail panes are scrollable using the `[` and `]` keys.
 
 ## 1. Physical Scope
 - **Path:** `/src/rendering/` — `LandingScreen.h/.cpp`, `MarketPanel.h/.cpp`, `ShipyardPanel.h/.cpp`, `OutfitterPanel.h/.cpp`, `InfoPanel.h/.cpp`, `LandingPanel.h`, `UIUtils.h/.cpp`
@@ -32,7 +34,7 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - [rendering-spatial-bridge](/docs/developer/pattern/rendering-spatial-bridge.md) (P) — `target.setView(defaultView)` for overlay rendering
 - [cpp-interface-segregation](/docs/developer/pattern/cpp-interface-segregation.md) (P) — `sf::RenderTarget` abstract parameters avoiding `sf::RenderWindow` concrete coupling.
 - [rendering-schematic-visuals](/docs/developer/pattern/rendering-schematic-visuals.md) (P) — Blueprint outlines moving away from faction color schemes.
-- [rendering-scrollable-subpanel](/docs/developer/pattern/rendering-scrollable-subpanel.md) (P) — `ShipyardPanel` module detail scrolling via `PageUp/PageDown`
+- [rendering-scrollable-subpanel](/docs/developer/pattern/rendering-scrollable-subpanel.md) (P) — Detail pane scrolling via `[` and `]` keys; automatic list selection clamping.
 - [ui-component-guard](/docs/developer/pattern/ui-component-guard.md) (P) — Resilient `try_get` access for `CargoComponent` and `CreditsComponent`
 
 ## 4. Telemetry & Observability

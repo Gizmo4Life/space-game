@@ -19,6 +19,9 @@ private:
   entt::entity playerEntity_;
   entt::entity targetShip_ = entt::null;
   int selectedOutfitterIndex_ = 0;
+  int installedScrollOffset_ = 0;
+  int marketScrollOffset_ = 0;
+  float detailScrollY_ = 0.f;
   bool outfitterMarketMode_ = false;
   int outfitterTab_ = 0; // 0 = Modules, 1 = Ammo
 };

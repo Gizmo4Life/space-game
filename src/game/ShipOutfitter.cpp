@@ -445,6 +445,69 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
   return true;
 }
 
+bool ShipOutfitter::sellModule(entt::registry &registry, entt::entity entity,
+                               entt::entity planet, ModuleCategory category,
+                               int slotIndex) {
+  if (!registry.valid(entity) || !registry.all_of<HullDef>(entity))
+    return false;
+
+  ModuleDef *mSold = nullptr;
+
+  auto findAndRemove = [&](auto &comp, int idx) -> ModuleDef * {
+    if (idx >= 0 && idx < (int)comp.modules.size()) {
+      auto &m = comp.modules[idx];
+      if (!m.name.empty() && m.name != "Empty") {
+        return &m;
+      }
+    }
+    return nullptr;
+  };
+
+  if (category == ModuleCategory::Engine &&
+      registry.all_of<InstalledEngines>(entity)) {
+    mSold = findAndRemove(registry.get<InstalledEngines>(entity), slotIndex);
+  } else if (category == ModuleCategory::Weapon &&
+             registry.all_of<InstalledWeapons>(entity)) {
+    mSold = findAndRemove(registry.get<InstalledWeapons>(entity), slotIndex);
+  } else if (category == ModuleCategory::Shield &&
+             registry.all_of<InstalledShields>(entity)) {
+    mSold = findAndRemove(registry.get<InstalledShields>(entity), slotIndex);
+  } else if (category == ModuleCategory::Utility &&
+             registry.all_of<InstalledCargo>(entity)) {
+    mSold = findAndRemove(registry.get<InstalledCargo>(entity), slotIndex);
+  } else if (category == ModuleCategory::Reactor &&
+             registry.all_of<InstalledPower>(entity)) {
+    mSold = findAndRemove(registry.get<InstalledPower>(entity), slotIndex);
+  } else if (category == ModuleCategory::ReactionWheel &&
+             registry.all_of<InstalledReactionWheels>(entity)) {
+    mSold =
+        findAndRemove(registry.get<InstalledReactionWheels>(entity), slotIndex);
+  }
+
+  if (!mSold)
+    return false;
+
+  ModuleDef m = *mSold;
+  *mSold = ModuleDef{}; // Clear it
+
+  // Refund
+  entt::entity payer = entity;
+  if (!registry.all_of<PlayerComponent>(payer)) {
+    for (auto e : registry.view<PlayerComponent>()) {
+      payer = e;
+      break;
+    }
+  }
+
+  if (registry.valid(payer) && registry.all_of<CreditsComponent>(payer)) {
+    auto &credits = registry.get<CreditsComponent>(payer);
+    credits.amount += m.basePrice * 0.8f; // 80% resale value
+  }
+
+  refreshStats(registry, entity, registry.get<HullDef>(entity));
+  return true;
+}
+
 float ShipOutfitter::calculateShipValue(entt::registry &registry,
                                         entt::entity entity) const {
   float total = 0.0f;
@@ -455,7 +518,7 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
   auto addVal = [&](const std::vector<ModuleDef> &modules) {
     for (const auto &m : modules)
       if (!m.name.empty() && m.name != "Empty")
-        total += 5000.0f;
+        total += m.basePrice;
   };
   if (registry.all_of<InstalledEngines>(entity))
     addVal(registry.get<InstalledEngines>(entity).modules);

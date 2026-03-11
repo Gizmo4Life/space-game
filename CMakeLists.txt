@@ -86,6 +86,8 @@ if (BUILD_TESTING)
         tests/test_ammo.cpp
         tests/test_economy.cpp
         tests/test_world_seeding.cpp
+        tests/test_ui_scrolling.cpp
+        tests/test_module_pricing.cpp
         tests/test_shipless_player.cpp
         tests/test_weapons.cpp
         tests/test_collisions.cpp

@@ -31,3 +31,10 @@ This protocol combines the introspective power of **Discovery** with the structu
 - **Action:** Run all unit tests and verify 100% pass rate for new logic.
 - **Action:** Perform a final **Drift Analysis** to ensure documentation and code are perfectly synchronized.
 - **Action:** Execute [Documentation Validation](documentation-validation.md).
+
+## 5. Definition of Done
+A task is considered **DONE** only when:
+1. **Successful Build**: The project compiles without errors on all targeted platforms.
+2. **100% Test Pass Rate**: All unit, integration, and regression tests pass with zero failures.
+3. **Clean Linter Findings**: All modified files have zero linter errors or warnings as defined in the [Coding Standards](../standard/coding-standards.md).
+4. **Verified Documentation**: T3 modules, Signpost Readmes, and architecture diagrams are updated and pass [Documentation Validation](documentation-validation.md).

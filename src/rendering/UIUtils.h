@@ -11,6 +11,7 @@ namespace space {
 std::string fmt(float v, int dec = 0);
 sf::Vector2f rotateVector(sf::Vector2f vec, float degrees);
 std::string typeName(CelestialType t);
+std::string moduleCategoryName(ModuleCategory cat);
 std::string getAttributeName(AttributeType type);
 std::string getTierStars(Tier tier);
 

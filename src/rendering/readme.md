@@ -1,15 +1,20 @@
-# Rendering
+# Rendering Module
 
-→ [T3 Module: Rendering Main](/docs/architecture/module/rendering-main.md)
-→ [T3 Module: Game UI / Landing Screen](/docs/architecture/module/game-ui.md)
-→ [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
+## Overview
+This directory contains classes and utilities responsible for the visual representation of the game world, including UI panels, ship rendering, and scene management.
 
-## Systems
-- `MainRenderer` — SFML window lifecycle (open/clear/display)
-- `RenderSystem` — Four-pass rendering pipeline (background, foreground, UI, projectiles)
-- `LandingScreen` — Pause overlay: planet info + competitive ship market
+## Key Components
+- **ShipRenderer**: Handles procedural drawing of ship hulls and modules.
+- **ShipyardPanel**: UI for purchasing and selling vessels, featuring a two-pane layout with automatic scrolling.
+- **OutfitterPanel**: UI for managing ship modules and ammunition, featuring a three-column layout with scrollable lists and a detail pane.
+- **LandingPanel**: Base class for planetside UI screens.
+- **UIUtils**: Common helper functions for formatting and UI drawing.
 
-## Build
-```bash
-cmake --build build --target SpaceGame
-```
+## UI Navigation Standards
+- **Vertical Navigation**: `W`/`S` or Arrow keys.
+- **Scrolling**: Lists scroll automatically based on selection.
+- **Detail Panes**: Use `[` and `]` for vertical scrolling.
+- **Tab Switching**: Use `Tab` or `Z` where appropriate.
+
+## Documentation
+See [docs/architecture/module/rendering.md](/docs/architecture/module/rendering.md) for detailed architectural patterns.

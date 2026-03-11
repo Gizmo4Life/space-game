@@ -4,6 +4,7 @@
 #include "game/EconomyManager.h"
 #include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
+#include "game/components/Faction.h"
 #include "game/components/GameTypes.h"
 #include "game/components/HullDef.h"
 #include "game/components/NPCComponent.h"
@@ -13,7 +14,6 @@
 #include "rendering/UIUtils.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <algorithm>
-#include <cmath>
 #include <entt/entt.hpp>
 #include <opentelemetry/trace/provider.h>
 #include <vector>
@@ -30,8 +30,8 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
       mode_ =
           (mode_ == ShipyardMode::Buy) ? ShipyardMode::Sell : ShipyardMode::Buy;
       selectedBidIndex_ = 0;
-      expandedModules_.clear();
-      moduleScrollY_ = 0.f;
+      scrollOffset_ = 0;
+      detailScrollY_ = 0.f;
 
       if (mode_ == ShipyardMode::Sell) {
         fleetEntities_.clear();
@@ -45,29 +45,30 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
         }
       }
     }
+
+    int maxIdx = (mode_ == ShipyardMode::Buy) ? (int)currentBids_.size()
+                                              : (int)fleetEntities_.size();
+
     if (kp->code == sf::Keyboard::Key::Up || kp->code == sf::Keyboard::Key::W) {
       if (selectedBidIndex_ > 0) {
         selectedBidIndex_--;
-        expandedModules_.clear();
-        moduleScrollY_ = 0.f;
+        detailScrollY_ = 0.f;
       }
     }
-    int maxIdx = (mode_ == ShipyardMode::Buy) ? (int)currentBids_.size()
-                                              : (int)fleetEntities_.size();
     if (kp->code == sf::Keyboard::Key::Down ||
         kp->code == sf::Keyboard::Key::S) {
       if (selectedBidIndex_ < maxIdx - 1) {
         selectedBidIndex_++;
-        expandedModules_.clear();
-        moduleScrollY_ = 0.f;
+        detailScrollY_ = 0.f;
       }
     }
 
-    if (kp->code == sf::Keyboard::Key::PageUp) {
-      moduleScrollY_ = std::max(0.f, moduleScrollY_ - 60.f);
+    // Manual detail scrolling (requested [ and ])
+    if (kp->code == sf::Keyboard::Key::LBracket) {
+      detailScrollY_ = std::max(0.f, detailScrollY_ - 40.f);
     }
-    if (kp->code == sf::Keyboard::Key::PageDown) {
-      moduleScrollY_ += 60.f;
+    if (kp->code == sf::Keyboard::Key::RBracket) {
+      detailScrollY_ += 40.f;
     }
 
     // Purchase/Sell Logic
@@ -138,17 +139,6 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
       }
       span->End();
     }
-
-    // Toggle module expansion
-    if (kp->code == sf::Keyboard::Key::X && !currentBids_.empty()) {
-      const auto &bid = currentBids_[selectedBidIndex_];
-      if (expandedModules_.size() == bid.blueprint.modules.size()) {
-        expandedModules_.clear();
-      } else {
-        for (size_t i = 0; i < bid.blueprint.modules.size(); ++i)
-          expandedModules_.insert(i);
-      }
-    }
   }
 }
 
@@ -163,11 +153,19 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     if (selectedBidIndex_ >= (int)currentBids_.size())
       selectedBidIndex_ = std::max(0, (int)currentBids_.size() - 1);
   } else {
-    // Sell mode uses fleetEntities_ which is updated in handleEvent(Tab)
     if (selectedBidIndex_ >= (int)fleetEntities_.size())
       selectedBidIndex_ = std::max(0, (int)fleetEntities_.size() - 1);
   }
 
+  // Automatic scrolling for the list
+  int maxVisible = 18;
+  if (selectedBidIndex_ < scrollOffset_) {
+    scrollOffset_ = selectedBidIndex_;
+  } else if (selectedBidIndex_ >= scrollOffset_ + maxVisible) {
+    scrollOffset_ = selectedBidIndex_ - maxVisible + 1;
+  }
+
+  float listWidth = 340.f;
   float x = rect.position.x + 20.f;
   float y = rect.position.y + 20.f;
 
@@ -178,30 +176,33 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
   title.setFillColor(sf::Color(140, 200, 255));
   title.setPosition({x, y});
   target.draw(title);
-  y += 30.f;
+  y += 35.f;
+
+  float listStartY = y;
 
   if (mode_ == ShipyardMode::Buy) {
     if (currentBids_.empty()) {
-      sf::Text none(*font, "No vessels for sale at this outpost.", 16);
+      sf::Text none(*font, "No vessels for sale here.", 16);
       none.setFillColor(sf::Color(180, 180, 180));
       none.setPosition({x, y});
       target.draw(none);
     } else {
-      for (int i = 0; i < (int)currentBids_.size(); ++i) {
+      int endIdx =
+          std::min((int)currentBids_.size(), scrollOffset_ + maxVisible);
+      for (int i = scrollOffset_; i < endIdx; ++i) {
         const auto &bid = currentBids_[i];
         bool sel = (i == selectedBidIndex_);
         sf::Color col = sel ? sf::Color::Cyan : sf::Color::White;
         const auto &faction =
             FactionManager::instance().getFaction(bid.factionId);
-        std::string label =
-            (sel ? "> " : "  ") + tierName(bid.blueprint.hull.sizeTier) + " " +
-            bid.blueprint.hull.className + " (" + bid.blueprint.role + ") [" +
-            faction.name + "] - $" + fmt(bid.price, 0);
-        sf::Text t(*font, label, 16);
+        std::string label = (sel ? "> " : "  ") + bid.blueprint.hull.className +
+                            " (" + bid.blueprint.role + ") [" + faction.name +
+                            "]";
+        sf::Text t(*font, label, 15);
         t.setFillColor(col);
         t.setPosition({x, y});
         target.draw(t);
-        y += 22.f;
+        y += 20.f;
       }
     }
   } else {
@@ -211,195 +212,132 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
       none.setPosition({x, y});
       target.draw(none);
     } else {
-      for (int i = 0; i < (int)fleetEntities_.size(); ++i) {
+      int endIdx =
+          std::min((int)fleetEntities_.size(), scrollOffset_ + maxVisible);
+      for (int i = scrollOffset_; i < endIdx; ++i) {
         auto entity = fleetEntities_[i];
         bool sel = (i == selectedBidIndex_);
         sf::Color col = sel ? sf::Color::Cyan : sf::Color::White;
-
-        float value =
-            ShipOutfitter::instance().calculateShipValue(registry, entity) *
-            0.8f;
         std::string name = registry.get<NameComponent>(entity).name;
-        std::string label = (sel ? "> " : "  ") + name + " - $" + fmt(value, 0);
-
-        sf::Text t(*font, label, 16);
+        std::string label = (sel ? "> " : "  ") + name;
+        sf::Text t(*font, label, 15);
         t.setFillColor(col);
         t.setPosition({x, y});
         target.draw(t);
-        y += 22.f;
+        y += 20.f;
       }
     }
   }
 
-  // Detail Panel
-  if (!currentBids_.empty() && selectedBidIndex_ < (int)currentBids_.size()) {
-    const auto &bid = currentBids_[selectedBidIndex_];
-    // Detail Panel
-    float detailY = rect.position.y + 40.f;
-    auto dtext = [&](float coreX, float &coreY, const std::string &s,
-                     unsigned sz, sf::Color c) {
+  // Divider
+  sf::RectangleShape vDiv({2.f, rect.size.y - 40.f});
+  vDiv.setPosition({rect.position.x + listWidth, rect.position.y + 20.f});
+  vDiv.setFillColor(sf::Color(80, 80, 100));
+  target.draw(vDiv);
+
+  // Detail Pane (Right Side)
+  float dx = rect.position.x + listWidth + 20.f;
+  float dy_start = rect.position.y + 20.f;
+  float dy = dy_start - detailScrollY_;
+
+  auto dtext = [&](float coreX, float &coreY, const std::string &s, unsigned sz,
+                   sf::Color c) {
+    if (coreY >= dy_start && coreY < rect.position.y + rect.size.y - 40.f) {
       sf::Text t(*font, s, sz);
       t.setFillColor(c);
       t.setPosition({coreX, coreY});
       target.draw(t);
-      coreY += sz + 6.f;
-    };
-
-    float dx = rect.position.x + 400.f;
-    float dy = detailY;
-    // Calc totals
-    float usedVol = 0.f;
-    float powerProduction = 0.f;
-    float powerLoad = 0.f;
-    float totalMass =
-        bid.blueprint.hull.baseMass * bid.blueprint.hull.massMultiplier;
-
-    for (const auto &m : bid.blueprint.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
-      usedVol += m.volumeOccupied;
-      totalMass += m.mass;
-      if (m.powerDraw < 0)
-        powerProduction -= m.powerDraw; // Production is positive here
-      else
-        powerLoad += m.powerDraw;
     }
+    coreY += sz + 6.f;
+  };
 
-    const auto &faction = FactionManager::instance().getFaction(bid.factionId);
-    dtext(dx, dy,
-          bid.blueprint.hull.className + " (" + bid.blueprint.role + ")", 24,
-          sf::Color::Yellow);
-    dtext(dx, dy, "Armor: " + tierName(bid.blueprint.hull.armorTier) + " Alloy",
-          14, sf::Color(180, 180, 180));
-    dtext(dx, dy, "Base HP: " + fmt(bid.blueprint.hull.baseHitpoints, 0), 14,
-          sf::Color(180, 180, 180));
-    dtext(dx, dy, "Internal Vol: " + fmt(bid.blueprint.hull.internalVolume, 1),
-          14, sf::Color(180, 180, 180));
-    dtext(dx, dy, "Used Vol: " + fmt(usedVol, 1), 14,
-          (usedVol > bid.blueprint.hull.internalVolume) ? sf::Color::Red
-                                                        : sf::Color::White);
-    dtext(dx, dy, "Seller: " + faction.name, 16, sf::Color(200, 200, 255));
-    dtext(dx, dy, "Price: $" + fmt(bid.price, 0), 18, sf::Color(100, 255, 100));
-    dy += 10.f;
+  ShipBlueprint bp;
+  uint32_t bidFactionId = 0;
+  float displayPrice = 0.f;
 
-    // Preview rendering & Technicals
-    sf::Vector2f previewPos = {dx + 120.f, dy + 100.f};
-    ShipRenderParams sparams;
-    sparams.mode = RenderMode::Schematic;
-    sparams.color = faction.color;
-    sparams.scale = 1.0f;
-    sparams.viewScale = 6.0f; // 2x gameplay scale (3.0f)
-    ShipRenderer::drawShip(target, bid.blueprint.hull, previewPos, sparams);
-
-    float ty = dy + 180.f;
-    auto dtech = [&](const std::string &lab, float val, const std::string &unit,
-                     sf::Color c) {
-      sf::Text t(*font, lab + ": " + fmt(val, 1) + " " + unit, 14);
-      t.setFillColor(c);
-      t.setPosition({dx, ty});
-      target.draw(t);
-      ty += 18.f;
-    };
-
-    dtech("Volume", usedVol,
-          "/" + fmt(bid.blueprint.hull.internalVolume, 0) + " cubic m",
-          usedVol > bid.blueprint.hull.internalVolume ? sf::Color::Red
-                                                      : sf::Color::Cyan);
-    dtech("Power", powerProduction - powerLoad, "GW",
-          (powerProduction < powerLoad) ? sf::Color::Red
-                                        : sf::Color(100, 255, 100));
-    dtech("Mass", totalMass, "t", sf::Color::White);
-
-    // Slots Summary
-    ty += 5.f;
-    sf::Text slotsText(*font, bid.blueprint.hull.getSlotSummary(), 13);
-    slotsText.setFillColor(sf::Color(180, 180, 180));
-    slotsText.setPosition({dx, ty});
-    target.draw(slotsText);
-
-    dy = ty + 40.f;
-
-    // Modules list on the far right
-    float mx = rect.position.x + 750.f;
-    float my = detailY;
-    float scrollLimitY = rect.position.y + rect.size.y - 60.f;
-
-    sf::Text modTitle(*font, "── Modules ──", 15);
-    modTitle.setFillColor(sf::Color(140, 200, 255));
-    modTitle.setPosition({mx, my});
-    target.draw(modTitle);
-    my += 25.f;
-
-    float listStart = my;
-    my -= moduleScrollY_;
-
-    auto &eco2 = registry.get<PlanetEconomy>(planetEntity_);
-    auto &fEco2 = eco2.factionData[bid.factionId];
-
-    for (size_t i = 0; i < bid.blueprint.modules.size(); ++i) {
-      const auto &mod = bid.blueprint.modules[i];
-      if (mod.name.empty() || mod.name == "Empty")
-        continue;
-      bool exp = expandedModules_.count(i);
-      std::string modLabel = (exp ? "[-] " : "[+] ") + mod.name;
-
-      if (my >= listStart && my < scrollLimitY) {
-        sf::Text mt(*font, modLabel, 14);
-        mt.setFillColor(sf::Color::White);
-        mt.setPosition({mx, my});
-        target.draw(mt);
-      }
-      my += 18.f;
-
-      if (exp) {
-        auto dattr = [&](const std::string &lt, int stars, sf::Color c) {
-          if (my < listStart || my >= scrollLimitY) {
-            my += 14.f;
-            return;
-          }
-          sf::Text labelText(*font, "  " + lt + " ", 11);
-          labelText.setFillColor(c);
-          labelText.setPosition({mx, my});
-          target.draw(labelText);
-
-          sf::Text starText(*font, getTierStars(static_cast<Tier>(stars)), 11);
-          starText.setFillColor(sf::Color::Yellow);
-          starText.setPosition({mx + 110.f, my});
-          target.draw(starText);
-
-          my += 14.f;
-        };
-
-        dattr("Vol: " + fmt(mod.volumeOccupied, 1) + " cubic m", 0,
-              sf::Color(180, 180, 180));
-        dattr("Pwr: " + fmt(mod.powerDraw, 1) + "GW", 0,
-              sf::Color(180, 180, 180));
-
-        for (const auto &attr : mod.attributes) {
-          int starCount = 0;
-          if (attr.tier == Tier::T1)
-            starCount = 1;
-          else if (attr.tier == Tier::T2)
-            starCount = 2;
-          else if (attr.tier >= Tier::T3)
-            starCount = 3;
-          dattr(getAttributeName(attr.type), starCount,
-                sf::Color(140, 200, 255));
-        }
-      }
-    }
-
-    float helpY = rect.position.y + rect.size.y - 40.f;
-    std::string helpLine =
-        (mode_ == ShipyardMode::Buy)
-            ? "[B] Buy to Fleet  [F] Buy as Flagship  [X] Toggle Details  "
-              "[Tab] Mode  [PgUp/PgDn] Scroll"
-            : "[X] SELL SHIP  [Tab] Mode  [PgUp/PgDn] Scroll";
-    sf::Text help(*font, helpLine, 13);
-    help.setFillColor(sf::Color(150, 150, 150));
-    help.setPosition({rect.position.x + 400.f, helpY});
-    target.draw(help);
+  if (mode_ == ShipyardMode::Buy && !currentBids_.empty()) {
+    const auto &bid = currentBids_[selectedBidIndex_];
+    bp = bid.blueprint;
+    bidFactionId = bid.factionId;
+    displayPrice = bid.price;
+  } else if (mode_ == ShipyardMode::Sell && !fleetEntities_.empty()) {
+    entt::entity e = fleetEntities_[selectedBidIndex_];
+    // Create a pseudo-blueprint for display
+    bp.hull = registry.get<HullDef>(e);
+    bp.role = "Owned";
+    displayPrice =
+        ShipOutfitter::instance().calculateShipValue(registry, e) * 0.8f;
+    if (registry.all_of<Faction>(e))
+      bidFactionId = registry.get<Faction>(e).getMajorityFaction();
+  } else {
+    return; // Nothing to show
   }
+
+  const auto &faction = FactionManager::instance().getFaction(bidFactionId);
+  dtext(dx, dy, bp.hull.className + " Details", 22, sf::Color::Yellow);
+  dtext(dx, dy, "Tier: " + tierName(bp.hull.sizeTier), 14,
+        sf::Color(180, 180, 180));
+  dtext(dx, dy,
+        (mode_ == ShipyardMode::Buy ? "Buy Price: $" : "Sell Value: $") +
+            fmt(displayPrice, 0),
+        18, sf::Color(100, 255, 100));
+  dy += 10.f;
+
+  // Ship Preview (Floating above technicals)
+  sf::Vector2f previewPos = {dx + 350.f, rect.position.y + 120.f};
+  ShipRenderParams sparams;
+  sparams.mode = RenderMode::Schematic;
+  sparams.color = faction.color;
+  sparams.scale = 1.0f;
+  sparams.viewScale = 6.0f;
+  ShipRenderer::drawShip(target, bp.hull, previewPos, sparams);
+
+  // Technical Stats
+  float usedVol = 0.f;
+  float powerDraw = 0.f;
+  float totalMass = bp.hull.baseMass * bp.hull.massMultiplier;
+  for (const auto &m : bp.modules) {
+    if (m.name.empty() || m.name == "Empty")
+      continue;
+    usedVol += m.volumeOccupied;
+    powerDraw += m.powerDraw;
+    totalMass += m.mass;
+  }
+
+  dtext(dx, dy,
+        "Volume: " + fmt(usedVol, 1) + " / " + fmt(bp.hull.internalVolume, 0),
+        14,
+        (usedVol > bp.hull.internalVolume) ? sf::Color::Red : sf::Color::Cyan);
+  dtext(dx, dy, "Mass: " + fmt(totalMass, 1) + " t", 14, sf::Color::White);
+  dtext(dx, dy, "Power Draw: " + fmt(powerDraw, 1) + " GW", 14,
+        (powerDraw > 0) ? sf::Color::Yellow : sf::Color(100, 255, 100));
+
+  dy += 15.f;
+  dtext(dx, dy, "── Installed Modules ──", 16, sf::Color(140, 200, 255));
+
+  for (const auto &m : bp.modules) {
+    if (m.name.empty() || m.name == "Empty")
+      continue;
+    dtext(dx, dy, "• " + m.name, 14, sf::Color::White);
+    for (const auto &attr : m.attributes) {
+      dtext(dx + 20.f, dy,
+            getAttributeName(attr.type) + " " + getTierStars(attr.tier), 11,
+            sf::Color(180, 180, 180));
+    }
+    dy += 5.f;
+  }
+
+  // Instructions at the bottom
+  float helpY = rect.position.y + rect.size.y - 35.f;
+  std::string instructions =
+      (mode_ == ShipyardMode::Buy)
+          ? "[B] Buy to Fleet  [F] Buy as Flagship  [Tab] Sell Mode  [W/S] Nav "
+            " [[]/[]] Scroll Details"
+          : "[X] SELL SHIP  [Tab] Buy Mode  [W/S] Nav  [[]/[]] Scroll Details";
+  sf::Text help(*font, instructions, 13);
+  help.setFillColor(sf::Color(150, 150, 150));
+  help.setPosition({rect.position.x + 20.f, helpY});
+  target.draw(help);
 }
 
 } // namespace space

@@ -1,6 +1,4 @@
 #include "ModuleGenerator.h"
-#include <algorithm>
-#include <random>
 
 namespace space {
 
@@ -85,6 +83,42 @@ ModuleGenerator::generate(ModuleCategory category,
       }
     }
   }
+
+  // Calculate Base Price (REQ-11)
+  float price = def.volumeOccupied * 150.f; // Base Material Cost
+  float catMult = 1.0f;
+  switch (category) {
+  case ModuleCategory::Weapon:
+    catMult = 3.0f;
+    break;
+  case ModuleCategory::Reactor:
+    catMult = 2.5f;
+    break;
+  case ModuleCategory::Engine:
+    catMult = 2.0f;
+    break;
+  case ModuleCategory::Shield:
+    catMult = 1.8f;
+    break;
+  case ModuleCategory::Battery:
+  case ModuleCategory::ReactionWheel:
+    catMult = 1.4f;
+    break;
+  default:
+    catMult = 1.0f;
+  }
+  price *= catMult;
+
+  // Complexity Multiplier from Tiers
+  for (const auto &attr : attributes) {
+    if (attr.type == AttributeType::Size)
+      continue;
+    if (attr.tier == Tier::T2)
+      price *= 1.5f;
+    else if (attr.tier == Tier::T3)
+      price *= 3.0f;
+  }
+  def.basePrice = price;
 
   return def;
 }
