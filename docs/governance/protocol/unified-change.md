@@ -9,6 +9,13 @@ pillar: governance
 
 This protocol combines the introspective power of **Discovery** with the structured implementation of **Greenfield** to ensure all changes are standard-compliant, well-documented, and fully tested.
 
+## 0. Pre-Flight Check
+Before starting any significant change, ensure the baseline environment is healthy:
+- **Build Baseline**: Verify the project compiles without errors.
+- **Test Baseline**: Run existing tests to ensure zero failures before local changes.
+- **Lint Baseline**: Verify a clean linter state for target files.
+- **Goal**: Ensure the "Definition of Done" is not compromised by pre-existing technical debt.
+
 ## 1. Introspection & Elicitation
 - **Action:** Execute the [Discovery Protocol](discovery.md) to map the current state of target modules and identify technical debt or documentation drift.
 - **Action:** Execute the **Domain Context & Elicitation** phase from the [Greenfield Protocol](greenfield.md).
@@ -18,6 +25,7 @@ This protocol combines the introspective power of **Discovery** with the structu
 
 ## 2. Planning & Test Design
 - **Action:** Create an **Implementation Plan** that meets all `docs/governance/standard/` and `docs/architecture/patterns/`.
+- **Action:** Audit proposed changes against [Observability Standard](../standard/observability-standard.md). Identify required telemetry spans or probes.
 - **Action:** Define **Unit Tests** for critical logic paths (e.g., economy transactions, production rolls).
 - **Verify:** The plan must call out *all* necessary changes across the codebase to avoid refactor-looping.
 - **Verify:** User approval of the plan and test strategy before implementation.
@@ -25,10 +33,12 @@ This protocol combines the introspective power of **Discovery** with the structu
 ## 3. Execution & Documentation
 - **Action:** Implement the changes according to the approved plan.
 - **Action:** Update or create **T3 Module** documentation in `docs/architecture/module/` to reflect new functionality.
+- **Action:** For UI/Frontend changes, implement **Visual Assets** (screenshots or recordings) for the `walkthrough.md`.
 - **Action:** Ensure every new directory or modified functional area has a [Signpost Readme](/docs/developer/pattern/signpost-readme.md).
 
 ## 4. Validation
 - **Action:** Run all unit tests and verify 100% pass rate for new logic.
+- **Action:** For performance-critical systems (Physics, AI, Rendering), verify no regression against baseline metrics using internal telemetry.
 - **Action:** Perform a final **Drift Analysis** to ensure documentation and code are perfectly synchronized.
 - **Action:** Execute [Documentation Validation](documentation-validation.md).
 

@@ -67,3 +67,13 @@ Establish the technical foundations for the space-game proof-of-concept using C+
 | **Wet Mass Dynamics** | **P** | Kinematics must account for cargo, fuel, and ammo mass in physics steps. |
 | **Boarding Protocol** | **P** | `BoardingSystem` allows resource transfer and fleet joining for derelict/friendly targets. |
 | **Incapacitation (EMP)** | **P** | EMP warheads trigger `empTimer` (60s). Incapacitated vessels are derelict. |
+
+## 7. Observability & Dashboards
+*Nuance: Deep observability is the primary tool for debugging complex multi-agent simulations.*
+
+| Pattern | Rating | Nuance |
+| :--- | :--- | :--- |
+| **SigNoz** | **P** | Unified OTel-native platform for traces, metrics, and logs. Preferred for dashboards. |
+| **Jaeger** | **A** | Lightweight local tracing; useful for deep dive into specific spans. |
+| **OTel Collector** | **P** | Fan-out component ensuring telemetry reaches multiple backends. |
+| [doc-ops-diagnostic-dashboard](/docs/developer/pattern/doc-ops-diagnostic-dashboard.md) | **P** | Standard manifest for defining troubleshooting views. |

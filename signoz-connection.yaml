@@ -1,0 +1,5 @@
+clickhouse:
+  datasource: tcp://clickhouse:9000/?database=signoz_index
+  cluster: signoz
+  user: default
+  password: ""

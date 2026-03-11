@@ -22,6 +22,14 @@ Every **Implementation** [T3 Module](/docs/developer/pattern/doc-t3-module.md) (
 - **Status**: Whether the instrumentation is physical (`[x]`) or strictly theoretical (`[ ]`).
 - **Nomenclature**: Spans must adhere to the `<pillar>.<module>.<action>` convention.
 
+## 4. Dashboard Requirements
+Every **P-rated** [T2 Capability](/docs/architecture/capability/readme.md) must have at least one **Diagnostic Dashboard** defined in the [SigNoz Console](http://localhost:3301).
+- **Mandatory Panels**:
+  - **Latency (P99)** by span action.
+  - **Error Rate** by module.
+  - **Throughput** (Ops/sec) for critical loops (Physics, Economy).
+- **Enforcement**: New features impacting a P-rated capability must update the corresponding [Diagnostic Dashboard] manifest.
+
 ## 3. Critical Failure Metrics (T2)
 Every [T2 Capability](/docs/developer/pattern/doc-t2-capability.md) must define at least one "Critical Failure Metric" in its Operational Context section.
 - **Example:** "Transaction failure rate exceeds 2% over a 5-minute window."

@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686" # UI
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+
+  # SigNoz Backend
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.1-alpine
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "localhost:8123/ping" ]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+  signoz-query-service:
+    image: signoz/query-service:0.38.0
+    container_name: signoz-query-service
+    command: [ "-config=/etc/signoz/connection.yaml" ]
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    ports:
+      - "3301:3301" # UI
+    volumes:
+      - ./signoz-connection.yaml:/etc/signoz/connection.yaml
+
+  otel-collector:
+    image: signoz/signoz-otel-collector:0.88.0
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    depends_on:
+      - signoz-query-service
+      - jaeger
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+
+  game:
+    build: .
+    depends_on:
+      - otel-collector
+    environment:
+      - DISPLAY=host.docker.internal:0
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    # Requires XQuartz on macOS host
+    network_mode: host
+
+volumes:
+  clickhouse_data:
