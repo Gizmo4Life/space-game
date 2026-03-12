@@ -23,7 +23,9 @@
 #include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
 #include "game/components/ModuleGenerator.h"
+#include "game/components/NPCComponent.h"
 #include "game/components/PlayerComponent.h"
+#include "game/components/ShipFitness.h"
 #include "game/components/ShipStats.h"
 
 namespace space {
@@ -38,6 +40,19 @@ const HullDef &ShipOutfitter::getHull(uint32_t factionId, Tier sizeTier,
   }
 
   const auto &fData = FactionManager::instance().getFaction(factionId);
+
+  // If this is a subsequent generation (lineIndex > 0), mutate from the
+  // previous one
+  if (lineIndex > 0) {
+    auto prevKey = std::make_tuple(factionId, sizeTier, role, lineIndex - 1);
+    auto itPrev = proceduralHulls_.find(prevKey);
+    if (itPrev != proceduralHulls_.end()) {
+      HullDef newHull = HullGenerator::mutateHull(itPrev->second, fData.dna);
+      proceduralHulls_[key] = newHull;
+      return proceduralHulls_[key];
+    }
+  }
+
   HullDef newHull =
       HullGenerator::generateHull(fData.dna, sizeTier, role, lineIndex);
   proceduralHulls_[key] = newHull;
@@ -55,147 +70,164 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
   span->SetAttribute("vessel.role", role);
   span->SetAttribute("vessel.isElite", isElite);
 
-  ShipBlueprint bp;
-  bp.role = role;
-  bp.lineIndex = lineIndex;
-  bp.hull = getHull(factionId, sizeTier, role, lineIndex);
-
   const auto *fData = FactionManager::instance().getFactionPtr(factionId);
   if (!fData) {
     span->End();
-    return bp;
+    return ShipBlueprint{};
   }
 
   auto &gen = ModuleGenerator::instance();
+  auto tierIt = fData->dna.tierDNA.find(sizeTier);
+  TierDNA tdna =
+      (tierIt != fData->dna.tierDNA.end()) ? tierIt->second : TierDNA();
 
-  // Non-elite ships can now match the hull tier (no longer strictly downgraded)
-  auto effectiveTier = [&](Tier t) -> Tier {
-    if (isElite)
-      return t;
-    // 70% chance to match the tier, 30% chance for a slight downgrade
-    if (rand() % 100 < 70)
-      return t;
-    return static_cast<Tier>(std::max(1, static_cast<int>(t) - 1));
-  };
+  auto generateCandidate = [&]() -> ShipBlueprint {
+    ShipBlueprint bp;
+    bp.role = role;
+    bp.lineIndex = lineIndex;
+    bp.hull = getHull(factionId, sizeTier, role, lineIndex);
 
-  // Generates a ModuleDef for the requested attribute + tier, checking faction
-  // standards first
-  auto makeModule = [&](ModuleCategory cat, AttributeType mainAttr,
-                        Tier slotSize) -> ModuleDef {
-    Tier baseT = effectiveTier(slotSize);
-
-    // Check if the faction has a standard design for this category and tier
-    ProductKey pk{ProductType::Module, static_cast<uint32_t>(cat), baseT};
-    if (fData->factionDesigns.count(pk)) {
-      return fData->factionDesigns.at(pk);
-    }
-
-    auto rollT = [&](Tier target) {
-      int r = rand() % 100;
-      if (r < 70)
-        return target; // 70% match
-      if (r < 85)
-        return static_cast<Tier>(
-            std::max(1, static_cast<int>(target) - 1)); // 15% lower
-      return static_cast<Tier>(
-          std::min(3, static_cast<int>(target) + 1)); // 15% higher
+    auto effectiveTier = [&](Tier t) -> Tier {
+      if (isElite)
+        return t;
+      if (rand() % 100 < 70)
+        return t;
+      return static_cast<Tier>(std::max(1, static_cast<int>(t) - 1));
     };
 
-    return gen.generate(cat,
-                        {{mainAttr, rollT(baseT)},
-                         {AttributeType::Size, baseT},
-                         {AttributeType::Mass, rollT(baseT)},
-                         {AttributeType::Volume, rollT(baseT)}},
-                        0.0f, 0.0f, 1.0f, 0.0f);
-  };
-
-  ModuleDef emptyMod; // default-constructed empty module
-
-  // 1. Fill slots
-  for (const auto &slot : bp.hull.slots) {
-    if (slot.role == SlotRole::Engine) {
-      bp.modules.push_back(
-          makeModule(ModuleCategory::Engine, AttributeType::Thrust, slot.size));
-    } else if (slot.role == SlotRole::Command) {
-      bp.modules.push_back(makeModule(ModuleCategory::Command,
-                                      AttributeType::Efficiency, slot.size));
-    } else if (slot.role == SlotRole::Hardpoint) {
-      if (fData->dna.aggression > 0.3f || role == "Combat") {
-        bp.modules.push_back(
-            makeModule(ModuleCategory::Weapon, AttributeType::ROF, slot.size));
-      } else {
-        bp.modules.push_back(emptyMod);
+    auto makeModule = [&](ModuleCategory cat, AttributeType mainAttr,
+                          Tier slotSize) -> ModuleDef {
+      Tier baseT = effectiveTier(slotSize);
+      ProductKey pk{ProductType::Module, static_cast<uint32_t>(cat), baseT};
+      if (fData->factionDesigns.count(pk)) {
+        return fData->factionDesigns.at(pk);
       }
-    }
-  }
 
-  // 2. Add Internals
-  // Reactor (mandatory)
-  bp.modules.push_back(
-      makeModule(ModuleCategory::Reactor, AttributeType::Output, sizeTier));
-  // Shield (optional)
-  bp.modules.push_back(
-      makeModule(ModuleCategory::Shield, AttributeType::Capacity, sizeTier));
-  // Cargo (if commercial)
-  if (role == "Cargo" || role == "Transport" ||
-      fData->dna.commercialism > 0.6f) {
-    bp.modules.push_back(
-        makeModule(ModuleCategory::Utility, AttributeType::Volume, sizeTier));
-  }
-  // Battery (stored power reserve)
-  bp.modules.push_back(
-      makeModule(ModuleCategory::Battery, AttributeType::Capacity, sizeTier));
+      auto rollT = [&](Tier target) {
+        int r = rand() % 100;
+        if (r < 70)
+          return target;
+        if (r < 85)
+          return static_cast<Tier>(std::max(1, static_cast<int>(target) - 1));
+        return static_cast<Tier>(std::min(3, static_cast<int>(target) + 1));
+      };
 
-  // 3. Simple volume/power balancing pass
-  auto recomputeTotals = [&](float &totalVol, float &totalPower) {
-    totalVol = 0.0f;
-    totalPower = 0.0f;
-    for (const auto &m : bp.modules) {
-      if (!m.name.empty() && m.name != "Empty") {
-        totalVol += m.volumeOccupied;
-        totalPower += m.powerDraw;
-      }
-    }
-  };
+      return gen.generate(cat,
+                          {{mainAttr, rollT(baseT)},
+                           {AttributeType::Size, baseT},
+                           {AttributeType::Mass, rollT(baseT)},
+                           {AttributeType::Volume, rollT(baseT)}},
+                          0.0f, 0.0f, 1.0f, 0.0f);
+    };
 
-  constexpr int MAX_BALANCE_ITERS = 5;
-  for (int iter = 0; iter < MAX_BALANCE_ITERS; ++iter) {
-    float totalVol = 0.0f, totalPower = 0.0f;
-    recomputeTotals(totalVol, totalPower);
-    bool changed = false;
-
-    // Prune optional internals if over volume
-    while (totalVol > bp.hull.internalVolume &&
-           bp.modules.size() > bp.hull.slots.size() + 1) {
-      const auto &back = bp.modules.back();
-      if (!back.name.empty() && back.name != "Empty") {
-        totalVol -= back.volumeOccupied;
-        totalPower -= back.powerDraw;
-      }
-      bp.modules.pop_back();
-      changed = true;
-    }
-
-    // If power-starved, empty optional hardpoints
-    recomputeTotals(totalVol, totalPower);
-    if (totalPower > 0.0f) {
-      for (int si = static_cast<int>(bp.hull.slots.size()) - 1;
-           si >= 0 && totalPower > 0.0f; --si) {
-        if (bp.hull.slots[si].role == SlotRole::Hardpoint &&
-            !bp.modules[si].name.empty() && bp.modules[si].name != "Empty") {
-          totalPower -= bp.modules[si].powerDraw;
-          bp.modules[si] = emptyMod;
-          changed = true;
+    ModuleDef emptyMod;
+    for (const auto &slot : bp.hull.slots) {
+      if (slot.role == SlotRole::Engine) {
+        bp.modules.push_back(makeModule(ModuleCategory::Engine,
+                                        AttributeType::Thrust, slot.size));
+      } else if (slot.role == SlotRole::Command) {
+        bp.modules.push_back(makeModule(ModuleCategory::Command,
+                                        AttributeType::Efficiency, slot.size));
+      } else if (slot.role == SlotRole::Hardpoint) {
+        // DNS Aggression vs Role check
+        if (fData->dna.aggression > 0.3f || role == "Combat") {
+          bp.modules.push_back(makeModule(ModuleCategory::Weapon,
+                                          AttributeType::ROF, slot.size));
+        } else {
+          bp.modules.push_back(emptyMod);
         }
       }
     }
 
-    if (!changed)
-      break;
+    // Add Internals
+    bp.modules.push_back(
+        makeModule(ModuleCategory::Reactor, AttributeType::Output, sizeTier));
+    bp.modules.push_back(
+        makeModule(ModuleCategory::Shield, AttributeType::Capacity, sizeTier));
+
+    if (role == "Cargo" || role == "Transport" ||
+        fData->dna.commercialism > 0.6f) {
+      bp.modules.push_back(
+          makeModule(ModuleCategory::Utility, AttributeType::Volume, sizeTier));
+    }
+    bp.modules.push_back(
+        makeModule(ModuleCategory::Battery, AttributeType::Capacity, sizeTier));
+
+    // Balancing pass
+    auto recomputeTotals = [&](float &totalVol, float &totalPower) {
+      totalVol = 0.0f;
+      totalPower = 0.0f;
+      for (const auto &m : bp.modules) {
+        if (!m.name.empty() && m.name != "Empty") {
+          totalVol += m.volumeOccupied;
+          totalPower += m.powerDraw;
+        }
+      }
+    };
+
+    constexpr int MAX_BALANCE_ITERS = 5;
+    for (int iter = 0; iter < MAX_BALANCE_ITERS; ++iter) {
+      float totalVol = 0.0f, totalPower = 0.0f;
+      recomputeTotals(totalVol, totalPower);
+      bool changed = false;
+
+      while (totalVol > bp.hull.internalVolume &&
+             bp.modules.size() > bp.hull.slots.size() + 1) {
+        const auto &back = bp.modules.back();
+        if (!back.name.empty() && back.name != "Empty") {
+          totalVol -= back.volumeOccupied;
+          totalPower -= back.powerDraw;
+        }
+        bp.modules.pop_back();
+        changed = true;
+      }
+
+      recomputeTotals(totalVol, totalPower);
+      if (totalPower > 0.0f) {
+        for (int si = static_cast<int>(bp.hull.slots.size()) - 1;
+             si >= 0 && totalPower > 0.0f; --si) {
+          if (bp.hull.slots[si].role == SlotRole::Hardpoint &&
+              !bp.modules[si].name.empty() && bp.modules[si].name != "Empty") {
+            totalPower -= bp.modules[si].powerDraw;
+            bp.modules[si] = emptyMod;
+            changed = true;
+          }
+        }
+      }
+      if (!changed)
+        break;
+    }
+    return bp;
+  };
+
+  // Evolutionary Selection: Generate N candidates and pick the fittest
+  constexpr int NUM_CANDIDATES = 4;
+  ShipBlueprint bestBp;
+  float bestFitness = -1.0f;
+
+  for (int i = 0; i < NUM_CANDIDATES; ++i) {
+    ShipBlueprint candidate = generateCandidate();
+    float fitness = 0.0f;
+
+    if (role == "Combat")
+      fitness = ShipFitness::calculateCombatFitness(candidate, tdna);
+    else if (role == "Cargo")
+      fitness = ShipFitness::calculateTradeFitness(candidate, tdna);
+    else if (role == "Transport")
+      fitness = ShipFitness::calculateTransportFitness(candidate, tdna);
+    else
+      fitness =
+          ShipFitness::calculateGeneralFitness(candidate, fData->dna, sizeTier);
+
+    if (fitness > bestFitness) {
+      bestFitness = fitness;
+      bestBp = std::move(candidate);
+    }
   }
 
+  span->SetAttribute("vessel.fitness", bestFitness);
   span->End();
-  return bp;
+  return bestBp;
 }
 
 void ShipOutfitter::applyBlueprint(entt::registry &registry,
@@ -214,6 +246,11 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   }
 
   applyBlueprint(registry, entity, *bpPtr);
+
+  if (auto *npc = registry.try_get<NPCComponent>(entity)) {
+    npc->role = role;
+    npc->lineIndex = lineIndex;
+  }
 }
 
 void ShipOutfitter::applyBlueprint(entt::registry &registry,
@@ -329,6 +366,12 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   ShipOutfitHash oh = calculateOutfitHash(registry, entity);
   span->SetAttribute("vessel.outfit_hash", std::to_string(oh));
   span->SetAttribute("vessel.role", bp.role);
+  span->SetAttribute("vessel.line_index", static_cast<int>(bp.lineIndex));
+
+  if (auto *npc = registry.try_get<NPCComponent>(entity)) {
+    npc->role = bp.role;
+    npc->lineIndex = bp.lineIndex;
+  }
 
   span->End();
 }

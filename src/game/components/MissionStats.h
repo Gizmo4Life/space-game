@@ -18,6 +18,8 @@ struct MissionRecord {
   uint32_t missionId;
   uint32_t factionId;
   uint32_t type; // Cast from MissionType
+  std::string role = "General";
+  Tier tier = Tier::T1;
   std::vector<ShipOutfitHash> deployedOutfits;
   std::vector<ShipOutfitHash> lostOutfits;
   std::map<ShipOutfitHash, uint32_t> enemyKills; // Hash -> Count

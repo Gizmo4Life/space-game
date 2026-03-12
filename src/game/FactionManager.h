@@ -25,6 +25,7 @@ struct FactionData {
 
   std::map<ProductKey, ModuleDef> factionDesigns;
   std::map<ProductKey, AmmoDef> factionAmmo;
+  std::map<std::pair<Tier, std::string>, uint32_t> currentGenerations;
 
   const ShipBlueprint *getBlueprint(Tier tier, const std::string &role,
                                     uint32_t lineIndex = 0) const;
@@ -44,6 +45,7 @@ public:
   uint32_t getRandomFactionId() const;
 
   std::string generateShipLineName(NamingScheme scheme, uint32_t index);
+  void evolveShipLine(uint32_t factionId, Tier tier, const std::string &role);
 
   // Get relationship between two factions (-1.0 to 1.0)
   float getRelationship(uint32_t idA, uint32_t idB) const;

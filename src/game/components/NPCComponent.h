@@ -12,6 +12,8 @@ enum class AIState { Idle, Docked, Traveling, Combat, Fleeing };
 struct NPCComponent {
   uint32_t factionId;
   Tier sizeTier = Tier::T1;
+  std::string role = "General";
+  uint32_t lineIndex = 0;
   AIBelief belief = AIBelief::Trader;
   AIState state = AIState::Idle;
   bool isPlayerFleet = false;

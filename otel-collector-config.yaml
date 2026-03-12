@@ -14,10 +14,6 @@ exporters:
     endpoint: jaeger:4317
     tls:
       insecure: true
-  otlp/signoz:
-    endpoint: signoz-query-service:4317
-    tls:
-      insecure: true
   logging:
     loglevel: debug
 
@@ -26,8 +22,4 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp/jaeger, otlp/signoz, logging]
-    metrics:
-      receivers: [otlp]
-      processors: [batch]
-      exporters: [otlp/signoz, logging]
+      exporters: [otlp/jaeger, logging]

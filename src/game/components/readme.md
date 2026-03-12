@@ -4,6 +4,7 @@
 → [T3 Module: Game Economy](/docs/architecture/module/game-economy.md)
 → [T3 Module: Game Factions](/docs/architecture/module/game-factions.md)
 → [T3 Module: Game NPC](/docs/architecture/module/game-npc.md)
+→ [T3 Module: Ship Generation](/docs/architecture/module/ship-generation.md)
 → [T3 Module: Engine Combat](/docs/architecture/module/engine-combat.md)
 → [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
 
@@ -21,4 +22,6 @@
     - [x] Market: Aggregate resource and module pools (scrapyards)
     - [x] Shipyard: Functional Sell menu via Tab key
 - [x] Final Build Verification
+- `ShipFitness.h` — Multi-role fitness scoring logic
+- `HullGenerator.h` — Procedural hull mutation
 - `WorldConfig.h` — Star system constants

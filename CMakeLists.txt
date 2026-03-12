@@ -23,7 +23,10 @@ find_package(nlohmann_json REQUIRED)
 find_package(CURL REQUIRED)
 
 # Protobuf (required by OpenTelemetry's exported targets)
-find_package(Protobuf REQUIRED)
+find_package(Protobuf CONFIG QUIET)
+if(NOT Protobuf_FOUND)
+    find_package(Protobuf REQUIRED)
+endif()
 
 # OpenTelemetry
 find_package(opentelemetry-cpp CONFIG REQUIRED)
@@ -105,6 +108,7 @@ if (BUILD_TESTING)
         tests/test_spawn_variety.cpp
         tests/test_module_quality.cpp
         tests/verify_hull_geometry.cpp
+        tests/test_ship_evolution.cpp
     )
     target_include_directories(SpaceGameTests PRIVATE src)
     target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)

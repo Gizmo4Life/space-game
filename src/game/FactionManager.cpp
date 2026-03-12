@@ -49,6 +49,7 @@ void FactionManager::init() {
 
         fData.blueprints.push_back(
             ShipOutfitter::instance().generateBlueprint(fData.id, t, role, i));
+        fData.currentGenerations[{t, role}] = i;
       }
     }
   };
@@ -375,6 +376,47 @@ std::string FactionManager::generateShipLineName(NamingScheme scheme,
 
   const auto &names = it->second;
   return names[index % names.size()];
+}
+
+void FactionManager::evolveShipLine(uint32_t factionId, Tier tier,
+                                    const std::string &role) {
+  auto *fData = getFactionPtr(factionId);
+  if (!fData)
+    return;
+
+  // 1. Increment generation index
+  auto key = std::make_pair(tier, role);
+  uint32_t &gen = fData->currentGenerations[key];
+  gen++;
+
+  // 2. Generate mutated successor
+  ShipBlueprint newBp = ShipOutfitter::instance().generateBlueprint(
+      factionId, tier, role, gen, false);
+
+  // 3. Replace old blueprint for this role/tier combo
+  bool found = false;
+  for (auto &bp : fData->blueprints) {
+    if (bp.hull.sizeTier == tier && bp.role == role) {
+      bp = newBp;
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    fData->blueprints.push_back(newBp);
+  }
+
+  // 4. Telemetry: Line Evolution
+  auto span =
+      Telemetry::instance().tracer()->StartSpan("game.factions.line.evolve");
+  span->SetAttribute("vessel.faction", (int)factionId);
+  span->SetAttribute("vessel.tier", (int)tier);
+  span->SetAttribute("vessel.role", role);
+  span->SetAttribute("vessel.generation", (int)gen);
+  span->End();
+
+  std::cout << "[Faction " << factionId << "] Evolving " << role << " Tier "
+            << (int)tier << " to Generation " << gen << "\n";
 }
 
 const ShipBlueprint *FactionData::getBlueprint(Tier tier,

@@ -61,6 +61,73 @@ HullDef HullGenerator::generateHull(const FactionDNA &dna, Tier tier,
   return hull;
 }
 
+HullDef HullGenerator::mutateHull(const HullDef &baseHull,
+                                  const FactionDNA &dna) {
+  HullDef hull = baseHull;
+  auto tierIt = dna.tierDNA.find(hull.sizeTier);
+  TierDNA tdna = (tierIt != dna.tierDNA.end()) ? tierIt->second : TierDNA();
+
+  // 1. Tweak base stats by ±5%
+  float factor = 0.95f + (static_cast<float>(rand() % 11) / 100.0f);
+  hull.baseMass *= factor;
+  hull.baseHitpoints *= factor;
+  hull.internalVolume *= factor;
+
+  // 2. Incremental Mutation of slots
+  int roll = rand() % 100;
+  if (roll < 20) {
+    // Add a slot following existing layout pattern
+    MountSlot newSlot;
+    newSlot.id = static_cast<uint8_t>(hull.slots.size());
+
+    // Role determined by Aggression DNA vs Volume DNA
+    if (rand() % 100 < static_cast<int>(dna.aggression * 100)) {
+      newSlot.role = SlotRole::Hardpoint;
+    } else if (rand() % 100 < static_cast<int>(tdna.prefVolume * 100)) {
+      newSlot.role = SlotRole::Engine;
+    } else {
+      newSlot.role = SlotRole::Hardpoint;
+    }
+
+    newSlot.size = (rand() % 100 < 80)
+                       ? hull.sizeTier
+                       : static_cast<Tier>(
+                             std::max(1, static_cast<int>(hull.sizeTier) - 1));
+    newSlot.style = hull.visual.bodyStyle;
+
+    // Position: find a "crowded" spot and mirror it or offset it
+    if (!hull.slots.empty()) {
+      const auto &ref = hull.slots[rand() % hull.slots.size()];
+      newSlot.localPos = ref.localPos + sf::Vector2f((rand() % 11) - 5.0f,
+                                                     (rand() % 11) - 5.0f);
+
+      // Enforce Engine/Forward boundaries
+      if (newSlot.role == SlotRole::Engine && newSlot.localPos.y < 2.0f)
+        newSlot.localPos.y = 5.0f;
+      if (newSlot.role != SlotRole::Engine && newSlot.localPos.y > -2.0f)
+        newSlot.localPos.y = -5.0f;
+    }
+    hull.slots.push_back(newSlot);
+  } else if (roll < 30 && hull.slots.size() > 4) {
+    // Remove a random slot (avoid removing the only command/engine/hardpoint)
+    int idx = rand() % hull.slots.size();
+    auto role = hull.slots[idx].role;
+    int roleCount = 0;
+    for (const auto &s : hull.slots)
+      if (s.role == role)
+        roleCount++;
+    if (roleCount > 1) {
+      hull.slots.erase(hull.slots.begin() + idx);
+    }
+  }
+
+  // 3. Metadata update
+  hull.className += " MK" + std::to_string(rand() % 10 + 1);
+  hull.name = hull.className;
+
+  return hull;
+}
+
 float HullGenerator::calculateMass(const TierDNA &tdna, Tier tier) {
   float base = static_cast<float>(tier) * 100.0f;
   // Volume and Durability contribute to mass

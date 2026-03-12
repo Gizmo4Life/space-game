@@ -110,10 +110,20 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
   }
   originEco.factionData[factionId].fleetPool[fleetKey] -= count;
 
-  for (int i = 0; i < count; ++i) {
-    auto ship = spawnShip(registry, factionId, pos, worldId_, primaryTier);
-    m.ships.push_back(ship);
+  m.record.tier = primaryTier;
+  // Role is determined by MissionType:
+  if (type == MissionType::Trade)
+    m.record.role = "Cargo";
+  else if (type == MissionType::Piracy)
+    m.record.role = "Combat";
+  else if (type == MissionType::Patrol || type == MissionType::Escort)
+    m.record.role = "Combat";
+  else
+    m.record.role = "General";
 
+  for (int i = 0; i < count; ++i) {
+    auto ship = spawnShip(registry, factionId, pos, worldId_, primaryTier,
+                          false, entt::null, m.record.role);
     auto &npc = registry.get<NPCComponent>(ship);
     npc.missionId = m.record.missionId;
     npc.homePlanet = m.origin;
@@ -178,6 +188,17 @@ void NPCShipManager::processMissions(entt::registry &registry, float dt) {
         }
         // Note: kills were already recorded in recordCombatDeath for the
         // specific outfit
+
+        // --- Evolutionary Trigger ---
+        // If mission failed completely and K/D is poor for this faction,
+        // evolve.
+        if (aliveCount == 0 || !it->record.success) {
+          float kd = fData->stats.getGlobalKillDeathValueRatio();
+          if (kd < 0.5f) {
+            FactionManager::instance().evolveShipLine(
+                it->record.factionId, it->record.tier, it->record.role);
+          }
+        }
       }
 
       if (aliveCount == 0) {
