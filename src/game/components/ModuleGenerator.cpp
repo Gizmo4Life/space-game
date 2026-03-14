@@ -39,6 +39,12 @@ ModuleGenerator::generate(ModuleCategory category,
   case ModuleCategory::ReactionWheel:
     catName = "Reaction Wheel";
     break;
+  case ModuleCategory::Habitation:
+    catName = "Habitation Module";
+    break;
+  case ModuleCategory::Cargo:
+    catName = "Cargo Bay";
+    break;
   }
 
   Tier sizeTier = Tier::T1;
@@ -99,6 +105,12 @@ ModuleGenerator::generate(ModuleCategory category,
     break;
   case ModuleCategory::Shield:
     catMult = 1.8f;
+    break;
+  case ModuleCategory::Habitation:
+    catMult = 1.6f;
+    break;
+  case ModuleCategory::Cargo:
+    catMult = 1.2f;
     break;
   case ModuleCategory::Battery:
   case ModuleCategory::ReactionWheel:
@@ -235,8 +247,25 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
     break;
   }
   case ModuleCategory::Utility: {
-    // Volume here is the *cargo bay* capacity tier, distinct from the
-    // physical Volume attribute above which tracks footprint efficiency
+    // Utility is now a generic catch-all, keeping it simple
+    auto eff = rollAttr();
+    eff.type = AttributeType::Efficiency;
+    attrs.push_back(eff);
+    break;
+  }
+  case ModuleCategory::Habitation: {
+    auto cap = rollAttr();
+    cap.type = AttributeType::Capacity;
+    attrs.push_back(cap);
+    auto eff = rollAttr();
+    eff.type = AttributeType::Efficiency;
+    attrs.push_back(eff);
+    break;
+  }
+  case ModuleCategory::Cargo: {
+    auto vol = rollAttr();
+    vol.type = AttributeType::Volume;
+    attrs.push_back(vol);
     auto eff = rollAttr();
     eff.type = AttributeType::Efficiency;
     attrs.push_back(eff);

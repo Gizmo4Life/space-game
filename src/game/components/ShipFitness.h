@@ -12,57 +12,48 @@ public:
   static float calculateCombatFitness(const ShipBlueprint &bp,
                                       const TierDNA &tdna) {
     float damage = 0.0f;
-    float defense = bp.hull.baseHitpoints * bp.hull.hpMultiplier;
     float mass = bp.hull.baseMass * bp.hull.massMultiplier;
     float thrust = 0.0f;
+    bool hasWeapons = false;
 
     for (const auto &m : bp.modules) {
       if (m.name.empty() || m.name == "Empty")
         continue;
 
-      // Damage scaling (Caliber is the main damage attribute)
-      if (m.hasAttribute(AttributeType::Caliber)) {
+      if (m.category == ModuleCategory::Weapon) {
+        hasWeapons = true;
         Tier cal = m.getAttributeTier(AttributeType::Caliber);
-        damage += (static_cast<float>(cal) * 10.0f);
+        Tier rof = m.getAttributeTier(AttributeType::ROF);
+        Tier range = m.getAttributeTier(AttributeType::Range);
+        damage += (static_cast<float>(cal) * 5.0f) +
+                  (static_cast<float>(rof) * 3.0f) +
+                  (static_cast<float>(range) * 2.0f);
       }
 
-      // Thrust scaling
       if (m.hasAttribute(AttributeType::Thrust)) {
-        Tier thr = m.getAttributeTier(AttributeType::Thrust);
-        thrust += (static_cast<float>(thr) * 1000.0f);
+        thrust += static_cast<float>(m.getAttributeTier(AttributeType::Thrust)) *
+                  1000.0f;
       }
-
-      // Shield capacity
-      if (m.hasAttribute(AttributeType::Capacity) &&
-          m.category == ModuleCategory::Shield) {
-        Tier cap = m.getAttributeTier(AttributeType::Capacity);
-        defense += (static_cast<float>(cap) * 50.0f);
-      }
-
       mass += m.mass;
     }
 
+    if (!hasWeapons)
+      return 0.0f;
+
     float twr = thrust / std::max(1.0f, mass);
+    float armorBonus = static_cast<float>(bp.hull.armorTier) * 0.2f;
+    float speedBonus = std::min(1.0f, twr / 50.0f) * 0.5f;
 
-    // Weights derived from prefDurability (DNA)
-    float dWeight = 0.3f + (tdna.prefDurability * 0.4f); // 0.3 to 0.7
-    float dmgWeight = 1.0f - dWeight;
+    // Normalizing damage score by hull size
+    float normDamage =
+        std::min(1.0f, damage / (static_cast<float>(bp.hull.sizeTier) * 50.0f));
 
-    // Normalized scores (rough approximations for T1-T3)
-    float normDamage = std::min(
-        1.0f, damage / (static_cast<float>(bp.hull.sizeTier) * 100.0f));
-    float normDefense = std::min(
-        1.0f, defense / (static_cast<float>(bp.hull.sizeTier) * 500.0f));
-    float normTWR = std::min(1.0f, twr / 50.0f);
-
-    return (normDamage * dmgWeight * 0.6f) + (normDefense * dWeight * 0.3f) +
-           (normTWR * 0.1f);
+    return normDamage * (1.0f + armorBonus) * (1.0f + speedBonus);
   }
 
   static float calculateTradeFitness(const ShipBlueprint &bp,
                                      const TierDNA &tdna) {
-    float cargoVol = 0.0f;
-    float defense = bp.hull.baseHitpoints * bp.hull.hpMultiplier;
+    float cargoCap = 0.0f;
     float mass = bp.hull.baseMass * bp.hull.massMultiplier;
     float thrust = 0.0f;
 
@@ -70,76 +61,58 @@ public:
       if (m.name.empty() || m.name == "Empty")
         continue;
 
-      if (m.category == ModuleCategory::Utility &&
+      if (m.category == ModuleCategory::Cargo &&
           m.hasAttribute(AttributeType::Volume)) {
-        Tier vol = m.getAttributeTier(AttributeType::Volume);
-        cargoVol += (static_cast<float>(vol) * 50.0f);
+        cargoCap += static_cast<float>(m.getAttributeTier(AttributeType::Volume)) * 50.0f;
       }
 
       if (m.hasAttribute(AttributeType::Thrust)) {
-        Tier thr = m.getAttributeTier(AttributeType::Thrust);
-        thrust += (static_cast<float>(thr) * 1000.0f);
-      }
-
-      if (m.hasAttribute(AttributeType::Capacity) &&
-          m.category == ModuleCategory::Shield) {
-        Tier cap = m.getAttributeTier(AttributeType::Capacity);
-        defense += (static_cast<float>(cap) * 50.0f);
+        thrust += static_cast<float>(m.getAttributeTier(AttributeType::Thrust)) *
+                  1000.0f;
       }
       mass += m.mass;
     }
 
     float twr = thrust / std::max(1.0f, mass);
+    float armorBonus = static_cast<float>(bp.hull.armorTier) * 0.1f;
+    float speedBonus = std::min(1.0f, twr / 30.0f) * 0.3f;
 
-    // Weights derived from prefVolume (DNA)
-    float vWeight = 0.4f + (tdna.prefVolume * 0.4f); // 0.4 to 0.8
-    float dWeight = 1.0f - vWeight;
+    float normCargo =
+        std::min(1.0f, cargoCap / (static_cast<float>(bp.hull.sizeTier) * 300.0f));
 
-    float normCargo = std::min(
-        1.0f, cargoVol / (static_cast<float>(bp.hull.sizeTier) * 300.0f));
-    float normDefense = std::min(
-        1.0f, defense / (static_cast<float>(bp.hull.sizeTier) * 400.0f));
-    float normTWR =
-        std::min(1.0f, twr / 30.0f); // Lower TWR requirement for trade
-
-    return (normCargo * vWeight * 0.7f) + (normDefense * dWeight * 0.2f) +
-           (normTWR * 0.1f);
+    return normCargo * (1.0f + armorBonus) * (1.0f + speedBonus);
   }
 
   static float calculateTransportFitness(const ShipBlueprint &bp,
                                          const TierDNA &tdna) {
-    // Transport focuses on Speed (TWR) and Efficiency/Reliability
-    float thrust = 0.0f;
+    float passengerCap = 0.0f;
     float mass = bp.hull.baseMass * bp.hull.massMultiplier;
-    float efficiency = 0.0f;
-    float defense = bp.hull.baseHitpoints * bp.hull.hpMultiplier;
+    float thrust = 0.0f;
 
     for (const auto &m : bp.modules) {
       if (m.name.empty() || m.name == "Empty")
         continue;
 
+      if (m.category == ModuleCategory::Habitation &&
+          m.hasAttribute(AttributeType::Capacity)) {
+        passengerCap += static_cast<float>(m.getAttributeTier(AttributeType::Capacity)) * 5.0f;
+      }
+
       if (m.hasAttribute(AttributeType::Thrust)) {
-        Tier thr = m.getAttributeTier(AttributeType::Thrust);
-        thrust += (static_cast<float>(thr) * 1000.0f);
+        thrust += static_cast<float>(m.getAttributeTier(AttributeType::Thrust)) *
+                  1000.0f;
       }
-
-      if (m.hasAttribute(AttributeType::Efficiency)) {
-        Tier eff = m.getAttributeTier(AttributeType::Efficiency);
-        efficiency += static_cast<float>(eff);
-      }
-
-      defense += m.maintenanceCost * 0.1f; // Proxy for reliability?
       mass += m.mass;
     }
 
     float twr = thrust / std::max(1.0f, mass);
-    float normTWR = std::min(1.0f, twr / 60.0f); // Fast transport
-    float normEff = std::min(
-        1.0f, efficiency / (static_cast<float>(bp.modules.size()) * 3.0f));
-    float normDefense = std::min(
-        1.0f, defense / (static_cast<float>(bp.hull.sizeTier) * 300.0f));
+    float armorBonus = static_cast<float>(bp.hull.armorTier) * 0.05f;
+    float speedBonus = std::min(1.0f, twr / 60.0f) * 0.4f;
 
-    return (normTWR * 0.5f) + (normEff * 0.3f) + (normDefense * 0.2f);
+    float normPassengers = std::min(
+        1.0f, passengerCap / (static_cast<float>(bp.hull.sizeTier) * 40.0f));
+
+    return normPassengers * (1.0f + armorBonus) * (1.0f + speedBonus);
   }
 
   static float calculateGeneralFitness(const ShipBlueprint &bp,

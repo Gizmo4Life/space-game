@@ -36,7 +36,9 @@ enum class ModuleCategory {
   Command,
   Battery,
   Ammo,         // Physical storage rack for ammunition
-  ReactionWheel // Provides TurnRate attribute
+  ReactionWheel, // Provides TurnRate attribute
+  Habitation,    // Capacity for crew and passengers
+  Cargo          // Dedicated cargo capacity
 };
 
 enum class LayoutPattern { Symmetrical, Radial, Asymmetrical, Alternating };

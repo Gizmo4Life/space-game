@@ -44,6 +44,11 @@ struct InstalledPassengers {
   float count = 0.f;
 };
 
+struct InstalledHabitation {
+  std::vector<ModuleDef> modules;
+  float totalCapacity = 0.f;
+};
+
 struct InstalledFuel {
   std::vector<ModuleDef> modules;
   float capacity = 0.f;

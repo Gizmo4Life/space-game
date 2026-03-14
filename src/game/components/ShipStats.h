@@ -21,8 +21,14 @@ struct ShipStats {
   float restingPowerDraw = 0.0f;       // Net GW draw (negative = surplus)
   float internalVolumeOccupied = 0.0f; // Total m^3 used by modules
 
+  // Population and Resources
+  float passengerCapacity = 0.0f;
+  float crewPopulation = 0.0f;
+  float passengerPopulation = 0.0f;
+  float minCrew = 0.0f;
+  float foodStock = 0.0f;
+
   bool isDerelict = false;
-  bool massDirty = true; // Flag for KinematicsSystem to throttle updates
   float empTimer = 0.0f; // Seconds remaining of EMP incapacitation
 };
 

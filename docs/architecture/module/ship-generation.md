@@ -19,8 +19,12 @@ The Ship Generation system is responsible for creating diverse, role-optimized v
 
 ## 3. Evolutionary Loop
 1. **Candidate Selection**: `ShipOutfitter` generates 4 candidates per request and selects the fittest based on `ShipFitness`.
-2. **Generational Shifting**: If a ship line's K/D ratio falls below 0.5, `NPCShipManager` triggers `FactionManager::evolveShipLine`.
-3. **Edit-Distance Mutation**: `HullGenerator::mutateHull` creates a successor generation by applying small changes (slots, mass, volume) to the previous design.
+2. **Fitness Logic**:
+    - **Combat**: Requires at least one weapon (else fitness = 0). Base score from weapon attributes (Caliber, ROF, Range).
+    - **Trade/Transport**: Driven by `Cargo` and `Habitation` capacities.
+    - **Multipliers**: Base scores are multiplied by bonuses for Armor (Hull Tier) and Speed (TWR).
+3. **Generational Shifting**: If a ship line's K/D ratio falls below 0.5, `NPCShipManager` triggers `FactionManager::evolveShipLine`.
+4. **Edit-Distance Mutation**: `HullGenerator::mutateHull` creates a successor generation by applying small changes (slots, mass, volume) to the previous design.
 
 ## 4. Telemetry & Observability
 - `game.generation.blueprint.generate`: Basic generation span. Attributes: `vessel.fitness`, `vessel.role`.

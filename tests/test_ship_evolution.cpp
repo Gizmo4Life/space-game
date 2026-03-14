@@ -111,3 +111,66 @@ TEST_CASE("Selection Pressure in Outfitter", "[evolution]") {
     REQUIRE(npc.lineIndex == 7);
   }
 }
+
+TEST_CASE("Fitness Multipliers and Edge Cases", "[evolution]") {
+  TierDNA tdna;
+  ShipBlueprint bp;
+  bp.hull.sizeTier = Tier::T2;
+  bp.hull.armorTier = Tier::T1;
+  bp.hull.baseHitpoints = 500.0f;
+  bp.hull.hpMultiplier = 1.0f;
+  bp.hull.baseMass = 200.0f;
+  bp.hull.massMultiplier = 1.0f;
+
+  SECTION("Combat fitness is zero without weapons") {
+    // No modules added yet
+    REQUIRE(ShipFitness::calculateCombatFitness(bp, tdna) == 0.0f);
+
+    ModuleDef engine;
+    engine.category = ModuleCategory::Engine;
+    engine.attributes = {{AttributeType::Thrust, Tier::T2}};
+    bp.modules.push_back(engine);
+
+    // Still zero because no weapons
+    REQUIRE(ShipFitness::calculateCombatFitness(bp, tdna) == 0.0f);
+  }
+
+  SECTION("Fitness improves with armor and speed") {
+    ModuleDef weapon;
+    weapon.category = ModuleCategory::Weapon;
+    weapon.attributes = {{AttributeType::Caliber, Tier::T2}, {AttributeType::ROF, Tier::T2}};
+    bp.modules.push_back(weapon);
+
+    ModuleDef engine;
+    engine.category = ModuleCategory::Engine;
+    engine.attributes = {{AttributeType::Thrust, Tier::T1}};
+    bp.modules.push_back(engine);
+
+    float baseFitness = ShipFitness::calculateCombatFitness(bp, tdna);
+    REQUIRE(baseFitness > 0.0f);
+
+    // Improve armor
+    bp.hull.armorTier = Tier::T3;
+    float betterArmorFitness = ShipFitness::calculateCombatFitness(bp, tdna);
+    REQUIRE(betterArmorFitness > baseFitness);
+
+    // Improve engine
+    bp.modules[1].attributes[0].tier = Tier::T3;
+    float betterEngineFitness = ShipFitness::calculateCombatFitness(bp, tdna);
+    REQUIRE(betterEngineFitness > betterArmorFitness);
+  }
+
+  SECTION("Transport fitness scales with habitation modules") {
+    ModuleDef hab;
+    hab.category = ModuleCategory::Habitation;
+    hab.attributes = {{AttributeType::Capacity, Tier::T1}};
+    bp.modules.push_back(hab);
+
+    float lowCapFitness = ShipFitness::calculateTransportFitness(bp, tdna);
+    REQUIRE(lowCapFitness > 0.0f);
+
+    bp.modules[0].attributes[0].tier = Tier::T3;
+    float highCapFitness = ShipFitness::calculateTransportFitness(bp, tdna);
+    REQUIRE(highCapFitness > lowCapFitness);
+  }
+}

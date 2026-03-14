@@ -268,6 +268,7 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   InstalledCommand icmd;
   InstalledBatteries ib;
   InstalledReactionWheels irw;
+  InstalledHabitation ih;
 
   auto isEmpty = [](const ModuleDef &m) {
     return m.name.empty() || m.name == "Empty";
@@ -310,6 +311,12 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
     case ModuleCategory::ReactionWheel:
       irw.modules.push_back(m);
       break;
+    case ModuleCategory::Habitation:
+      ih.modules.push_back(m);
+      break;
+    case ModuleCategory::Cargo:
+      ic.modules.push_back(m);
+      break;
     default:
       break;
     }
@@ -320,6 +327,7 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   registry.emplace_or_replace<InstalledCommand>(entity, icmd);
   registry.emplace_or_replace<InstalledShields>(entity, is);
   registry.emplace_or_replace<InstalledCargo>(entity, ic);
+  registry.emplace_or_replace<InstalledHabitation>(entity, ih);
   registry.emplace_or_replace<InstalledPower>(entity, ip);
   registry.emplace_or_replace<InstalledBatteries>(entity, ib);
   registry.emplace_or_replace<InstalledReactionWheels>(entity, irw);
@@ -662,6 +670,61 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
         ic.capacity +=
             getMult(m.getAttributeTier(AttributeType::Volume)) * 50.0f;
     }
+  }
+
+  // --- Habitation and Population ---
+  stats.passengerCapacity = 0;
+  stats.minCrew = 0;
+
+  struct HabModuleInfo {
+    const ModuleDef *def;
+    float capacity;
+    float efficiency;
+  };
+  std::vector<HabModuleInfo> habModules;
+
+  if (registry.all_of<InstalledHabitation>(entity)) {
+    auto &ih = registry.get<InstalledHabitation>(entity);
+    ih.totalCapacity = 0;
+    sumModules(ih.modules);
+    for (const auto &m : ih.modules) {
+      if (m.name.empty() || m.name == "Empty")
+        continue;
+      float cap = getMult(m.getAttributeTier(AttributeType::Capacity)) * 10.0f;
+      float eff = 1.0f / getMult(m.getAttributeTier(AttributeType::Efficiency));
+      ih.totalCapacity += cap;
+      stats.passengerCapacity += cap;
+      habModules.push_back({&m, cap, eff});
+    }
+  }
+
+  if (registry.all_of<InstalledCommand>(entity)) {
+    auto &icmd = registry.get<InstalledCommand>(entity);
+    sumModules(icmd.modules);
+    // Placeholder: min crew based on command module count and hull size
+    stats.minCrew += static_cast<float>(icmd.modules.size()) * (1.0f + static_cast<int>(hull.sizeTier) * 2.0f);
+  }
+
+  // Sort hab modules by efficiency (best first)
+  std::sort(habModules.begin(), habModules.end(), [](const HabModuleInfo &a, const HabModuleInfo &b) {
+    return a.efficiency < b.efficiency;
+  });
+
+  // Distribute population
+  float totalPop = stats.crewPopulation + stats.passengerPopulation;
+  float remainingPop = totalPop;
+  stats.foodStock = std::max(0.0f, stats.foodStock); // Ensure non-negative
+
+  for (auto &hab : habModules) {
+    float assigned = std::min(remainingPop, hab.capacity);
+    if (assigned > 0) {
+      // Consume power if module is occupied
+      stats.restingPowerDraw += hab.def->powerDraw;
+      // Consume food (base rate * assigned pop * efficiency)
+      float foodRate = 0.01f * hab.efficiency;
+      stats.foodStock -= assigned * foodRate;
+    }
+    remainingPop -= assigned;
   }
   if (registry.all_of<InstalledPower>(entity)) {
     auto &ip = registry.get<InstalledPower>(entity);

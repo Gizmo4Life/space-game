@@ -11,7 +11,7 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 
 ## 1. Physical Scope
 - **Path:** `/src/game/` — `WorldLoader.h/.cpp`, `ShipOutfitter.h/.cpp`, `components/ShipConfig.h`, `components/ModuleGenerator.h/.cpp`
-- **Components:** `HullDef`, `ShipModule`, `ShipStats`, `ShipConfig`, `AmmoDef`, `InstalledAmmo`
+- **Components:** `HullDef`, `ShipModule`, `ShipStats`, `ShipConfig`, `AmmoDef`, `InstalledAmmo`, `InstalledHabitation`
 - **Ownership:** Core Engine Team
 
 ## 2. Capability Alignment
@@ -20,7 +20,7 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 
 ## 3. Key Systems
 - **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses a **Unified Slot System** where modules are mapped to `SlotRole` types. Handles technical validation: ensure at least one `Command` slot is present, manages power balance, and enforces volume bounds for `AmmoMagazine`. Implement relaxed **Module Tier Logic** (70% match for non-elites) and **Attribute Variance** (15% chance to roll +1 tier) to ensure competitive common vessels. Also calculates `rotationSpeed` using a balanced `baseTurnRate` (1500) for softer steering feel. **Persistent Economy Support**: Includes `applyBlueprint` overloads to support spawning ships from pre-calculated blueprints and automatically populates initial ammo (20 rounds) for projectile and missile weapons using `InstalledAmmo`.
-- **ModuleGenerator**: Procedural factory for creating `ModuleDef` and `AmmoDef` variants. Scales attributes (Mass, Volume, Thrust, Output) based on Tier and Faction DNA. Now supports explicit `WeaponType` generation to ensure hull hardpoints are correctly typed.
+- **ModuleGenerator**: Procedural factory for creating `ModuleDef` and `AmmoDef` variants. Scales attributes (Mass, Volume, Thrust, Output) based on Tier and Faction DNA. Now supports explicit `WeaponType` generation and specialized categories including `Habitation` (population support) and `Cargo` (dedicated storage).
 - **PowerSystem**: Manages energy production via Isotope Reactors (exponential fuel decay) and buffer storage in Batteries. Updates `batteryLevel` for energy weapon draw.
 - **ShipConfig**: Static registry of hull definitions and default outfits. Replaces hardcoded mappings within the outfitter to allow for data-driven ship balancing.
 - **ModuleRegistry**: Singleton catalogue for all available ship modules.
