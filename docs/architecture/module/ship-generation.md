@@ -3,6 +3,7 @@ id: ship-generation
 type: doc-t3-module
 pillar: game
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Ship Generation
 
 # Module: Ship Generation & Evolution
 

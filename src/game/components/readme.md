@@ -1,12 +1,13 @@
+[Home](file:///Users/Dan/repos/space-game/readme.md) > [Standard](file:///Users/Dan/repos/space-game/docs/governance/standard/game-tech-stack.md)
+
 # /src/game/components/
 
-→ [T3 Module: Game Core](/docs/architecture/module/game-core.md)
-→ [T3 Module: Game Economy](/docs/architecture/module/game-economy.md)
-→ [T3 Module: Game Factions](/docs/architecture/module/game-factions.md)
-→ [T3 Module: Game NPC](/docs/architecture/module/game-npc.md)
-→ [T3 Module: Ship Generation](/docs/architecture/module/ship-generation.md)
-→ [T3 Module: Engine Combat](/docs/architecture/module/engine-combat.md)
-→ [Standard: Game Tech Stack](/docs/governance/standard/game-tech-stack.md)
+This directory contains the core ECS components and procedural generation logic for the space game.
+
+→ [T3 Module: Ship Modules System](/docs/architecture/module/game-modules.md)
+
+## Local Context
+- **Testing**: `./build/SpaceGameTests "[evolution]"` or `./build/SpaceGameTests "[modules]"`
 
 ## Components
 - `ShipConfig.h` — Static hull and outfit registry
