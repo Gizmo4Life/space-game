@@ -1,9 +1,9 @@
 #include "RenderSystem.h"
+#include "FleetOverlay.h"
 #include "ShipRenderer.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/components/CelestialBody.h"
-#include "game/components/Economy.h"
 #include "game/components/Faction.h"
 #include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
@@ -19,7 +19,6 @@
 #include "game/components/WorldConfig.h"
 #include <SFML/Graphics.hpp>
 #include <cmath>
-#include <iostream>
 #include <opentelemetry/trace/provider.h>
 #include <string>
 #include <vector>
@@ -81,6 +80,9 @@ static void drawHUD(entt::registry &registry, entt::entity player,
       drawTelText("FORC: " + std::to_string((int)ib.thrustForce) + " N");
     }
   }
+
+  // --- Fleet Status Overlay ---
+  FleetOverlay::draw(registry, target, *font);
 
   // --- Old HUD Logic ---
   float hudWidth = 280.0f;
@@ -171,7 +173,7 @@ static void drawHUD(entt::registry &registry, entt::entity player,
       if (registry.all_of<ShipStats>(player)) {
         physStr +=
             "  MASS: " +
-            std::to_string((int)registry.get<ShipStats>(player).totalMass) +
+            std::to_string((int)registry.get<ShipStats>(player).wetMass) +
             " t";
       }
       drawText(physStr, 12, sf::Color(180, 180, 180));

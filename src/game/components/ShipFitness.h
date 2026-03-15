@@ -25,13 +25,14 @@ public:
         Tier cal = m.getAttributeTier(AttributeType::Caliber);
         Tier rof = m.getAttributeTier(AttributeType::ROF);
         Tier range = m.getAttributeTier(AttributeType::Range);
-        damage += (static_cast<float>(cal) * 5.0f) +
-                  (static_cast<float>(rof) * 3.0f) +
-                  (static_cast<float>(range) * 2.0f);
+        float f_cal = 1.0f + static_cast<float>(cal);
+        float f_rof = 1.0f + static_cast<float>(rof);
+        float f_range = 1.0f + static_cast<float>(range);
+        damage += (f_cal * 5.0f) + (f_rof * 3.0f) + (f_range * 2.0f);
       }
 
       if (m.hasAttribute(AttributeType::Thrust)) {
-        thrust += static_cast<float>(m.getAttributeTier(AttributeType::Thrust)) *
+        thrust += (1.0f + static_cast<float>(m.getAttributeTier(AttributeType::Thrust))) *
                   1000.0f;
       }
       mass += m.mass;
@@ -41,12 +42,12 @@ public:
       return 0.0f;
 
     float twr = thrust / std::max(1.0f, mass);
-    float armorBonus = static_cast<float>(bp.hull.armorTier) * 0.2f;
+    float armorBonus = (1.0f + static_cast<float>(bp.hull.armorTier)) * 0.2f;
     float speedBonus = std::min(1.0f, twr / 50.0f) * 0.5f;
 
     // Normalizing damage score by hull size
     float normDamage =
-        std::min(1.0f, damage / (static_cast<float>(bp.hull.sizeTier) * 50.0f));
+        std::min(1.0f, damage / ((1.0f + static_cast<float>(bp.hull.sizeTier)) * 50.0f));
 
     return normDamage * (1.0f + armorBonus) * (1.0f + speedBonus);
   }
@@ -56,6 +57,7 @@ public:
     float cargoCap = 0.0f;
     float mass = bp.hull.baseMass * bp.hull.massMultiplier;
     float thrust = 0.0f;
+    bool hasCargo = false;
 
     for (const auto &m : bp.modules) {
       if (m.name.empty() || m.name == "Empty")
@@ -63,22 +65,26 @@ public:
 
       if (m.category == ModuleCategory::Cargo &&
           m.hasAttribute(AttributeType::Volume)) {
-        cargoCap += static_cast<float>(m.getAttributeTier(AttributeType::Volume)) * 50.0f;
+        hasCargo = true;
+        cargoCap += (1.0f + static_cast<float>(m.getAttributeTier(AttributeType::Volume))) * 50.0f;
       }
 
       if (m.hasAttribute(AttributeType::Thrust)) {
-        thrust += static_cast<float>(m.getAttributeTier(AttributeType::Thrust)) *
+        thrust += (1.0f + static_cast<float>(m.getAttributeTier(AttributeType::Thrust))) *
                   1000.0f;
       }
       mass += m.mass;
     }
 
+    if (!hasCargo)
+      return 0.0f;
+
     float twr = thrust / std::max(1.0f, mass);
-    float armorBonus = static_cast<float>(bp.hull.armorTier) * 0.1f;
+    float armorBonus = (1.0f + static_cast<float>(bp.hull.armorTier)) * 0.1f;
     float speedBonus = std::min(1.0f, twr / 30.0f) * 0.3f;
 
     float normCargo =
-        std::min(1.0f, cargoCap / (static_cast<float>(bp.hull.sizeTier) * 300.0f));
+        std::min(1.0f, cargoCap / ((1.0f + static_cast<float>(bp.hull.sizeTier)) * 300.0f));
 
     return normCargo * (1.0f + armorBonus) * (1.0f + speedBonus);
   }
@@ -88,6 +94,7 @@ public:
     float passengerCap = 0.0f;
     float mass = bp.hull.baseMass * bp.hull.massMultiplier;
     float thrust = 0.0f;
+    bool hasHabitation = false;
 
     for (const auto &m : bp.modules) {
       if (m.name.empty() || m.name == "Empty")
@@ -95,22 +102,26 @@ public:
 
       if (m.category == ModuleCategory::Habitation &&
           m.hasAttribute(AttributeType::Capacity)) {
-        passengerCap += static_cast<float>(m.getAttributeTier(AttributeType::Capacity)) * 5.0f;
+        hasHabitation = true;
+        passengerCap += (1.0f + static_cast<float>(m.getAttributeTier(AttributeType::Capacity))) * 5.0f;
       }
 
       if (m.hasAttribute(AttributeType::Thrust)) {
-        thrust += static_cast<float>(m.getAttributeTier(AttributeType::Thrust)) *
+        thrust += (1.0f + static_cast<float>(m.getAttributeTier(AttributeType::Thrust))) *
                   1000.0f;
       }
       mass += m.mass;
     }
 
+    if (!hasHabitation)
+      return 0.0f;
+
     float twr = thrust / std::max(1.0f, mass);
-    float armorBonus = static_cast<float>(bp.hull.armorTier) * 0.05f;
+    float armorBonus = (1.0f + static_cast<float>(bp.hull.armorTier)) * 0.05f;
     float speedBonus = std::min(1.0f, twr / 60.0f) * 0.4f;
 
     float normPassengers = std::min(
-        1.0f, passengerCap / (static_cast<float>(bp.hull.sizeTier) * 40.0f));
+        1.0f, passengerCap / ((1.0f + static_cast<float>(bp.hull.sizeTier)) * 40.0f));
 
     return normPassengers * (1.0f + armorBonus) * (1.0f + speedBonus);
   }
@@ -139,16 +150,17 @@ public:
     wTrade /= totalW;
     wTransport /= totalW;
 
-    // Apply specialization modifier
-    // High specialization = favor the highest score even more
-    if (tdna.specialization > 0.7f) {
-      float maxScore = std::max({cScore, tScore, pScore});
-      return (maxScore * 0.6f) +
-             ((cScore * wCombat + tScore * wTrade + pScore * wTransport) *
-              0.4f);
+    // Versatility Bonus: Reward the "General" ship for being proficient in ALL 3
+    float versatilityBonus = 1.0f;
+    if (cScore > 0.2f && tScore > 0.2f && pScore > 0.2f) {
+      versatilityBonus = 1.5f; // Significant bump for being a true multi-role craft
+    } else if (cScore <= 0.05f || tScore <= 0.05f || pScore <= 0.05f) {
+      versatilityBonus = 0.5f; // Penalty for missing a core proficiency
     }
 
-    return (cScore * wCombat) + (tScore * wTrade) + (pScore * wTransport);
+    float weightedScore =
+        (cScore * wCombat) + (tScore * wTrade) + (pScore * wTransport);
+    return weightedScore * versatilityBonus;
   }
 };
 

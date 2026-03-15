@@ -66,6 +66,16 @@
                 "critical": 5,
                 "warning": 10
             }
+        },
+        {
+            "name": "Vessel Survival (Deaths)",
+            "description": "Total deaths due to starvation/power failure",
+            "query": "SELECT sumIf(attributes['vessel.deaths']) AS total_deaths FROM signoz_index.traces WHERE serviceName = 'SpaceGame' AND name IN ('engine.resource.starvation', 'engine.resource.power_failure_death') GROUP BY time",
+            "type": "graph",
+            "thresholds": {
+                "critical": 1.0,
+                "warning": 0.1
+            }
         }
     ],
     "layout": [
@@ -108,6 +118,13 @@
             "id": 5,
             "x": 0,
             "y": 12,
+            "w": 12,
+            "h": 4
+        },
+        {
+            "id": 6,
+            "x": 0,
+            "y": 16,
             "w": 12,
             "h": 4
         }

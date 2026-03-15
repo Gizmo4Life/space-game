@@ -97,4 +97,7 @@ enum class NamingScheme {
 
 using ShipOutfitHash = uint64_t;
 
+// Timescale: 1 minute real time = 1 game day
+constexpr float GAME_SECONDS_PER_DAY = 60.0f;
+
 } // namespace space

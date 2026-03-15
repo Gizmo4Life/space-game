@@ -68,6 +68,8 @@ graph TD
 - [cpp-header-hygiene](cpp-header-hygiene.md)
 - [cpp-explicit-namespace-resolution](cpp-explicit-namespace-resolution.md)
 - [cpp-component-aggregation](cpp-component-aggregation.md)
+- [cpp-visibility-promotion](cpp-visibility-promotion.md): Promoting private members for testability.
+- [cpp-sdk-type-completion](cpp-sdk-type-completion.md): Managing smart pointer ownership with incomplete implementation types.
 
 ## 4. CI/CD & Infrastructure
 *Nuance: Patterns governing the automated deployment and verification pipeline.*
@@ -78,6 +80,9 @@ graph TD
 - [cicd-secret-vaulting](cicd-secret-vaulting.md)
 - [cicd-test-layering](cicd-test-layering.md)
 - [cicd-vulnerability-scan](cicd-vulnerability-scan.md)
+- [cicd-shadow-build](cicd-shadow-build.md): Out-of-tree builds for permission resilience.
+- [cicd-fetchcontent-dependency](cicd-fetchcontent-dependency.md): Automated dependency acquisition.
+- [cicd-hybrid-dependency-acquisition](cicd-hybrid-dependency-acquisition.md): Prioritizing local dependencies with automated remote fallback.
 - [doc-gov-protocol](doc-gov-protocol.md)
 - [doc-gov-standard](doc-gov-standard.md)
 - [doc-ext-contract](doc-ext-contract.md)
@@ -91,6 +96,7 @@ graph TD
 - [doc-ops-restoration-step](doc-ops-restoration-step.md)
 - [ops-triage-path](ops-triage-path.md)
 - [ops-escalation-path](ops-escalation-path.md)
+- [ops-scoped-resource-discovery](ops-scoped-resource-discovery.md): Progressive search strategy to avoid permission flakes.
 
 ## 6. Game Engine & Simulation
 *Nuance: Shapes for high-performance C++ games, Newtonian physics, and runtime observability.*
@@ -137,3 +143,16 @@ graph TD
 - [doc-ops-monolithic-runbook](doc-ops-monolithic-runbook.md)
 - [doc-ops-unverified-mitigation](doc-ops-unverified-mitigation.md)
 - [readme-long-prose](readme-long-prose.md)
+
+### Index Map
+```yaml
+index_map:
+  Elicitation: [doc-context-elicitation, doc-elicitation-clarity, doc-elicitation-exclusivity, doc-elicitation-traceability, doc-elicitation-premise, doc-elicitation-questioning]
+  Geometry: [doc-t1-landscape, doc-t2-capability, doc-t2-with-code, doc-t3-module, doc-t3-with-biz-logic, doc-pillar-ownership, doc-module-dependency, doc-dichotomy]
+  Logic: [logic-idempotency, logic-test-first, test-case-duality, padu-evaluation, trade-static-interface, cpp-header-hygiene, cpp-explicit-namespace-resolution, cpp-component-aggregation, cpp-visibility-promotion, cpp-sdk-type-completion]
+  CICD: [cicd-immutable-artifact, cicd-isolated-build, cicd-prioritized-testing, cicd-reproducible-build, cicd-secret-vaulting, cicd-test-layering, cicd-vulnerability-scan, cicd-shadow-build, cicd-fetchcontent-dependency, cicd-hybrid-dependency-acquisition, doc-gov-protocol, doc-gov-standard, doc-ext-contract, doc-ext-integration]
+  Ops: [doc-ops-alert, doc-ops-span-runbook, doc-ops-unified-runbook, doc-ops-restoration-step, ops-triage-path, ops-escalation-path, ops-scoped-resource-discovery]
+  Engine: [cpp-ecs-component, cpp-ecs-system-static, cpp-singleton-manager, kinematics-newtonian-2d, rendering-spatial-bridge, rendering-offscreen-indicator, rendering-pause-overlay, rendering-dual-scale, world-procedural-generation, npc-ai-state-machine, npc-fleet-leader-boids, otel-span-instrumentation, economy-resource-chain, economy-dynamic-pricing, economy-competitive-market, economy-infrastructure-expansion, dna-weighted-infrastructure-expansion, faction-relationship-matrix, ship-modular-composition, procedural-hull-generation, faction-dna-genetic-profile, evolutionary-strategy-drift, mission-performance-feedback-loop]
+  UX: [doc-breadcrumb-navigation, doc-flat-hierarchy, doc-yaml-metadata, doc-structured-readme, signpost-readme, doc-walkthrough, ext-greenfield-context, ext-brownfield-context]
+  AntiPatterns: [doc-directory-nesting, doc-monolithic-wiki, doc-narrative-paragraphs, doc-ops-monolithic-runbook, doc-ops-unverified-mitigation, readme-long-prose]
+```

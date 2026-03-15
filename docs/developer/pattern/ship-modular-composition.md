@@ -21,3 +21,5 @@ This pattern replaces role-based inheritance (e.g., "Passenger Ship") with prope
 - The ship entity has a `HullComponent`.
 - Modules are correctly attached to valid mounts or hardpoints.
 - `ShipStats` derived from the composition (Mass, Thrust, Power) are updated correctly.
+- **Role Continuity**: Combat-roled ships retain $\geq 1$ weapon; Cargo-roled ships retain $\geq 1$ cargo pod.
+- **Functional Sync**: `InstalledAmmo` (inventory) matches `AmmoMagazine` (combat stack).

@@ -46,10 +46,14 @@ int main() {
   if (gameFont.openFromFile(
           "/System/Library/Fonts/Supplemental/Arial Unicode.ttf") ||
       gameFont.openFromFile("/Library/Fonts/Arial Unicode.ttf") ||
+      gameFont.openFromFile("/System/Library/Fonts/SFNS.ttf") ||
+      gameFont.openFromFile("/System/Library/Fonts/SFCompact.ttf") ||
       gameFont.openFromFile("/System/Library/Fonts/Menlo.ttc") ||
       gameFont.openFromFile("/System/Library/Fonts/Helvetica.ttc") ||
       gameFont.openFromFile("/System/Library/Fonts/Supplemental/Arial.ttf") ||
-      gameFont.openFromFile("/Library/Fonts/Arial.ttf")) {
+      gameFont.openFromFile("/Library/Fonts/Arial.ttf") ||
+      gameFont.openFromFile("Arial.ttf") || 
+      gameFont.openFromFile("Helvetica.ttf")) {
     fontLoaded = true;
   }
 

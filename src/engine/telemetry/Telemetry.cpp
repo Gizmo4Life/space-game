@@ -6,6 +6,7 @@
 #include <opentelemetry/sdk/resource/resource.h>
 #include <opentelemetry/sdk/trace/batch_span_processor_factory.h>
 #include <opentelemetry/sdk/trace/batch_span_processor_options.h>
+#include <opentelemetry/sdk/trace/exporter.h>
 #include <opentelemetry/sdk/trace/processor.h>
 #include <opentelemetry/sdk/trace/tracer_provider.h>
 #include <opentelemetry/sdk/trace/tracer_provider_factory.h>
@@ -52,7 +53,7 @@ void Telemetry::init(const std::string &serviceName,
     std::cout << "[Telemetry] Falling back to stdout exporter\n";
   }
 
-  // --- Batch processor (flushes every 5s or 512 spans) ---
+  // --- Batch processor ---
   trace_sdk::BatchSpanProcessorOptions procOpts;
   procOpts.max_queue_size = 2048;
   procOpts.schedule_delay_millis = std::chrono::milliseconds(5000);
@@ -65,11 +66,13 @@ void Telemetry::init(const std::string &serviceName,
   auto res = resource::Resource::Create({{"service.name", serviceName}});
 
   // --- Provider ---
-  auto provider =
-      std::make_shared<trace_sdk::TracerProvider>(std::move(processor), res);
-
+  // The SDK TracerProvider implements the API TracerProvider.
+  // Construct it directly as a raw pointer then let nostd::shared_ptr take ownership.
+  auto sdkProvider = new trace_sdk::TracerProvider(std::move(processor), res);
+  
+  // Set as the global provider
   trace_api::Provider::SetTracerProvider(
-      opentelemetry::nostd::shared_ptr<trace_api::TracerProvider>(provider));
+      opentelemetry::nostd::shared_ptr<trace_api::TracerProvider>(sdkProvider));
 
   initialized_ = true;
   std::cout << "[Telemetry] Initialized (" << serviceName << ")\n";
@@ -81,7 +84,6 @@ void Telemetry::shutdown() {
 
   auto provider = trace_api::Provider::GetTracerProvider();
   if (provider) {
-    // Force flush via the tracer provider
     auto *sdkProvider =
         dynamic_cast<trace_sdk::TracerProvider *>(provider.get());
     if (sdkProvider) {

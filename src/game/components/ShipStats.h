@@ -17,7 +17,8 @@ struct ShipStats {
   float fuelMass = 0.f;
   float ammoMass = 0.f;
   float cargoMass = 0.f;
-  float totalMass = 1.0f;
+  float dryMass = 1.0f;  // Hull + Modules (static)
+  float wetMass = 1.0f;  // dryMass + Fuel + Cargo + Ammo (dynamic)
   float restingPowerDraw = 0.0f;       // Net GW draw (negative = surplus)
   float internalVolumeOccupied = 0.0f; // Total m^3 used by modules
 
@@ -26,10 +27,34 @@ struct ShipStats {
   float crewPopulation = 0.0f;
   float passengerPopulation = 0.0f;
   float minCrew = 0.0f;
+
   float foodStock = 0.0f;
+  float foodCapacity = 0.0f;
+  float fuelStock = 0.0f;
+  float fuelCapacity = 0.0f;
+  float isotopesStock = 0.0f;
+  float isotopesCapacity = 0.0f;
+  float ammoStock = 0.0f;
+  float ammoCapacity = 0.0f;
+
+  // Consumption rates (units per second)
+  float foodConsumption = 0.0f;
+  float fuelConsumption = 0.0f;
+  float isotopesConsumption = 0.0f;
+  float ammoConsumption = 0.0f;
 
   bool isDerelict = false;
+  bool controlLoss = false;
   float empTimer = 0.0f; // Seconds remaining of EMP incapacitation
+  float powerFailureTimer = 0.0f; // Seconds until crew dies from no power
+
+  // Time to Exhaustion (TTE) - Seconds until zero
+  float fuelTTE = -1.0f;
+  float foodTTE = -1.0f;
+  float isotopesTTE = -1.0f;
+  float ammoTTE = -1.0f;
+
+  bool massDirty = true;
 };
 
 } // namespace space

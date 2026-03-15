@@ -64,7 +64,8 @@ TEST_CASE("KinematicsSystem Wet Mass Impact", "[physics][kinematics]") {
 
   SECTION("Base mass calculation") {
     KinematicsSystem::update(registry, 0.01f);
-    REQUIRE((stats.totalMass == 100.0f));
+    REQUIRE((stats.dryMass == 100.0f));
+    REQUIRE((stats.wetMass == 100.0f));
 
     b2MassData mass = b2Body_GetMassData(bodyId);
     REQUIRE((mass.mass == 100.0f));
@@ -76,7 +77,7 @@ TEST_CASE("KinematicsSystem Wet Mass Impact", "[physics][kinematics]") {
     stats.massDirty = true;
 
     KinematicsSystem::update(registry, 0.01f);
-    REQUIRE((stats.totalMass == 150.0f));
+    REQUIRE((stats.wetMass == 150.0f));
 
     b2MassData mass = b2Body_GetMassData(bodyId);
     REQUIRE((mass.mass == 150.0f));
@@ -90,7 +91,7 @@ TEST_CASE("KinematicsSystem Wet Mass Impact", "[physics][kinematics]") {
     stats.massDirty = true;
 
     KinematicsSystem::update(registry, 0.01f);
-    REQUIRE((stats.totalMass == 200.0f)); // 100 base + 100 ammo
+    REQUIRE((stats.wetMass == 200.0f)); // 100 base + 100 ammo
   }
 
   b2DestroyWorld(worldId);

@@ -18,6 +18,8 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - **Visual Preview**: The `OutfitterPanel` includes a live ship blueprint preview and a dedicated detail pane.
 - **Automatic Scrolling**: Lists in `ShipyardPanel` and `OutfitterPanel` automatically scroll to maintain visibility of the selected item.
 - **Detail Pane Scrolling**: Large blocks of information (module stats, hull specs) in detail panes are scrollable using the `[` and `]` keys.
+- **Fleet Management**: The `FleetOverlay` provides a persistent HUD element displaying member health and Time-to-Exhaustion (TTE) for critical resources.
+- **Ship Exchange UI**: `ShipyardPanel` supports `[E] Transfer to Faction` for moving vessels to the faction collection while landed. Aligned faction transfers are displayed as `FREE`.
 
 ## 1. Physical Scope
 - **Path:** `/src/rendering/` — `LandingScreen.h/.cpp`, `MarketPanel.h/.cpp`, `ShipyardPanel.h/.cpp`, `OutfitterPanel.h/.cpp`, `InfoPanel.h/.cpp`, `LandingPanel.h`, `UIUtils.h/.cpp`
@@ -40,4 +42,5 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 ## 4. Telemetry & Observability
 - `game.ui.landing.open` — attributes: `planet.id`, `player.id`
 - `game.ui.ship.purchase` — attributes: `vessel.class`
+- **Dashboards**: [Fleet Status & Logistics Dashboard](fleet-diagnostics.md)
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0

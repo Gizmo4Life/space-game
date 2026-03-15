@@ -38,11 +38,17 @@ Vessels must support their population via Habitation modules:
     - **Food**: Consumption rate is per-person, influenced by module `Efficiency`.
 - **Minimum Crew**: A vessel's `minCrew` requirement is derived from its `Command` modules and overall hull size.
 
-## 4. Economic Fitness
-Ship designs are evolved based on their specialization:
-- **Combat Fitness**: Aggregated weapon stats multiplied by Armor and Speed bonuses. Requires $\geq 1$ weapon.
+## 4. Economic Fitness & Role Enforcement
+Ship designs are evolved and validated based on their specialization. Functional enforcement is applied during outfitting to prevent role-critical module loss:
+- **Combat Fitness**: Aggregated weapon stats multiplied by Armor and Speed bonuses.
+    - *Requirement:* Must have $\geq 1$ weapon module.
+    - *Protection:* Weapons cannot be removed during auto-balancing for power or volume.
 - **Trade Fitness**: Driven by Cargo volume capacity.
+    - *Requirement:* Must have $\geq 1$ cargo module.
+    - *Protection:* Cargo pods are preserved during volume balancing.
 - **Transport Fitness**: Driven by Habitation passenger capacity.
+    - *Requirement:* Must have $\geq 1$ habitation module.
+    - *Protection:* Habitation modules are preserved during volume balancing.
 - **Synergy Multipliers**: High Speed (TWR) and heavy Armor provide compounding bonuses to a ship's role-specific score.
 
 ## 5. Pattern Composition

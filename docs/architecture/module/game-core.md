@@ -19,9 +19,9 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 - [Capability: Navigation](/docs/architecture/capability/navigation.md) (T2)
 
 ## 3. Key Systems
-- **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses a **Unified Slot System** where modules are mapped to `SlotRole` types. Handles technical validation: ensure at least one `Command` slot is present, manages power balance, and enforces volume bounds for `AmmoMagazine`. Implement relaxed **Module Tier Logic** (70% match for non-elites) and **Attribute Variance** (15% chance to roll +1 tier) to ensure competitive common vessels. Also calculates `rotationSpeed` using a balanced `baseTurnRate` (1500) for softer steering feel. **Persistent Economy Support**: Includes `applyBlueprint` overloads to support spawning ships from pre-calculated blueprints and automatically populates initial ammo (20 rounds) for projectile and missile weapons using `InstalledAmmo`.
-- **ModuleGenerator**: Procedural factory for creating `ModuleDef` and `AmmoDef` variants. Scales attributes (Mass, Volume, Thrust, Output) based on Tier and Faction DNA. Now supports explicit `WeaponType` generation and specialized categories including `Habitation` (population support) and `Cargo` (dedicated storage).
 - **PowerSystem**: Manages energy production via Isotope Reactors (exponential fuel decay) and buffer storage in Batteries. Updates `batteryLevel` for energy weapon draw.
+- **ResourceSystem**: Implements persistence and survival logic. Tracks Food, Fuel, Isotopes, and Ammo consumption. Enforces consequences for depletion: Starvation (population loss), Power Failure (Life Support death timer), and Control Loss (minimum crew requirements).
+- **ShipOutfitter**: Centralized manager for applying modular outfits to hulls. Uses a **Unified Slot System** where modules are mapped to `SlotRole` types. Handles technical validation: ensure at least one `Command` slot is present, manages power balance, and enforces volume bounds for `AmmoMagazine`. Enforces **Vessel Viability Standard**: All generated ships must have at least 5 days of Time to Exhaustion (TTE) for critical resources. Calculates `rotationSpeed` using a balanced `baseTurnRate` (1500) for softer steering feel. **Persistent Economy Support**: Includes `applyBlueprint` overloads to support spawning ships from pre-calculated blueprints and automatically populates initial resources based on the 5-day TTE target.
 - **ShipConfig**: Static registry of hull definitions and default outfits. Replaces hardcoded mappings within the outfitter to allow for data-driven ship balancing.
 - **ModuleRegistry**: Singleton catalogue for all available ship modules.
 - **WorldLoader**: Procedural star system generation and deterministic player spawning near inhabited worlds.
@@ -37,4 +37,9 @@ Procedural world generation, player spawning, and modular vessel outfitting mana
 ## 5. Telemetry & Observability
 - `game.core.world.load` — duration of procedural generation
 - `game.core.ship.outfit` — attributes: `vessel.class`, `v_faction_id`
+- `engine.resource.starvation` — attributes: `vessel.entity`, `vessel.deaths`
+- `engine.resource.isotope_depletion` — attributes: `vessel.entity`
+- `engine.resource.power_failure_death` — attributes: `vessel.entity`, `vessel.deaths`
+- `engine.resource.derelict` — attributes: `vessel.entity`
+- `engine.resource.control_loss` — attributes: `vessel.entity`, `reason`
 - **Status:** ✅ Instrumented via `opentelemetry-cpp` v1.25.0

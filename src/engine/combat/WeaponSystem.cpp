@@ -1,25 +1,21 @@
 #include "engine/combat/WeaponSystem.h"
 #include "engine/physics/AsteroidSystem.h"
 #include "engine/telemetry/Telemetry.h"
-#include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
 #include "game/components/AmmoComponent.h"
 #include "game/components/CelestialBody.h"
 #include "game/components/Faction.h"
-#include "game/components/GameTypes.h"
 #include "game/components/InertialBody.h"
-#include "game/components/InstalledModules.h"
 #include "game/components/ShipStats.h"
-#include "game/components/SpriteComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
 #include <box2d/box2d.h>
 #include <cmath>
 #include <entt/entt.hpp>
-#include <iostream>
 #include <map>
 #include <opentelemetry/trace/provider.h>
 #include <vector>
+#include <algorithm>
 
 namespace space {
 
@@ -165,7 +161,7 @@ entt::entity WeaponSystem::fire(::entt::registry &registry, entt::entity owner,
   if (registry.all_of<TransformComponent, InertialBody>(owner) &&
       registry.all_of<ShipStats>(owner)) {
     auto &stats = registry.get<ShipStats>(owner);
-    if (stats.isDerelict)
+    if (stats.isDerelict || stats.controlLoss)
       return entt::null;
   }
 
@@ -188,6 +184,12 @@ entt::entity WeaponSystem::fire(::entt::registry &registry, entt::entity owner,
     if (mag.storedAmmo[weapon.selectedAmmo] <= 0)
       return entt::null;
     mag.storedAmmo[weapon.selectedAmmo]--;
+    
+    // Sync to ShipStats for HUD
+    if (registry.all_of<ShipStats>(owner)) {
+        auto &stats = registry.get<ShipStats>(owner);
+        stats.ammoStock = std::max(0.0f, stats.ammoStock - 1.0f);
+    }
   }
 
   auto &ownerTrans = registry.get<TransformComponent>(owner);

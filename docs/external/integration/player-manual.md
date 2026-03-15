@@ -1,0 +1,42 @@
+---
+id: player-manual
+type: guide
+pillar: external
+---
+[Home](/) > [Docs](/docs/readme.md) > [External](/docs/external/readme.md) > [Integration](/docs/external/integration/readme.md) > Player Manual
+
+# Player Manual: Fleet Logistics & Resource Management
+
+Welcome, Commander. This guide covers the essential systems for managing your fleet's survival and operational efficiency in deep space.
+
+## 1. Core Resources
+Your vessels depend on four primary resources. Depletion of any of these will lead to mission failure or vessel loss.
+
+| Resource | Icon | Purpose | Warning Signs |
+| :--- | :--- | :--- | :--- |
+| **Fuel** | `F` | Required for all propulsion and maneuvering. | Vessel becomes immobile at 0%. |
+| **Food** | `Fd` | Sustains your crew and passengers. | Starvation leads to rapid population loss. |
+| **Isotopes** | `I` | Reactor fuel for power generation. | Surpluses are stored in batteries; 0% stops charging. |
+| **Ammo** | `A` | Physical munitions for projectile and missile weapons. | Weapons will fail to cycle when dry. |
+
+## 2. Interpreting the Fleet HUD
+The **Fleet Overlay** (Top Right) provides real-time logistics data for every vessel under your command.
+
+### Time to Exhaustion (TTE)
+The most critical metric is **TTE**. This calculates how many seconds (hours/minutes) remain until your *most critical* resource runs out based on current consumption rates.
+- **Stable**: Consumption is balanced or positive.
+- **Red Alert**: TTE < 10 minutes. Immediate resupply required.
+
+### Quantity Indicators
+Displayed as `Current / Max`:
+- `F: 50/100`: Half fuel remains.
+- `A: 200/500`: Magazine at 40% capacity.
+
+## 3. Logistics Strategy
+- **Habitation Efficiency**: Tier 3 Habitation modules are significantly more efficient. Moving population to high-tier vessels reduces global food consumption.
+- **Mass Impact**: Cargo and fuel add "Wet Mass." A fully loaded freighter will accelerate slower than an empty one.
+- **Resupply**: Visit friendly orbital stations or planetary hubs to replenish stocks.
+
+---
+> [!IMPORTANT]
+> Always verify your fleet's TTE before initiating long-range jumps or entering hostile sectors.

@@ -88,6 +88,17 @@ Consolidated view of all critical P-rated signals: **Rendering**, **Combat**, **
   GROUP BY time
   ```
 - **Threshold**: Critical if total_bodies < 5 per system.
+### G. Vessel Survival (T2)
+- **Signal**: Fleet-wide starvation and power failure death rates.
+- **Query**:
+  ```sql
+  SELECT
+    sumIf(attributes['vessel.deaths']) AS total_deaths
+  FROM signoz_index.traces
+  WHERE serviceName = 'SpaceGame' AND name IN ('engine.resource.starvation', 'engine.resource.power_failure_death')
+  GROUP BY time
+  ```
+- **Threshold**: Red if total_deaths > 0.
 
 ## 3. Alert Thresholds
 | KPI | Warning | Critical |
@@ -107,3 +118,5 @@ Consolidated view of all critical P-rated signals: **Rendering**, **Combat**, **
 | **Mission Stagnation**| [npc.mission.stagnation Runbook](/docs/operational/span/npc-mission-stagnation.md) |
 | **Stockpile Imbalance**| [economy.stockpile.imbalance Runbook](/docs/operational/span/economy-stockpile-imbalance.md) |
 | **World Gen Anomaly** | [world.gen.anomaly Runbook](/docs/operational/span/world-gen-anomaly.md) |
+| **Vessel Death** | [engine.resource.death Runbook](/docs/operational/span/engine-resource-death.md) |
+| **Control Loss** | [engine.resource.control_loss Runbook](/docs/operational/span/engine-resource-control-loss.md) |

@@ -28,6 +28,7 @@ Before starting any significant change, ensure the baseline environment is healt
 - **Action:** Audit proposed changes against [Observability Standard](../standard/observability-standard.md). Identify required telemetry spans or probes.
 - **Action:** Define **Unit Tests** for critical logic paths (e.g., economy transactions, production rolls).
 - **Verify:** The plan must call out *all* necessary changes across the codebase to avoid refactor-looping.
+- **Verify:** The plan must follow acceptable durable patterns as defined in the [Build Resilience Standard](../standard/build-resilience.md).
 - **Verify:** User approval of the plan and test strategy before implementation.
 
 ## 3. Execution & Documentation
@@ -43,7 +44,15 @@ Before starting any significant change, ensure the baseline environment is healt
 - **Action:** Perform a final **Drift Analysis** to ensure documentation and code are perfectly synchronized.
 - **Action:** Execute [Documentation Validation](documentation-validation.md).
 
-## 5. Definition of Done
+## 5. Pattern Analysis & Standard Evolution
+- **Action:** Execute the **[Pattern Intake Protocol](pattern-intake.md)** for any build errors, test failures, or linter findings.
+- **Action:** Identify the specific **Context** of the failure (e.g., Platform, Testability, Build Integrity), and identify the relevant context specific standard.
+- **Action:** Extract both the **Failed Attempts** (Discouraged/Unstable) and the **Successful Solution** (Preferred/Alternative) as decontextualized patterns.
+- **Action:** Categorize new patterns into the PADU tables of the identified relevant context specific standard.
+- **Action:** Update **[Build Resilience Standard](../standard/build-resilience.md)** with any new standards.
+- **Verify:** The "Definition of Done" now includes contributing back to the governance layer to prevent future regressions.
+
+## 6. Definition of Done
 A task is considered **DONE** only when:
 1. **Successful Build**: The project compiles without errors on all targeted platforms.
 2. **100% Test Pass Rate**: All unit, integration, and regression tests pass with zero failures.

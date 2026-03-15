@@ -9,6 +9,8 @@ struct TierDNA {
   float specialization = 0.5f; // Jack of all trades vs. Specialist
   float prefDurability = 0.5f; // Armor/HP focus
   float prefVolume = 0.5f;     // Cargo/Internal space focus
+  float prefAmmo = 0.5f;       // Ammo volume/mass focus
+  float prefPassengers = 0.5f; // Habitation focus
 
   // Densities per mount/hardpoint size
   std::map<Tier, float> hardpointDensities;

@@ -42,6 +42,7 @@ set(CORE_SOURCES
     src/engine/physics/PowerSystem.cpp
     src/engine/combat/WeaponSystem.cpp
     src/engine/systems/BoardingSystem.cpp
+    src/engine/systems/ResourceSystem.cpp
     src/engine/telemetry/Telemetry.cpp
     src/rendering/MainRenderer.cpp
     src/rendering/RenderSystem.cpp
@@ -59,6 +60,7 @@ set(CORE_SOURCES
     src/game/ShipOutfitter.cpp
     src/game/components/HullGenerator.cpp
     src/game/components/ModuleGenerator.cpp
+    src/rendering/FleetOverlay.cpp
 )
 
 add_library(SpaceGameCore OBJECT ${CORE_SOURCES})
@@ -82,39 +84,66 @@ target_link_libraries(SpaceGame PRIVATE SpaceGameCore)
 # --- Tests (Catch2 via FetchContent) ---
 option(BUILD_TESTING "Build the testing tree." ON)
 if (BUILD_TESTING)
-    include(FetchContent)
-    FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG v3.5.2
-    )
-    FetchContent_MakeAvailable(Catch2)
+    find_package(Catch2 3.0 QUIET)
+    if (NOT Catch2_FOUND)
+        include(FetchContent)
+        FetchContent_Declare(
+            Catch2
+            GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+            GIT_TAG v3.5.2
+        )
+        # Suppress fatal error if fetch fails
+        FetchContent_GetProperties(Catch2)
+        if (NOT catch2_POPULATED)
+            message(STATUS "[Build] Attempting to acquire Catch2...")
+            FetchContent_Populate(Catch2)
+        endif()
+        if (EXISTS "${catch2_SOURCE_DIR}")
+            add_subdirectory("${catch2_SOURCE_DIR}" "${catch2_BINARY_DIR}" EXCLUDE_FROM_ALL)
+            set(Catch2_FOUND TRUE)
+        else()
+            message(WARNING "[Build] Catch2 could not be acquired. Tests will be disabled.")
+            set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+        endif()
+    endif()
+ 
+    if (Catch2_FOUND)
+        add_executable(SpaceGameTests
+            tests/test_blueprint_viability.cpp
+            tests/test_kinematics.cpp
+            tests/test_gravity.cpp
+            tests/test_world_loader.cpp
+            tests/test_ammo.cpp
+            tests/test_economy.cpp
+            tests/test_world_seeding.cpp
+            tests/test_ui_scrolling.cpp
+            tests/test_module_pricing.cpp
+            tests/test_shipless_player.cpp
+            tests/test_weapons.cpp
+            tests/test_collisions.cpp
+            tests/test_npc_missions.cpp
+            tests/test_ship_alignment.cpp
+            tests/test_spawn_variety.cpp
+            tests/test_module_quality.cpp
+            tests/verify_hull_geometry.cpp
+            tests/test_ship_evolution.cpp
+            tests/test_resource_management.cpp
+        )
+        target_include_directories(SpaceGameTests PRIVATE src)
+        target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
 
-    add_executable(SpaceGameTests
-        tests/test_blueprint_viability.cpp
-        tests/test_kinematics.cpp
-        tests/test_gravity.cpp
-        tests/test_world_loader.cpp
-        tests/test_ammo.cpp
-        tests/test_economy.cpp
-        tests/test_world_seeding.cpp
-        tests/test_ui_scrolling.cpp
-        tests/test_module_pricing.cpp
-        tests/test_shipless_player.cpp
-        tests/test_weapons.cpp
-        tests/test_collisions.cpp
-        tests/test_npc_missions.cpp
-        tests/test_ship_alignment.cpp
-        tests/test_spawn_variety.cpp
-        tests/test_module_quality.cpp
-        tests/verify_hull_geometry.cpp
-        tests/test_ship_evolution.cpp
-    )
-    target_include_directories(SpaceGameTests PRIVATE src)
-    target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
-
-    include(CTest)
-    include(Catch)
-    catch_discover_tests(SpaceGameTests)
+        include(CTest)
+        include(Catch)
+        catch_discover_tests(SpaceGameTests)
+    endif()
 endif()
 
+
+# --- Standalone Verification (No Dependencies) ---
+add_executable(VerifyBaseline scripts/verify_viability_baseline.cpp)
+target_include_directories(VerifyBaseline PRIVATE src)
+target_link_libraries(VerifyBaseline PRIVATE SpaceGameCore)
+
+add_executable(VerifyDoD scripts/verify_dod.cpp)
+target_include_directories(VerifyDoD PRIVATE src)
+target_link_libraries(VerifyDoD PRIVATE SpaceGameCore)

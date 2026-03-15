@@ -55,6 +55,8 @@ public:
                       entt::entity player);
   bool sellModularShip(entt::registry &registry, entt::entity shipEntity,
                        entt::entity player);
+  bool transferShipToFaction(entt::registry &registry, entt::entity shipEntity,
+                             uint32_t factionId);
 
   bool sellShip(entt::registry &registry, entt::entity planet,
                 entt::entity player, entt::entity shipToSell);

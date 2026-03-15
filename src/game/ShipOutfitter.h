@@ -49,11 +49,10 @@ public:
 
   void populateShop(entt::registry &registry, entt::entity planet) const;
 
-private:
-  ShipOutfitter() = default;
-
   void refreshStats(entt::registry &registry, entt::entity entity,
                     const HullDef &hull) const;
+
+private:
 
   mutable std::map<std::tuple<uint32_t, Tier, std::string, uint32_t>, HullDef>
       proceduralHulls_;

@@ -4,7 +4,6 @@
 
 #include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
-#include "game/components/FactionDNA.h"
 #include "game/components/GameTypes.h"
 #include "game/components/HullDef.h"
 #include "game/components/HullGenerator.h"
@@ -34,7 +33,7 @@ static GameInit gameInit; // Force initialisation before Catch2 runs
 // ──────────────────────────────────────────────────────────────────────────
 static const std::vector<Tier> ALL_TIERS = {Tier::T1, Tier::T2, Tier::T3};
 static const std::vector<std::string> ALL_ROLES = {"General", "Combat",
-                                                   "Cargo"};
+                                                   "Cargo", "Transport"};
 
 static bool isEmpty(const ModuleDef &m) {
   return m.name.empty() || m.name == "Empty";
@@ -304,4 +303,117 @@ TEST_CASE("Minimal T1 ship is viable", "[blueprint][scale]") {
   INFO("Net power: " << totalPower << " GW, Volume: " << totalVolume << " m³");
   REQUIRE(totalPower <= 0.0f);
   REQUIRE(totalVolume <= hull.internalVolume);
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Role-specific enforcement
+// ──────────────────────────────────────────────────────────────────────────
+TEST_CASE("Role-specific mandatory modules are present", "[blueprint][role]") {
+  auto &fm = FactionManager::instance();
+
+  for (auto &[factionId, factionData] : fm.getAllFactions()) {
+    for (Tier t : ALL_TIERS) {
+      SECTION("Combat ships must have weapons (Faction " +
+              std::to_string(factionId) + " T" +
+              std::to_string(static_cast<int>(t)) + ")") {
+        ShipBlueprint bp = ShipOutfitter::instance().generateBlueprint(
+            factionId, t, "Combat");
+
+        bool hasWeapon = false;
+        for (const auto &m : bp.modules) {
+          if (m.category == ModuleCategory::Weapon)
+            hasWeapon = true;
+        }
+        REQUIRE(hasWeapon);
+      }
+
+      SECTION("Transport ships must have habitation modules (Faction " +
+              std::to_string(factionId) + " T" +
+              std::to_string(static_cast<int>(t)) + ")") {
+        ShipBlueprint bp = ShipOutfitter::instance().generateBlueprint(
+            factionId, t, "Transport");
+
+        bool hasHab = false;
+        for (const auto &m : bp.modules) {
+          if (m.category == ModuleCategory::Habitation)
+            hasHab = true;
+        }
+        REQUIRE(hasHab);
+      }
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Entity-level validation (Outfitting/Ammo)
+// ──────────────────────────────────────────────────────────────────────────
+#include "game/components/AmmoComponent.h"
+#include "game/components/ShipStats.h"
+#include "game/components/WeaponComponent.h"
+
+TEST_CASE("Outfitted ships have correct ammo magazines and HUD stats", "[outfitting][ammo]") {
+  auto &fm = FactionManager::instance();
+  entt::registry registry;
+
+  for (auto &[factionId, factionData] : fm.getAllFactions()) {
+    for (Tier t : ALL_TIERS) {
+      DYNAMIC_SECTION("Faction " << factionId << " T" << static_cast<int>(t)) {
+        entt::entity ship = registry.create();
+        ShipOutfitter::instance().applyBlueprint(registry, ship, factionId, t, "Combat");
+
+        auto* wComp = registry.try_get<WeaponComponent>(ship);
+        if (wComp && wComp->tier != WeaponTier::T1_Energy) {
+          // Check Magazine
+          auto* mag = registry.try_get<AmmoMagazine>(ship);
+          REQUIRE(mag != nullptr);
+          
+          // Check Selected Ammo is in Magazine
+          REQUIRE(mag->storedAmmo.count(wComp->selectedAmmo) > 0);
+          REQUIRE(mag->storedAmmo.at(wComp->selectedAmmo) > 0);
+
+          // Check ShipStats
+          auto* stats = registry.try_get<ShipStats>(ship);
+          REQUIRE(stats != nullptr);
+          REQUIRE(stats->ammoStock > 0);
+        }
+        registry.destroy(ship);
+      }
+    }
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Viability Enforcement (5-Day TTE)
+// ──────────────────────────────────────────────────────────────────────────
+TEST_CASE("Generated ships meet 5-day TTE viability standard", "[outfitting][viability]") {
+  auto &fm = FactionManager::instance();
+  entt::registry registry;
+
+  for (auto &[factionId, factionData] : fm.getAllFactions()) {
+    for (Tier t : ALL_TIERS) {
+      for (const auto &role : ALL_ROLES) {
+        DYNAMIC_SECTION("Faction " << factionId << " T" << static_cast<int>(t) << " " << role) {
+          entt::entity ship = registry.create();
+          ShipOutfitter::instance().applyBlueprint(registry, ship, factionId, t, role);
+
+          auto* stats = registry.try_get<ShipStats>(ship);
+          REQUIRE(stats != nullptr);
+
+          // We check for ~4.9 instead of 5.0 to account for floating point jitter in draw rate calculations
+          INFO("Checking 5-day TTE for: " << stats->foodTTE << " " << stats->fuelTTE << " " << stats->isotopesTTE << " " << stats->ammoTTE);
+          
+          if (stats->foodTTE != -1.0f) CHECK(stats->foodTTE >= 4.9f);
+          if (stats->fuelTTE != -1.0f) CHECK(stats->fuelTTE >= 4.9f);
+          if (stats->isotopesTTE != -1.0f) CHECK(stats->isotopesTTE >= 4.9f);
+          
+          // Ammo TTE only checked if role is Combat and ship has kinetic weapons
+          if (role == "Combat" && stats->ammoTTE != -1.0f) {
+            CHECK(stats->ammoTTE >= 4.9f);
+          }
+
+          registry.destroy(ship);
+        }
+      }
+    }
+  }
 }

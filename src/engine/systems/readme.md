@@ -5,6 +5,7 @@
 
 ## Systems
 - `BoardingSystem` — Facilitates ship boarding and ownership transfer
+- `ResourceSystem` — Handles resource consumption, survival, and depletion consequences
 
 ## Build
 ```bash

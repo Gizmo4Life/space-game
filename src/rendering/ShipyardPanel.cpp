@@ -10,7 +10,8 @@
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
-#include "game/components/ShipModule.h"
+#include "game/components/ShipFitness.h"
+#include "game/components/ShipStats.h"
 #include "rendering/UIUtils.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <algorithm>
@@ -108,14 +109,27 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
         span->SetAttribute("purchase.denied", "insufficient credits");
       }
       span->End();
-    } else if (mode_ == ShipyardMode::Sell && sellShip &&
+      span->End();
+    } else if (mode_ == ShipyardMode::Sell && (sellShip || kp->code == sf::Keyboard::Key::E) &&
                !fleetEntities_.empty()) {
-      auto span =
-          Telemetry::instance().tracer()->StartSpan("game.ui.ship.sell");
       entt::entity toSell = fleetEntities_[selectedBidIndex_];
-      if (EconomyManager::instance().sellShip(registry, planetEntity_,
-                                              playerEntity_, toSell)) {
-        // Re-sync playerEntity if flagship was sold
+      bool isTransfer = (kp->code == sf::Keyboard::Key::E);
+      
+      auto span = Telemetry::instance().tracer()->StartSpan(isTransfer ? "game.ui.ship.transfer" : "game.ui.ship.sell");
+
+      bool success = false;
+      if (isTransfer) {
+        uint32_t fId = 0;
+        if (registry.all_of<Faction>(playerEntity_)) {
+            fId = registry.get<Faction>(playerEntity_).getMajorityFaction();
+        }
+        success = EconomyManager::instance().transferShipToFaction(registry, toSell, fId);
+      } else {
+        success = EconomyManager::instance().sellShip(registry, planetEntity_, playerEntity_, toSell);
+      }
+
+      if (success) {
+        // Re-sync playerEntity if flagship was sold/transferred
         auto playerView = registry.view<PlayerComponent>();
         for (auto entity : playerView) {
           if (playerView.get<PlayerComponent>(entity).isFlagship) {
@@ -135,7 +149,7 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
         }
         selectedBidIndex_ =
             std::min(selectedBidIndex_, (int)fleetEntities_.size() - 1);
-        span->SetAttribute("sell.success", true);
+        span->SetAttribute(isTransfer ? "transfer.success" : "sell.success", true);
       }
       span->End();
     }
@@ -277,9 +291,18 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
   dtext(dx, dy, bp.hull.className + " Details", 22, sf::Color::Yellow);
   dtext(dx, dy, "Tier: " + tierName(bp.hull.sizeTier), 14,
         sf::Color(180, 180, 180));
-  dtext(dx, dy,
-        (mode_ == ShipyardMode::Buy ? "Buy Price: $" : "Sell Value: $") +
-            fmt(displayPrice, 0),
+
+  bool isTransfer = false;
+  if (registry.all_of<Faction>(playerEntity_)) {
+    if (registry.get<Faction>(playerEntity_).getMajorityFaction() == bidFactionId) {
+      isTransfer = true;
+    }
+  }
+
+  std::string priceLabel = (mode_ == ShipyardMode::Buy ? (isTransfer ? "Transfer: " : "Buy Price: $") : "Sell Value: $");
+  std::string priceVal = (isTransfer && mode_ == ShipyardMode::Buy ? "FREE (Faction Collection)" : fmt(displayPrice, 0));
+
+  dtext(dx, dy, priceLabel + priceVal,
         18, sf::Color(100, 255, 100));
   dy += 10.f;
 
@@ -312,6 +335,74 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
   dtext(dx, dy, "Power Draw: " + fmt(powerDraw, 1) + " GW", 14,
         (powerDraw > 0) ? sf::Color::Yellow : sf::Color(100, 255, 100));
 
+  // Fitness Score
+  float fitness = 0.0f;
+  auto it = faction.dna.tierDNA.find(bp.hull.sizeTier);
+  TierDNA tdna = (it != faction.dna.tierDNA.end()) ? it->second : TierDNA();
+
+  if (bp.role == "Combat")
+    fitness = ShipFitness::calculateCombatFitness(bp, tdna);
+  else if (bp.role == "Cargo")
+    fitness = ShipFitness::calculateTradeFitness(bp, tdna);
+  else if (bp.role == "Transport")
+    fitness = ShipFitness::calculateTransportFitness(bp, tdna);
+  else
+    fitness = ShipFitness::calculateGeneralFitness(bp, faction.dna, bp.hull.sizeTier);
+
+  sf::Color fitCol = sf::Color::Green;
+  if (fitness <= 0.0f) fitCol = sf::Color::Red;
+  else if (fitness < 0.4f) fitCol = sf::Color(255, 165, 0); // Orange
+
+  dtext(dx, dy, "Fitness: " + fmt(fitness * 100.0f, 1) + "%", 16, fitCol);
+
+  // ── Time to Exhaustion (TTEs) ──
+  dy += 10.f;
+  dtext(dx, dy, "── Survival TTE (Equipped) ──", 16, sf::Color(140, 200, 255));
+
+  float foodTTE = 5.0f;
+  float fuelTTE = 5.0f;
+  float isotopesTTE = 5.0f;
+  float ammoTTE = 5.0f;
+  bool showAmmo = false;
+
+  if (mode_ == ShipyardMode::Sell && !fleetEntities_.empty()) {
+    entt::entity e = fleetEntities_[selectedBidIndex_];
+    if (registry.all_of<ShipStats>(e)) {
+      auto &s = registry.get<ShipStats>(e);
+      foodTTE = s.foodTTE;
+      fuelTTE = s.fuelTTE;
+      isotopesTTE = s.isotopesTTE;
+      ammoTTE = s.ammoTTE;
+      showAmmo = true; // Always show for owned ships
+    }
+  } else {
+    // For Buy mode, we know it will be at least 5.0 from ensureViability
+    for (const auto &m : bp.modules) {
+      if (m.category == ModuleCategory::Weapon &&
+          m.weaponType != WeaponType::Energy && !m.name.empty() &&
+          m.name != "Empty") {
+        showAmmo = true;
+        break;
+      }
+    }
+  }
+
+  auto dtte = [&](const std::string &label, float val) {
+    std::string v =
+        (val < 0 || val > 90.0f) ? "Infinite" : fmt(val, 1) + " days";
+    dtext(dx + 10.f, dy, label + ": " + v, 14, sf::Color::White);
+  };
+
+  dtte("Food", foodTTE);
+  dtte("Fuel", fuelTTE);
+  dtte("Isotopes", isotopesTTE);
+  if (showAmmo) {
+    dtte("Ammo", ammoTTE);
+  } else if (mode_ == ShipyardMode::Buy) {
+    dtext(dx + 10.f, dy, "Ammo: Infinite (Energy Only)", 14,
+          sf::Color(180, 180, 180));
+  }
+
   dy += 15.f;
   dtext(dx, dy, "── Installed Modules ──", 16, sf::Color(140, 200, 255));
 
@@ -331,9 +422,9 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
   float helpY = rect.position.y + rect.size.y - 35.f;
   std::string instructions =
       (mode_ == ShipyardMode::Buy)
-          ? "[B] Buy to Fleet  [F] Buy as Flagship  [Tab] Sell Mode  [W/S] Nav "
+          ? "[B] Buy/Transfer to Fleet  [F] Buy/Transfer as Flagship  [Tab] Sell Mode  [W/S] Nav "
             " [[]/[]] Scroll Details"
-          : "[X] SELL SHIP  [Tab] Buy Mode  [W/S] Nav  [[]/[]] Scroll Details";
+          : "[X] SELL SHIP  [E] Transfer to Faction  [Tab] Buy Mode  [W/S] Nav  [[]/[]] Scroll Details";
   sf::Text help(*font, instructions, 13);
   help.setFillColor(sf::Color(150, 150, 150));
   help.setPosition({rect.position.x + 20.f, helpY});

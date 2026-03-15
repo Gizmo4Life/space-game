@@ -21,7 +21,8 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 ## 3. Key Systems
 - **EconomyManager**: Orchestrates planetary markets and the persistent ship inventory.
   - **Dynamic Pricing**: Uses factory supply nodes and `hullClassScarcity` to adjust prices. Prices are clamped between 0.1x and 10x of the base price.
-  - **Ship Transactions**: `buyShip` and `sellShip` handle vessel ownership. Buying a ship consumes it from the persistent `parkedShips` inventory. Selling a ship adds its hull back to the `scrapyardHulls`.
+  - **Ship Transactions**: `buyShip` and `sellShip` handle vessel ownership. Buying a ship consumes it from the persistent `parkedShips` inventory. Selling a ship adds its hull back to the `scrapyardHulls`. 
+  - **Ship Exchange**: `transferShipToFaction` allows the player to move an active fleet vessel back into the faction's `parkedShips` pool while landed. This process captures the current module configuration as a blueprint. Transfers from an aligned faction's collection back to the player fleet are free (waiving credit costs).
   - **Competitive Bidding**: Factions list hulls via `DetailedHullBid`. These bids are now generated directly from the `parkedShips` vector, ensuring the shipyard displays actual physical inventory.
   - **Scrapyard Management**: Factions store salvaged and obsolete inventory in `scrapyardModules` and `scrapyardHulls`.
   - **Ship Assembly**: `tryAssembleShips` greedily combines `scrapyardHulls` and `shopModules` into `ShipBlueprint` objects, which are then added to `parkedShips` for sale. This system ensures that faction production of parts eventually results in available ships.

@@ -36,5 +36,8 @@ index_map:
   integration:
     path: integration/
     scope: Vendor SLAs and behavioral specs.
+  player_manual:
+    path: integration/player-manual.md
+    scope: Core game mechanics and fleet logistics guide for players.
 ```
 

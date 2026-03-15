@@ -7,10 +7,11 @@
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
 #include "game/components/TransformComponent.h"
-#include "game/components/WeaponComponent.h"
 #include "game/components/WorldConfig.h"
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
+#include "game/components/Faction.h"
+#include "game/components/PlayerComponent.h"
 
 #include <SFML/Graphics.hpp>
 #include <algorithm>
@@ -249,10 +250,13 @@ entt::entity NPCShipManager::spawnShip(
   registry.emplace_or_replace<InertialBody>(entity, bodyId, 500.0f, 0.05f,
                                             20.0f);
 
+  // Add Faction component for rendering and allegiance
+  auto &fComp = registry.emplace<Faction>(entity);
+  fComp.allegiances[factionId] = 1.0f;
+
   auto &outfitter = ShipOutfitter::instance();
   outfitter.applyBlueprint(registry, entity, factionId, sizeTier, role,
                            lineIndex);
-  registry.emplace_or_replace<WeaponComponent>(entity);
 
   const auto &hull = outfitter.getHull(factionId, sizeTier, role, lineIndex);
   registry.emplace<NameComponent>(
@@ -286,6 +290,31 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
 
     sf::Vector2f steeringForce(0, 0);
     entt::entity leader = npc.leaderEntity;
+    
+    // --- Fleet Fail-safe ---
+    // If this is a player fleet ship, ensure it's following the current flagship
+    if (npc.isPlayerFleet) {
+      bool needNewLeader = (leader == entt::null || !registry.valid(leader));
+      if (!needNewLeader) {
+         // Even if valid, check if it's still the flagship
+         if (auto* pComp = registry.try_get<PlayerComponent>(leader)) {
+             if (!pComp->isFlagship) needNewLeader = true;
+         } else {
+             needNewLeader = true; // Leader is no longer a player-controlled entity
+         }
+      }
+
+      if (needNewLeader) {
+        auto playerView = registry.view<PlayerComponent>();
+        for (auto e : playerView) {
+          if (playerView.get<PlayerComponent>(e).isFlagship) {
+            npc.leaderEntity = e;
+            leader = e;
+            break;
+          }
+        }
+      }
+    }
 
     // Determine target/leader for mission-based NPCs
     if (leader == entt::null && npc.missionId != 0) {
@@ -309,10 +338,10 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
       float idealDist = 50.0f;
       if (distToLeader > idealDist) {
         sf::Vector2f cohesionDir = toLeader / distToLeader;
-        steeringForce += cohesionDir * 0.8f;
+        steeringForce += cohesionDir * 1.2f; // Increased cohesion
       }
 
-      // B. Alignment: Match leader's target direction
+      // B. Alignment: Match leader's target direction or player's heading
       if (registry.all_of<NPCComponent>(leader)) {
         auto &leaderNpc = registry.get<NPCComponent>(leader);
         if (registry.valid(leaderNpc.targetEntity)) {
@@ -323,6 +352,11 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
           if (mag > 0)
             steeringForce += (dir / mag) * 0.4f;
         }
+      } else if (registry.all_of<PlayerComponent>(leader)) {
+        // Match player heading
+        float rad = leaderTrans.rotation * 3.14159f / 180.0f;
+        sf::Vector2f playerDir(cos(rad), sin(rad));
+        steeringForce += playerDir * 0.6f;
       }
 
       // C. Separation: Repulsive force from nearby peers
@@ -343,8 +377,8 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
 
       // Apply the steering force as a Box2D force
       float thrustMultiplier = inertial.thrustForce;
-      if (distToLeader > 250.0f)
-        thrustMultiplier *= 2.0f; // Catch up!
+      if (distToLeader > 120.0f)
+        thrustMultiplier *= 2.5f; // Aggressive catch up!
 
       b2Vec2 force = {steeringForce.x * thrustMultiplier,
                       steeringForce.y * thrustMultiplier};

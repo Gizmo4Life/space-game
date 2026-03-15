@@ -1,16 +1,16 @@
 #include "KinematicsSystem.h"
 #include "game/components/AmmoComponent.h"
-#include "game/components/CargoComponent.h"
 #include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
 #include "game/components/InstalledModules.h"
-#include "game/components/PlayerComponent.h"
 #include "game/components/ShipStats.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WorldConfig.h"
+#include <entt/entt.hpp>
 #include <box2d/box2d.h>
 #include <cmath>
-#include <iostream>
+#include "game/components/CargoComponent.h"
+#include "game/components/Economy.h"
 
 namespace space {
 
@@ -38,17 +38,18 @@ void KinematicsSystem::update(entt::registry &registry, float deltaTime) {
             }
           }
 
-          if (registry.all_of<InstalledCargo>(entity))
-            wetMass += registry.get<InstalledCargo>(entity).used * 1.0f;
+          if (auto* cargo = registry.try_get<CargoComponent>(entity))
+            wetMass += cargo->currentWeight;
 
           // Base hull mass + summed module masses + wet mass
           auto &hull = registry.get<HullDef>(entity);
-          stats.totalMass = hull.baseMass * hull.massMultiplier + wetMass;
+          stats.dryMass = hull.baseMass * hull.massMultiplier;
+          stats.wetMass = stats.dryMass + wetMass;
 
           b2MassData massData;
-          massData.mass = stats.totalMass;
+          massData.mass = stats.wetMass;
           massData.center = {0, 0};
-          massData.rotationalInertia = stats.totalMass * 2.0f;
+          massData.rotationalInertia = stats.wetMass * 2.0f;
           b2Body_SetMassData(inertial.bodyId, massData);
 
           stats.massDirty = false;
@@ -75,6 +76,27 @@ void KinematicsSystem::applyThrust(entt::registry &registry,
     return;
   auto &inertial = registry.get<InertialBody>(entity);
   if (b2Body_IsValid(inertial.bodyId)) {
+    // Fuel Consumption
+    if (registry.all_of<ShipStats>(entity)) {
+      auto &stats = registry.get<ShipStats>(entity);
+      float fuelDraw = 0.01f * std::abs(power); // 1% per unit power per second?
+      if (stats.fuelStock > 0) {
+        stats.fuelStock = std::max(0.0f, stats.fuelStock - fuelDraw);
+        // Sync back to InstalledFuel
+        if (auto* fuel = registry.try_get<InstalledFuel>(entity)) {
+            fuel->level = std::min(fuel->capacity, stats.fuelStock);
+        }
+        // Sync to Cargo if fuelStock exceeds InstalledFuel capacity or if we want to pull from cargo
+        if (auto* cargo = registry.try_get<CargoComponent>(entity)) {
+            float fuelInTanks = 0;
+            if (auto* fuel = registry.try_get<InstalledFuel>(entity)) fuelInTanks = fuel->level;
+            cargo->inventory[Resource::Fuel] = std::max(0.0f, stats.fuelStock - fuelInTanks);
+        }
+      } else {
+        return; // No fuel, no thrust
+      }
+    }
+
     b2Rot rot = b2Body_GetRotation(inertial.bodyId);
     float force = inertial.thrustForce * power;
     b2Vec2 thrustVec = {rot.c * force, rot.s * force};

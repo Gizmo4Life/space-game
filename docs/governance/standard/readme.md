@@ -26,6 +26,7 @@ graph TD
 - [arch-documentation](arch-documentation.md): T1-T3 mapping rules.
 - [document-organization](document-organization.md): Metadata and hierarchy rules.
 - [document-topologies](document-topologies.md): Cross-pillar linkage rules.
+- [header-management](header-management.md): IWYU and include rules.
 
 ## 2. Process Quality (Action)
 *Nuance: Standards governing runtime and CI/CD operations.*

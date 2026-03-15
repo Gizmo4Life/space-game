@@ -13,7 +13,7 @@ NPC ship spawning, faction-weighted vessel selection, AI state-machine execution
 - **Path:** `/src/game/` — `NPCShipManager.h/.cpp`
 - **Components:** `components/NPCComponent.h`
 - **Ownership:** Core Engine Team
-- **Collaborators:** Uses `ShipOutfitter` for vessel composition.
+- **Collaborators:** Uses `ShipOutfitter` for vessel composition and ammo synchronization.
 
 ## 2. Capability Alignment
 - [Capability: Economy](/docs/architecture/capability/economy.md) (T2)
@@ -23,7 +23,7 @@ NPC ship spawning, faction-weighted vessel selection, AI state-machine execution
 - [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `NPCShipManager::update`
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `NPCShipManager::instance()`
 - [npc-ai-state-machine](/docs/developer/pattern/npc-ai-state-machine.md) (P) — belief/state machine, timer-gated decisions
-- [npc-fleet-leader-boids](/docs/developer/pattern/npc-fleet-leader-boids.md) (P) — player fleet follow with weighted boids + aggressive catch-up
+- [npc-fleet-leader-boids](/docs/developer/pattern/npc-fleet-leader-boids.md) (P) — player fleet follow with weighted boids (Separation, Cohesion, Alignment). Escorts prioritize flagship heading via an alignment force and maintain a tight formation through increased cohesion.
 - [mission-performance-feedback-loop](/docs/developer/pattern/mission-performance-feedback-loop.md) (P) — `NPCShipManager` records kills/losses in `MissionStats`, providing the fitness metric for `EconomyManager` to trigger DNA drift.
 - [ship-modular-composition](/docs/developer/pattern/ship-modular-composition.md) (P) — Spawning logic uses hulls and modular outfits
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)

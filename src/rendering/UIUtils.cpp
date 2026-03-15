@@ -61,6 +61,10 @@ std::string moduleCategoryName(ModuleCategory cat) {
     return "Ammo Rack";
   case ModuleCategory::ReactionWheel:
     return "Reaction Wheel";
+  case ModuleCategory::Habitation:
+    return "Habitation";
+  case ModuleCategory::Cargo:
+    return "Cargo";
   }
   return "Unknown";
 }

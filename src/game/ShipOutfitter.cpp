@@ -27,6 +27,9 @@
 #include "game/components/PlayerComponent.h"
 #include "game/components/ShipFitness.h"
 #include "game/components/ShipStats.h"
+#include "game/components/SpriteComponent.h"
+#include "game/components/AmmoComponent.h"
+#include "game/components/WeaponComponent.h"
 
 namespace space {
 
@@ -145,8 +148,19 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
     bp.modules.push_back(
         makeModule(ModuleCategory::Shield, AttributeType::Capacity, sizeTier));
 
-    if (role == "Cargo" || role == "Transport" ||
-        fData->dna.commercialism > 0.6f) {
+    if (role == "Cargo") {
+      bp.modules.push_back(
+          makeModule(ModuleCategory::Cargo, AttributeType::Volume, sizeTier));
+    } else if (role == "Transport") {
+      bp.modules.push_back(makeModule(ModuleCategory::Habitation,
+                                      AttributeType::Capacity, sizeTier));
+    } else if (role == "General") {
+      // General ships need to be proficient in all 3
+      bp.modules.push_back(
+          makeModule(ModuleCategory::Cargo, AttributeType::Volume, sizeTier));
+      bp.modules.push_back(makeModule(ModuleCategory::Habitation,
+                                      AttributeType::Capacity, sizeTier));
+    } else if (fData->dna.commercialism > 0.6f) {
       bp.modules.push_back(
           makeModule(ModuleCategory::Utility, AttributeType::Volume, sizeTier));
     }
@@ -156,7 +170,7 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
     // Balancing pass
     auto recomputeTotals = [&](float &totalVol, float &totalPower) {
       totalVol = 0.0f;
-      totalPower = 0.0f;
+      totalPower = 0.0f; // Net power (Draw + Signed Generation)
       for (const auto &m : bp.modules) {
         if (!m.name.empty() && m.name != "Empty") {
           totalVol += m.volumeOccupied;
@@ -175,6 +189,14 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
              bp.modules.size() > bp.hull.slots.size() + 1) {
         const auto &back = bp.modules.back();
         if (!back.name.empty() && back.name != "Empty") {
+          
+          // Protect role-essential internal modules
+          if ((role == "Cargo" && back.category == ModuleCategory::Cargo) ||
+              (role == "Transport" && back.category == ModuleCategory::Habitation)) {
+              // Instead of popping, we'll try to rotate or stop here
+              break; 
+          }
+
           totalVol -= back.volumeOccupied;
           totalPower -= back.powerDraw;
         }
@@ -184,10 +206,27 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
 
       recomputeTotals(totalVol, totalPower);
       if (totalPower > 0.0f) {
+        // Power deficit: remove non-essential hardpoints first
         for (int si = static_cast<int>(bp.hull.slots.size()) - 1;
              si >= 0 && totalPower > 0.0f; --si) {
           if (bp.hull.slots[si].role == SlotRole::Hardpoint &&
               !bp.modules[si].name.empty() && bp.modules[si].name != "Empty") {
+            
+            // Protect essential modules based on role
+            if (role == "Combat") {
+                int count = 0;
+                for (const auto& m : bp.modules) if (m.category == ModuleCategory::Weapon) count++;
+                if (count <= 1 && bp.modules[si].category == ModuleCategory::Weapon) continue;
+            } else if (role == "Cargo") {
+                int count = 0;
+                for (const auto& m : bp.modules) if (m.category == ModuleCategory::Cargo) count++;
+                if (count <= 1 && bp.modules[si].category == ModuleCategory::Cargo) continue;
+            } else if (role == "Transport") {
+                int count = 0;
+                for (const auto& m : bp.modules) if (m.category == ModuleCategory::Habitation) count++;
+                if (count <= 1 && bp.modules[si].category == ModuleCategory::Habitation) continue;
+            }
+
             totalPower -= bp.modules[si].powerDraw;
             bp.modules[si] = emptyMod;
             changed = true;
@@ -331,45 +370,136 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   registry.emplace_or_replace<InstalledPower>(entity, ip);
   registry.emplace_or_replace<InstalledBatteries>(entity, ib);
   registry.emplace_or_replace<InstalledReactionWheels>(entity, irw);
+  (void)registry.get_or_emplace<InstalledFuel>(entity); // Mandatory for all ships
 
   auto &cargo = registry.emplace_or_replace<CargoComponent>(entity);
   registry.emplace_or_replace<HullDef>(entity, bp.hull);
 
-  // Give some starting ammo if needed
-  InstalledAmmo ia;
-  for (const auto &m : bp.modules) {
-    if (m.category == ModuleCategory::Weapon &&
-        m.weaponType != WeaponType::Energy) {
-      Tier caliber = m.getAttributeTier(AttributeType::Caliber);
-      AmmoDef ammo =
-          ModuleGenerator::instance().generateAmmo(m.weaponType, caliber);
-
-      bool found = false;
-      for (auto &stack : ia.inventory) {
-        if (stack.type.compatibleWeapon == m.weaponType &&
-            stack.type.caliber == caliber) {
-          stack.count += 20;
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        ia.inventory.push_back({ammo, 20});
-      }
-
-      std::cout << "[Outfitter] Initialized weapon " << m.name
-                << " with 20 rounds of " << ammo.name << "\n";
+  // Give some starting ammo and population based on DNA
+  const auto* fData = FactionManager::instance().getFactionPtr(bp.hull.originFactionId);
+  float ammoPref = 0.5f;
+  float passPref = 0.5f;
+  if (fData) {
+    auto tIt = fData->dna.tierDNA.find(bp.hull.sizeTier);
+    if (tIt != fData->dna.tierDNA.end()) {
+      ammoPref = tIt->second.prefAmmo;
+      passPref = tIt->second.prefPassengers;
     }
   }
+
+  ShipStats tempStats;
+  if (registry.all_of<ShipStats>(entity)) tempStats = registry.get<ShipStats>(entity);
+
+  InstalledAmmo ia;
+  auto &mag = registry.get_or_emplace<AmmoMagazine>(entity);
+  mag.storedAmmo.clear();
+
+  // Find the primary weapon to configure WeaponComponent
+  WeaponComponent* wComp = registry.try_get<WeaponComponent>(entity);
+  ModuleDef primaryWeapon;
+
+  for (const auto &m : bp.modules) {
+    if (m.category == ModuleCategory::Weapon) {
+      if (primaryWeapon.name.empty()) primaryWeapon = m;
+
+      if (m.weaponType != WeaponType::Energy) {
+        Tier caliber = m.getAttributeTier(AttributeType::Caliber);
+        
+        // Generate standard ammo for this weapon
+        AmmoDef ammoDef = ModuleGenerator::instance().generateAmmo(m.weaponType, caliber);
+        
+        // Map to combat AmmoType
+        AmmoType combatType;
+        combatType.isMissile = (m.weaponType == WeaponType::Missile);
+        combatType.warhead = (caliber == Tier::T1) ? WarheadType::Kinetic : 
+                             (caliber == Tier::T2) ? WarheadType::Explosive : WarheadType::EMP;
+        combatType.guidance = (caliber == Tier::T3) ? GuidanceType::HeatSeeking : GuidanceType::Dumb;
+
+        // Starting count based on DNA
+        int startCount = static_cast<int>(20.0f + (ammoPref * 180.0f));
+        if (combatType.isMissile) startCount /= 4; // Missiles are bulkier
+
+        // Stock outfitting inventory
+        bool found = false;
+        for (auto &stack : ia.inventory) {
+          if (stack.type.compatibleWeapon == m.weaponType && stack.type.caliber == caliber) {
+            stack.count += startCount;
+            found = true;
+            break;
+          }
+        }
+        if (!found) ia.inventory.push_back({ammoDef, startCount});
+
+        // Stock combat magazine
+        mag.storedAmmo[combatType] += startCount;
+
+        // Auto-select this ammo if it matches the primary weapon
+        if (wComp && m.name == primaryWeapon.name) {
+            wComp->selectedAmmo = combatType;
+        }
+      }
+    } else if (m.category == ModuleCategory::Ammo) {
+        ia.racks.push_back(m);
+    }
+  }
+
+  // Configure WeaponComponent from primary weapon stats
+  if (!primaryWeapon.name.empty()) {
+      if (!wComp) wComp = &registry.emplace<WeaponComponent>(entity);
+      
+      if (primaryWeapon.weaponType == WeaponType::Energy) wComp->tier = WeaponTier::T1_Energy;
+      else if (primaryWeapon.weaponType == WeaponType::Projectile) wComp->tier = WeaponTier::T2_Projectile;
+      else wComp->tier = WeaponTier::T3_Missile;
+
+      wComp->baseDamage = iw.damage;
+      wComp->fireCooldown = iw.cooldown;
+      wComp->energyCost = iw.energyCost;
+      wComp->mode = WeaponMode::Active;
+  }
+
   if (!ia.inventory.empty()) {
     registry.emplace_or_replace<InstalledAmmo>(entity, ia);
+    
+    // Update ShipStats for HUD visibility
+    float totalCount = 0;
+    for (auto const& [type, count] : mag.storedAmmo) totalCount += count;
+    tempStats.ammoStock = totalCount;
+    tempStats.ammoCapacity = mag.totalVolume; // Placeholder sync
   }
+
+  // Set initial population based on prefPassengers
+
+  // We'll calculate requirements from the components we just populated
+  float minCrewReq = static_cast<float>(icmd.modules.size()) * (1.0f + static_cast<int>(bp.hull.sizeTier) * 2.0f);
+  tempStats.crewPopulation = minCrewReq;
+  tempStats.minCrew = minCrewReq;
+  
+  // Passengers: prefPassengers * totalCapacity
+  float totalHabCap = 0;
+  auto getMultT = [](Tier t) {
+    if (t == Tier::T1) return 1.0f;
+    if (t == Tier::T2) return 3.0f;
+    if (t == Tier::T3) return 8.0f;
+    return 1.0f;
+  };
+  for (const auto& m : ih.modules) {
+    if (m.name.empty() || m.name == "Empty") continue;
+    totalHabCap += getMultT(m.getAttributeTier(AttributeType::Capacity)) * 10.0f;
+  }
+  tempStats.passengerPopulation = totalHabCap * passPref;
+  
+  registry.emplace_or_replace<ShipStats>(entity, tempStats);
 
   if (!registry.all_of<CreditsComponent>(entity)) {
     registry.emplace<CreditsComponent>(entity, 0.0f);
   }
 
   refreshStats(registry, entity, bp.hull);
+
+  // Ensure NPC fleet ships have a SpriteComponent if needed
+  if (!registry.all_of<SpriteComponent>(entity)) {
+     // Optional: SpriteComponent is used for icons/effects
+  }
 
   ShipOutfitHash oh = calculateOutfitHash(registry, entity);
   span->SetAttribute("vessel.outfit_hash", std::to_string(oh));
@@ -380,6 +510,104 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
     npc->role = bp.role;
     npc->lineIndex = bp.lineIndex;
   }
+
+  // Ensure 5-day TTE viability for all critical resources
+  const float TARGET_TTE_DAYS = 5.0f;
+  const float TARGET_TTE_SECONDS = TARGET_TTE_DAYS * GAME_SECONDS_PER_DAY;
+
+  auto ensureViability = [&]() {
+    refreshStats(registry, entity, bp.hull);
+    auto* s = registry.try_get<ShipStats>(entity);
+    if (!s) return;
+
+    bool adjustmentMade = false;
+
+    // 1. Food Viability
+    if (s->foodTTE < TARGET_TTE_DAYS) {
+      if (auto* c = registry.try_get<CargoComponent>(entity)) {
+        float drawRatePerSec = s->foodConsumption;
+        if (drawRatePerSec > 0) {
+          float neededFood = drawRatePerSec * TARGET_TTE_SECONDS;
+          if (neededFood > s->foodStock) {
+            c->inventory[Resource::Food] = neededFood;
+            adjustmentMade = true;
+          }
+        }
+      }
+    }
+
+    // 2. Fuel Viability
+    if (s->fuelTTE < TARGET_TTE_DAYS) {
+      float drawRatePerSec = s->fuelConsumption;
+      float neededFuel = drawRatePerSec * TARGET_TTE_SECONDS;
+
+      if (neededFuel > s->fuelStock) {
+        float tankSpace = s->fuelCapacity;
+        if (auto* c = registry.try_get<CargoComponent>(entity)) 
+          tankSpace -= (s->fuelStock - c->inventory[Resource::Fuel]);
+
+        float toTanks = std::min(neededFuel, tankSpace);
+        if (auto* fuelComp = registry.try_get<InstalledFuel>(entity)) {
+            fuelComp->level = toTanks;
+        }
+        if (auto* c = registry.try_get<CargoComponent>(entity)) {
+            c->inventory[Resource::Fuel] = std::max(0.0f, neededFuel - toTanks);
+        }
+        adjustmentMade = true;
+      }
+    }
+
+    // 3. Isotope Viability
+    if (s->isotopesTTE < TARGET_TTE_DAYS) {
+      if (auto* ip = registry.try_get<InstalledPower>(entity)) {
+          float drawRatePerSec = s->isotopesConsumption;
+          float neededIsotopes = drawRatePerSec * TARGET_TTE_SECONDS;
+          if (neededIsotopes > s->isotopesStock) {
+            ip->isotopeFuel = neededIsotopes;
+            adjustmentMade = true;
+          }
+      }
+    }
+
+    // 4. Ammo Viability
+    if (s->ammoTTE < TARGET_TTE_DAYS) {
+      if (auto* iw = registry.try_get<InstalledWeapons>(entity)) {
+          bool needsAmmo = false;
+          for (const auto& m : iw->modules) {
+              if (m.weaponType != WeaponType::Energy && !m.name.empty() && m.name != "Empty") {
+                  needsAmmo = true; break;
+              }
+          }
+          if (needsAmmo) {
+              registry.get_or_emplace<InstalledAmmo>(entity);
+              registry.get_or_emplace<AmmoMagazine>(entity);
+              
+              float drawRatePerSec = s->ammoConsumption;
+              float neededAmmo = drawRatePerSec * TARGET_TTE_SECONDS;
+              float diff = neededAmmo - s->ammoStock;
+              
+              if (diff > 0) {
+                  if (ia.inventory.empty()) {
+                      // Add a dummy stack if none exists to hold count
+                      ia.inventory.push_back({{}, static_cast<int>(diff)});
+                  } else {
+                      ia.inventory[0].count += static_cast<int>(diff);
+                  }
+                  // Just boost first type in magazine for TTE calculation
+                  for (auto& [type, count] : mag.storedAmmo) {
+                      count += static_cast<int>(diff); 
+                      break; 
+                  }
+                  adjustmentMade = true;
+              }
+          }
+      }
+    }
+
+    if (adjustmentMade) refreshStats(registry, entity, bp.hull);
+  };
+
+  ensureViability();
 
   span->End();
 }
@@ -589,175 +817,64 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
 void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
                                  const HullDef &hull) const {
   auto getMult = [](Tier t) {
-    if (t == Tier::T1)
-      return 1.0f;
-    if (t == Tier::T2)
-      return 3.0f;
-    if (t == Tier::T3)
-      return 8.0f;
+    if (t == Tier::T1) return 1.0f;
+    if (t == Tier::T2) return 3.0f;
+    if (t == Tier::T3) return 8.0f;
     return 1.0f;
   };
 
   ShipStats stats;
+  // Preserve existing mutable values if present
+  if (registry.all_of<ShipStats>(entity)) {
+    stats = registry.get<ShipStats>(entity);
+  }
+
   stats.maxHull = hull.baseHitpoints * hull.hpMultiplier;
-  stats.currentHull = stats.maxHull;
-  stats.totalMass = hull.baseMass * hull.massMultiplier;
+  stats.currentHull = std::min(stats.currentHull, stats.maxHull);
+  
+  stats.dryMass = hull.baseMass * hull.massMultiplier;
   stats.restingPowerDraw = 0.0f;
   stats.internalVolumeOccupied = 0.0f;
 
   auto sumModules = [&](const std::vector<ModuleDef> &modules) {
     for (const auto &m : modules) {
       if (!m.name.empty() && m.name != "Empty") {
-        stats.totalMass += m.mass;
+        stats.dryMass += m.mass;
         stats.restingPowerDraw += m.powerDraw;
         stats.internalVolumeOccupied += m.volumeOccupied;
       }
     }
   };
 
+  // --- 1. Basic Module Aggregation ---
   if (registry.all_of<InstalledEngines>(entity)) {
     auto &ie = registry.get<InstalledEngines>(entity);
     ie.totalThrust = 0;
-    ie.totalRotSpeed = 0;
     sumModules(ie.modules);
     for (const auto &m : ie.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
+      if (m.name.empty() || m.name == "Empty") continue;
       if (m.hasAttribute(AttributeType::Thrust))
-        ie.totalThrust +=
-            getMult(m.getAttributeTier(AttributeType::Thrust)) * 8000.0f;
+        ie.totalThrust += getMult(m.getAttributeTier(AttributeType::Thrust)) * 8000.0f;
     }
   }
+
   if (registry.all_of<InstalledWeapons>(entity)) {
-    auto &iw = registry.get<InstalledWeapons>(entity);
-    iw.damage = 0;
-    sumModules(iw.modules);
-    for (const auto &m : iw.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
-      if (m.hasAttribute(AttributeType::Caliber))
-        iw.damage +=
-            getMult(m.getAttributeTier(AttributeType::Caliber)) * 10.0f;
-    }
+    sumModules(registry.get<InstalledWeapons>(entity).modules);
   }
+
   if (registry.all_of<InstalledShields>(entity)) {
     auto &is = registry.get<InstalledShields>(entity);
     is.maxShield = 0;
     is.regenRate = 0;
     sumModules(is.modules);
     for (const auto &m : is.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
+      if (m.name.empty() || m.name == "Empty") continue;
       if (m.hasAttribute(AttributeType::Capacity))
-        is.maxShield +=
-            getMult(m.getAttributeTier(AttributeType::Capacity)) * 80.0f;
+        is.maxShield += getMult(m.getAttributeTier(AttributeType::Capacity)) * 80.0f;
       if (m.hasAttribute(AttributeType::Regen))
-        is.regenRate +=
-            getMult(m.getAttributeTier(AttributeType::Regen)) * 5.0f;
+        is.regenRate += getMult(m.getAttributeTier(AttributeType::Regen)) * 5.0f;
     }
     is.current = std::min(is.current, is.maxShield);
-    if (is.current <= 0)
-      is.current = is.maxShield;
-  }
-  if (registry.all_of<InstalledCargo>(entity)) {
-    auto &ic = registry.get<InstalledCargo>(entity);
-    ic.capacity = 0;
-    sumModules(ic.modules);
-    for (const auto &m : ic.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
-      if (m.hasAttribute(AttributeType::Volume))
-        ic.capacity +=
-            getMult(m.getAttributeTier(AttributeType::Volume)) * 50.0f;
-    }
-  }
-
-  // --- Habitation and Population ---
-  stats.passengerCapacity = 0;
-  stats.minCrew = 0;
-
-  struct HabModuleInfo {
-    const ModuleDef *def;
-    float capacity;
-    float efficiency;
-  };
-  std::vector<HabModuleInfo> habModules;
-
-  if (registry.all_of<InstalledHabitation>(entity)) {
-    auto &ih = registry.get<InstalledHabitation>(entity);
-    ih.totalCapacity = 0;
-    sumModules(ih.modules);
-    for (const auto &m : ih.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
-      float cap = getMult(m.getAttributeTier(AttributeType::Capacity)) * 10.0f;
-      float eff = 1.0f / getMult(m.getAttributeTier(AttributeType::Efficiency));
-      ih.totalCapacity += cap;
-      stats.passengerCapacity += cap;
-      habModules.push_back({&m, cap, eff});
-    }
-  }
-
-  if (registry.all_of<InstalledCommand>(entity)) {
-    auto &icmd = registry.get<InstalledCommand>(entity);
-    sumModules(icmd.modules);
-    // Placeholder: min crew based on command module count and hull size
-    stats.minCrew += static_cast<float>(icmd.modules.size()) * (1.0f + static_cast<int>(hull.sizeTier) * 2.0f);
-  }
-
-  // Sort hab modules by efficiency (best first)
-  std::sort(habModules.begin(), habModules.end(), [](const HabModuleInfo &a, const HabModuleInfo &b) {
-    return a.efficiency < b.efficiency;
-  });
-
-  // Distribute population
-  float totalPop = stats.crewPopulation + stats.passengerPopulation;
-  float remainingPop = totalPop;
-  stats.foodStock = std::max(0.0f, stats.foodStock); // Ensure non-negative
-
-  for (auto &hab : habModules) {
-    float assigned = std::min(remainingPop, hab.capacity);
-    if (assigned > 0) {
-      // Consume power if module is occupied
-      stats.restingPowerDraw += hab.def->powerDraw;
-      // Consume food (base rate * assigned pop * efficiency)
-      float foodRate = 0.01f * hab.efficiency;
-      stats.foodStock -= assigned * foodRate;
-    }
-    remainingPop -= assigned;
-  }
-  if (registry.all_of<InstalledPower>(entity)) {
-    auto &ip = registry.get<InstalledPower>(entity);
-    ip.output = 0;
-    sumModules(ip.modules);
-    for (const auto &m : ip.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
-      if (m.hasAttribute(AttributeType::Output))
-        ip.output +=
-            getMult(m.getAttributeTier(AttributeType::Output)) * 100.0f;
-    }
-    stats.energyCapacity = ip.output;
-    stats.currentEnergy = stats.energyCapacity;
-  }
-
-  if (registry.all_of<InstalledBatteries>(entity)) {
-    auto &ib = registry.get<InstalledBatteries>(entity);
-    ib.capacity = 0;
-    sumModules(ib.modules);
-    for (const auto &m : ib.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
-      if (m.hasAttribute(AttributeType::Capacity))
-        ib.capacity +=
-            getMult(m.getAttributeTier(AttributeType::Capacity)) * 500.0f;
-    }
-    stats.batteryCapacity = ib.capacity;
-    stats.batteryLevel = ib.capacity;
-  }
-
-  if (registry.all_of<InstalledCommand>(entity)) {
-    sumModules(registry.get<InstalledCommand>(entity).modules);
   }
 
   if (registry.all_of<InstalledReactionWheels>(entity)) {
@@ -765,38 +882,176 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
     irw.totalTurnRate = 0;
     sumModules(irw.modules);
     for (const auto &m : irw.modules) {
-      if (m.name.empty() || m.name == "Empty")
-        continue;
+      if (m.name.empty() || m.name == "Empty") continue;
       if (m.hasAttribute(AttributeType::TurnRate))
-        irw.totalTurnRate +=
-            getMult(m.getAttributeTier(AttributeType::TurnRate)) * 2000.0f;
+        irw.totalTurnRate += getMult(m.getAttributeTier(AttributeType::TurnRate)) * 2000.0f;
     }
   }
 
+  // --- 2. Habitation and Population (Resource Draw) ---
+  stats.passengerCapacity = 0;
+  stats.minCrew = 0;
+  struct HabInfo { const ModuleDef *def; float cap, eff; };
+  std::vector<HabInfo> habs;
+
+  if (registry.all_of<InstalledHabitation>(entity)) {
+    auto &ih = registry.get<InstalledHabitation>(entity);
+    sumModules(ih.modules);
+    ih.totalCapacity = 0;
+    for (const auto &m : ih.modules) {
+      if (m.name.empty() || m.name == "Empty") continue;
+      float cap = getMult(m.getAttributeTier(AttributeType::Capacity)) * 10.0f;
+      float eff = 1.0f / getMult(m.getAttributeTier(AttributeType::Efficiency));
+      ih.totalCapacity += cap;
+      stats.passengerCapacity += cap;
+      habs.push_back({&m, cap, eff});
+    }
+  }
+
+  if (registry.all_of<InstalledCommand>(entity)) {
+    auto &icmd = registry.get<InstalledCommand>(entity);
+    sumModules(icmd.modules);
+    // Min crew based on command modules and hull size
+    stats.minCrew = static_cast<float>(icmd.modules.size()) * (1.0f + static_cast<int>(hull.sizeTier) * 2.0f);
+  }
+
+  // Efficient modules fill first
+  std::sort(habs.begin(), habs.end(), [](const HabInfo &a, const HabInfo &b) { return a.eff < b.eff; });
+  
+  float totalPop = stats.crewPopulation + stats.passengerPopulation;
+  float remPop = totalPop;
+  float foodDrawRate = 0.0f;
+
+  for (auto &h : habs) {
+    float assigned = std::min(remPop, h.cap);
+    if (assigned > 0) {
+      // Consume food rate
+      foodDrawRate += assigned * (0.01f * h.eff);
+    }
+    remPop -= assigned;
+  }
+  // Food stock is actually in CargoComponent now as Resource::Food
+  // We'll calculate TTE based on CargoComponent::inventory[Resource::Food]
+
+  // --- 3. Power Generation and Storage ---
+  float powerGen = 0.0f;
+  if (registry.all_of<InstalledPower>(entity)) {
+    auto &ip = registry.get<InstalledPower>(entity);
+    sumModules(ip.modules);
+    ip.output = 0;
+    for (const auto &m : ip.modules) {
+      if (m.name.empty() || m.name == "Empty") continue;
+      if (m.hasAttribute(AttributeType::Output))
+        ip.output += getMult(m.getAttributeTier(AttributeType::Output)) * 100.0f;
+    }
+    powerGen = ip.output;
+    stats.energyCapacity = ip.output;
+  }
+
+  float batteryCap = 0.0f;
+  float combinedBatteryEff = 1.0f; // Average efficiency for simplified calc
+  if (registry.all_of<InstalledBatteries>(entity)) {
+    auto &ib = registry.get<InstalledBatteries>(entity);
+    sumModules(ib.modules);
+    ib.capacity = 0;
+    float effSum = 0;
+    int bCount = 0;
+    for (const auto &m : ib.modules) {
+      if (m.name.empty() || m.name == "Empty") continue;
+      float mCap = getMult(m.getAttributeTier(AttributeType::Capacity)) * 500.0f;
+      ib.capacity += mCap;
+      effSum += getMult(m.getAttributeTier(AttributeType::Efficiency));
+      bCount++;
+    }
+    batteryCap = ib.capacity;
+    stats.batteryCapacity = ib.capacity;
+    if (bCount > 0) combinedBatteryEff = effSum / bCount;
+  }
+
+  // Battery logic: Net power surplus charges batteries at tiered efficiency
+  float netPower = powerGen - stats.restingPowerDraw;
+  if (netPower > 0) {
+    // Charge: base efficiency * module efficiency (T1=1.4, T2=1.25, T3=1.1)
+    float chargeLoss = (hull.sizeTier == Tier::T1 ? 1.4f : (hull.sizeTier == Tier::T2 ? 1.25f : 1.1f)) * combinedBatteryEff;
+    // (Simplified) refreshStats doesn't tick deltaT, but we set restingPowerDraw to show the net
+  }
+  // --- 4. Final Physics and TTE Mapping ---
+  // Results are in DAYS (1 day = 60 seconds)
+  auto getTTE = [&](float stock, float drawRate) {
+    if (drawRate <= 0) return 99.0f; // Infinite
+    return (stock / drawRate) / GAME_SECONDS_PER_DAY;
+  };
+
+  stats.fuelStock = 0; stats.fuelCapacity = 0;
+  if (auto* fuel = registry.try_get<InstalledFuel>(entity)) {
+    stats.fuelStock = fuel->level;
+    stats.fuelCapacity = fuel->capacity;
+  }
+
+  stats.isotopesStock = 0; stats.isotopesCapacity = 100.0f; // Default capacity
+  if (auto* pwr = registry.try_get<InstalledPower>(entity)) {
+    stats.isotopesStock = pwr->isotopeFuel;
+  }
+
+  stats.ammoStock = 0; stats.ammoCapacity = 0;
+  if (auto* ammo = registry.try_get<InstalledAmmo>(entity)) {
+    stats.ammoCapacity = ammo->totalCapacity();
+    for (const auto& stack : ammo->inventory) {
+      stats.ammoStock += (float)stack.count;
+    }
+  }
+
+  stats.foodCapacity = stats.passengerCapacity; // Simplified: Habitation provides food storage
+
+  stats.wetMass = stats.dryMass + stats.fuelStock + stats.isotopesStock + stats.ammoStock * 0.1f;
+  if (auto* cargo = registry.try_get<CargoComponent>(entity)) {
+    stats.foodStock = cargo->inventory[Resource::Food];
+    stats.fuelStock += cargo->inventory[Resource::Fuel];
+    stats.fuelCapacity += cargo->maxCapacity; // Cargo can act as overflow fuel capacity
+    stats.wetMass += cargo->currentWeight;
+  }
+
+  stats.foodConsumption = foodDrawRate;
+  stats.foodTTE = getTTE(stats.foodStock, foodDrawRate);
+  
+  // Fuel TTE: assume 50% average throttle for mission planning
+  stats.fuelConsumption = 0.5f * 0.01f; // 50% power * 1% per unit per sec
+  stats.fuelTTE = getTTE(stats.fuelStock, stats.fuelConsumption);
+  
+  // Isotope TTE: draw based on restingPowerDraw
+  stats.isotopesConsumption = stats.restingPowerDraw * 0.001f;
+  stats.isotopesTTE = getTTE(stats.isotopesStock, stats.isotopesConsumption);
+  
+  // Ammo TTE: estimate based on kinetic weapon presence
+  stats.ammoConsumption = 0.0f;
+  if (auto* iwTotal = registry.try_get<InstalledWeapons>(entity)) {
+    for (const auto& m : iwTotal->modules) {
+      if (m.weaponType != WeaponType::Energy && !m.name.empty() && m.name != "Empty") {
+        stats.ammoConsumption += 0.1f; // 0.1 units per second per weapon (placeholder)
+      }
+    }
+  }
+  stats.ammoTTE = getTTE(stats.ammoStock, stats.ammoConsumption);
+
+  if (registry.all_of<InstalledAmmo>(entity)) {
+    float totalAmmoMass = 0;
+    for (const auto& stack : registry.get<InstalledAmmo>(entity).inventory) {
+      totalAmmoMass += stack.count * (stack.type.caliber == Tier::T3 ? 0.05f : 0.01f);
+    }
+    stats.wetMass += totalAmmoMass;
+    stats.ammoMass = totalAmmoMass;
+  }
+
+  stats.massDirty = true; // Signal physics engine to update b2Body mass
   registry.emplace_or_replace<ShipStats>(entity, stats);
 
   if (registry.all_of<InertialBody>(entity)) {
     auto &ib = registry.get<InertialBody>(entity);
-    if (registry.all_of<InstalledEngines>(entity)) {
-      ib.thrustForce = registry.get<InstalledEngines>(entity).totalThrust;
-    }
-
-    // Calculate rotation speed from reaction wheels (and a base minimum)
-    // divided by mass
-    float baseTurnRate = 500.0f; // Minimum rotational force
-    float wheelTurnRate = 0.0f;
-    if (registry.all_of<InstalledReactionWheels>(entity)) {
-      wheelTurnRate =
-          registry.get<InstalledReactionWheels>(entity).totalTurnRate;
-    }
-    ib.rotationSpeed = (baseTurnRate + wheelTurnRate) / stats.totalMass;
-
-    // Initial mass calculation
-    b2MassData md;
-    md.mass = stats.totalMass;
-    md.center = {0, 0};
-    md.rotationalInertia = stats.totalMass * 2.0f;
-    b2Body_SetMassData(ib.bodyId, md);
+    ib.thrustForce = registry.all_of<InstalledEngines>(entity) ? registry.get<InstalledEngines>(entity).totalThrust : 0.0f;
+    
+    float baseTurnRate = 500.0f;
+    float wheelTurnRate = registry.all_of<InstalledReactionWheels>(entity) ? registry.get<InstalledReactionWheels>(entity).totalTurnRate : 0.0f;
+    ib.rotationSpeed = (baseTurnRate + wheelTurnRate) / stats.wetMass;
   }
 }
 

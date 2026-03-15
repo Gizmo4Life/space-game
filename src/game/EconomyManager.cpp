@@ -11,6 +11,7 @@
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
+#include "game/components/Faction.h"
 #include "game/ShipOutfitter.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
@@ -128,6 +129,11 @@ void EconomyManager::init() {
       case ModuleCategory::ReactionWheel:
         r.inputs[resKey(Resource::Metals)] += 2.0f * multiplier;
         r.inputs[resKey(Resource::Electronics)] += 2.0f * multiplier;
+        break;
+      case ModuleCategory::Habitation:
+      case ModuleCategory::Cargo:
+        r.inputs[resKey(Resource::Metals)] += 2.0f * multiplier;
+        r.inputs[resKey(Resource::Plastics)] += 2.0f * multiplier;
         break;
       }
 
@@ -560,6 +566,65 @@ bool EconomyManager::buyModularShip(entt::registry &registry,
   return true;
 }
 
+bool EconomyManager::transferShipToFaction(entt::registry &registry,
+                                           entt::entity shipEntity,
+                                           uint32_t factionId) {
+  if (!registry.valid(shipEntity))
+    return false;
+
+  // 1. Get Planet it is landed on (needed to find the FactionEconomy)
+  entt::entity planet = entt::null;
+  if (registry.all_of<Landed>(shipEntity)) {
+    planet = registry.get<Landed>(shipEntity).planet;
+  }
+
+  if (planet == entt::null || !registry.all_of<PlanetEconomy>(planet)) {
+    // Fallback: If not landed, we can't easily find the local faction pool
+    // But for now, let's assume it must be landed to exchange.
+    return false;
+  }
+
+  auto &pEco = registry.get<PlanetEconomy>(planet);
+  if (pEco.factionData.count(factionId) == 0) return false;
+
+  // 2. Capture its current state as a blueprint
+  ShipBlueprint bp;
+  if (registry.all_of<HullDef>(shipEntity)) {
+    bp.hull = registry.get<HullDef>(shipEntity);
+  } else {
+    return false;
+  }
+
+  // Aggregate modules
+  auto addMods = [&](auto &comp) {
+    for (const auto &m : comp.modules) bp.modules.push_back(m);
+  };
+  if (registry.all_of<InstalledEngines>(shipEntity)) addMods(registry.get<InstalledEngines>(shipEntity));
+  if (registry.all_of<InstalledWeapons>(shipEntity)) addMods(registry.get<InstalledWeapons>(shipEntity));
+  if (registry.all_of<InstalledShields>(shipEntity)) addMods(registry.get<InstalledShields>(shipEntity));
+  if (registry.all_of<InstalledCargo>(shipEntity)) addMods(registry.get<InstalledCargo>(shipEntity));
+  if (registry.all_of<InstalledPower>(shipEntity)) addMods(registry.get<InstalledPower>(shipEntity));
+  if (registry.all_of<InstalledCommand>(shipEntity)) addMods(registry.get<InstalledCommand>(shipEntity));
+  if (registry.all_of<InstalledBatteries>(shipEntity)) addMods(registry.get<InstalledBatteries>(shipEntity));
+  if (registry.all_of<InstalledReactionWheels>(shipEntity)) addMods(registry.get<InstalledReactionWheels>(shipEntity));
+  if (registry.all_of<InstalledHabitation>(shipEntity)) addMods(registry.get<InstalledHabitation>(shipEntity));
+
+  if (registry.all_of<NPCComponent>(shipEntity)) {
+    bp.role = registry.get<NPCComponent>(shipEntity).role;
+    bp.lineIndex = registry.get<NPCComponent>(shipEntity).lineIndex;
+  }
+
+  // 3. Store in parkedShips
+  pEco.factionData[factionId].parkedShips.push_back(bp);
+
+  // 4. Destroy entity (transferred to collection)
+  registry.destroy(shipEntity);
+
+  std::cout << "[Economy] Ship transferred correctly back to faction collection at faction pool "
+            << factionId << "\n";
+  return true;
+}
+
 void EconomyManager::reEvaluateFactionDNA(uint32_t factionId,
                                           FactionEconomy &fEco,
                                           float deltaTime) {
@@ -864,11 +929,19 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
   if (it == fEco.parkedShips.end())
     return false;
 
-  if (registry.get<CreditsComponent>(player).amount < bid.price)
-    return false;
+  bool isFreeTransfer = false;
+  if (registry.all_of<Faction>(player)) {
+    if (registry.get<Faction>(player).getMajorityFaction() == bid.factionId) {
+      isFreeTransfer = true;
+    }
+  }
 
-  registry.get<CreditsComponent>(player).amount -= bid.price;
-  fEco.credits += bid.price;
+  if (!isFreeTransfer) {
+    if (registry.get<CreditsComponent>(player).amount < bid.price)
+      return false;
+    registry.get<CreditsComponent>(player).amount -= bid.price;
+    fEco.credits += bid.price;
+  }
 
   // Telemetry: Ship Purchase
   auto tradeSpan = space::Telemetry::instance().tracer()->StartSpan(
@@ -904,12 +977,10 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
 
     registry.emplace_or_replace<PlayerComponent>(newFlagship);
     registry.get<PlayerComponent>(newFlagship).isFlagship = true;
+    registry.emplace_or_replace<NameComponent>(newFlagship, "Flagship (" + bid.blueprint.hull.className + ")");
 
     float currentCredits = registry.get<CreditsComponent>(player).amount;
     registry.emplace_or_replace<CreditsComponent>(newFlagship, currentCredits);
-
-    registry.emplace_or_replace<NameComponent>(
-        newFlagship, "Player Ship (" + bid.blueprint.hull.className + ")");
 
     registry.remove<PlayerComponent>(player);
     if (registry.all_of<HullDef>(player)) {
@@ -917,8 +988,22 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
       oldNpc.isPlayerFleet = true;
       oldNpc.leaderEntity = newFlagship;
       oldNpc.state = AIState::Traveling;
+      
+      // Ensure the old flagship has a name for the Fleet Overlay
+      if (!registry.all_of<NameComponent>(player)) {
+          registry.emplace<NameComponent>(player, "Former Flagship");
+      }
     } else {
       registry.destroy(player);
+    }
+
+    // Update all existing wingmen to follow the new flagship
+    auto fleetView = registry.view<NPCComponent>();
+    for (auto e : fleetView) {
+      auto &npc = fleetView.get<NPCComponent>(e);
+      if (npc.isPlayerFleet && e != newFlagship) {
+        npc.leaderEntity = newFlagship;
+      }
     }
 
     if (registry.valid(newFlagship) &&
