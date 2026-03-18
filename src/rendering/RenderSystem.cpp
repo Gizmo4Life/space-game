@@ -14,6 +14,7 @@
 #include "game/components/TransformComponent.h"
 #include "game/components/WeaponComponent.h"
 #include "game/components/WorldConfig.h"
+#include "rendering/UIUtils.h"
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <opentelemetry/trace/provider.h>
@@ -30,18 +31,13 @@ void RenderSystem::update(entt::registry &registry, sf::RenderTarget &target,
   float zoom = WorldConfig::DEFAULT_ZOOM;
 
   // Find Player position for centering
-  entt::entity playerEntity = entt::null;
+  entt::entity playerEntity = findFlagship(registry);
   sf::Vector2f playerPhysPos(0, 0);
-  auto playerView = registry.view<PlayerComponent, InertialBody>();
-  for (auto e : playerView) {
-    if (registry.get<PlayerComponent>(e).isFlagship) { // P-rated: find flagship
-      playerEntity = e;
-      auto &inertial = playerView.get<InertialBody>(e);
-      if (b2Body_IsValid(inertial.bodyId)) {
-        b2Vec2 bPos = b2Body_GetPosition(inertial.bodyId);
-        playerPhysPos = {bPos.x, bPos.y};
-      }
-      break;
+  if (playerEntity != entt::null && registry.all_of<InertialBody>(playerEntity)) {
+    auto &inertial = registry.get<InertialBody>(playerEntity);
+    if (b2Body_IsValid(inertial.bodyId)) {
+      b2Vec2 bPos = b2Body_GetPosition(inertial.bodyId);
+      playerPhysPos = {bPos.x, bPos.y};
     }
   }
 

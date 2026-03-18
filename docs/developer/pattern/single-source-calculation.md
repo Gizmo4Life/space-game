@@ -39,5 +39,10 @@ void KinematicsSystem::update(entt::registry& registry) {
 }
 ```
 
-## Nuance
-If performance is a concern, use a `dirty` flag to trigger the single-source calculation only when inputs change. Do NOT opt for local recalculation as a performance optimization unless you are prepared to maintain parity across all sites.
+## UI Example
+UI panels should not manually sum component values to display totals (e.g., mass, volume). Instead, they should consume pre-calculated summary fields from a central source.
+
+*   **Undesired**: Looping over `bp.modules` in `ShipyardPanel::render` to sum volume.
+*   **Preferred**: Consuming `bp.calculateStats().totalVolume` or `ShipStats::internalVolumeOccupied`.
+
+This ensures the UI display exactly matches the engine's internal logic.

@@ -4,6 +4,7 @@
 #include "game/components/NPCComponent.h"
 #include "game/components/ShipStats.h"
 #include "game/components/PlayerComponent.h"
+#include "rendering/UIUtils.h"
 #include <algorithm>
 #include <opentelemetry/trace/scope.h>
 #include <sstream>
@@ -16,26 +17,7 @@ void FleetOverlay::draw(entt::registry &registry, sf::RenderTarget &target, cons
 
     // 1. Identify all fleet members (Flagship + Player-allied NPCs)
     std::vector<entt::entity> fleet;
-    
-    // Always put flagship first
-    auto playerView = registry.view<PlayerComponent>();
-    for (auto entity : playerView) {
-        if (playerView.get<PlayerComponent>(entity).isFlagship) {
-            fleet.push_back(entity);
-            break;
-        }
-    }
-
-    auto npcView = registry.view<NPCComponent>();
-    for (auto entity : npcView) {
-        auto &npc = npcView.get<NPCComponent>(entity);
-        if (npc.isPlayerFleet) {
-            // Avoid duplicates if for some reason flagship also has NPCComponent
-            if (std::find(fleet.begin(), fleet.end(), entity) == fleet.end()) {
-                fleet.push_back(entity);
-            }
-        }
-    }
+    getFleetEntities(registry, findFlagship(registry), fleet);
 
     if (fleet.empty()) return;
 
@@ -50,7 +32,7 @@ void FleetOverlay::draw(entt::registry &registry, sf::RenderTarget &target, cons
         box.setFillColor(sf::Color(30, 35, 40, 180));
         
         // Highlight flagship with different border
-        bool isFlagship = registry.all_of<PlayerComponent>(entity) && registry.get<PlayerComponent>(entity).isFlagship;
+        bool isFlagship = (entity == findFlagship(registry));
         if (isFlagship) {
             box.setOutlineColor(sf::Color(100, 200, 255, 180));
             box.setOutlineThickness(2.0f);

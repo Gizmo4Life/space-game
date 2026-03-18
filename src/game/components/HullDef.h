@@ -158,6 +158,13 @@ inline HullDef makeBasicHull(const std::string &name,
   return h;
 }
 
+// ─── Ship Blueprint Stats
+struct BlueprintStats {
+  float totalVolume = 0.0f;
+  float totalPowerDraw = 0.0f;
+  float totalMass = 0.0f;
+};
+
 // ─── Ship Blueprint (Hull + Modules)
 // ──────────────────────────────────────────────────────────
 struct ShipBlueprint {
@@ -166,6 +173,23 @@ struct ShipBlueprint {
   std::string role;
   float performanceScore = 1.0f; // For future genetic/learning sims
   uint32_t lineIndex = 0;
+
+  BlueprintStats calculateStats() const {
+    BlueprintStats s;
+    s.totalMass = hull.baseMass * hull.massMultiplier;
+    
+    auto isEmpty = [](const ModuleDef &m) {
+      return m.name.empty() || m.name == "Empty";
+    };
+
+    for (const auto &m : modules) {
+      if (isEmpty(m)) continue;
+      s.totalVolume += m.volumeOccupied;
+      s.totalPowerDraw += m.powerDraw;
+      s.totalMass += m.mass;
+    }
+    return s;
+  }
 
   bool validate(std::string &outError) const {
     if (!hull.validate(outError))
@@ -177,11 +201,10 @@ struct ShipBlueprint {
       return false;
     }
 
-    // 2. Technical constraints: Power, Volume, and Mandatory Modules
+    BlueprintStats s = calculateStats();
+
     bool hasCommandModule = false;
     bool hasEngineModule = false;
-    float totalVolume = 0.0f;
-    float totalPowerDraw = 0.0f;
 
     auto isEmpty = [](const ModuleDef &m) {
       return m.name.empty() || m.name == "Empty";
@@ -193,9 +216,6 @@ struct ShipBlueprint {
       const auto &m = modules[i];
       if (isEmpty(m))
         continue;
-
-      totalVolume += m.volumeOccupied;
-      totalPowerDraw += m.powerDraw;
 
       // Slot-tier enforcement: module size tier must not exceed slot size
       Tier moduleTier = m.getAttributeTier(AttributeType::Size);
@@ -214,15 +234,6 @@ struct ShipBlueprint {
         hasEngineModule = true;
     }
 
-    // Check internals (those beyond slot count)
-    for (size_t i = hull.slots.size(); i < modules.size(); ++i) {
-      const auto &m = modules[i];
-      if (isEmpty(m))
-        continue;
-      totalVolume += m.volumeOccupied;
-      totalPowerDraw += m.powerDraw;
-    }
-
     if (!hasCommandModule) {
       outError = "Ship requires an active Command module.";
       return false;
@@ -231,13 +242,13 @@ struct ShipBlueprint {
       outError = "Ship requires an active Engine module.";
       return false;
     }
-    if (totalVolume > hull.internalVolume) {
+    if (s.totalVolume > hull.internalVolume) {
       outError = "Modules exceed hull internal volume.";
       return false;
     }
-    if (totalPowerDraw > 0.0f) {
+    if (s.totalPowerDraw > 0.0f) {
       outError = "Ship has insufficient power generation (net draw: " +
-                 std::to_string(totalPowerDraw) + " GW).";
+                 std::to_string(s.totalPowerDraw) + " GW).";
       return false;
     }
 

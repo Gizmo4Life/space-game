@@ -25,7 +25,7 @@ SFML-based rendering pipeline: sprite management, camera follow, label rendering
   2. **Foreground layer** — Physics bodies (`InertialBody`). Ships are rendered using the unified `ShipRenderer` utility.
   3. **UI layer** — Offscreen indicators for `CelestialBody` and `NPCComponent` entities with distance labels.
   4. **Projectile layer** — `ProjectileComponent` bullets.
-- **FleetOverlay**: HUD element injected during Phase 3 of the `RenderSystem` update to display fleet TTE and health.
+- **FleetOverlay**: HUD element injected during Phase 3 of the `RenderSystem` update to display fleet TTE and health. Uses centralized `getFleetEntities` for list populating.
 
 ## 4. ShipRenderer Utility
 The `space::ShipRenderer` utility serves as the single source of truth for all ship visuals:

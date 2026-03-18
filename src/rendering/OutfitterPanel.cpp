@@ -1,5 +1,4 @@
 #include "OutfitterPanel.h"
-#include "UIUtils.h"
 #include "game/ShipOutfitter.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
@@ -11,8 +10,11 @@
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
 #include "game/components/ShipModule.h"
+#include "game/components/ShipStats.h"
+#include "rendering/UIUtils.h"
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
+#include <algorithm>
 
 namespace space {
 
@@ -22,6 +24,7 @@ OutfitterPanel::OutfitterPanel(entt::entity planet, entt::entity player)
 void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
                                  b2WorldId worldId) {
   auto &registry = ctx.registry;
+  auto playerEntity = ctx.player;
   if (const auto *kp = event.getIf<sf::Event::KeyPressed>()) {
     if (kp->code == sf::Keyboard::Key::Tab) {
       outfitterMarketMode_ = !outfitterMarketMode_;
@@ -39,14 +42,7 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
         kp->code == sf::Keyboard::Key::A) {
       // Find previous ship in fleet
       std::vector<entt::entity> fleet;
-      auto playerView = registry.view<PlayerComponent, HullDef, NameComponent>();
-      for (auto e : playerView)
-        if (playerView.get<PlayerComponent>(e).isFlagship)
-          fleet.push_back(e);
-      auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
-      for (auto e : npcView)
-        if (npcView.get<NPCComponent>(e).isPlayerFleet)
-          fleet.push_back(e);
+      getFleetEntities(registry, playerEntity, fleet);
 
       auto it = std::find(fleet.begin(), fleet.end(), targetShip_);
       if (it != fleet.end() && it != fleet.begin()) {
@@ -61,14 +57,7 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
     if (kp->code == sf::Keyboard::Key::Right ||
         kp->code == sf::Keyboard::Key::D) {
       std::vector<entt::entity> fleet;
-      auto playerView = registry.view<PlayerComponent, HullDef, NameComponent>();
-      for (auto e : playerView)
-        if (playerView.get<PlayerComponent>(e).isFlagship)
-          fleet.push_back(e);
-      auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
-      for (auto e : npcView)
-        if (npcView.get<NPCComponent>(e).isPlayerFleet)
-          fleet.push_back(e);
+      getFleetEntities(registry, playerEntity, fleet);
 
       auto it = std::find(fleet.begin(), fleet.end(), targetShip_);
       if (it != fleet.end() && std::next(it) != fleet.end()) {
@@ -242,24 +231,10 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
     // Stats summary
     float usedVol = 0.f;
     float powerTotal = 0.f;
-    auto collect = [&](const std::vector<ModuleDef> &modules) {
-      for (const auto &m : modules) {
-        if (m.name.empty() || m.name == "Empty")
-          continue;
-        usedVol += m.volumeOccupied;
-        powerTotal -= m.powerDraw;
-      }
-    };
-    if (registry.all_of<InstalledEngines>(targetShip_))
-      collect(registry.get<InstalledEngines>(targetShip_).modules);
-    if (registry.all_of<InstalledWeapons>(targetShip_))
-      collect(registry.get<InstalledWeapons>(targetShip_).modules);
-    if (registry.all_of<InstalledShields>(targetShip_))
-      collect(registry.get<InstalledShields>(targetShip_).modules);
-    if (registry.all_of<InstalledCargo>(targetShip_))
-      collect(registry.get<InstalledCargo>(targetShip_).modules);
-    if (registry.all_of<InstalledPower>(targetShip_))
-      collect(registry.get<InstalledPower>(targetShip_).modules);
+    if (auto *s = registry.try_get<ShipStats>(targetShip_)) {
+      usedVol = s->internalVolumeOccupied;
+      powerTotal = s->restingPowerDraw;
+    }
 
     dtext(x, y,
           "Vol: " + fmt(usedVol, 1) + "/" + fmt(hdef.internalVolume, 0) +

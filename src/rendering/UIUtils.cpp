@@ -1,9 +1,16 @@
 #include "UIUtils.h"
 #include "game/components/CelestialBody.h"
 #include "game/components/GameTypes.h"
+#include "game/components/HullDef.h"
+#include "game/components/NPCComponent.h"
+#include "game/components/NameComponent.h"
+#include "game/components/PlayerComponent.h"
+#include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <algorithm>
 #include <cmath>
 #include <entt/entt.hpp>
+#include <iomanip>
 #include <sstream>
 #include <string>
 
@@ -127,9 +134,35 @@ void drawText(sf::RenderTarget &target, const sf::Font &font,
               const std::string &str, sf::Vector2f pos, unsigned int size,
               sf::Color color) {
   sf::Text t(font, str, size);
-  t.setPosition(pos);
   t.setFillColor(color);
+  t.setPosition(pos);
   target.draw(t);
+}
+
+::entt::entity findFlagship(const ::entt::registry &registry) {
+  auto playerView = registry.view<PlayerComponent>();
+  for (auto entity : playerView) {
+    if (playerView.get<PlayerComponent>(entity).isFlagship) {
+      return entity;
+    }
+  }
+  return entt::null;
+}
+
+void getFleetEntities(const ::entt::registry &registry, ::entt::entity player,
+                      std::vector<::entt::entity> &outFleet) {
+  outFleet.clear();
+  if (registry.valid(player) &&
+      registry.all_of<HullDef, NameComponent>(player)) {
+    outFleet.push_back(player);
+  }
+
+  auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
+  for (auto e : npcView) {
+    if (npcView.get<NPCComponent>(e).isPlayerFleet) {
+      outFleet.push_back(e);
+    }
+  }
 }
 
 } // namespace space

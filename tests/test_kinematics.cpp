@@ -115,13 +115,17 @@ TEST_CASE("KinematicsSystem Apply Force", "[physics][kinematics]") {
   bodyDef.type = b2_dynamicBody;
   b2BodyId bodyId = b2CreateBody(worldId, &bodyDef);
 
-  auto &inertial = registry.emplace<InertialBody>(entity, bodyId);
-  inertial.thrustForce = 1000.0f;
-
+  registry.emplace<InertialBody>(entity, bodyId);
   registry.emplace<TransformComponent>(entity);
   auto& fuel = registry.emplace<InstalledFuel>(entity);
   fuel.level = 100.0f;
   fuel.capacity = 100.0f;
+
+  auto& engines = registry.emplace<InstalledEngines>(entity);
+  ModuleDef engineModule;
+  engineModule.name = "Test Engine";
+  engineModule.attributes.push_back({AttributeType::Thrust, Tier::T1});
+  engines.modules.push_back(engineModule);
 
   auto &hull = registry.emplace<HullDef>(entity);
   hull.name = "Test Hull";
@@ -135,12 +139,12 @@ TEST_CASE("KinematicsSystem Apply Force", "[physics][kinematics]") {
 
   KinematicsSystem::applyThrust(registry, entity, 1.0f); // Max thrust
 
-  // F = ma -> 1000N = 100kg * a -> a = 10m/s^2
-  // After 0.1s, v = at = 10 * 0.1 = 1.0m/s
+  // F = ma -> 8000N = 200kg * a (100 dry + 100 fuel) -> a = 40m/s^2
+  // After 0.1s, v = at = 40 * 0.1 = 4.0m/s
   b2World_Step(worldId, 0.1f, 4);
-
   b2Vec2 vel = b2Body_GetLinearVelocity(bodyId);
-  REQUIRE((vel.x == Catch::Approx(1.0f).margin(0.1f)));
+  
+  REQUIRE((vel.x == Catch::Approx(4.0f).margin(0.1f)));
 
   b2DestroyWorld(worldId);
 }

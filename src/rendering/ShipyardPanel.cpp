@@ -14,6 +14,7 @@
 #include "game/components/ShipStats.h"
 #include "rendering/UIUtils.h"
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
 #include <algorithm>
 #include <entt/entt.hpp>
 #include <opentelemetry/trace/provider.h>
@@ -38,16 +39,7 @@ void ShipyardPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
       detailScrollY_ = 0.f;
 
       if (mode_ == ShipyardMode::Sell) {
-        fleetEntities_.clear();
-        if (registry.valid(playerEntity) &&
-            registry.all_of<HullDef, NameComponent>(playerEntity))
-          fleetEntities_.push_back(playerEntity);
-        auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
-        for (auto e : npcView) {
-          if (npcView.get<NPCComponent>(e).isPlayerFleet) {
-            fleetEntities_.push_back(e);
-          }
-        }
+        getFleetEntities(registry, playerEntity, fleetEntities_);
       }
     }
 
@@ -95,15 +87,8 @@ void ShipyardPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
                                                playerEntity, bid, worldId,
                                                buyToFleet, buyAsFlagship)) {
 
-          // Re-sync after flagship change (only if we need to update the local playerEntity handle inside this function's logic)
-          auto playerView =
-              registry.view<PlayerComponent, HullDef, NameComponent>();
-          for (auto entity : playerView) {
-            if (playerView.get<PlayerComponent>(entity).isFlagship) {
-              playerEntity = entity;
-              break;
-            }
-          }
+          // Re-sync after flagship change
+          playerEntity = findFlagship(registry);
 
           currentBids_ =
               EconomyManager::instance().getHullBids(registry, planetEntity_);
@@ -139,24 +124,9 @@ void ShipyardPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
 
       if (success) {
         // Re-sync playerEntity if flagship was sold/transferred
-        auto playerView = registry.view<PlayerComponent>();
-        for (auto entity : playerView) {
-          if (playerView.get<PlayerComponent>(entity).isFlagship) {
-            playerEntity = entity;
-            break;
-          }
-        }
+        playerEntity = findFlagship(registry);
         // Refresh list
-        fleetEntities_.clear();
-        if (registry.valid(playerEntity) &&
-            registry.all_of<HullDef, NameComponent>(playerEntity))
-          fleetEntities_.push_back(playerEntity);
-        auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
-        for (auto e : npcView) {
-          if (npcView.get<NPCComponent>(e).isPlayerFleet) {
-            fleetEntities_.push_back(e);
-          }
-        }
+        getFleetEntities(registry, playerEntity, fleetEntities_);
         selectedBidIndex_ =
             std::min(selectedBidIndex_, (int)fleetEntities_.size() - 1);
         span->SetAttribute(isTransfer ? "transfer.success" : "sell.success", true);
@@ -341,20 +311,26 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
 
   // Technical Stats
   float usedVol = 0.f;
+  float totalVol = bp.hull.internalVolume;
   float powerDraw = 0.f;
-  float totalMass = bp.hull.baseMass * bp.hull.massMultiplier;
-  for (const auto &m : bp.modules) {
-    if (m.name.empty() || m.name == "Empty")
-      continue;
-    usedVol += m.volumeOccupied;
-    powerDraw += m.powerDraw;
-    totalMass += m.mass;
+  float totalMass = 0.f;
+
+  if (mode_ == ShipyardMode::Buy) {
+    auto bstats = bp.calculateStats();
+    usedVol = bstats.totalVolume;
+    powerDraw = bstats.totalPowerDraw;
+    totalMass = bstats.totalMass;
+  } else {
+    entt::entity e = fleetEntities_[selectedBidIndex_];
+    if (auto *s = registry.try_get<ShipStats>(e)) {
+      usedVol = s->internalVolumeOccupied;
+      powerDraw = s->restingPowerDraw;
+      totalMass = s->wetMass;
+    }
   }
 
-  dtext(dx, dy,
-        "Volume: " + fmt(usedVol, 1) + " / " + fmt(bp.hull.internalVolume, 0),
-        14,
-        (usedVol > bp.hull.internalVolume) ? sf::Color::Red : sf::Color::Cyan);
+  dtext(dx, dy, "Volume: " + fmt(usedVol, 1) + " / " + fmt(totalVol, 0), 14,
+        (usedVol > totalVol) ? sf::Color::Red : sf::Color::Cyan);
   dtext(dx, dy, "Mass: " + fmt(totalMass, 1) + " t", 14, sf::Color::White);
   dtext(dx, dy, "Power Draw: " + fmt(powerDraw, 1) + " GW", 14,
         (powerDraw > 1.f) ? sf::Color::Yellow : sf::Color(100, 255, 100));
@@ -394,15 +370,16 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
 
   if (mode_ == ShipyardMode::Sell && !fleetEntities_.empty()) {
     entt::entity e = fleetEntities_[selectedBidIndex_];
-    if (registry.all_of<ShipStats>(e)) {
-      auto &s = registry.get<ShipStats>(e);
-      foodTTE = s.foodTTE;
-      fuelTTE = s.fuelTTE;
-      isotopesTTE = s.isotopesTTE;
-      ammoTTE = s.ammoTTE;
-      showAmmo = true;
+    if (auto *s = registry.try_get<ShipStats>(e)) {
+      foodTTE = s->foodTTE;
+      fuelTTE = s->fuelTTE;
+      isotopesTTE = s->isotopesTTE;
+      ammoTTE = s->ammoTTE;
+      showAmmo = (s->ammoCapacity > 0);
     }
   } else {
+    // For Bids: Bids come fully stocked (Standard TTE is 5 days)
+    // We only show ammo if kinetic modules are present
     for (const auto &m : bp.modules) {
       if (m.category == ModuleCategory::Weapon &&
           m.weaponType != WeaponType::Energy && !m.name.empty() &&

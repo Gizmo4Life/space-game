@@ -24,6 +24,7 @@
 #include "rendering/LandingScreen.h"
 #include "rendering/MainRenderer.h"
 #include "rendering/RenderSystem.h"
+#include "rendering/UIUtils.h"
 
 int main() {
   using namespace space;
@@ -145,15 +146,7 @@ int main() {
     // ───────────────────────────────────────────────────────
 
     // Refresh playerEntity to the active flagship
-    {
-      auto playerView = registry.view<PlayerComponent>();
-      for (auto e : playerView) {
-        if (playerView.get<PlayerComponent>(e).isFlagship) {
-          playerEntity = e;
-          break;
-        }
-      }
-    }
+    playerEntity = findFlagship(registry);
 
     // 'L': find nearest planet and open landing screen
     if (lHeld && registry.valid(playerEntity) &&

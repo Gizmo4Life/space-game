@@ -26,9 +26,8 @@ private:
   std::vector<DetailedHullBid> currentBids_;
   std::vector<entt::entity> fleetEntities_; // For Sell mode
   int selectedBidIndex_ = 0;
-  int scrollOffset_ = 0;             // For ship list
-  float detailScrollY_ = 0.f;        // For right-side detail pane
-  std::set<size_t> expandedModules_; // Deprecated soon?
+  int scrollOffset_ = 0;      // For ship list
+  float detailScrollY_ = 0.f; // For right-side detail pane
 };
 
 } // namespace space

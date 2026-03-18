@@ -15,12 +15,8 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - Ships must maintain a non-negative `PowerBalance` (Total GW >= 0).
 - UI summarizes available hard points and engine mounts by tier (Small/Medium/Large).
 - **Synced Blueprints**: Every UI panel (Shipyard, Outfitter) now utilizes the unified `ShipRenderer` in `Schematic` mode, ensuring visual consistency between ship specs and the in-game vessel.
-- **Visual Preview**: The `OutfitterPanel` includes a live ship blueprint preview, a dedicated detail pane, and a **Consumption Analysis** summary (GW/hour draw and TTE estimates).
-- **UI Resilience**: Panels implement **Vessel Data Guards** (displaying "Vessel data temporarily unavailable") to handle entities that are in an invalid or transitional state (e.g., during rapid refits).
-- **Automatic Scrolling**: Lists in `ShipyardPanel` and `OutfitterPanel` automatically scroll to maintain visibility of the selected item.
-- **Detail Pane Scrolling**: Large blocks of information (module stats, hull specs) in detail panes are scrollable using the `[` and `]` keys.
-- **Fleet Management**: The `FleetOverlay` provides a persistent HUD element displaying member health and Time-to-Exhaustion (TTE) for critical resources.
-- **Ship Exchange UI**: `ShipyardPanel` supports `[E] Transfer to Faction` for moving vessels to the faction collection while landed. Aligned faction transfers are displayed as `FREE`.
+- **Centralized Housekeeping**: All panels utilize `space::findFlagship` and `space::getFleetEntities` from `UIUtils.h` for vessel identification, ensuring logic parity across the HUD and landing overlays.
+- **Unified Stat Sourcing**: UI panels consume derived statistics (Volume, Power, TTE) directly from `ShipStats` or `BlueprintStats`, eliminating manual re-calculation within the rendering layer.
 
 ## 1. Physical Scope
 - **Path:** `/src/rendering/` — `LandingScreen.h/.cpp`, `MarketPanel.h/.cpp`, `ShipyardPanel.h/.cpp`, `OutfitterPanel.h/.cpp`, `InfoPanel.h/.cpp`, `LandingPanel.h`, `UIUtils.h/.cpp`
@@ -39,6 +35,7 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - [rendering-schematic-visuals](/docs/developer/pattern/rendering-schematic-visuals.md) (P) — Blueprint outlines moving away from faction color schemes.
 - [rendering-scrollable-subpanel](/docs/developer/pattern/rendering-scrollable-subpanel.md) (P) — Detail pane scrolling via `[` and `]` keys; automatic list selection clamping.
 - [ui-component-guard](/docs/developer/pattern/ui-component-guard.md) (P) — Resilient `try_get` access for `CargoComponent` and `CreditsComponent`
+- [housekeeping-encapsulation](/docs/developer/pattern/housekeeping-encapsulation.md) (P) — Centralized `UIUtils` for flagship and fleet registration.
 
 ## 4. Telemetry & Observability
 - `game.ui.landing.open` — attributes: `planet.id`, `player.id`

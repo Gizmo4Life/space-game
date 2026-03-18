@@ -12,6 +12,7 @@
 #include <entt/entt.hpp>
 #include "game/components/Faction.h"
 #include "game/components/PlayerComponent.h"
+#include "rendering/UIUtils.h"
 
 #include <SFML/Graphics.hpp>
 #include <algorithm>
@@ -305,13 +306,10 @@ void NPCShipManager::tickAI(entt::registry &registry, float dt) {
       }
 
       if (needNewLeader) {
-        auto playerView = registry.view<PlayerComponent>();
-        for (auto e : playerView) {
-          if (playerView.get<PlayerComponent>(e).isFlagship) {
-            npc.leaderEntity = e;
-            leader = e;
-            break;
-          }
+        entt::entity f = findFlagship(registry);
+        if (f != entt::null) {
+          npc.leaderEntity = f;
+          leader = f;
         }
       }
     }

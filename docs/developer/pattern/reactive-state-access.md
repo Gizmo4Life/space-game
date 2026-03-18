@@ -38,5 +38,10 @@ stats.foodStock = cargo->inventory[Resource::Food]; // Manual sync required ever
 cargo->inventory[Resource::Food] -= 10.0f; // currentWeight is out of sync!
 ```
 
-## Nuance
-If a system must mirror values (e.g., for performance or as a public API for scripts), it MUST use a centralized update method (like `ShipOutfitter::refreshStats`) that is triggered by a `dirty` flag or a reactive event.
+## UI Example
+UI panels should query derived statistics from a specialized stats component (e.g., `ShipStats`) rather than attempting to recalculate them from raw components (e.g., `CargoComponent`, `InstalledModules`).
+
+*   **Undesired**: Reading `CargoComponent` manually in `ShipyardPanel` to estimate weight.
+*   **Preferred**: Reading `ShipStats::wetMass` which is already synchronized by the engine.
+
+This reduces the complexity of UI code and ensures that any balance changes to the mass calculation are automatically reflected in the interface.

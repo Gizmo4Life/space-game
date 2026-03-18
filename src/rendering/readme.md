@@ -9,7 +9,7 @@ This directory contains classes and utilities responsible for the visual represe
 - **OutfitterPanel**: UI for managing ship modules and ammunition, featuring a three-column layout with scrollable lists and a detail pane.
 - **FleetOverlay**: Persistent HUD element displaying fleet member health and Time-to-Exhaustion (TTE) for critical resources.
 - **LandingPanel**: Base class for planetside UI screens.
-- **UIUtils**: Common helper functions for formatting and UI drawing.
+- **UIUtils**: Centralized source of truth for vessel identification (`findFlagship`) and fleet registration (`getFleetEntities`), plus common formatting helpers.
 
 ## UI Navigation Standards
 - **Vertical Navigation**: `W`/`S` or Arrow keys.
