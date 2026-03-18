@@ -1,5 +1,6 @@
 #pragma once
 #include "LandingPanel.h"
+#include "VesselHUD.h"
 #include <SFML/Graphics.hpp>
 #include <box2d/box2d.h>
 #include <entt/entt.hpp>
@@ -22,11 +23,11 @@ public:
   void close();
 
   /// Handle keyboard/mouse events. Call every frame while isOpen().
-  void handleEvent(const sf::Event &event, entt::registry &registry,
+  void handleEvent(const sf::Event &event, const UIContext &ctx,
                    b2WorldId worldId);
 
   /// Render the full overlay onto window. Call every frame while isOpen().
-  void render(sf::RenderTarget &target, entt::registry &registry,
+  void render(sf::RenderTarget &target, const UIContext &ctx,
               const sf::Font *font);
 
 private:

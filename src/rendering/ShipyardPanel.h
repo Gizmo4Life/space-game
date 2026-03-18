@@ -12,9 +12,9 @@ public:
   ShipyardPanel(entt::entity planet, entt::entity player);
   virtual ~ShipyardPanel() = default;
 
-  void handleEvent(const sf::Event &event, ::entt::registry &registry,
+  void handleEvent(const sf::Event &event, const UIContext &ctx,
                    b2WorldId worldId) override;
-  void render(sf::RenderTarget &target, ::entt::registry &registry,
+  void render(sf::RenderTarget &target, const UIContext &ctx,
               const sf::Font *font, sf::FloatRect rect) override;
 
 private:

@@ -27,28 +27,28 @@ TEST_CASE("Ship Resource Management", "[resource]") {
     stats.crewPopulation = 10.0f;
 
     auto& cargo = registry.emplace<CargoComponent>(entity);
-    cargo.inventory[Resource::Food] = 100.0f;
-    cargo.inventory[Resource::Fuel] = 50.0f;
-    cargo.inventory[Resource::Isotopes] = 20.0f;
+    cargo.maxCapacity = 1000.0f;
+    cargo.add(Resource::Food, 100.0f);
+    cargo.add(Resource::Fuel, 50.0f);
+    cargo.add(Resource::Isotopes, 20.0f);
 
     SECTION("Dry Mass vs Wet Mass Calculation") {
         ShipOutfitter::instance().refreshStats(registry, entity, hull);
+        auto& stats_ref = registry.get<ShipStats>(entity);
         
         // Dry mass should be hull mass + (initially 0) module mass
-        CHECK(stats.dryMass == 100.0f);
+        CHECK(stats_ref.dryMass == 100.0f);
         
         // Wet mass should include cargo
-        // Weights: Food=1.0, Fuel=2.0, Isotopes=5.0 (assuming these ratios for test)
-        // Wait, I should check the actual weight ratios in ShipOutfitter.cpp
-        // refreshStats uses: Food * 0.05, Fuel * 0.2, Isotopes * 0.5, Ammo * 0.1
-        float expectedCargoMass = (100.0f * 0.05f) + (50.0f * 0.2f) + (20.0f * 0.5f); // 5 + 10 + 10 = 25
-        CHECK(stats.wetMass == Catch::Approx(125.0f));
+        // refreshStats uses 1:1 weight for all cargo now via currentWeight
+        CHECK(stats.wetMass == Catch::Approx(270.0f));
     }
 
     SECTION("TTE Calculation") {
         // Setup a Habitation module to consume food
         InstalledHabitation ih;
         ModuleDef hab;
+        hab.name = "Habitation Unit";
         hab.category = ModuleCategory::Habitation;
         hab.attributes.push_back({AttributeType::Capacity, Tier::T1});
         hab.attributes.push_back({AttributeType::Efficiency, Tier::T1}); // 1.0 multiplier
@@ -59,12 +59,15 @@ TEST_CASE("Ship Resource Management", "[resource]") {
 
         // Food depletion: 10 crew * 0.01 units/sec = 0.1 units/sec
         // 100 units / 0.1 units/sec = 1000 sec
-        CHECK(stats.foodTTE == Catch::Approx(1000.0f));
+        // refreshStats returns TTE in DAYS (1 day = 60s)
+        // 1000 / 60 = 16.67 days
+        CHECK(stats.foodTTE == Catch::Approx(16.666f).margin(0.01f));
     }
 
     SECTION("Battery Charging Efficiency") {
         InstalledPower ip;
         ModuleDef reactor;
+        reactor.name = "Nuclear Reactor";
         reactor.category = ModuleCategory::Reactor;
         reactor.powerDraw = -10.0f; // 10GW output
         ip.modules.push_back(reactor);
@@ -72,6 +75,7 @@ TEST_CASE("Ship Resource Management", "[resource]") {
 
         InstalledBatteries ib;
         ModuleDef battery;
+        battery.name = "Storage Battery";
         battery.category = ModuleCategory::Battery;
         battery.powerDraw = 5.0f; // 5GW charging
         ib.modules.push_back(battery);
@@ -87,12 +91,12 @@ TEST_CASE("Ship Resource Management", "[resource]") {
         // Isotopes Energy = 1000.0
         // Total Draw = 5 (battery) - 10 (reactor) = -5 (surplus)
         // If surplus, no isotopes needed.
-        CHECK(stats.isotopesTTE == -1.0f); // Stable
+        CHECK(stats.isotopesTTE == 99.0f); // Stable sentinel in getTTE
     }
 
     SECTION("Resource Depletion Consequences") {
+        cargo.remove(Resource::Food, 100.0f); // Use API to keep currentWeight in sync
         stats.foodStock = 0.0f;
-        cargo.inventory[Resource::Food] = 0.0f;
         stats.crewPopulation = 10.0f;
         stats.minCrew = 5.0f;
         

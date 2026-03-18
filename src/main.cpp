@@ -88,7 +88,8 @@ int main() {
 
       // Route events to landing screen when open
       if (landingScreen.isOpen()) {
-        landingScreen.handleEvent(*event, registry, physics.getWorldId());
+        UIContext ctx{registry, playerEntity};
+        landingScreen.handleEvent(*event, ctx, physics.getWorldId());
         continue;
       }
 
@@ -133,7 +134,8 @@ int main() {
                            fontLoaded ? &gameFont : nullptr);
       // Switch to UI view so the overlay fills the screen
       renderer.getWindow().setView(renderer.getWindow().getDefaultView());
-      landingScreen.render(renderer.getWindow(), registry,
+      UIContext ctx{registry, playerEntity};
+      landingScreen.render(renderer.getWindow(), ctx,
                            fontLoaded ? &gameFont : nullptr);
       renderer.display();
       continue;
@@ -143,11 +145,13 @@ int main() {
     // ───────────────────────────────────────────────────────
 
     // Refresh playerEntity to the active flagship
-    auto playerView = registry.view<PlayerComponent>();
-    for (auto e : playerView) {
-      if (playerView.get<PlayerComponent>(e).isFlagship) {
-        playerEntity = e;
-        break;
+    {
+      auto playerView = registry.view<PlayerComponent>();
+      for (auto e : playerView) {
+        if (playerView.get<PlayerComponent>(e).isFlagship) {
+          playerEntity = e;
+          break;
+        }
       }
     }
 

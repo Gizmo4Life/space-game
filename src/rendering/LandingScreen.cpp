@@ -7,6 +7,7 @@
 #include "engine/telemetry/Telemetry.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/NameComponent.h"
+#include "game/components/PlayerComponent.h"
 #include <SFML/Graphics.hpp>
 #include <opentelemetry/trace/provider.h>
 
@@ -39,8 +40,8 @@ void LandingScreen::updatePanels() {
       std::make_unique<MarketPanel>(planetEntity_, playerEntity_);
 }
 
-void LandingScreen::handleEvent(const sf::Event &event,
-                                entt::registry &registry, b2WorldId worldId) {
+void LandingScreen::handleEvent(const sf::Event &event, const UIContext &ctx,
+                                b2WorldId worldId) {
   if (!open_)
     return;
 
@@ -66,14 +67,18 @@ void LandingScreen::handleEvent(const sf::Event &event,
   }
 
   if (panels_.count(currentTab_)) {
-    panels_[currentTab_]->handleEvent(event, registry, worldId);
+    panels_[currentTab_]->handleEvent(event, ctx, worldId);
   }
 }
 
-void LandingScreen::render(sf::RenderTarget &target, entt::registry &registry,
+void LandingScreen::render(sf::RenderTarget &target, const UIContext &ctx,
                            const sf::Font *font) {
   if (!open_ || !font)
     return;
+
+  auto &registry = ctx.registry;
+  playerEntity_ = ctx.player; // Keep track of current player flagship
+
   // Draw Panel
   sf::Vector2u size = target.getSize();
   sf::FloatRect rect({50.f, 50.f}, {size.x - 100.f, size.y - 100.f});
@@ -127,12 +132,12 @@ void LandingScreen::render(sf::RenderTarget &target, entt::registry &registry,
 
   drawTab(LandingTab::Info, "[1] Info", sf::Color(150, 150, 150),
           currentTab_ == LandingTab::Info);
-  drawTab(LandingTab::Market, "[2] Market", sf::Color(150, 150, 150),
-          currentTab_ == LandingTab::Market);
+  drawTab(LandingTab::Shipyard, "[2] Shipyard", sf::Color(150, 150, 150),
+          currentTab_ == LandingTab::Shipyard);
   drawTab(LandingTab::Outfitter, "[3] Outfitter", sf::Color(150, 150, 150),
           currentTab_ == LandingTab::Outfitter);
-  drawTab(LandingTab::Shipyard, "[4] Shipyard", sf::Color(150, 150, 150),
-          currentTab_ == LandingTab::Shipyard);
+  drawTab(LandingTab::Market, "[4] Market", sf::Color(150, 150, 150),
+          currentTab_ == LandingTab::Market);
 
   // Divider
   sf::RectangleShape div({rect.size.x - 40.f, 1.f});
@@ -144,7 +149,7 @@ void LandingScreen::render(sf::RenderTarget &target, entt::registry &registry,
                             {rect.size.x - 40.f, rect.size.y - (tabY + 40.f)});
 
   if (panels_.count(currentTab_)) {
-    panels_[currentTab_]->render(target, registry, font, contentRect);
+    panels_[currentTab_]->render(target, ctx, font, contentRect);
   }
 }
 

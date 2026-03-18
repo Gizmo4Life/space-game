@@ -20,8 +20,7 @@ void ResourceSystem::update(entt::registry &registry, float deltaTime) {
             float foodDraw = totalPop * 0.01f * deltaTime; // 0.01 units per person per second
             
             if (cargo->inventory.count(Resource::Food) > 0 && cargo->inventory[Resource::Food] > 0) {
-                float currentFood = cargo->inventory[Resource::Food];
-                cargo->inventory[Resource::Food] = std::max(0.0f, currentFood - foodDraw);
+                cargo->remove(Resource::Food, foodDraw);
                 stats.foodStock = cargo->inventory[Resource::Food];
             } else {
                 // Food Depletion: 10% death rate per day if starvation occurs

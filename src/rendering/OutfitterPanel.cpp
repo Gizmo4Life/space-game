@@ -19,8 +19,9 @@ namespace space {
 OutfitterPanel::OutfitterPanel(entt::entity planet, entt::entity player)
     : planetEntity_(planet), playerEntity_(player) {}
 
-void OutfitterPanel::handleEvent(const sf::Event &event,
-                                 entt::registry &registry, b2WorldId worldId) {
+void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
+                                 b2WorldId worldId) {
+  auto &registry = ctx.registry;
   if (const auto *kp = event.getIf<sf::Event::KeyPressed>()) {
     if (kp->code == sf::Keyboard::Key::Tab) {
       outfitterMarketMode_ = !outfitterMarketMode_;
@@ -193,7 +194,7 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
           if (selectedOutfitterIndex_ < (int)entries.size()) {
             auto &e = entries[selectedOutfitterIndex_];
             ShipOutfitter::instance().sellModule(registry, targetShip_,
-                                                 planetEntity_, e.cat, e.idx);
+                                                  planetEntity_, e.cat, e.idx);
           }
         }
       }
@@ -201,10 +202,13 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
   }
 }
 
-void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
+void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
                             const sf::Font *font, sf::FloatRect rect) {
-  if (!font || !registry.valid(playerEntity_))
+  if (!font || !ctx.registry.valid(ctx.player))
     return;
+
+  auto &registry = ctx.registry;
+  auto playerEntity = ctx.player;
 
   float x = rect.position.x + 20.f;
   float y = rect.position.y + 20.f;
@@ -219,7 +223,7 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
   };
 
   if (!registry.valid(targetShip_) || !registry.all_of<HullDef, NameComponent>(targetShip_)) {
-    targetShip_ = playerEntity_;
+    targetShip_ = playerEntity;
   }
 
   if (!registry.valid(targetShip_) || !registry.all_of<HullDef, NameComponent>(targetShip_)) {
@@ -266,7 +270,7 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
   }
 
   CreditsComponent *pCredits =
-      registry.try_get<CreditsComponent>(playerEntity_);
+      registry.try_get<CreditsComponent>(playerEntity);
   dtext(x, y, "Credits: $" + (pCredits ? fmt(pCredits->amount, 0) : "0"), 16,
         sf::Color(100, 255, 100));
   y += 10.f;
@@ -352,7 +356,7 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
     selMod = shopModules[selectedOutfitterIndex_];
     hasSelection = true;
   } else if (!outfitterMarketMode_ &&
-             selectedOutfitterIndex_ < (int)allInstalled.size()) {
+              selectedOutfitterIndex_ < (int)allInstalled.size()) {
     selMod = allInstalled[selectedOutfitterIndex_];
     hasSelection = true;
   }
@@ -381,7 +385,7 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
     dDetail("── Attributes ──", 14, sf::Color(140, 200, 255));
     for (const auto &attr : selMod.attributes) {
       dDetail("• " + getAttributeName(attr.type) + " " +
-                  getTierStars(attr.tier),
+                   getTierStars(attr.tier),
               12, sf::Color::White);
     }
   }

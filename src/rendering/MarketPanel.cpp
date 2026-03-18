@@ -3,23 +3,14 @@
 #include "game/EconomyManager.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
-#include "game/components/PlayerComponent.h"
 
 namespace space {
 
-MarketPanel::MarketPanel(entt::entity planet, entt::entity player)
-    : planetEntity_(planet), playerEntity_(player) {}
+MarketPanel::MarketPanel(entt::entity planet, entt::entity)
+    : planetEntity_(planet) {}
 
-void MarketPanel::handleEvent(const sf::Event &event, entt::registry &registry,
-                              b2WorldId) {
-  auto playerView = registry.view<PlayerComponent>();
-  for (auto e : playerView) {
-    if (playerView.get<PlayerComponent>(e).isFlagship) {
-      playerEntity_ = e;
-      break;
-    }
-  }
-
+void MarketPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
+                               b2WorldId) {
   if (const auto *kp = event.getIf<sf::Event::KeyPressed>()) {
     int maxRes = static_cast<int>(Resource::Refinery);
     if (kp->code == sf::Keyboard::Key::Up || kp->code == sf::Keyboard::Key::W) {
@@ -34,26 +25,18 @@ void MarketPanel::handleEvent(const sf::Event &event, entt::registry &registry,
 
     Resource res = static_cast<Resource>(selectedMarketIndex_);
     if (kp->code == sf::Keyboard::Key::B) {
-      EconomyManager::instance().executeTrade(registry, planetEntity_,
-                                              playerEntity_, res, 1.0f);
+      EconomyManager::instance().executeTrade(ctx.registry, planetEntity_,
+                                               ctx.player, res, 1.0f);
     } else if (kp->code == sf::Keyboard::Key::V) {
-      EconomyManager::instance().executeTrade(registry, planetEntity_,
-                                              playerEntity_, res, -1.0f);
+      EconomyManager::instance().executeTrade(ctx.registry, planetEntity_,
+                                               ctx.player, res, -1.0f);
     }
   }
 }
 
-void MarketPanel::render(sf::RenderTarget &target, entt::registry &registry,
+void MarketPanel::render(sf::RenderTarget &target, const UIContext &ctx,
                          const sf::Font *font, sf::FloatRect rect) {
-  auto playerView = registry.view<PlayerComponent>();
-  for (auto e : playerView) {
-    if (playerView.get<PlayerComponent>(e).isFlagship) {
-      playerEntity_ = e;
-      break;
-    }
-  }
-
-  if (!font || !registry.valid(planetEntity_))
+  if (!font || !ctx.registry.valid(planetEntity_))
     return;
 
   float x = rect.position.x + 20.f;
@@ -70,15 +53,15 @@ void MarketPanel::render(sf::RenderTarget &target, entt::registry &registry,
   dtext("── Commodity Market ──", 18, sf::Color(140, 200, 255));
   y += 10.f;
 
-  if (!registry.all_of<PlanetEconomy>(planetEntity_)) {
+  if (!ctx.registry.all_of<PlanetEconomy>(planetEntity_)) {
     dtext("No market activity on this body.", 16, sf::Color(200, 200, 200));
     return;
   }
 
-  auto &eco = registry.get<PlanetEconomy>(planetEntity_);
-  CargoComponent *pCargo = registry.try_get<CargoComponent>(playerEntity_);
+  auto &eco = ctx.registry.get<PlanetEconomy>(planetEntity_);
+  CargoComponent *pCargo = ctx.registry.try_get<CargoComponent>(ctx.player);
   CreditsComponent *pCredits =
-      registry.try_get<CreditsComponent>(playerEntity_);
+      ctx.registry.try_get<CreditsComponent>(ctx.player);
 
   if (pCredits) {
     dtext("Credits: $" + fmt(pCredits->amount, 0), 16,

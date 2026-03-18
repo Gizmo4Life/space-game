@@ -24,8 +24,11 @@ namespace space {
 ShipyardPanel::ShipyardPanel(entt::entity planet, entt::entity player)
     : planetEntity_(planet), playerEntity_(player) {}
 
-void ShipyardPanel::handleEvent(const sf::Event &event,
-                                entt::registry &registry, b2WorldId worldId) {
+void ShipyardPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
+                                b2WorldId worldId) {
+  auto &registry = ctx.registry;
+  auto playerEntity = ctx.player;
+
   if (const auto *kp = event.getIf<sf::Event::KeyPressed>()) {
     if (kp->code == sf::Keyboard::Key::Tab) {
       mode_ =
@@ -36,8 +39,9 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
 
       if (mode_ == ShipyardMode::Sell) {
         fleetEntities_.clear();
-        if (registry.valid(playerEntity_) && registry.all_of<HullDef, NameComponent>(playerEntity_))
-          fleetEntities_.push_back(playerEntity_);
+        if (registry.valid(playerEntity) &&
+            registry.all_of<HullDef, NameComponent>(playerEntity))
+          fleetEntities_.push_back(playerEntity);
         auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
         for (auto e : npcView) {
           if (npcView.get<NPCComponent>(e).isPlayerFleet) {
@@ -83,18 +87,20 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
           Telemetry::instance().tracer()->StartSpan("game.ui.ship.purchase");
       const auto &bid = currentBids_[selectedBidIndex_];
 
-      auto &credits = registry.get<CreditsComponent>(playerEntity_);
+      auto &credits = registry.get<CreditsComponent>(playerEntity);
       bool canAfford = credits.amount >= bid.price;
 
       if (canAfford) {
         if (EconomyManager::instance().buyShip(registry, planetEntity_,
-                                               playerEntity_, bid, worldId,
+                                               playerEntity, bid, worldId,
                                                buyToFleet, buyAsFlagship)) {
 
-          auto playerView = registry.view<PlayerComponent, HullDef, NameComponent>();
+          // Re-sync after flagship change (only if we need to update the local playerEntity handle inside this function's logic)
+          auto playerView =
+              registry.view<PlayerComponent, HullDef, NameComponent>();
           for (auto entity : playerView) {
             if (playerView.get<PlayerComponent>(entity).isFlagship) {
-              playerEntity_ = entity;
+              playerEntity = entity;
               break;
             }
           }
@@ -109,23 +115,26 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
         span->SetAttribute("purchase.denied", "insufficient credits");
       }
       span->End();
-      span->End();
-    } else if (mode_ == ShipyardMode::Sell && (sellShip || kp->code == sf::Keyboard::Key::E) &&
+    } else if (mode_ == ShipyardMode::Sell &&
+               (sellShip || kp->code == sf::Keyboard::Key::E) &&
                !fleetEntities_.empty()) {
       entt::entity toSell = fleetEntities_[selectedBidIndex_];
       bool isTransfer = (kp->code == sf::Keyboard::Key::E);
-      
-      auto span = Telemetry::instance().tracer()->StartSpan(isTransfer ? "game.ui.ship.transfer" : "game.ui.ship.sell");
+
+      auto span = Telemetry::instance().tracer()->StartSpan(
+          isTransfer ? "game.ui.ship.transfer" : "game.ui.ship.sell");
 
       bool success = false;
       if (isTransfer) {
         uint32_t fId = 0;
-        if (registry.all_of<Faction>(playerEntity_)) {
-            fId = registry.get<Faction>(playerEntity_).getMajorityFaction();
+        if (registry.all_of<Faction>(playerEntity)) {
+          fId = registry.get<Faction>(playerEntity).getMajorityFaction();
         }
-        success = EconomyManager::instance().transferShipToFaction(registry, toSell, fId);
+        success =
+            EconomyManager::instance().transferShipToFaction(registry, toSell, fId);
       } else {
-        success = EconomyManager::instance().sellShip(registry, planetEntity_, playerEntity_, toSell);
+        success = EconomyManager::instance().sellShip(registry, planetEntity_,
+                                                      playerEntity, toSell);
       }
 
       if (success) {
@@ -133,14 +142,15 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
         auto playerView = registry.view<PlayerComponent>();
         for (auto entity : playerView) {
           if (playerView.get<PlayerComponent>(entity).isFlagship) {
-            playerEntity_ = entity;
+            playerEntity = entity;
             break;
           }
         }
         // Refresh list
         fleetEntities_.clear();
-        if (registry.valid(playerEntity_) && registry.all_of<HullDef, NameComponent>(playerEntity_))
-          fleetEntities_.push_back(playerEntity_);
+        if (registry.valid(playerEntity) &&
+            registry.all_of<HullDef, NameComponent>(playerEntity))
+          fleetEntities_.push_back(playerEntity);
         auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
         for (auto e : npcView) {
           if (npcView.get<NPCComponent>(e).isPlayerFleet) {
@@ -156,10 +166,13 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
   }
 }
 
-void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
+void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
                            const sf::Font *font, sf::FloatRect rect) {
   if (!font)
     return;
+
+  auto &registry = ctx.registry;
+  auto playerEntity = ctx.player;
 
   if (mode_ == ShipyardMode::Buy) {
     currentBids_ =
@@ -191,8 +204,6 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
   title.setPosition({x, y});
   target.draw(title);
   y += 35.f;
-
-  float listStartY = y;
 
   if (mode_ == ShipyardMode::Buy) {
     if (currentBids_.empty()) {
@@ -230,7 +241,8 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
           std::min((int)fleetEntities_.size(), scrollOffset_ + maxVisible);
       for (int i = scrollOffset_; i < endIdx; ++i) {
         auto entity = fleetEntities_[i];
-        if (!registry.valid(entity)) continue;
+        if (!registry.valid(entity))
+          continue;
         bool sel = (i == selectedBidIndex_);
         sf::Color col = sel ? sf::Color::Cyan : sf::Color::White;
         auto *nc = registry.try_get<NameComponent>(entity);
@@ -278,9 +290,11 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     displayPrice = bid.price;
   } else if (mode_ == ShipyardMode::Sell && !fleetEntities_.empty()) {
     entt::entity e = fleetEntities_[selectedBidIndex_];
-    if (!registry.valid(e)) return;
+    if (!registry.valid(e))
+      return;
     auto *hdef = registry.try_get<HullDef>(e);
-    if (!hdef) return;
+    if (!hdef)
+      return;
     // Create a pseudo-blueprint for display
     bp.hull = *hdef;
     bp.role = "Owned";
@@ -298,20 +312,25 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
         sf::Color(180, 180, 180));
 
   bool isTransfer = false;
-  if (registry.all_of<Faction>(playerEntity_)) {
-    if (registry.get<Faction>(playerEntity_).getMajorityFaction() == bidFactionId) {
+  if (registry.all_of<Faction>(playerEntity)) {
+    if (registry.get<Faction>(playerEntity).getMajorityFaction() ==
+        bidFactionId) {
       isTransfer = true;
     }
   }
 
-  std::string priceLabel = (mode_ == ShipyardMode::Buy ? (isTransfer ? "Transfer: " : "Buy Price: $") : "Sell Value: $");
-  std::string priceVal = (isTransfer && mode_ == ShipyardMode::Buy ? "FREE (Faction Collection)" : fmt(displayPrice, 0));
+  std::string priceLabel =
+      (mode_ == ShipyardMode::Buy
+           ? (isTransfer ? "Transfer: " : "Buy Price: $")
+           : "Sell Value: $");
+  std::string priceVal =
+      (isTransfer && mode_ == ShipyardMode::Buy ? "FREE (Faction Collection)"
+                                                : fmt(displayPrice, 0));
 
-  dtext(dx, dy, priceLabel + priceVal,
-        18, sf::Color(100, 255, 100));
+  dtext(dx, dy, priceLabel + priceVal, 18, sf::Color(100, 255, 100));
   dy += 10.f;
 
-  // Ship Preview (Floating above technicals)
+  // Ship Preview
   sf::Vector2f previewPos = {dx + 350.f, rect.position.y + 120.f};
   ShipRenderParams sparams;
   sparams.mode = RenderMode::Schematic;
@@ -338,7 +357,7 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
         (usedVol > bp.hull.internalVolume) ? sf::Color::Red : sf::Color::Cyan);
   dtext(dx, dy, "Mass: " + fmt(totalMass, 1) + " t", 14, sf::Color::White);
   dtext(dx, dy, "Power Draw: " + fmt(powerDraw, 1) + " GW", 14,
-        (powerDraw > 0) ? sf::Color::Yellow : sf::Color(100, 255, 100));
+        (powerDraw > 1.f) ? sf::Color::Yellow : sf::Color(100, 255, 100));
 
   // Fitness Score
   float fitness = 0.0f;
@@ -352,15 +371,18 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
   else if (bp.role == "Transport")
     fitness = ShipFitness::calculateTransportFitness(bp, tdna);
   else
-    fitness = ShipFitness::calculateGeneralFitness(bp, faction.dna, bp.hull.sizeTier);
+    fitness =
+        ShipFitness::calculateGeneralFitness(bp, faction.dna, bp.hull.sizeTier);
 
   sf::Color fitCol = sf::Color::Green;
-  if (fitness <= 0.0f) fitCol = sf::Color::Red;
-  else if (fitness < 0.4f) fitCol = sf::Color(255, 165, 0); // Orange
+  if (fitness <= 0.0f)
+    fitCol = sf::Color::Red;
+  else if (fitness < 0.4f)
+    fitCol = sf::Color(255, 165, 0); // Orange
 
   dtext(dx, dy, "Fitness: " + fmt(fitness * 100.0f, 1) + "%", 16, fitCol);
 
-  // ── Time to Exhaustion (TTEs) ──
+  // Survivors
   dy += 10.f;
   dtext(dx, dy, "── Survival TTE (Equipped) ──", 16, sf::Color(140, 200, 255));
 
@@ -378,10 +400,9 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
       fuelTTE = s.fuelTTE;
       isotopesTTE = s.isotopesTTE;
       ammoTTE = s.ammoTTE;
-      showAmmo = true; // Always show for owned ships
+      showAmmo = true;
     }
   } else {
-    // For Buy mode, we know it will be at least 5.0 from ensureViability
     for (const auto &m : bp.modules) {
       if (m.category == ModuleCategory::Weapon &&
           m.weaponType != WeaponType::Energy && !m.name.empty() &&
@@ -423,7 +444,6 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     dy += 5.f;
   }
 
-  // Instructions at the bottom
   float helpY = rect.position.y + rect.size.y - 35.f;
   std::string instructions =
       (mode_ == ShipyardMode::Buy)

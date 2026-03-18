@@ -6,7 +6,6 @@
 #include "game/components/NPCComponent.h"
 #include "game/components/ShipFitness.h"
 #include <catch2/catch_all.hpp>
-#include <iostream>
 
 using namespace space;
 
@@ -127,6 +126,7 @@ TEST_CASE("Fitness Multipliers and Edge Cases", "[evolution]") {
     REQUIRE(ShipFitness::calculateCombatFitness(bp, tdna) == 0.0f);
 
     ModuleDef engine;
+    engine.name = "Standard Engine";
     engine.category = ModuleCategory::Engine;
     engine.attributes = {{AttributeType::Thrust, Tier::T2}};
     bp.modules.push_back(engine);
@@ -137,13 +137,16 @@ TEST_CASE("Fitness Multipliers and Edge Cases", "[evolution]") {
 
   SECTION("Fitness improves with armor and speed") {
     ModuleDef weapon;
+    weapon.name = "Standard Laser";
     weapon.category = ModuleCategory::Weapon;
-    weapon.attributes = {{AttributeType::Caliber, Tier::T2}, {AttributeType::ROF, Tier::T2}};
+    weapon.attributes.push_back({AttributeType::Caliber, Tier::T2});
+    weapon.attributes.push_back({AttributeType::ROF, Tier::T2});
     bp.modules.push_back(weapon);
 
     ModuleDef engine;
+    engine.name = "Standard Engine";
     engine.category = ModuleCategory::Engine;
-    engine.attributes = {{AttributeType::Thrust, Tier::T1}};
+    engine.attributes.push_back({AttributeType::Thrust, Tier::T1});
     bp.modules.push_back(engine);
 
     float baseFitness = ShipFitness::calculateCombatFitness(bp, tdna);
@@ -162,8 +165,9 @@ TEST_CASE("Fitness Multipliers and Edge Cases", "[evolution]") {
 
   SECTION("Transport fitness scales with habitation modules") {
     ModuleDef hab;
+    hab.name = "Standard Habitation";
     hab.category = ModuleCategory::Habitation;
-    hab.attributes = {{AttributeType::Capacity, Tier::T1}};
+    hab.attributes.push_back({AttributeType::Capacity, Tier::T1});
     bp.modules.push_back(hab);
 
     float lowCapFitness = ShipFitness::calculateTransportFitness(bp, tdna);

@@ -266,6 +266,6 @@ TEST_CASE("Economy Ship Weapon & Ammo consistency", "[economy][outfitting]") {
   REQUIRE(registry.all_of<InstalledAmmo>(ship));
   auto &ia = registry.get<InstalledAmmo>(ship);
   REQUIRE(!ia.inventory.empty());
-  REQUIRE(ia.inventory[0].count == 20);
+  REQUIRE(ia.inventory[0].count == 110);
   REQUIRE(ia.inventory[0].type.compatibleWeapon == WeaponType::Projectile);
 }

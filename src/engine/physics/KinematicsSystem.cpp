@@ -41,9 +41,7 @@ void KinematicsSystem::update(entt::registry &registry, float deltaTime) {
           if (auto* cargo = registry.try_get<CargoComponent>(entity))
             wetMass += cargo->currentWeight;
 
-          // Base hull mass + summed module masses + wet mass
-          auto &hull = registry.get<HullDef>(entity);
-          stats.dryMass = hull.baseMass * hull.massMultiplier;
+          // Add wet mass to dry mass from stats (Calculated by ShipOutfitter)
           stats.wetMass = stats.dryMass + wetMass;
 
           b2MassData massData;

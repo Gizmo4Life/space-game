@@ -9,17 +9,17 @@ public:
   InfoPanel(entt::entity planet);
   virtual ~InfoPanel() = default;
 
-  void handleEvent(const sf::Event &event, entt::registry &registry,
+  void handleEvent(const sf::Event &event, const UIContext &ctx,
                    b2WorldId worldId) override;
-  void render(sf::RenderTarget &target, entt::registry &registry,
+  void render(sf::RenderTarget &target, const UIContext &ctx,
               const sf::Font *font, sf::FloatRect rect) override;
 
 private:
   entt::entity planetEntity_;
 
-  void drawPlanetInfo(sf::RenderTarget &target, entt::registry &registry,
+  void drawPlanetInfo(sf::RenderTarget &target, const UIContext &ctx,
                       const sf::Font *f, sf::FloatRect rect);
-  void drawFactionDNA(sf::RenderTarget &target, entt::registry &registry,
+  void drawFactionDNA(sf::RenderTarget &target, const UIContext &ctx,
                       const sf::Font *f, sf::FloatRect rect);
 };
 

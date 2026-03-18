@@ -1,4 +1,5 @@
 #include "engine/physics/KinematicsSystem.h"
+#include "game/ShipOutfitter.h"
 #include "game/components/AmmoComponent.h"
 #include "game/components/HullDef.h"
 #include "game/components/InertialBody.h"
@@ -63,9 +64,11 @@ TEST_CASE("KinematicsSystem Wet Mass Impact", "[physics][kinematics]") {
   hull.massMultiplier = 1.0f;
 
   SECTION("Base mass calculation") {
+    ShipOutfitter::instance().refreshStats(registry, entity, hull);
+    auto &stats_ref = registry.get<ShipStats>(entity);
     KinematicsSystem::update(registry, 0.01f);
-    REQUIRE((stats.dryMass == 100.0f));
-    REQUIRE((stats.wetMass == 100.0f));
+    REQUIRE((stats_ref.dryMass == 100.0f));
+    REQUIRE((stats_ref.wetMass == 100.0f));
 
     b2MassData mass = b2Body_GetMassData(bodyId);
     REQUIRE((mass.mass == 100.0f));
@@ -74,10 +77,12 @@ TEST_CASE("KinematicsSystem Wet Mass Impact", "[physics][kinematics]") {
   SECTION("Adding fuel increases wet mass") {
     auto &fuel = registry.emplace<InstalledFuel>(entity);
     fuel.level = 50.0f; // 50kg extra
-    stats.massDirty = true;
+    registry.get<ShipStats>(entity).massDirty = true;
 
+    ShipOutfitter::instance().refreshStats(registry, entity, hull);
+    auto &stats_ref = registry.get<ShipStats>(entity);
     KinematicsSystem::update(registry, 0.01f);
-    REQUIRE((stats.wetMass == 150.0f));
+    REQUIRE((stats_ref.wetMass == 150.0f));
 
     b2MassData mass = b2Body_GetMassData(bodyId);
     REQUIRE((mass.mass == 150.0f));
@@ -88,10 +93,12 @@ TEST_CASE("KinematicsSystem Wet Mass Impact", "[physics][kinematics]") {
     AmmoType type = {WarheadType::Kinetic, GuidanceType::Dumb,
                      false}; // T2 = 1kg
     mag.storedAmmo[type] = 100;
-    stats.massDirty = true;
+    registry.get<ShipStats>(entity).massDirty = true;
 
+    ShipOutfitter::instance().refreshStats(registry, entity, hull);
+    auto &stats_ref = registry.get<ShipStats>(entity);
     KinematicsSystem::update(registry, 0.01f);
-    REQUIRE((stats.wetMass == 200.0f)); // 100 base + 100 ammo
+    REQUIRE((stats_ref.wetMass == 200.0f)); // 100 base + 100 ammo
   }
 
   b2DestroyWorld(worldId);
@@ -112,15 +119,18 @@ TEST_CASE("KinematicsSystem Apply Force", "[physics][kinematics]") {
   inertial.thrustForce = 1000.0f;
 
   registry.emplace<TransformComponent>(entity);
-  auto &stats = registry.emplace<ShipStats>(entity);
-  stats.isDerelict = false;
-  stats.massDirty = true;
+  auto& fuel = registry.emplace<InstalledFuel>(entity);
+  fuel.level = 100.0f;
+  fuel.capacity = 100.0f;
 
   auto &hull = registry.emplace<HullDef>(entity);
+  hull.name = "Test Hull";
   hull.baseMass = 100.0f;
   hull.massMultiplier = 1.0f;
 
-  // Initialize mass
+  // Initialize mass and sync from components
+  ShipOutfitter::instance().refreshStats(registry, entity, hull);
+  auto &stats = registry.get<ShipStats>(entity);
   KinematicsSystem::update(registry, 0.01f);
 
   KinematicsSystem::applyThrust(registry, entity, 1.0f); // Max thrust

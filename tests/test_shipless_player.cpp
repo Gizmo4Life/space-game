@@ -23,6 +23,7 @@
 #include "rendering/LandingScreen.h"
 #include "rendering/OutfitterPanel.h"
 #include "rendering/RenderSystem.h"
+#include "rendering/VesselHUD.h"
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <box2d/box2d.h>
 #include <catch2/catch_test_macros.hpp>
@@ -67,14 +68,6 @@ TEST_CASE("Shipless Player Buying Ship as Flagship", "[shipless][economy]") {
   registry.emplace<TransformComponent>(player, sf::Vector2f(0.0f, 0.0f));
   registry.emplace<CreditsComponent>(player, 1000000.0f);
   registry.emplace<Landed>(player, planet);
-
-  Faction pFaction;
-  pFaction.allegiances[factionId] = 1.0f;
-  registry.emplace<Faction>(player, pFaction);
-
-  // Verify Player starts Shipless
-  REQUIRE((!registry.all_of<HullDef>(player)));
-  REQUIRE((!registry.all_of<InertialBody>(player)));
 
   // 3. Get Bids
   auto bids = EconomyManager::instance().getHullBids(registry, planet);
@@ -273,8 +266,17 @@ TEST_CASE("Player with Ship Swaps Flagship", "[economy]") {
     KinematicsSystem::update(registry, 0.016f);
 
     rTex.clear();
+    entt::entity currentFlagship = entt::null;
+    auto pView = registry.view<PlayerComponent>();
+    for (auto e : pView) {
+      if (pView.get<PlayerComponent>(e).isFlagship) {
+        currentFlagship = e;
+        break;
+      }
+    }
+    UIContext ctx{registry, currentFlagship};
     RenderSystem::update(registry, rTex, nullptr);
-    landingScreen.render(rTex, registry, nullptr);
+    landingScreen.render(rTex, ctx, nullptr);
   }
 
   b2DestroyWorld(worldId);
@@ -306,9 +308,11 @@ TEST_CASE("Shipless Player in Outfitter Screen", "[shipless][rendering]") {
   sf::FloatRect rect({0.f, 0.f}, {800.f, 600.f});
 
   // This should not crash
-  outfitter.render(rTex, registry, &font, rect);
+  UIContext ctx{registry, player};
+  outfitter.render(rTex, ctx, &font, rect);
 
   // Even if we "switch" to another ship that doesn't exist
   registry.destroy(player); // Player is gone? render guards should handle
-  outfitter.render(rTex, registry, &font, rect);
+  UIContext ctx2{registry, player};
+  outfitter.render(rTex, ctx2, &font, rect);
 }

@@ -10,24 +10,25 @@ namespace space {
 
 InfoPanel::InfoPanel(entt::entity planet) : planetEntity_(planet) {}
 
-void InfoPanel::handleEvent(const sf::Event &, entt::registry &, b2WorldId) {
+void InfoPanel::handleEvent(const sf::Event &, const UIContext &, b2WorldId) {
   // Info panel doesn't handle keyboard events for now
 }
 
-void InfoPanel::render(sf::RenderTarget &target, entt::registry &registry,
+void InfoPanel::render(sf::RenderTarget &target, const UIContext &ctx,
                        const sf::Font *font, sf::FloatRect rect) {
-  drawPlanetInfo(target, registry, font, rect);
-  drawFactionDNA(target, registry, font, rect);
+  drawPlanetInfo(target, ctx, font, rect);
+  drawFactionDNA(target, ctx, font, rect);
 }
 
-void InfoPanel::drawPlanetInfo(sf::RenderTarget &target, entt::registry &r,
+void InfoPanel::drawPlanetInfo(sf::RenderTarget &target, const UIContext &ctx,
                                const sf::Font *f, sf::FloatRect rect) {
-  if (!f || !r.valid(planetEntity_))
+  if (!f || !ctx.registry.valid(planetEntity_))
     return;
 
   float x = rect.position.x + 20.f;
   float y = rect.position.y + 16.f;
   float lineH = 22.f;
+  auto &r = ctx.registry;
 
   auto text = [&](const std::string &s, unsigned sz, sf::Color col) {
     sf::Text t(*f, s, sz);
@@ -75,7 +76,7 @@ void InfoPanel::drawPlanetInfo(sf::RenderTarget &target, entt::registry &r,
       if (eco.currentPrices.count(pk)) {
         text("  " + getResourceName(res) + ": $" +
                  fmt(eco.currentPrices.at(pk)),
-             14, sf::Color(210, 210, 210));
+              14, sf::Color(210, 210, 210));
       }
     }
     y += 8.f;
@@ -89,11 +90,12 @@ void InfoPanel::drawPlanetInfo(sf::RenderTarget &target, entt::registry &r,
   }
 }
 
-void InfoPanel::drawFactionDNA(sf::RenderTarget &target, entt::registry &r,
+void InfoPanel::drawFactionDNA(sf::RenderTarget &target, const UIContext &ctx,
                                const sf::Font *f, sf::FloatRect rect) {
-  if (!f || !r.valid(planetEntity_) || !r.all_of<Faction>(planetEntity_))
+  if (!f || !ctx.registry.valid(planetEntity_) || !ctx.registry.all_of<Faction>(planetEntity_))
     return;
 
+  auto &r = ctx.registry;
   auto &facComp = r.get<Faction>(planetEntity_);
   uint32_t fId = facComp.getMajorityFaction();
   auto &fd = FactionManager::instance().getFaction(fId);
@@ -142,13 +144,6 @@ void InfoPanel::drawFactionDNA(sf::RenderTarget &target, entt::registry &r,
   float rel = FactionManager::instance().getRelationship(0, fId);
   std::string relStr = "Neutral";
   sf::Color relCol = sf::Color(200, 200, 200);
-  if (rel > 0.4f) {
-    relStr = "Friendly";
-    relCol = sf::Color(100, 255, 100);
-  } else if (rel < -0.4f) {
-    relStr = "Hostile";
-    relCol = sf::Color(255, 100, 100);
-  }
   text("Relationship: " + relStr + " (" + fmt(rel, 2) + ")", 14, relCol);
 }
 

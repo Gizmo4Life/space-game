@@ -61,6 +61,7 @@ set(CORE_SOURCES
     src/game/components/HullGenerator.cpp
     src/game/components/ModuleGenerator.cpp
     src/rendering/FleetOverlay.cpp
+    src/rendering/VesselHUD.cpp
 )
 
 add_library(SpaceGameCore OBJECT ${CORE_SOURCES})
