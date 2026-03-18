@@ -7,7 +7,6 @@
 #include "engine/telemetry/Telemetry.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/NameComponent.h"
-#include "game/components/PlayerComponent.h"
 #include <SFML/Graphics.hpp>
 #include <opentelemetry/trace/provider.h>
 

@@ -19,6 +19,7 @@ public:
 private:
   entt::entity planetEntity_;
   int selectedMarketIndex_ = 0;
+  int selectedQuantity_ = 1;
 };
 
 } // namespace space

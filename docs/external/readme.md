@@ -18,6 +18,7 @@ graph LR
 
 ## Sub-directories
 - [use-cases.md](use-cases.md): Primary operational contexts for repository consumption.
+- [trading.md](trading.md): Guide for commodity trading and cargo volume management.
 - [contract/](contract/): OpenAPI, GraphQL, and public interface definitions.
 - [integration/](integration/): SLAs and behavior for 3rd party vendors.
 

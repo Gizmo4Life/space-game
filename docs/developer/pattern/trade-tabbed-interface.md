@@ -27,8 +27,13 @@ The active tab is highlighted in the header, and the main viewport is cleared be
 ## Trade Interaction
 The **Market Tab** specifically follows a selection-based trade pattern:
 - **Up/Down (W/S)**: Change the selected commodity.
-- **Buy (B)**: Execute `EconomyManager::executeTrade` with a positive delta.
-- **Sell (V)**: Execute `EconomyManager::executeTrade` with a negative delta.
+- **Left/Right (A/D)**: Adjust the **selectedQuantity** for the transaction (Buy/Sell).
+- **Buy (B)**: Execute `EconomyManager::executeTrade` for the current selection and quantity.
+- **Sell (V)**: Execute `EconomyManager::executeTrade` with a negative delta for the current selection and quantity.
+
+## Visual Feedback & Observability
+- **Total Cost**: A dynamic display in the panel that updates as `selectedQuantity` is adjusted.
+- **Cargo Volume**: A persistent indicator (e.g., `45 / 100`) that highlights current ship capacity and provides immediate feedback on trade feasibility.
 
 ## Traceability
 - **Implementation**: `src/rendering/LandingScreen.cpp`

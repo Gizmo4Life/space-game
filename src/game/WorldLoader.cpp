@@ -484,7 +484,7 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
       fEco.factories[rKey(Resource::Hydrocarbons)] = 2;
     } else if (type == CelestialType::Icy) {
       fEco.factories[rKey(Resource::Water)] = 5;
-      fEco.factories[rKey(Resource::Isotopes)] = 2;
+      fEco.factories[rKey(Resource::Isotopes)] = 4;
     } else if (type == CelestialType::Earthlike) {
       fEco.factories[rKey(Resource::Crops)] = 5;
       fEco.factories[rKey(Resource::Water)] = 2;
@@ -538,6 +538,7 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     fEco.stockpile[rKey(Resource::Fuel)] = 1000.0f;
     fEco.stockpile[rKey(Resource::Electronics)] = 250.0f;
     fEco.stockpile[rKey(Resource::ManufacturingGoods)] = 250.0f;
+    fEco.stockpile[rKey(Resource::Isotopes)] = 500.0f;
 
     // Faction always has capacity to rebuild its fleet locally
     fEco.factories[rKey(Resource::Shipyard)] = 1;

@@ -52,3 +52,6 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - `game.economy.factory.build` — attributes: `economy.product_type`, `economy.product_id`, `economy.cost_credits`
 - `game.economy.stockpile.delta` — attributes: `faction.id`, `product.id`, `stockpile.delta`
 - **Status:** ✅ Fully instrumented via `opentelemetry-cpp`
+55: 
+56: ## 5. Economic Balance & Tuning
+57: - **Isotope Availability**: To avoid bottlenecks in power and fuel production, Isotopes are balanced with a higher `baseOutputRate` (15.0f) and increased baseline seeding (4 factories) on `Icy` planets.

@@ -130,6 +130,7 @@ if (BUILD_TESTING)
             tests/test_ship_evolution.cpp
             tests/test_resource_management.cpp
             tests/test_blueprint_extraction.cpp
+            src/game/tests/EconomyVolumeTests.cpp
         )
         target_include_directories(SpaceGameTests PRIVATE src)
         target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)

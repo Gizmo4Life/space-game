@@ -26,6 +26,7 @@
 - **Blueprint Extraction**: Use `ShipOutfitter::blueprintFromEntity` — never manually aggregate `InstalledModules` components. See [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md).
 - **Player Lookup**: Use `findFlagship(registry)` — never inline `registry.view<PlayerComponent>()`. See [ghost-logic](/docs/developer/pattern/ghost-logic.md).
 - **Blueprint Symmetry**: Any system that applies and extracts blueprints must have a round-trip test. See [blueprint-round-trip](/docs/developer/pattern/blueprint-round-trip.md).
+- **Trade Validation**: All resource transactions must use `EconomyManager::executeTrade` to ensure `CargoComponent` capacity and weight are correctly tracked.
 - **Header Hygiene**: Remove orphaned includes immediately after centralizing logic. See [header-management](/docs/governance/standard/header-management.md) § Post-Refactor Orphan Hygiene.
 
 ## Build

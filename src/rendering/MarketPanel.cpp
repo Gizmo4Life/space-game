@@ -22,14 +22,21 @@ void MarketPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
       if (selectedMarketIndex_ < maxRes)
         selectedMarketIndex_++;
     }
+    if (kp->code == sf::Keyboard::Key::Left || kp->code == sf::Keyboard::Key::A) {
+      if (selectedQuantity_ > 1)
+        selectedQuantity_--;
+    }
+    if (kp->code == sf::Keyboard::Key::Right || kp->code == sf::Keyboard::Key::D) {
+      selectedQuantity_++;
+    }
 
     Resource res = static_cast<Resource>(selectedMarketIndex_);
     if (kp->code == sf::Keyboard::Key::B) {
       EconomyManager::instance().executeTrade(ctx.registry, planetEntity_,
-                                               ctx.player, res, 1.0f);
+                                               ctx.player, res, (float)selectedQuantity_);
     } else if (kp->code == sf::Keyboard::Key::V) {
       EconomyManager::instance().executeTrade(ctx.registry, planetEntity_,
-                                               ctx.player, res, -1.0f);
+                                               ctx.player, res, -(float)selectedQuantity_);
     }
   }
 }
@@ -69,6 +76,12 @@ void MarketPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   } else {
     dtext("Credits: N/A", 16, sf::Color(150, 150, 150));
   }
+
+  if (pCargo) {
+    std::string color = (pCargo->currentWeight >= pCargo->maxCapacity) ? "#FF5555" : "#55FF55";
+    dtext("Cargo: " + fmt(pCargo->currentWeight, 0) + " / " + fmt(pCargo->maxCapacity, 0), 16,
+          (pCargo->currentWeight >= pCargo->maxCapacity) ? sf::Color::Red : sf::Color::Green);
+  }
   y += 5.f;
 
   int maxRes = static_cast<int>(Resource::Refinery);
@@ -102,8 +115,16 @@ void MarketPanel::render(sf::RenderTarget &target, const UIContext &ctx,
     y += 22.f;
   }
 
-  y = rect.position.y + rect.size.y - 40.f;
-  dtext("[B] Buy 1   [V] Sell 1   [W/S] Navigate", 13,
+  y = rect.position.y + rect.size.y - 65.f;
+  Resource selRes = static_cast<Resource>(selectedMarketIndex_);
+  ProductKey selPk{ProductType::Resource, (uint32_t)selRes, Tier::T1};
+  float selPrice = eco.currentPrices.count(selPk) ? eco.currentPrices.at(selPk) : 0.f;
+  float totalCost = selPrice * selectedQuantity_;
+
+  dtext("Trade Quantity: " + std::to_string(selectedQuantity_) + "   Total Cost: $" + fmt(totalCost, 0), 15, sf::Color::Yellow);
+  
+  y = rect.position.y + rect.size.y - 30.f;
+  dtext("[B] Buy Quantity   [V] Sell Quantity   [Arrows] Navigate / Qty", 13,
         sf::Color(150, 150, 150));
 }
 

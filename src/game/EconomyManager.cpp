@@ -46,7 +46,7 @@ void EconomyManager::init() {
   recipes[resKey(Resource::Hydrocarbons)] = {{}, 0.1f, 15.0f};
   recipes[resKey(Resource::Metals)] = {{}, 0.2f, 10.0f};
   recipes[resKey(Resource::RareMetals)] = {{}, 0.5f, 5.0f};
-  recipes[resKey(Resource::Isotopes)] = {{}, 0.5f, 5.0f};
+  recipes[resKey(Resource::Isotopes)] = {{}, 0.5f, 15.0f};
 
   // Processed Goods
   recipes[resKey(Resource::Food)] = {
@@ -1107,8 +1107,11 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     if (eco.marketStockpile[pk] < delta)
       return false;
 
+    // Use add() to ensure capacity and weight are tracked
+    if (!cargo.add(res, delta))
+      return false;
+
     credits.amount -= totalCost;
-    cargo.inventory[res] += delta;
 
     // Telemetry: Commodity Purchase
     auto tradeSpan = space::Telemetry::instance().tracer()->StartSpan(
@@ -1134,12 +1137,13 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     return true;
   } else { // Player Sell
     float amountToSell = -delta;
-    if (cargo.inventory[res] < amountToSell)
+    
+    // Use remove() to ensure weight is tracked
+    if (!cargo.remove(res, amountToSell))
       return false;
 
     float totalGain = price * amountToSell;
     credits.amount += totalGain;
-    cargo.inventory[res] -= amountToSell;
 
     // Add to market (primary faction takes it)
     uint32_t bestFid = 0;
