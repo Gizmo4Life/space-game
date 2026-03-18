@@ -36,9 +36,9 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
 
       if (mode_ == ShipyardMode::Sell) {
         fleetEntities_.clear();
-        if (registry.valid(playerEntity_))
+        if (registry.valid(playerEntity_) && registry.all_of<HullDef, NameComponent>(playerEntity_))
           fleetEntities_.push_back(playerEntity_);
-        auto npcView = registry.view<NPCComponent>();
+        auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
         for (auto e : npcView) {
           if (npcView.get<NPCComponent>(e).isPlayerFleet) {
             fleetEntities_.push_back(e);
@@ -91,7 +91,7 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
                                                playerEntity_, bid, worldId,
                                                buyToFleet, buyAsFlagship)) {
 
-          auto playerView = registry.view<PlayerComponent>();
+          auto playerView = registry.view<PlayerComponent, HullDef, NameComponent>();
           for (auto entity : playerView) {
             if (playerView.get<PlayerComponent>(entity).isFlagship) {
               playerEntity_ = entity;
@@ -139,9 +139,9 @@ void ShipyardPanel::handleEvent(const sf::Event &event,
         }
         // Refresh list
         fleetEntities_.clear();
-        if (registry.valid(playerEntity_))
+        if (registry.valid(playerEntity_) && registry.all_of<HullDef, NameComponent>(playerEntity_))
           fleetEntities_.push_back(playerEntity_);
-        auto npcView = registry.view<NPCComponent>();
+        auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
         for (auto e : npcView) {
           if (npcView.get<NPCComponent>(e).isPlayerFleet) {
             fleetEntities_.push_back(e);
@@ -230,9 +230,11 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
           std::min((int)fleetEntities_.size(), scrollOffset_ + maxVisible);
       for (int i = scrollOffset_; i < endIdx; ++i) {
         auto entity = fleetEntities_[i];
+        if (!registry.valid(entity)) continue;
         bool sel = (i == selectedBidIndex_);
         sf::Color col = sel ? sf::Color::Cyan : sf::Color::White;
-        std::string name = registry.get<NameComponent>(entity).name;
+        auto *nc = registry.try_get<NameComponent>(entity);
+        std::string name = nc ? nc->name : "Unknown Ship";
         std::string label = (sel ? "> " : "  ") + name;
         sf::Text t(*font, label, 15);
         t.setFillColor(col);
@@ -276,8 +278,11 @@ void ShipyardPanel::render(sf::RenderTarget &target, ::entt::registry &registry,
     displayPrice = bid.price;
   } else if (mode_ == ShipyardMode::Sell && !fleetEntities_.empty()) {
     entt::entity e = fleetEntities_[selectedBidIndex_];
+    if (!registry.valid(e)) return;
+    auto *hdef = registry.try_get<HullDef>(e);
+    if (!hdef) return;
     // Create a pseudo-blueprint for display
-    bp.hull = registry.get<HullDef>(e);
+    bp.hull = *hdef;
     bp.role = "Owned";
     displayPrice =
         ShipOutfitter::instance().calculateShipValue(registry, e) * 0.8f;

@@ -34,6 +34,7 @@ Before starting any significant change, ensure the baseline environment is healt
 ## 3. Execution & Documentation
 - **Action:** Implement the changes according to the approved plan.
 - **Action:** Update or create **T3 Module** documentation in `docs/architecture/module/` to reflect new functionality.
+- **Action:** Update **End User Documentation** in `docs/external/` (e.g., `use-cases.md`, `integration/`) for any changes that affect external consumers or modify [T2 Capabilities](/docs/architecture/capability/readme.md).
 - **Action:** For UI/Frontend changes, implement **Visual Assets** (screenshots or recordings) for the `walkthrough.md`.
 - **Action:** Ensure every new directory or modified functional area has a [Signpost Readme](/docs/developer/pattern/signpost-readme.md).
 
@@ -45,7 +46,7 @@ Before starting any significant change, ensure the baseline environment is healt
 - **Action:** Execute [Documentation Validation](documentation-validation.md).
 
 ## 5. Pattern Analysis & Standard Evolution
-- **Action:** Execute the **[Pattern Intake Protocol](pattern-intake.md)** for any build errors, test failures, or linter findings.
+- **Action:** Execute the **[Pattern Intake Protocol](pattern-intake.md)** for any build errors, test failures, linter findings, or user reported feedback. Try to categorize the feedback into the PADU tables of the identified relevant context specific standard.
 - **Action:** Identify the specific **Context** of the failure (e.g., Platform, Testability, Build Integrity), and identify the relevant context specific standard.
 - **Action:** Extract both the **Failed Attempts** (Discouraged/Unstable) and the **Successful Solution** (Preferred/Alternative) as decontextualized patterns.
 - **Action:** Categorize new patterns into the PADU tables of the identified relevant context specific standard.
@@ -53,9 +54,5 @@ Before starting any significant change, ensure the baseline environment is healt
 - **Verify:** The "Definition of Done" now includes contributing back to the governance layer to prevent future regressions.
 
 ## 6. Definition of Done
-A task is considered **DONE** only when:
-1. **Successful Build**: The project compiles without errors on all targeted platforms.
-2. **100% Test Pass Rate**: All unit, integration, and regression tests pass with zero failures.
-3. **Clean Linter Findings**: All modified files have zero linter errors or warnings as defined in the [Coding Standards](../standard/coding-standards.md).
-4. **Verified Documentation**: T3 modules, Signpost Readmes, and architecture diagrams are updated and pass [Documentation Validation](documentation-validation.md).
-5. **Observability Assets**: Diagnostic Dashboard manifests (.md and .json export) and Span Runbooks are present, linked, and pass drift analysis.
+
+A task is considered **DONE** only when it meets the requirements defined in the **[Definition of Done Pattern](/docs/developer/pattern/definition-of-done.md)**.

@@ -8,6 +8,7 @@
 #include "game/components/HullDef.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/NPCComponent.h"
+#include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
 #include "game/components/ShipModule.h"
 #include <SFML/Graphics.hpp>
@@ -37,11 +38,11 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
         kp->code == sf::Keyboard::Key::A) {
       // Find previous ship in fleet
       std::vector<entt::entity> fleet;
-      auto playerView = registry.view<PlayerComponent>();
+      auto playerView = registry.view<PlayerComponent, HullDef, NameComponent>();
       for (auto e : playerView)
         if (playerView.get<PlayerComponent>(e).isFlagship)
           fleet.push_back(e);
-      auto npcView = registry.view<NPCComponent>();
+      auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
       for (auto e : npcView)
         if (npcView.get<NPCComponent>(e).isPlayerFleet)
           fleet.push_back(e);
@@ -59,11 +60,11 @@ void OutfitterPanel::handleEvent(const sf::Event &event,
     if (kp->code == sf::Keyboard::Key::Right ||
         kp->code == sf::Keyboard::Key::D) {
       std::vector<entt::entity> fleet;
-      auto playerView = registry.view<PlayerComponent>();
+      auto playerView = registry.view<PlayerComponent, HullDef, NameComponent>();
       for (auto e : playerView)
         if (playerView.get<PlayerComponent>(e).isFlagship)
           fleet.push_back(e);
-      auto npcView = registry.view<NPCComponent>();
+      auto npcView = registry.view<NPCComponent, HullDef, NameComponent>();
       for (auto e : npcView)
         if (npcView.get<NPCComponent>(e).isPlayerFleet)
           fleet.push_back(e);
@@ -205,10 +206,6 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
   if (!font || !registry.valid(playerEntity_))
     return;
 
-  if (!registry.valid(targetShip_)) {
-    targetShip_ = playerEntity_;
-  }
-
   float x = rect.position.x + 20.f;
   float y = rect.position.y + 20.f;
 
@@ -220,6 +217,15 @@ void OutfitterPanel::render(sf::RenderTarget &target, entt::registry &registry,
     target.draw(t);
     coreY += sz + 6.f;
   };
+
+  if (!registry.valid(targetShip_) || !registry.all_of<HullDef, NameComponent>(targetShip_)) {
+    targetShip_ = playerEntity_;
+  }
+
+  if (!registry.valid(targetShip_) || !registry.all_of<HullDef, NameComponent>(targetShip_)) {
+    dtext(x, y, "Vessel data is temporarily unavailable", 20, sf::Color::Yellow);
+    return;
+  }
 
   dtext(x, y, "── Vessel Outfitter ──", 18, sf::Color(140, 200, 255));
 

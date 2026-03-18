@@ -12,6 +12,7 @@ Identify structural errors, missing artifacts, and technical drift between the r
 - **Action:** Verify [doc-breadcrumb-navigation](/docs/developer/pattern/doc-breadcrumb-navigation.md) is present on line 6 of all `.md` files in `docs/`.
 - **Action:** Verify every file has a valid YAML frontmatter with `id` and `type`.
 - **Action:** Verify all internal links (e.g., `file:///...`) are functional and point to existing files.
+- **Action:** Verify **Atomic Docs** compliance: If a document exceeds 100 lines of prose, evaluate if core concepts can be extracted into a [Pattern](/docs/developer/pattern/readme.md) or [Standard](/docs/governance/standard/readme.md).
 
 ## 3. Drift & Omission Analysis
 - **Action:** Scan for directories in `src/` or `tools/` that lack a corresponding [T3 Module] in `docs/architecture/module/`.
@@ -22,6 +23,8 @@ Identify structural errors, missing artifacts, and technical drift between the r
 ## 4. Operational & Logic Audit
 - **Action:** Scan for critical telemetry spans in code that lack a corresponding [doc-ops-span-runbook](/docs/developer/pattern/doc-ops-span-runbook.md).
 - **Action:** Identify "Ghost Logic"—defined as code blocks that implement patterns marked as **Unacceptable (U)** or **Discouraged (D)** in the standards.
+- **Action:** Verify **End User Documentation**: Any change that modifies a [T2 Capability](/docs/architecture/capability/readme.md) must have a corresponding update in `docs/external/` (e.g., `use-cases.md`, `integration/`, or `contract/`).
+- **Action:** Verify **Major Section Sync**: Ensure that a change to a T3 module is reflected in its parent T2 capability and the T1 landscape if the system's external interface or purpose has changed.
 
 ## 5. Verification
 - **Verify:** No dead links remain in the Knowledge Graph.

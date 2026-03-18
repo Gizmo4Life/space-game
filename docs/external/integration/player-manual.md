@@ -37,6 +37,21 @@ Displayed as `Current / Max`:
 - **Mass Impact**: Cargo and fuel add "Wet Mass." A fully loaded freighter will accelerate slower than an empty one.
 - **Resupply**: Visit friendly orbital stations or planetary hubs to replenish stocks.
 
+## 4. Vessel Outfitting & Shipyard
+Planetary hubs offer services to refit your vessel or expand your fleet.
+
+### The Outfitter
+Accessible via the **[Outfitter]** tab when landed.
+- **Consumption Analysis**: View your vessel's active power draw and resource consumption rates (GW/hour).
+- **Module Compatibility**: Volumetric and mass limits apply according to your hull's specifications.
+
+### The Shipyard
+Accessible via the **[Shipyard]** tab.
+- **Fleet Management**: Cycle through your owned vessels to view status or sell ships at a market-adjusted rate.
+
+### UI Stability & Data Availability
+During complex operations (such as refitting engines or transferring ships between fleets), a vessel may briefly report **"Vessel data temporarily unavailable"** in the UI. This is a safety measure to ensure system stability while the ship's physical configuration is being recalculated.
+
 ---
 > [!IMPORTANT]
 > Always verify your fleet's TTE before initiating long-range jumps or entering hostile sectors.

@@ -15,7 +15,8 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - Ships must maintain a non-negative `PowerBalance` (Total GW >= 0).
 - UI summarizes available hard points and engine mounts by tier (Small/Medium/Large).
 - **Synced Blueprints**: Every UI panel (Shipyard, Outfitter) now utilizes the unified `ShipRenderer` in `Schematic` mode, ensuring visual consistency between ship specs and the in-game vessel.
-- **Visual Preview**: The `OutfitterPanel` includes a live ship blueprint preview and a dedicated detail pane.
+- **Visual Preview**: The `OutfitterPanel` includes a live ship blueprint preview, a dedicated detail pane, and a **Consumption Analysis** summary (GW/hour draw and TTE estimates).
+- **UI Resilience**: Panels implement **Vessel Data Guards** (displaying "Vessel data temporarily unavailable") to handle entities that are in an invalid or transitional state (e.g., during rapid refits).
 - **Automatic Scrolling**: Lists in `ShipyardPanel` and `OutfitterPanel` automatically scroll to maintain visibility of the selected item.
 - **Detail Pane Scrolling**: Large blocks of information (module stats, hull specs) in detail panes are scrollable using the `[` and `]` keys.
 - **Fleet Management**: The `FleetOverlay` provides a persistent HUD element displaying member health and Time-to-Exhaustion (TTE) for critical resources.
