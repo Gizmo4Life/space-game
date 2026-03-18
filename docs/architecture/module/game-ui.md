@@ -35,7 +35,8 @@ Full-screen landing overlay providing planet information, tiered ship technicals
 - [rendering-schematic-visuals](/docs/developer/pattern/rendering-schematic-visuals.md) (P) — Blueprint outlines moving away from faction color schemes.
 - [rendering-scrollable-subpanel](/docs/developer/pattern/rendering-scrollable-subpanel.md) (P) — Detail pane scrolling via `[` and `]` keys; automatic list selection clamping.
 - [ui-component-guard](/docs/developer/pattern/ui-component-guard.md) (P) — Resilient `try_get` access for `CargoComponent` and `CreditsComponent`
-- [housekeeping-encapsulation](/docs/developer/pattern/housekeeping-encapsulation.md) (P) — Centralized `UIUtils` for flagship and fleet registration.
+- [housekeeping-encapsulation](/docs/developer/pattern/housekeeping-encapsulation.md) (P) — Intra-class: repeated setup logic extracted into private methods on each panel.
+- [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) (P) — Cross-class: `UIUtils::findFlagship` and `getFleetEntities` as shared single-authority lookups.
 
 ## 4. Telemetry & Observability
 - `game.ui.landing.open` — attributes: `planet.id`, `player.id`

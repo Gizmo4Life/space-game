@@ -56,6 +56,8 @@ graph TD
 - [game-npc](game-npc.md): NPC ship spawning, faction-weighted AI, and player fleet management.
 - [game-core](game-core.md): Procedural world generation, player spawning, and modular vessel outfitting.
 - [game-hull](game-hull.md): Procedural generation of ship hulls.
+- [game-modules](game-modules.md): Ship module ECS components and the modular slot system.
+- [ship-generation](ship-generation.md): Blueprint-driven ship assembly and outfitting pipeline.
 - [system-gate](system-gate.md): Inter-system jump and loading logic.
 - [core-main](core-main.md): Low-level primitives and shared utilities.
 
@@ -63,6 +65,10 @@ graph TD
 *Nuance: Structural modules governing how the repository is organized.*
 - [doc-system](doc-system.md): File system structure and DaC engine.
 - [ai-config](ai-config.md): Persona behavioral injections.
+
+## 3. Observability
+*Nuance: Dashboards and telemetry manifests for operational visibility.*
+- [fleet-diagnostics](fleet-diagnostics.md): Fleet status and logistics diagnostic dashboard.
 
 ## 3. Governance Layer
 *Nuance: The "Brain" of the repository, defining the rules and protocols.*

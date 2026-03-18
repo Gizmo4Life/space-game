@@ -21,8 +21,8 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 ## 3. Key Systems
 - **EconomyManager**: Orchestrates planetary markets and the persistent ship inventory.
   - **Dynamic Pricing**: Uses factory supply nodes and `hullClassScarcity` to adjust prices. Prices are clamped between 0.1x and 10x of the base price.
-  - **Ship Transactions**: `buyShip` and `sellShip` handle vessel ownership. Buying a ship consumes it from the persistent `parkedShips` inventory. Selling a ship adds its hull back to the `scrapyardHulls`. 
-  - **Ship Exchange**: `transferShipToFaction` allows the player to move an active fleet vessel back into the faction's `parkedShips` pool while landed. This process captures the current module configuration as a blueprint. Transfers from an aligned faction's collection back to the player fleet are free (waiving credit costs).
+  - **Ship Transactions**: `buyShip` and `sellShip` handle vessel ownership. Buying a ship consumes it from the persistent `parkedShips` inventory. Selling a ship adds its hull back to the `scrapyardHulls`.
+  - **Ship Exchange**: `transferShipToFaction` allows the player to move an active fleet vessel back into the faction's `parkedShips` pool while landed. This process uses `ShipOutfitter::blueprintFromEntity` to capture the current module configuration as a blueprint — a single centralized extraction point.
   - **Competitive Bidding**: Factions list hulls via `DetailedHullBid`. These bids are now generated directly from the `parkedShips` vector, ensuring the shipyard displays actual physical inventory.
   - **Scrapyard Management**: Factions store salvaged and obsolete inventory in `scrapyardModules` and `scrapyardHulls`.
   - **Ship Assembly**: `tryAssembleShips` greedily combines `scrapyardHulls` and `shopModules` into `ShipBlueprint` objects, which are then added to `parkedShips` for sale. This system ensures that faction production of parts eventually results in available ships.
@@ -43,6 +43,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [economy-competitive-market](/docs/developer/pattern/economy-competitive-market.md) (P) — Faction bid model using `Tier` for tiered pricing
 - [economy-refit-fee](/docs/developer/pattern/economy-refit-fee.md) (P) — Installation costs for player refits
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
+- [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) (P) — `ShipOutfitter::blueprintFromEntity` centralizes all entity-to-blueprint extraction; `findFlagship` unifies player identification in refit/sell operations.
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 
 ## 4. Telemetry & Observability

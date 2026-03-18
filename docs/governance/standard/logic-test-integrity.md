@@ -17,7 +17,8 @@ This standard defines the maturity and fitness ratings for core game logic and i
 | [explicit-module-identity](/docs/developer/pattern/explicit-module-identity.md) | **P** | Preferred. Objects must have explicit identities (e.g., names) to be processed by systems. |
 | [encapsulated-state-mutation](/docs/developer/pattern/encapsulated-state-mutation.md) | **P** | Preferred. State changes occur through verified API methods (e.g., `cargo.add()`). |
 | [component-driven-initialization](/docs/developer/pattern/component-driven-initialization.md) | **P** | Preferred. Initialize primary source components (`InstalledFuel`) rather than summary fields (`fuelStock`). |
-| [Housekeeping Encapsulation](file:///Users/Dan/repos/space-game/docs/developer/pattern/housekeeping-encapsulation.md) | **P** | Helper methods for setup/lookups. |
+| [housekeeping-encapsulation](/docs/developer/pattern/housekeeping-encapsulation.md) | **P** | Preferred. Repeated setup logic extracted into private methods within the same class. |
+| [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) | **P** | Preferred. Cross-class entity identification delegated to a single shared utility (e.g., `findFlagship`). |
 | [full-dependency-initialization](/docs/developer/pattern/full-dependency-initialization.md) | **P** | Preferred. Initialize all mandatory context components to avoid silent logic bypasses via "early escape" guards. |
 | [entt-reference-safety](/docs/developer/pattern/entt-reference-safety.md) | **P** | Preferred. Re-fetch component references after calling synchronization hubs that might use `registry.replace`. |
 | [unified-unit-representation](/docs/developer/pattern/unified-unit-representation.md) | **P** | Preferred. Consistent use of system units (e.g., Days for TTE) across code and tests. |

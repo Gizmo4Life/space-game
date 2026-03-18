@@ -26,3 +26,15 @@ pillar: governance
 
 ## Success State
 A file is compliant if it contains zero unused headers and all used symbols are accounted for by direct includes or forward declarations.
+
+## Post-Refactor Orphan Hygiene
+
+When logic is centralized (e.g., removing an inline `registry.view<PlayerComponent>()` in favor of `findFlagship`), the header that previously defined the locally-used type becomes an **orphan include** — still present but no longer directly used.
+
+| Scenario | Action |
+| :--- | :--- |
+| A `registry.view<T>()` loop is replaced by a centralized utility | Remove the header for `T` from the calling file if it is no longer used directly. |
+| A multi-step component aggregation is replaced by `blueprintFromEntity` | Remove all `InstalledModules.h` etc. from the calling file unless another symbol from that header is still used. |
+| A duplicate `#include` is introduced during a refactor merge | Remove the duplicate — C++ include guards prevent double-inclusion but duplicate lines are a maintenance hazard. |
+
+**Protocol**: Every PR that centralizes logic MUST include a header hygiene pass on all modified files as part of the [Definition of Done](/docs/developer/pattern/definition-of-done.md).

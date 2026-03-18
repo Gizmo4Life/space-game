@@ -11,13 +11,12 @@
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/NPCShipManager.h"
-#include "game/components/Faction.h"
 #include "game/ShipOutfitter.h"
+#include "game/components/Faction.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/GameTypes.h"
 #include "game/components/HullGenerator.h"
-#include "game/components/InstalledModules.h"
 #include "game/components/Landed.h"
 #include "game/components/ModuleGenerator.h"
 #include "game/components/NPCComponent.h"
@@ -587,31 +586,10 @@ bool EconomyManager::transferShipToFaction(entt::registry &registry,
   auto &pEco = registry.get<PlanetEconomy>(planet);
   if (pEco.factionData.count(factionId) == 0) return false;
 
-  // 2. Capture its current state as a blueprint
-  ShipBlueprint bp;
-  if (registry.all_of<HullDef>(shipEntity)) {
-    bp.hull = registry.get<HullDef>(shipEntity);
-  } else {
+  // 2. Capture its current state as a blueprint (centralized extraction)
+  ShipBlueprint bp = ShipOutfitter::blueprintFromEntity(registry, shipEntity);
+  if (bp.hull.name.empty()) {
     return false;
-  }
-
-  // Aggregate modules
-  auto addMods = [&](auto &comp) {
-    for (const auto &m : comp.modules) bp.modules.push_back(m);
-  };
-  if (registry.all_of<InstalledEngines>(shipEntity)) addMods(registry.get<InstalledEngines>(shipEntity));
-  if (registry.all_of<InstalledWeapons>(shipEntity)) addMods(registry.get<InstalledWeapons>(shipEntity));
-  if (registry.all_of<InstalledShields>(shipEntity)) addMods(registry.get<InstalledShields>(shipEntity));
-  if (registry.all_of<InstalledCargo>(shipEntity)) addMods(registry.get<InstalledCargo>(shipEntity));
-  if (registry.all_of<InstalledPower>(shipEntity)) addMods(registry.get<InstalledPower>(shipEntity));
-  if (registry.all_of<InstalledCommand>(shipEntity)) addMods(registry.get<InstalledCommand>(shipEntity));
-  if (registry.all_of<InstalledBatteries>(shipEntity)) addMods(registry.get<InstalledBatteries>(shipEntity));
-  if (registry.all_of<InstalledReactionWheels>(shipEntity)) addMods(registry.get<InstalledReactionWheels>(shipEntity));
-  if (registry.all_of<InstalledHabitation>(shipEntity)) addMods(registry.get<InstalledHabitation>(shipEntity));
-
-  if (registry.all_of<NPCComponent>(shipEntity)) {
-    bp.role = registry.get<NPCComponent>(shipEntity).role;
-    bp.lineIndex = registry.get<NPCComponent>(shipEntity).lineIndex;
   }
 
   // 3. Store in parkedShips
@@ -1068,24 +1046,12 @@ bool EconomyManager::sellShip(entt::registry &registry, entt::entity planet,
 
     if (buyerFaction != 0) {
       auto &fEco = eco.factionData[buyerFaction];
-      auto salvage = [&](auto &comp) {
-        for (const auto &m : comp.modules)
+      // Centralized extraction: salvage all installed modules into the shop
+      ShipBlueprint salvageBp = ShipOutfitter::blueprintFromEntity(registry, shipToSell);
+      for (const auto &m : salvageBp.modules) {
+        if (!m.name.empty() && m.name != "Empty")
           fEco.shopModules.push_back(m);
-      };
-      if (registry.all_of<InstalledEngines>(shipToSell))
-        salvage(registry.get<InstalledEngines>(shipToSell));
-      if (registry.all_of<InstalledWeapons>(shipToSell))
-        salvage(registry.get<InstalledWeapons>(shipToSell));
-      if (registry.all_of<InstalledShields>(shipToSell))
-        salvage(registry.get<InstalledShields>(shipToSell));
-      if (registry.all_of<InstalledCargo>(shipToSell))
-        salvage(registry.get<InstalledCargo>(shipToSell));
-      if (registry.all_of<InstalledPower>(shipToSell))
-        salvage(registry.get<InstalledPower>(shipToSell));
-      if (registry.all_of<InstalledBatteries>(shipToSell))
-        salvage(registry.get<InstalledBatteries>(shipToSell));
-      if (registry.all_of<InstalledReactionWheels>(shipToSell))
-        salvage(registry.get<InstalledReactionWheels>(shipToSell));
+      }
       // Scrapyards have a limit
       if (fEco.shopModules.size() > 50) {
         fEco.shopModules.erase(fEco.shopModules.begin(),

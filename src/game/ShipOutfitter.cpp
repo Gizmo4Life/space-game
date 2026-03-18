@@ -17,6 +17,7 @@
 #include <opentelemetry/trace/provider.h>
 
 #include "engine/telemetry/Telemetry.h"
+#include "rendering/UIUtils.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
 #include "game/components/InertialBody.h"
@@ -24,7 +25,6 @@
 #include "game/components/Landed.h"
 #include "game/components/ModuleGenerator.h"
 #include "game/components/NPCComponent.h"
-#include "game/components/PlayerComponent.h"
 #include "game/components/ShipFitness.h"
 #include "game/components/ShipStats.h"
 #include "game/components/SpriteComponent.h"
@@ -32,6 +32,40 @@
 #include "game/components/WeaponComponent.h"
 
 namespace space {
+
+ShipBlueprint ShipOutfitter::blueprintFromEntity(const entt::registry &registry,
+                                                 entt::entity entity) {
+  ShipBlueprint bp;
+  if (!registry.valid(entity)) return bp;
+
+  if (auto* hull = registry.try_get<HullDef>(entity)) {
+    bp.hull = *hull;
+  } else {
+    return bp;
+  }
+
+  // Aggregate modules from all possible installation components
+  auto addMods = [&](auto &comp) {
+    for (const auto &m : comp.modules) bp.modules.push_back(m);
+  };
+  
+  if (auto* c = registry.try_get<InstalledEngines>(entity)) addMods(*c);
+  if (auto* c = registry.try_get<InstalledWeapons>(entity)) addMods(*c);
+  if (auto* c = registry.try_get<InstalledShields>(entity)) addMods(*c);
+  if (auto* c = registry.try_get<InstalledCargo>(entity)) addMods(*c);
+  if (auto* c = registry.try_get<InstalledPower>(entity)) addMods(*c);
+  if (auto* c = registry.try_get<InstalledCommand>(entity)) addMods(*c);
+  if (auto* c = registry.try_get<InstalledBatteries>(entity)) addMods(*c);
+  if (auto* c = registry.try_get<InstalledReactionWheels>(entity)) addMods(*c);
+  if (auto* c = registry.try_get<InstalledHabitation>(entity)) addMods(*c);
+
+  if (auto* npc = registry.try_get<NPCComponent>(entity)) {
+    bp.role = npc->role;
+    bp.lineIndex = npc->lineIndex;
+  }
+
+  return bp;
+}
 
 const HullDef &ShipOutfitter::getHull(uint32_t factionId, Tier sizeTier,
                                       const std::string &role,
@@ -579,8 +613,8 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
               }
           }
           if (needsAmmo) {
-              registry.get_or_emplace<InstalledAmmo>(entity);
-              registry.get_or_emplace<AmmoMagazine>(entity);
+              (void)registry.get_or_emplace<InstalledAmmo>(entity);
+              (void)registry.get_or_emplace<AmmoMagazine>(entity);
               
               float drawRatePerSec = s->ammoConsumption;
               float neededAmmo = drawRatePerSec * TARGET_TTE_SECONDS;
@@ -703,13 +737,7 @@ bool ShipOutfitter::refitModule(entt::registry &registry, entt::entity entity,
         mDef);
   }
 
-  entt::entity payer = entity;
-  if (!registry.all_of<PlayerComponent>(payer)) {
-    for (auto e : registry.view<PlayerComponent>()) {
-      payer = e;
-      break;
-    }
-  }
+  entt::entity payer = findFlagship(registry);
   if (registry.valid(payer) && registry.all_of<CreditsComponent>(payer)) {
     auto &credits = registry.get<CreditsComponent>(payer);
     float price = mDef.basePrice > 0.f ? mDef.basePrice : 500.0f;
@@ -770,13 +798,7 @@ bool ShipOutfitter::sellModule(entt::registry &registry, entt::entity entity,
   *mSold = ModuleDef{}; // Clear it
 
   // Refund
-  entt::entity payer = entity;
-  if (!registry.all_of<PlayerComponent>(payer)) {
-    for (auto e : registry.view<PlayerComponent>()) {
-      payer = e;
-      break;
-    }
-  }
+  entt::entity payer = findFlagship(registry);
 
   if (registry.valid(payer) && registry.all_of<CreditsComponent>(payer)) {
     auto &credits = registry.get<CreditsComponent>(payer);

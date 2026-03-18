@@ -12,6 +12,11 @@ Find undocumented or outdated documentation with respect to current code, charac
 - **Action:** Execute [Documentation Validation](documentation-validation.md).
 - **Verify:** Identify physical code files that lack a corresponding T3 module or have stale pattern mappings.
 - **Verify:** Ensure T3 Module filenames match their physical directory pillar (e.g., `src/engine/` -> `engine-*`).
+- **Action: Ghost Logic Audit** — For each target file, search for [Ghost Logic](/docs/developer/pattern/ghost-logic.md) signals:
+  - Any `registry.view<T>()` loop that could be replaced by a call to a shared utility (e.g., `findFlagship`).
+  - Any multi-step component aggregation block that is duplicated across files (e.g., manual `InstalledModules` iteration).
+  - Any stat derivation that recalculates a value already computed by a dedicated system (e.g., summing module mass when `ShipStats` exists).
+  - Flag all findings as D-rated candidates requiring [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) or [single-source-calculation](/docs/developer/pattern/single-source-calculation.md) refactoring.
 
 
 ## 3. Characterization & Elicitation

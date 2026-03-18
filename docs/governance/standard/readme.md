@@ -27,6 +27,9 @@ graph TD
 - [document-organization](document-organization.md): Metadata and hierarchy rules.
 - [document-topologies](document-topologies.md): Cross-pillar linkage rules.
 - [header-management](header-management.md): IWYU and include rules.
+- [cmake-registration-consistency](cmake-registration-consistency.md): CMake source listing and target registration.
+- [cpp-incomplete-type-resolution](cpp-incomplete-type-resolution.md): Resolving incomplete type errors in C++ headers.
+- [cpp-test-visibility](cpp-test-visibility.md): Ensuring test targets can access non-public symbols.
 
 ## 2. Process Quality (Action)
 *Nuance: Standards governing runtime and CI/CD operations.*
@@ -34,6 +37,9 @@ graph TD
 - [ops-documentation](ops-documentation.md): Restoration and triage guidelines.
 - [protocol-execution](protocol-execution.md): Rules for valid agent-led operations.
 - [observability-standard](observability-standard.md): Telemetry naming and documentation rules.
+- [build-resilience](build-resilience.md): Approved build strategies and fallback patterns.
+- [build-env-mac-restriction](build-env-mac-restriction.md): Network-isolated build fallback for macOS.
+- [docker-orchestration](docker-orchestration.md): Container orchestration and service coordination.
 
 ## 3. Semantic Clarity (Intent)
 *Nuance: Standards for capturing intent and nuance before implementation.*
@@ -42,3 +48,7 @@ graph TD
 ## 4. Game Engine (Domain-Specific)
 *Nuance: Standards governing the C++ game engine technology choices and ECS patterns.*
 - [game-tech-stack](game-tech-stack.md): Approved libraries, physics engine, ECS, and economy patterns.
+- [logic-encapsulation-standard](logic-encapsulation-standard.md): PADU ratings for intra-class housekeeping and cross-class entity lookup patterns.
+- [logic-test-integrity](logic-test-integrity.md): Fitness ratings for core game logic patterns and unit test shapes.
+- [state-synchronization](state-synchronization.md): PADU ratings for maintaining consistent state across distributed components.
+- [ui-pattern-rating](ui-pattern-rating.md): PADU ratings for UI rendering and interaction patterns.

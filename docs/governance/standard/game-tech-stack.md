@@ -35,6 +35,9 @@ Establish the technical foundations for the space-game proof-of-concept using C+
 | **EnTT** | **P** | Modern C++ ECS with exceptional performance and a wide range of features. |
 | [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) | **P** | Required shape for all game data structures. |
 | [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) | **P** | Required shape for all game logic systems. |
+| [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) | **P** | Canonically unique entities (e.g., flagship) identified via shared utilities (`findFlagship`, `blueprintFromEntity`). |
+| [blueprint-round-trip](/docs/developer/pattern/blueprint-round-trip.md) | **P** | `applyBlueprint` and `blueprintFromEntity` are proven inverses; verified by round-trip tests. |
+| [ghost-logic](/docs/developer/pattern/ghost-logic.md) | **U** | Unacceptable. Duplicate inline lookups or component aggregation spread across multiple files. |
 | **Flecs** | **A** | Excellent API and focus on usability; a strong contender to EnTT. |
 | **Deep Inheritance** | **U** | Strictly forbidden due to cache-unfriendly memory layouts and fragility. |
 

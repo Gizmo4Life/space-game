@@ -19,6 +19,9 @@ public:
                          const std::string &role = "General",
                          uint32_t lineIndex = 0) const;
 
+  static ShipBlueprint blueprintFromEntity(const entt::registry &registry,
+                                           entt::entity entity);
+
   void applyBlueprint(::entt::registry &registry, ::entt::entity entity,
                       uint32_t factionId, Tier sizeTier,
                       const std::string &role = "General",

@@ -16,7 +16,8 @@ This standard defines the requirements for maintaining consistent state across m
 | :--- | :--- | :--- |
 | [Single Source Calculation](file:///Users/Dan/repos/space-game/docs/developer/pattern/single-source-calculation.md) | **P** | Derived values (Mass, Vol) must be calculated in one site. |
 | [Reactive State Access](file:///Users/Dan/repos/space-game/docs/developer/pattern/reactive-state-access.md) | **P** | UI must query stats instead of re-calculating them. Systems query the "source of truth" component directly or via a shared accessor. |
-| [Housekeeping Encapsulation](file:///Users/Dan/repos/space-game/docs/developer/pattern/housekeeping-encapsulation.md) | **P** | Common UI lookups moved to helper methods. |
+| [housekeeping-encapsulation](/docs/developer/pattern/housekeeping-encapsulation.md) | **P** | Repeated setup and refresh logic within a class extracted into named helper methods. |
+| [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) | **P** | Cross-class flagship/entity identification delegated to a single shared utility (`findFlagship`, `blueprintFromEntity`). |
 | [manual-cached-mirroring](/docs/developer/pattern/reactive-state-access.md) | **D** | Discouraged. Cloning a value from one component to another (e.g., `stats.foodStock` mirroring `cargo[Food]`). |
 | [conflicting-redundant-logic](/docs/developer/pattern/single-source-calculation.md) | **U** | Unacceptable. Implementing the same calculation in multiple systems with different inputs (e.g., mass calculation excluding modules in one system). |
 | [direct-bypassing-update](/docs/developer/pattern/encapsulated-state-mutation.md) | **U** | Unacceptable. Modifying a source value via direct access while bypassing its synchronization logic (e.g., modifying `inventory` map without updating `currentWeight`). |

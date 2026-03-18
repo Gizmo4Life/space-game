@@ -9,7 +9,7 @@
 #include "game/components/HullDef.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
-#include "game/components/PlayerComponent.h"
+#include "game/components/ShipModule.h"
 #include "game/components/ShipFitness.h"
 #include "game/components/ShipStats.h"
 #include "rendering/UIUtils.h"

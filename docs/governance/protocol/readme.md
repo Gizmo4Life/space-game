@@ -13,6 +13,7 @@ Standardized execution sequences and automation flows.
 *Nuance: Core sequences for feature development, discovery, and quality assurance.*
 - [Greenfield](greenfield.md): New feature orchestration.
 - [Discovery](discovery.md): Drift analysis and reconciliation.
+- [Unified Change](unified-change.md): Combined discovery + greenfield for standard-compliant implementation.
 - [PR Review](pull-request-review.md): Contribution verification.
 
 ## Architectural Enforcement

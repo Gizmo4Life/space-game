@@ -17,5 +17,9 @@ Ensure structural alignment with the repository's T1 (Landscape), T2 (Capability
 
 ## 3. Domain Integrity
 - **Verify:** [Module Dependencies](/docs/developer/pattern/doc-module-dependency.md) are explicitly documented.
-
 - **Action:** If structural drift is detected, update the corresponding Landscape or Capability artifact.
+- **Action: Ghost Logic Check** — For each modified file, verify that no [Ghost Logic](/docs/developer/pattern/ghost-logic.md) was introduced or left unaddressed:
+  - No new `registry.view<T>()` loops for canonically unique entities (use `findFlagship` or equivalent).
+  - No new manual component aggregation blocks that duplicate logic in another file (use `blueprintFromEntity` or equivalent).
+  - All centralization refactors include a header hygiene pass per [header-management](/docs/governance/standard/header-management.md).
+  - Verify adherence to [logic-encapsulation-standard](/docs/governance/standard/logic-encapsulation-standard.md).
