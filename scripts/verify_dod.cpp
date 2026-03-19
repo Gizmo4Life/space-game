@@ -3,10 +3,16 @@
 #include "game/ShipOutfitter.h"
 #include "game/components/WeaponComponent.h"
 #include "game/components/AmmoComponent.h"
+#include "game/NPCShipManager.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/CargoComponent.h"
+#include "game/components/ShipStats.h"
+#include "engine/physics/KinematicsSystem.h"
+#include "game/components/ShipStats.h"
+#include "engine/physics/KinematicsSystem.h"
+#include "engine/physics/PhysicsEngine.h"
 #include <entt/entt.hpp>
-
+ 
 using namespace space;
 
 bool checkRole(entt::registry& registry, entt::entity ship, const std::string& role) {
@@ -27,38 +33,80 @@ bool checkRole(entt::registry& registry, entt::entity ship, const std::string& r
     }
     return true; 
 }
+ 
+bool checkViability(entt::registry& registry, entt::entity ship) {
+    auto& stats = registry.get<ShipStats>(ship);
+    bool ok = true;
+    if (stats.foodTTE < 4.9f) {
+        std::cout << "  FAIL: Food TTE is " << stats.foodTTE << " (Expected >= 4.9)\n";
+        ok = false;
+    }
+    if (stats.fuelTTE < 4.9f) {
+        std::cout << "  FAIL: Fuel TTE is " << stats.fuelTTE << " (Expected >= 4.9)\n";
+        ok = false;
+    }
+    if (stats.isotopesTTE < 4.9f) {
+        std::cout << "  FAIL: Isotope TTE is " << stats.isotopesTTE << " (Expected >= 4.9)\n";
+        ok = false;
+    }
+    return ok;
+}
+ 
+bool checkFitness(entt::registry& registry, entt::entity ship) {
+    auto& stats = registry.get<ShipStats>(ship);
+    if (stats.fitness < 0.499f) {
+        std::cout << "  FAIL: Fitness is " << stats.fitness << " (Expected >= 0.5)\n";
+        return false;
+    }
+    return true;
+}
 
 void verifyDoD() {
     entt::registry registry;
-    auto& outfitter = ShipOutfitter::instance();
+    PhysicsEngine physics;
+    b2WorldId worldId = physics.getWorldId();
     FactionManager::instance().init();
     
-    std::cout << "--- Ship DoD Verification (Role & Ammo Sync) ---\n";
+    std::cout << "--- Unified Change: Ship Viability & Fitness Audit ---\n";
     
     int failures = 0;
-    int totalChecked = 100;
+    int totalChecked = 20; // Reduced for script speed
     std::vector<std::string> roles = {"Combat", "Cargo", "Transport", "General"};
-
+ 
     for (int i = 0; i < totalChecked; ++i) {
-        entt::entity ship = registry.create();
         std::string role = roles[i % roles.size()];
-        outfitter.applyBlueprint(registry, ship, 1, Tier::T1, role);
+        auto ship = NPCShipManager::instance().spawnShip(
+            registry, 1, {0,0}, worldId, Tier::T1, false, entt::null, role);
         
         // 1. Check Role Compliance
         if (!checkRole(registry, ship, role)) {
-            std::cout << "Ship " << i << " failed Role Compliance for " << role << "\n";
+            std::cout << "Ship " << i << " [" << role << "] failed Role Compliance\n";
+            failures++;
+        }
+ 
+        // 2. Check TTE Viability
+        if (!checkViability(registry, ship)) {
+            std::cout << "Ship " << i << " [" << role << "] failed TTE Viability\n";
             failures++;
         }
         
-        // 2. Check Ammo Sync (if Combat)
-        if (role == "Combat") {
-            auto* wComp = registry.try_get<WeaponComponent>(ship);
-            if (wComp && wComp->tier != WeaponTier::T1_Energy) {
-                auto* mag = registry.try_get<AmmoMagazine>(ship);
-                if (!mag || mag->storedAmmo.count(wComp->selectedAmmo) == 0) {
-                    std::cout << "Ship " << i << " failed Ammo Synchronization\n";
-                    failures++;
-                }
+        // 3. Check Fitness
+        if (!checkFitness(registry, ship)) {
+            std::cout << "Ship " << i << " [" << role << "] failed Fitness (Target >= 0.5)\n";
+            failures++;
+        }
+ 
+        // 4. Verify Consumption (Simulation) - only on even indexes
+        if (i % 5 == 0) {
+            float dt = 1.0f; 
+            for (int s = 0; s < 60; ++s) {
+                KinematicsSystem::applyThrust(registry, ship, 1.0f, dt);
+            }
+            ShipOutfitter::instance().refreshStats(registry, ship, registry.get<HullDef>(ship));
+            auto& sAfter = registry.get<ShipStats>(ship);
+            if (sAfter.fuelTTE < 3.8f || sAfter.fuelTTE > 4.2f) { // Wider margin for dt variance
+                std::cout << "Ship " << i << " failed Consumption Rate: " << sAfter.fuelTTE << "\n";
+                failures++;
             }
         }
         

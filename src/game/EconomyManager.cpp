@@ -959,8 +959,13 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
 
     float currentCredits = registry.get<CreditsComponent>(player).amount;
     registry.emplace_or_replace<CreditsComponent>(newFlagship, currentCredits);
-
-    registry.remove<PlayerComponent>(player);
+ 
+    if (auto* oldCargo = registry.try_get<CargoComponent>(player)) {
+        auto &newCargo = registry.get_or_emplace<CargoComponent>(newFlagship);
+        for (auto const& [res, amount] : oldCargo->inventory) {
+            newCargo.add(res, amount); // Try to add cleanly
+        }
+    }
     if (registry.all_of<HullDef>(player)) {
       auto &oldNpc = registry.emplace_or_replace<NPCComponent>(player);
       oldNpc.isPlayerFleet = true;

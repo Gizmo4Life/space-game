@@ -42,7 +42,9 @@ struct ShipStats {
   float fuelConsumption = 0.0f;
   float isotopesConsumption = 0.0f;
   float ammoConsumption = 0.0f;
-
+ 
+  float fitness = 0.0f; // Blueprint fitness (0.0 to 1.0)
+ 
   bool isDerelict = false;
   bool controlLoss = false;
   float empTimer = 0.0f; // Seconds remaining of EMP incapacitation

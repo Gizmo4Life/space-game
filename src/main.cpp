@@ -175,16 +175,16 @@ int main() {
     // Ship controls
     if (registry.valid(playerEntity)) {
       if (wHeld)
-        KinematicsSystem::applyThrust(registry, playerEntity, 1.0f);
+        KinematicsSystem::applyThrust(registry, playerEntity, 1.0f, dt);
       if (sHeld)
-        KinematicsSystem::applyThrust(registry, playerEntity, -0.6f);
-
+        KinematicsSystem::applyThrust(registry, playerEntity, -0.6f, dt);
+ 
       float rotDir = 0.0f;
       if (aHeld)
         rotDir -= 1.0f;
       if (dHeld)
         rotDir += 1.0f;
-      KinematicsSystem::applyRotation(registry, playerEntity, rotDir);
+      KinematicsSystem::applyRotation(registry, playerEntity, rotDir, dt);
       if (spaceHeld)
         WeaponSystem::fire(registry, playerEntity, physics.getWorldId());
     }

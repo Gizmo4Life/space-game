@@ -65,11 +65,11 @@ void KinematicsSystem::update(entt::registry &registry, float deltaTime) {
 }
 
 void KinematicsSystem::applyThrust(entt::registry &registry,
-                                   entt::entity entity, float power) {
+                                   entt::entity entity, float power, float deltaTime) {
   if (registry.all_of<ShipStats>(entity) &&
       registry.get<ShipStats>(entity).isDerelict)
     return;
-
+ 
   if (!registry.all_of<InertialBody>(entity))
     return;
   auto &inertial = registry.get<InertialBody>(entity);
@@ -77,14 +77,16 @@ void KinematicsSystem::applyThrust(entt::registry &registry,
     // Fuel Consumption
     if (registry.all_of<ShipStats>(entity)) {
       auto &stats = registry.get<ShipStats>(entity);
-      float fuelDraw = 0.01f * std::abs(power); // 1% per unit power per second?
+      float fuelDrawRate = 0.333f * std::abs(power); // 5 days (300s) at 100% throttle
+      float fuelDraw = fuelDrawRate * deltaTime;
+ 
       if (stats.fuelStock > 0) {
         stats.fuelStock = std::max(0.0f, stats.fuelStock - fuelDraw);
         // Sync back to InstalledFuel
         if (auto* fuel = registry.try_get<InstalledFuel>(entity)) {
             fuel->level = std::min(fuel->capacity, stats.fuelStock);
         }
-        // Sync to Cargo if fuelStock exceeds InstalledFuel capacity or if we want to pull from cargo
+        // Sync to Cargo if fuelStock exceeds InstalledFuel capacity
         if (auto* cargo = registry.try_get<CargoComponent>(entity)) {
             float fuelInTanks = 0;
             if (auto* fuel = registry.try_get<InstalledFuel>(entity)) fuelInTanks = fuel->level;
@@ -94,20 +96,19 @@ void KinematicsSystem::applyThrust(entt::registry &registry,
         return; // No fuel, no thrust
       }
     }
-
     b2Rot rot = b2Body_GetRotation(inertial.bodyId);
     float force = inertial.thrustForce * power;
     b2Vec2 thrustVec = {rot.c * force, rot.s * force};
     b2Body_ApplyForceToCenter(inertial.bodyId, thrustVec, true);
   }
 }
-
+ 
 void KinematicsSystem::applyRotation(entt::registry &registry,
-                                     entt::entity entity, float direction) {
+                                     entt::entity entity, float direction, float deltaTime) {
   if (registry.all_of<ShipStats>(entity) &&
       registry.get<ShipStats>(entity).isDerelict)
     return;
-
+ 
   if (!registry.all_of<InertialBody>(entity))
     return;
   auto &inertial = registry.get<InertialBody>(entity);

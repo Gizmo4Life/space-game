@@ -8,9 +8,9 @@ class KinematicsSystem {
 public:
   static void update(entt::registry &registry, float deltaTime);
   static void applyThrust(entt::registry &registry, entt::entity entity,
-                          float power);
+                          float power, float deltaTime);
   static void applyRotation(entt::registry &registry, entt::entity entity,
-                            float direction);
+                            float direction, float deltaTime);
 };
 
 } // namespace space
