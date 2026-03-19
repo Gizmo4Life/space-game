@@ -14,13 +14,13 @@ Govern the flow of resources, credits, and political power across the game world
 3. **Faction Income:** `FactionManager` accumulates credits from controlled planets. Industrial factions generate a bonus 10% wealth base.
 4. **Genetic Ship Design:** `FactionDNA` drives per-tier preferences. `HullGenerator` creates specialized hulls for **Combat** (durability), **Cargo** (volume), and **General** roles.
 5. **Adaptive Evolution:** `FactionBrain` (in `FactionManager`) triggers DNA drift based on mission success (K/D value ratio). Poor performance shifts DNA towards defense or industry.
-6. **Trade Execution:** `TradeManager` facilitators buy/sell transactions.
+6. **Trade Execution:** `TradeManager` facilitates buy/sell transactions. Logic is aggregated across the entire active fleet (all `isPlayerFleet` entities), distributing purchases across available cargo holds and summing resource stock for sales.
 7. **NPC Orchestration:** `NPCShipManager` spawns ships with `AIBelief` (Trader, Raider, Escort) and tracks mission outcomes.
 
 ## 3. Data Flow & Integrity
 - **Trigger:** Continuous per-tick simulation for production/consumption; event-driven for trades.
 - **Output:** Updated stockpiles, prices, faction credits, and NPC entity spawns.
-- **Consistency:** Deterministic per-frame updates; trade transactions are atomic (check → debit → credit).
+- **Consistency:** Deterministic per-frame updates; trade transactions are atomic across the entire player fleet (check aggregate capacity → debit → distribute resources).
 
 ## 4. Resource Model
 

@@ -31,6 +31,9 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 
 ## 4. Pattern Composition
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `PlanetEconomy`, `CargoComponent`, `CreditsComponent`
+- [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
+- [logic-encapsulation-standard](/docs/governance/standard/logic-encapsulation-standard.md) (S) — Context: Fleet-Wide Resource Management
+- [fleet-wide-resource-aggregation](/docs/developer/pattern/fleet-wide-resource-aggregation.md) (P) — Preferred for market/reequip
 - [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `EconomyManager::update`
 - [cpp-compiler-driven-refactoring](/docs/developer/pattern/cpp-compiler-driven-refactoring.md) (P) — Mandatory protocol for wide-reaching structural changes.
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `EconomyManager`, `TradeManager`
@@ -44,14 +47,16 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [economy-refit-fee](/docs/developer/pattern/economy-refit-fee.md) (P) — Installation costs for player refits
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 - [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) (P) — `ShipOutfitter::blueprintFromEntity` centralizes all entity-to-blueprint extraction; `findFlagship` unifies player identification in refit/sell operations.
-- [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
+
+### 2. Market Logistics
+- **Fleet-Wide Aggregation**: Commodity trading (`executeTrade`) and vessel provisioning (`reequipForDuration`) aggregate cargo capacity and resource stock across the entire active fleet (all ships marked `isPlayerFleet`).
+- **Automatic Distribution**: Purchased resources are distributed to ships with available capacity, starting with the flagship.
+- **Atomic Transactions**: Trades fail if the aggregate fleet capacity or credits are insufficient.
 
 ## 4. Telemetry & Observability
-- `game.economy.tick` — attributes: `economy.planet_count`
-- `game.economy.trade.transaction` — attributes: `economy.credits_transferred`
-- `game.economy.factory.build` — attributes: `economy.product_type`, `economy.product_id`, `economy.cost_credits`
-- `game.economy.stockpile.delta` — attributes: `faction.id`, `product.id`, `stockpile.delta`
-- **Status:** ✅ Fully instrumented via `opentelemetry-cpp`
-55: 
-56: ## 5. Economic Balance & Tuning
-57: - **Isotope Availability**: To avoid bottlenecks in power and fuel production, Isotopes are balanced with a higher `baseOutputRate` (15.0f) and increased baseline seeding (4 factories) on `Icy` planets.
+- `game.economy.transaction` — attributes: `transaction_type` (`commodity_buy` / `commodity_sell`), `resource_id`, `quantity`, `price_total`, `fleet_size`, `buying_faction`
+- `game.economy.reequip` — attributes: `reequip_days`, `reequip_fleet_size`, `reequip_total_spent`
+- **Status:** ✅ Fully instrumented with fleet-scale attributes.
+
+## 5. Economic Balance & Tuning
+- **Isotope Availability**: To avoid bottlenecks in power and fuel production, Isotopes are balanced with a higher `baseOutputRate` (15.0f) and increased baseline seeding (4 factories) on `Icy` planets.

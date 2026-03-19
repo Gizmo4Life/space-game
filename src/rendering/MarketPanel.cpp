@@ -3,6 +3,7 @@
 #include "game/EconomyManager.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/Economy.h"
+#include "game/components/NPCComponent.h"
 
 namespace space {
 
@@ -66,9 +67,31 @@ void MarketPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   }
 
   auto &eco = ctx.registry.get<PlanetEconomy>(planetEntity_);
-  CargoComponent *pCargo = ctx.registry.try_get<CargoComponent>(ctx.player);
   CreditsComponent *pCredits =
       ctx.registry.try_get<CreditsComponent>(ctx.player);
+
+  // Aggregated fleet stats
+  std::vector<entt::entity> fleetShips;
+  fleetShips.push_back(ctx.player);
+  auto npcView = ctx.registry.view<NPCComponent>();
+  for (auto e : npcView) {
+    if (npcView.get<NPCComponent>(e).isPlayerFleet && e != ctx.player)
+      fleetShips.push_back(e);
+  }
+
+  float totalWeight = 0.f;
+  float totalCapacity = 0.f;
+  std::map<Resource, float> totalInventory;
+
+  for (auto ship : fleetShips) {
+    if (auto *cargo = ctx.registry.try_get<CargoComponent>(ship)) {
+      totalWeight += cargo->currentWeight;
+      totalCapacity += cargo->maxCapacity;
+      for (auto const &[res, qty] : cargo->inventory) {
+        totalInventory[res] += qty;
+      }
+    }
+  }
 
   if (pCredits) {
     dtext("Credits: $" + fmt(pCredits->amount, 0), 16,
@@ -77,11 +100,10 @@ void MarketPanel::render(sf::RenderTarget &target, const UIContext &ctx,
     dtext("Credits: N/A", 16, sf::Color(150, 150, 150));
   }
 
-  if (pCargo) {
-    std::string color = (pCargo->currentWeight >= pCargo->maxCapacity) ? "#FF5555" : "#55FF55";
-    dtext("Cargo: " + fmt(pCargo->currentWeight, 0) + " / " + fmt(pCargo->maxCapacity, 0), 16,
-          (pCargo->currentWeight >= pCargo->maxCapacity) ? sf::Color::Red : sf::Color::Green);
-  }
+  bool isFull = (totalWeight >= totalCapacity);
+  dtext("Fleet Cargo: " + fmt(totalWeight, 0) + " / " + fmt(totalCapacity, 0), 16,
+        isFull ? sf::Color::Red : sf::Color::Green);
+
   y += 5.f;
 
   int maxRes = static_cast<int>(Resource::Refinery);
@@ -93,14 +115,12 @@ void MarketPanel::render(sf::RenderTarget &target, const UIContext &ctx,
     float price = eco.currentPrices.count(pk) ? eco.currentPrices.at(pk) : 0.f;
     float stock =
         eco.marketStockpile.count(pk) ? eco.marketStockpile.at(pk) : 0.f;
-    float pQty = (pCargo && pCargo->inventory.count(res))
-                     ? pCargo->inventory.at(res)
-                     : 0.f;
+    float pQty = totalInventory.count(res) ? totalInventory.at(res) : 0.f;
 
     std::string label = (sel ? "> " : "  ") + getResourceName(res);
     std::string stats = "   Price: $" + fmt(price, 1) +
                         "   Stock: " + fmt(stock, 0) +
-                        "   Cargo: " + fmt(pQty, 0);
+                        "   Fleet: " + fmt(pQty, 0);
 
     sf::Text t1(*font, label, 15);
     t1.setFillColor(sel ? sf::Color::Cyan : sf::Color::White);

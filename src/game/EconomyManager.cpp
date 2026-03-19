@@ -1100,8 +1100,17 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     return false;
 
   auto &eco = registry.get<PlanetEconomy>(planet);
-  auto &cargo = registry.get<CargoComponent>(player);
   auto &credits = registry.get<CreditsComponent>(player);
+
+  // Identify all fleet ships (flagship + player-allied NPCs)
+  std::vector<entt::entity> fleetShips;
+  fleetShips.push_back(player);
+  auto npcView = registry.view<NPCComponent>();
+  for (auto e : npcView) {
+    if (npcView.get<NPCComponent>(e).isPlayerFleet && e != player) {
+      fleetShips.push_back(e);
+    }
+  }
 
   ProductKey pk{ProductType::Resource, static_cast<uint32_t>(res), Tier::T1};
   float price = eco.currentPrices.count(pk) ? eco.currentPrices.at(pk) : 10.0f;
@@ -1113,11 +1122,45 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     if (eco.marketStockpile[pk] < delta)
       return false;
 
-    // Use add() to ensure capacity and weight are tracked
-    if (!cargo.add(res, delta))
+    // Check aggregate fleet capacity
+    float totalAvail = 0.f;
+    for (auto ship : fleetShips) {
+      if (auto *cargo = registry.try_get<CargoComponent>(ship)) {
+        totalAvail += cargo->maxCapacity - cargo->currentWeight;
+      }
+    }
+    if (totalAvail < delta)
       return false;
 
+    // Execute transaction: Deduct credits and market stock
     credits.amount -= totalCost;
+    eco.marketStockpile[pk] -= delta;
+
+    // Deduct from aggregate stockpile and pay factions
+    float stockRemaining = delta;
+    for (auto &[fid, fEco] : eco.factionData) {
+      if (fEco.stockpile[pk] > 0) {
+        float taken = std::min(fEco.stockpile[pk], stockRemaining);
+        fEco.stockpile[pk] -= taken;
+        stockRemaining -= taken;
+      }
+      if (stockRemaining <= 0)
+        break;
+    }
+
+    // Distribute bought resources across fleet cargo holds
+    float distRemaining = delta;
+    for (auto ship : fleetShips) {
+      if (distRemaining <= 0.f) break;
+      if (auto *cargo = registry.try_get<CargoComponent>(ship)) {
+        float avail = cargo->maxCapacity - cargo->currentWeight;
+        float toAdd = std::min(distRemaining, std::floor(avail));
+        if (toAdd > 0.f) {
+          cargo->add(res, toAdd);
+          distRemaining -= toAdd;
+        }
+      }
+    }
 
     // Telemetry: Commodity Purchase
     auto tradeSpan = space::Telemetry::instance().tracer()->StartSpan(
@@ -1126,30 +1169,44 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     tradeSpan->SetAttribute("economy.resource_id", (int)res);
     tradeSpan->SetAttribute("economy.quantity", delta);
     tradeSpan->SetAttribute("economy.price_total", totalCost);
+    tradeSpan->SetAttribute("economy.fleet_size", (int)fleetShips.size());
     tradeSpan->End();
 
-    // Deduct from aggregate stockpile and pay factions
-    float remaining = delta;
-    for (auto &[fid, fEco] : eco.factionData) {
-      if (fEco.stockpile[pk] > 0) {
-        float taken = std::min(fEco.stockpile[pk], remaining);
-        fEco.stockpile[pk] -= taken;
-        remaining -= taken;
-      }
-      if (remaining <= 0)
-        break;
-    }
-    eco.marketStockpile[pk] -= delta;
     return true;
   } else { // Player Sell
     float amountToSell = -delta;
     
-    // Use remove() to ensure weight is tracked
-    if (!cargo.remove(res, amountToSell))
+    // Check aggregate fleet stock
+    float totalStock = 0.f;
+    for (auto ship : fleetShips) {
+      if (auto *cargo = registry.try_get<CargoComponent>(ship)) {
+        if (cargo->inventory.count(res)) {
+          totalStock += cargo->inventory.at(res);
+        }
+      }
+    }
+    if (totalStock < amountToSell)
       return false;
 
+    // Execute transaction: Add credits
     float totalGain = price * amountToSell;
     credits.amount += totalGain;
+
+    // Remove resources from fleet
+    float remToSell = amountToSell;
+    for (auto ship : fleetShips) {
+      if (remToSell <= 0.f) break;
+      if (auto *cargo = registry.try_get<CargoComponent>(ship)) {
+        if (cargo->inventory.count(res)) {
+          float available = cargo->inventory.at(res);
+          float taken = std::min(remToSell, available);
+          if (taken > 0.f) {
+            cargo->remove(res, taken);
+            remToSell -= taken;
+          }
+        }
+      }
+    }
 
     // Add to market (primary faction takes it)
     uint32_t bestFid = 0;
@@ -1172,6 +1229,7 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
       tradeSpan->SetAttribute("economy.quantity", amountToSell);
       tradeSpan->SetAttribute("economy.price_total", totalGain);
       tradeSpan->SetAttribute("economy.buying_faction", (int)bestFid);
+      tradeSpan->SetAttribute("economy.fleet_size", (int)fleetShips.size());
       tradeSpan->End();
     }
     return true;

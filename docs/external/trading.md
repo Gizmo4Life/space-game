@@ -21,10 +21,12 @@ The market displays local prices, available stock, and your current cargo invent
 - **Sell**: Press **[V]** to sell the selected quantity from your cargo.
 
 ## Cargo & Volume Management
-Every ship has a maximum cargo capacity. The Market interface shows your current usage (e.g., `Cargo: 45 / 100`).
+Every ship has a maximum cargo capacity. Your **Fleet Cargo** usage represents the total capacity of all ships in your active fleet (flagship + escorts).
 
-> [!IMPORTANT]
-> You cannot buy more items than your ship's remaining volume allows. If the "Buy" action fails, check if your cargo is full or if the market has sufficient stock.
+- **Aggregate Capacity**: The Market interface displays the aggregate values (e.g., `Fleet Cargo: 150 / 600`).
+- **Automatic Distribution**: When you purchase resources, they are automatically distributed across your fleet's available cargo holds, starting with your flagship and then overflowing to your escorts.
+
+Price and availability are determined by the local planetary market. For high-volume trading, ensure your fleet has sufficient combined cargo capacity.
 
 ## Credits
 Transactions use your ship's credits. The "Total Cost" field updates dynamically as you change the trade quantity, allowing you to plan your purchases effectively.
