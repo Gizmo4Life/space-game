@@ -1,17 +1,15 @@
 #include <iostream>
 #include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
-#include "game/components/WeaponComponent.h"
-#include "game/components/AmmoComponent.h"
 #include "game/NPCShipManager.h"
+#include "game/components/WeaponComponent.h"
 #include "game/components/InstalledModules.h"
 #include "game/components/CargoComponent.h"
 #include "game/components/ShipStats.h"
 #include "engine/physics/KinematicsSystem.h"
-#include "game/components/ShipStats.h"
-#include "engine/physics/KinematicsSystem.h"
 #include "engine/physics/PhysicsEngine.h"
 #include <entt/entt.hpp>
+
  
 using namespace space;
 

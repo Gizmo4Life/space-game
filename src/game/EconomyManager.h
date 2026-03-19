@@ -67,6 +67,21 @@ public:
   bool executeTrade(entt::registry &registry, entt::entity planet,
                     entt::entity player, Resource res, float delta);
 
+  /// Result of a reequip operation.
+  struct ReequipResult {
+    float foodBought = 0.f;
+    float fuelBought = 0.f;
+    float isotopeBought = 0.f;
+    float totalSpent = 0.f;
+    std::string message;
+  };
+
+  /// Auto-purchase resources to sustain the player's ship for the given
+  /// number of days. Constrained by credits, cargo space, and market supply.
+  ReequipResult reequipForDuration(entt::registry &registry,
+                                   entt::entity planet, entt::entity player,
+                                   int days);
+
   float calculatePrice(ProductKey product, float localSupply,
                        float localPopulation, bool isBlackMarket = false);
 

@@ -4,7 +4,6 @@
 #include "game/NPCShipManager.h"
 #include "game/FactionManager.h"
 #include "game/components/ShipStats.h"
-#include "game/components/CargoComponent.h"
 #include "engine/physics/KinematicsSystem.h"
 
 using namespace space;

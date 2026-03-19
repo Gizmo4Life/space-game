@@ -35,7 +35,7 @@ private:
   entt::entity planetEntity_ = entt::null;
   entt::entity playerEntity_ = entt::null;
 
-  enum class LandingTab { Info, Shipyard, Outfitter, Market };
+  enum class LandingTab { Info, Shipyard, Outfitter, Market, Reequip };
   LandingTab currentTab_ = LandingTab::Info;
 
   std::map<LandingTab, std::unique_ptr<LandingPanel>> panels_;

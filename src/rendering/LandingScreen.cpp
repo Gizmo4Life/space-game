@@ -2,6 +2,7 @@
 #include "InfoPanel.h"
 #include "MarketPanel.h"
 #include "OutfitterPanel.h"
+#include "ReequipPanel.h"
 #include "ShipyardPanel.h"
 #include "UIUtils.h"
 #include "engine/telemetry/Telemetry.h"
@@ -37,6 +38,8 @@ void LandingScreen::updatePanels() {
       std::make_unique<OutfitterPanel>(planetEntity_, playerEntity_);
   panels_[LandingTab::Market] =
       std::make_unique<MarketPanel>(planetEntity_, playerEntity_);
+  panels_[LandingTab::Reequip] =
+      std::make_unique<ReequipPanel>(planetEntity_, playerEntity_);
 }
 
 void LandingScreen::handleEvent(const sf::Event &event, const UIContext &ctx,
@@ -59,6 +62,8 @@ void LandingScreen::handleEvent(const sf::Event &event, const UIContext &ctx,
       currentTab_ = LandingTab::Outfitter;
     else if (kp->code == sf::Keyboard::Key::Num4)
       currentTab_ = LandingTab::Market;
+    else if (kp->code == sf::Keyboard::Key::Num5)
+      currentTab_ = LandingTab::Reequip;
 
     if (oldTab != currentTab_) {
       // tab switch logic if needed
@@ -137,6 +142,8 @@ void LandingScreen::render(sf::RenderTarget &target, const UIContext &ctx,
           currentTab_ == LandingTab::Outfitter);
   drawTab(LandingTab::Market, "[4] Market", sf::Color(150, 150, 150),
           currentTab_ == LandingTab::Market);
+  drawTab(LandingTab::Reequip, "[5] Reequip", sf::Color(150, 150, 150),
+          currentTab_ == LandingTab::Reequip);
 
   // Divider
   sf::RectangleShape div({rect.size.x - 40.f, 1.f});
@@ -154,7 +161,7 @@ void LandingScreen::render(sf::RenderTarget &target, const UIContext &ctx,
 
 void LandingScreen::drawTabs(sf::RenderWindow &w, const sf::Font *f,
                              sf::FloatRect rect) {
-  float tabW = rect.size.x / 4.f;
+  float tabW = rect.size.x / 5.f;
   float x = rect.position.x;
   float y = rect.position.y;
 
@@ -178,6 +185,7 @@ void LandingScreen::drawTabs(sf::RenderWindow &w, const sf::Font *f,
   drawTab(LandingTab::Shipyard, "Shipyard", 1);
   drawTab(LandingTab::Outfitter, "Outfitter", 2);
   drawTab(LandingTab::Market, "Market", 3);
+  drawTab(LandingTab::Reequip, "Reequip", 4);
 }
 
 } // namespace space

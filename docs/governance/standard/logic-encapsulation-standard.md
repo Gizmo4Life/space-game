@@ -30,7 +30,17 @@ This standard governs where and how repetitive lookup and setup logic is defined
 | [per-class-entity-view](#) | **D** | Deprecated. Each class implementing its own `registry.view<PlayerComponent>()` loop for a globally unique entity. |
 | [cached-entity-handle](#) | **U** | Unacceptable. Storing an entity handle as a raw member variable across frames without validity checks. |
 
-## 3. Enforcement
+## 3. Context: Fleet-Wide Resource Management
+
+*Nuance: Operations that impact provisioning, reequipping, or logistical state must account for the entire active fleet (all `isPlayerFleet` NPCs), not just the flagship. Failing to aggregate creates a "fleet-starvation" state where escorts run out of fuel or food while the player remains provisioned.*
+
+| Pattern | Rating | Contextual Nuance |
+| :--- | :--- | :--- |
+| [fleet-wide-resource-aggregation](/docs/developer/pattern/fleet-wide-resource-aggregation.md) | **P** | Preferred. Calculate total fleet deficits and distribute results across all cargo holds. |
+| [flagship-only-provisioning](#) | **D** | Discouraged. Hardcoding logistics to only affect the player's flagship. |
+| [manual-fleet-distribution](#) | **U** | Unacceptable. Requiring the player to manually trade resources between their own ships for basic survival (food/fuel). |
+
+## 4. Enforcement
 
 - **Review**: PRs containing a `registry.view<PlayerComponent>()` loop outside of `UIUtils.cpp` or `ShipOutfitter.cpp` will be rejected in favor of using the centralized helpers.
 - **Validation**: Any class that duplicates a lookup block used elsewhere must be refactored to call the shared utility before merge.

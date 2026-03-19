@@ -135,6 +135,11 @@ graph TD
 - [rendering-spatial-bridge](rendering-spatial-bridge.md)
 - [rendering-offscreen-indicator](rendering-offscreen-indicator.md)
 - [rendering-pause-overlay](rendering-pause-overlay.md)
+- [unified-slot-system](unified-slot-system.md)
+- [unified-unit-representation](unified-unit-representation.md)
+- [rate-based-consumption-scaling](rate-based-consumption-scaling.md)
+- [fleet-wide-resource-aggregation](fleet-wide-resource-aggregation.md)
+- [greedy-fitness-generation-retry](greedy-fitness-generation-retry.md)
 - [rendering-dual-scale](rendering-dual-scale.md)
 - [world-procedural-generation](world-procedural-generation.md)
 - [npc-ai-state-machine](npc-ai-state-machine.md): Finite state machine for behavioral orchestration.

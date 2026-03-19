@@ -23,6 +23,7 @@
 #include "game/components/NameComponent.h"
 #include "game/components/PlayerComponent.h"
 #include "game/components/ShipModule.h"
+#include "game/components/ShipStats.h"
 #include "game/components/TransformComponent.h"
 
 // Observability instrumentation for stockpile and DNA drift.
@@ -1176,4 +1177,138 @@ bool EconomyManager::executeTrade(entt::registry &registry, entt::entity planet,
     return true;
   }
 }
+
+EconomyManager::ReequipResult
+EconomyManager::reequipForDuration(entt::registry &registry,
+                                   entt::entity planet, entt::entity player,
+                                   int days) {
+  ReequipResult result;
+  result.message = "";
+
+  if (!registry.all_of<PlanetEconomy>(planet) ||
+      !registry.all_of<CreditsComponent>(player)) {
+    result.message = "Missing market or credit data.";
+    return result;
+  }
+
+  float durationSec = static_cast<float>(days) * GAME_SECONDS_PER_DAY;
+
+  // Gather all fleet ships (flagship + escorts)
+  std::vector<entt::entity> fleetShips;
+  fleetShips.push_back(player);
+  auto npcView = registry.view<NPCComponent>();
+  for (auto e : npcView) {
+    if (npcView.get<NPCComponent>(e).isPlayerFleet && e != player) {
+      fleetShips.push_back(e);
+    }
+  }
+
+  // Aggregate fleet consumption and current stock
+  float totalFoodCons = 0.f, totalFuelCons = 0.f, totalIsoCons = 0.f;
+  float totalFoodStock = 0.f, totalFuelStock = 0.f, totalIsoStock = 0.f;
+  float totalCargoAvail = 0.f;
+
+  for (auto ship : fleetShips) {
+    if (auto *stats = registry.try_get<ShipStats>(ship)) {
+      totalFoodCons += stats->foodConsumption;
+      totalFuelCons += stats->fuelConsumption;
+      totalIsoCons += stats->isotopesConsumption;
+      totalFoodStock += stats->foodStock;
+      totalFuelStock += stats->fuelStock;
+      totalIsoStock += stats->isotopesStock;
+    }
+    if (auto *cargo = registry.try_get<CargoComponent>(ship)) {
+      totalCargoAvail += cargo->maxCapacity - cargo->currentWeight;
+    }
+  }
+
+  // Calculate fleet-wide deficits
+  float foodDeficit = std::max(0.f, totalFoodCons * durationSec - totalFoodStock);
+  float fuelDeficit = std::max(0.f, totalFuelCons * durationSec - totalFuelStock);
+  float isoDeficit = std::max(0.f, totalIsoCons * durationSec - totalIsoStock);
+
+  struct Need {
+    Resource res;
+    float deficit;
+    float *bought;
+  };
+  Need needs[] = {
+      {Resource::Food, foodDeficit, &result.foodBought},
+      {Resource::Fuel, fuelDeficit, &result.fuelBought},
+      {Resource::Isotopes, isoDeficit, &result.isotopeBought},
+  };
+
+  auto &eco = registry.get<PlanetEconomy>(planet);
+  auto &credits = registry.get<CreditsComponent>(player);
+
+  bool limitedByCargo = false;
+  bool limitedByCredits = false;
+  bool limitedBySupply = false;
+
+  for (auto &need : needs) {
+    if (need.deficit <= 0.f)
+      continue;
+
+    ProductKey pk{ProductType::Resource, static_cast<uint32_t>(need.res), Tier::T1};
+    float price = eco.currentPrices.count(pk) ? eco.currentPrices.at(pk) : 10.0f;
+    float stock = eco.marketStockpile.count(pk) ? eco.marketStockpile.at(pk) : 0.f;
+
+    // Clamp by constraints
+    float qty = need.deficit;
+    if (qty > stock) { qty = stock; limitedBySupply = true; }
+    if (qty > totalCargoAvail) { qty = totalCargoAvail; limitedByCargo = true; }
+    if (price > 0.f && qty * price > credits.amount) {
+      qty = std::floor(credits.amount / price);
+      limitedByCredits = true;
+    }
+    qty = std::max(0.f, std::floor(qty));
+
+    // Distribute across fleet ships with available cargo
+    float remaining = qty;
+    for (auto ship : fleetShips) {
+      if (remaining <= 0.f) break;
+      auto *cargo = registry.try_get<CargoComponent>(ship);
+      if (!cargo) continue;
+      float avail = cargo->maxCapacity - cargo->currentWeight;
+      float toAdd = std::min(remaining, std::floor(avail));
+      if (toAdd > 0.f) {
+        // Deduct credits and market stock per unit (executeTrade handles this)
+        executeTrade(registry, planet, player, need.res, toAdd);
+        // Move from flagship cargo to this ship's cargo if not the flagship
+        if (ship != player && cargo) {
+          auto *pCargo = registry.try_get<CargoComponent>(player);
+          if (pCargo && pCargo->inventory[need.res] >= toAdd) {
+            pCargo->remove(need.res, toAdd);
+            cargo->add(need.res, toAdd);
+          }
+        }
+        remaining -= toAdd;
+      }
+    }
+
+    *need.bought = qty - remaining;
+    result.totalSpent += (*need.bought) * price;
+    totalCargoAvail -= *need.bought;
+  }
+
+  // Build status message
+  if (limitedByCargo)
+    result.message += "Cargo full. ";
+  if (limitedByCredits)
+    result.message += "Insufficient credits. ";
+  if (limitedBySupply)
+    result.message += "Market supply exhausted. ";
+  if (result.message.empty())
+    result.message = "Fleet equipped for " + std::to_string(days) + " days.";
+
+  // Telemetry
+  auto span = Telemetry::instance().tracer()->StartSpan("game.economy.reequip");
+  span->SetAttribute("economy.reequip_days", days);
+  span->SetAttribute("economy.reequip_fleet_size", (int)fleetShips.size());
+  span->SetAttribute("economy.reequip_total_spent", (double)result.totalSpent);
+  span->End();
+
+  return result;
+}
+
 } // namespace space

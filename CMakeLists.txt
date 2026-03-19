@@ -52,6 +52,7 @@ set(CORE_SOURCES
     src/rendering/ShipyardPanel.cpp
     src/rendering/OutfitterPanel.cpp
     src/rendering/MarketPanel.cpp
+    src/rendering/ReequipPanel.cpp
     src/rendering/ShipRenderer.cpp
     src/game/WorldLoader.cpp
     src/game/FactionManager.cpp

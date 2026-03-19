@@ -13,6 +13,7 @@
 - **ShipRenderer**: Handles procedural drawing of ship hulls and modules.
 - **ShipyardPanel**: UI for purchasing and selling vessels, featuring a two-pane layout with automatic scrolling.
 - **MarketPanel**: Interface for trading commodity resources. Supports adjustable trade quantities (arrow keys) and displays real-time cargo capacity and total transaction costs.
+- **ReequipPanel**: Fleet provisioning interface. Lets the player specify a duration (1-30 days) and auto-purchases food, fuel, and isotopes across all fleet ships, constrained by credits, cargo, and market supply.
 - **OutfitterPanel**: UI for managing ship modules and ammunition, featuring a three-column layout with scrollable lists and a detail pane.
 - **FleetOverlay**: Persistent HUD element displaying fleet member health and Time-to-Exhaustion (TTE) for critical resources.
 - **LandingPanel**: Base class for planetside UI screens.

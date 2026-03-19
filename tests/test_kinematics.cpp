@@ -137,7 +137,7 @@ TEST_CASE("KinematicsSystem Apply Force", "[physics][kinematics]") {
   auto &stats = registry.get<ShipStats>(entity);
   KinematicsSystem::update(registry, 0.01f);
 
-  KinematicsSystem::applyThrust(registry, entity, 1.0f); // Max thrust
+  KinematicsSystem::applyThrust(registry, entity, 1.0f, 0.1f); // Max thrust, 0.1s step
 
   // F = ma -> 8000N = 200kg * a (100 dry + 100 fuel) -> a = 40m/s^2
   // After 0.1s, v = at = 40 * 0.1 = 4.0m/s

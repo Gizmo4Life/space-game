@@ -48,9 +48,18 @@ Accessible via the **[Outfitter]** tab when landed.
 ### The Shipyard
 Accessible via the **[Shipyard]** tab.
 - **Fleet Management**: Cycle through your owned vessels to view status or sell ships at a market-adjusted rate.
+- **Ship Quality**: All ships available for purchase meet a minimum **fitness score of 50%** for their designated role and come pre-provisioned with at least **5 days' worth** of food, fuel, and isotopes.
+- **Cargo Preservation**: When purchasing a new flagship, your existing cargo is automatically transferred to the new vessel.
 
 ### UI Stability & Data Availability
 During complex operations (such as refitting engines or transferring ships between fleets), a vessel may briefly report **"Vessel data temporarily unavailable"** in the UI. This is a safety measure to ensure system stability while the ship's physical configuration is being recalculated.
+
+### Reequip for Duration
+Accessible via the **[5] Reequip** tab when landed.
+- **Duration Selection**: Use Up/Down arrows to set a target duration (1-30 days).
+- **Fleet-Wide**: The calculation aggregates consumption and cargo across **all ships in your fleet** (flagship + escorts), so every vessel gets provisioned.
+- **Auto-Purchase**: Press **Enter** to buy food, fuel, and isotopes up to the specified duration, constrained by credits, cargo capacity, and market supply.
+- **Preview**: Before purchasing, the panel shows required quantities, unit prices, market stock, and estimated costs.
 
 ---
 > [!IMPORTANT]

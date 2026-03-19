@@ -80,3 +80,13 @@ Establish the technical foundations for the space-game proof-of-concept using C+
 | **Jaeger** | **A** | Lightweight local tracing; useful for deep dive into specific spans. |
 | **OTel Collector** | **P** | Fan-out component ensuring telemetry reaches multiple backends. |
 | [doc-ops-diagnostic-dashboard](/docs/developer/pattern/doc-ops-diagnostic-dashboard.md) | **P** | Standard manifest for defining troubleshooting views. |
+| [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) | **P** | Use for logic-heavy operations (e.g., `reequipForDuration`). |
+
+## 8. Simulation Integrity
+*Nuance: High-frequency simulation logic must remain stable regardless of frame rate or execution density.*
+
+| Pattern | Rating | Nuance |
+| :--- | :--- | :--- |
+| [rate-based-consumption-scaling](/docs/developer/pattern/rate-based-consumption-scaling.md) | **P** | Required. All resource draw (fuel/isotopes/food) must be scaled by `deltaTime`. |
+| [greedy-fitness-generation-retry](/docs/developer/pattern/greedy-fitness-generation-retry.md) | **P** | Preferred. Use for procedural generation where a minimum quality floor is required. |
+| [frame-fixed-draw](#) | **U** | Unacceptable. Resource consumption that occurs at a fixed rate per frame. |
