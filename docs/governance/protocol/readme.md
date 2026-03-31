@@ -21,6 +21,7 @@ Standardized execution sequences and automation flows.
 - [Architecture Review](architecture-review.md): Landscape/T3 mapping.
 - [Capability Elicitation](capability-elicitation.md): Brownfield vs Greenfield intent mapping.
 - [Documentation Validation](documentation-validation.md): Integrity/Drift audit.
+- [Merge Conflict Resolution](merge-conflict-resolution.md): Standard-compliant conflict handling.
 
 ## Operational & Reliability
 *Nuance: Step-by-step guides for system uptime and incident response.*

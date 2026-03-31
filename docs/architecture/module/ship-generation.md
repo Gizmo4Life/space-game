@@ -34,16 +34,12 @@ The Ship Generation system is responsible for creating diverse, role-optimized v
 - [blueprint-round-trip](/docs/developer/pattern/blueprint-round-trip.md) (P) — Symmetry between `applyBlueprint` and `blueprintFromEntity`.
 - [single-source-calculation](/docs/developer/pattern/single-source-calculation.md) (P) — Stats derived in `refreshStats` only.
 
-<<<<<<< HEAD
-=======
 ## 5. Telemetry & Observability
 - `game.generation.blueprint.generate`: Basic generation span. Attributes: `vessel.faction`, `vessel.tier`, `vessel.role`.
 - `game.generation.blueprint.apply`: Application span. Attributes: `vessel.entity`.
 - `game.generation.stats.refresh`: Live stat recalculation.
 - `game.factions.line.evolve`: Triggered on generational shifts.
 - `vessel.fitness`: Reported in `game.generation.blueprint.apply`.
-
->>>>>>> bec985f683f063b0d1ba155ae42f642cdbc0535e
 ## 6. Constraints
 - Ships must maintain at least 1 Engine, 1 Command, and 1 Hardpoint slot.
 - Power draw must be $\leq 0$ (net generation).
