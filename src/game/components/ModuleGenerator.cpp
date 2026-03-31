@@ -1,4 +1,5 @@
 #include "ModuleGenerator.h"
+#include "game/utils/RandomUtils.h"
 
 namespace space {
 
@@ -16,7 +17,11 @@ ModuleGenerator::generate(ModuleCategory category,
     catName = "Engine";
     break;
   case ModuleCategory::Weapon:
-    catName = "Weapon";
+    switch (weaponType) {
+    case WeaponType::Projectile: catName = "Autocannon"; break;
+    case WeaponType::Missile:    catName = "Missile Launcher"; break;
+    default:                     catName = "Energy Weapon"; break;
+    }
     break;
   case ModuleCategory::Shield:
     catName = "Shield";
@@ -67,25 +72,44 @@ ModuleGenerator::generate(ModuleCategory category,
 
     def.attributes.push_back({type, t});
 
-    // Quality Roll: 0.8 to 1.2 for unique variance
-    float qMult = attr.qualityRoll;
-    // Tiered reduction: T1=100%, T2=90%, T3=80%
-    float tierMult = 1.1f - (static_cast<float>(t) * 0.1f);
-    tierMult = std::max(0.1f, tierMult);
+    // Quality Roll variance removed (Deterministic Tiers only)
+    float qMult = 1.0f;
+    
+    // Functional Scaling (REQ-09): T1=1.0, T2=3.0, T3=8.0
+    float functionalMult = 1.0f;
+    if (t == Tier::T2) functionalMult = 3.0f;
+    else if (t == Tier::T3) functionalMult = 8.0f;
+
+    // Special case for cargo linear scaling (REQ-12)
+    if (category == ModuleCategory::Cargo) {
+        if (t == Tier::T2) functionalMult = 2.5f;
+        else if (t == Tier::T3) functionalMult = 4.0f;
+    }
+
+    // Physical Reduction (REQ-13): T1=1.0, T2=0.9, T3=0.75
+    float physicalMult = 1.0f;
+    if (t == Tier::T2) physicalMult = 0.9f;
+    else if (t == Tier::T3) physicalMult = 0.75f;
 
     if (type == AttributeType::Mass) {
-      def.mass *= tierMult * qMult;
+      def.mass *= physicalMult * qMult;
     } else if (type == AttributeType::Volume) {
-      def.volumeOccupied *= tierMult * qMult;
+      def.volumeOccupied *= physicalMult * qMult;
+    } else if (type == AttributeType::Output) {
+      // Functional output (Reactors, Batteries)
+      // For reactors, powerDraw is negative, so multiplying by functionalMult increases generation
+      def.powerDraw *= functionalMult * qMult;
     } else if (type == AttributeType::Efficiency) {
-      // Efficiency reduces both maintenance and power draw (if positive)
-      def.maintenanceCost *= tierMult * qMult;
+      // Efficiency reduces both maintenance and internal power draw (if positive)
+      def.maintenanceCost *= physicalMult * qMult;
       if (def.powerDraw > 0) {
-        def.powerDraw *= tierMult * qMult;
+        def.powerDraw *= physicalMult * qMult;
       } else if (def.powerDraw < 0) {
         // For reactors, efficiency INCREASES output (output is -powerDraw)
-        // 1.0/tierMult = 0.9->1.11, 0.8->1.25, 0.7->1.42
-        def.powerDraw /= (tierMult * qMult);
+        // Note: Output is already scaled by functionalMult if it has an Output attribute,
+        // but Efficiency provides an additional boost.
+        // 1.0/tierMult = 0.9->1.11, 0.8->1.25, 0.7->1.42 (using physicalMult here for consistency)
+        def.powerDraw /= (physicalMult * qMult);
       }
     }
   }
@@ -142,7 +166,7 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
   auto rollAttr = [sizeTier]() -> ModuleAttribute {
     ModuleAttribute attr;
     // Attribute quality is independent of size — any tier can have any quality
-    int val = rand() % 100;
+    int val = Random::getInt(0, 99);
     if (val < 60)
       attr.tier = sizeTier;
     else if (val < 80)
@@ -154,8 +178,8 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
                   : (sizeTier == Tier::T2) ? Tier::T3
                                            : Tier::T3;
 
-    // Quality Roll: 0.8 to 1.2
-    attr.qualityRoll = 0.8f + (rand() % 41) / 100.f;
+    // Quality Roll variance removed (Deterministic Tiers only)
+    attr.qualityRoll = 1.0f;
     return attr;
   };
 
@@ -182,7 +206,7 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
   }
   case ModuleCategory::Weapon: {
     // Determine weapon type randomly for procedural generation
-    wType = static_cast<WeaponType>(rand() % 3);
+    wType = static_cast<WeaponType>(Random::getInt(0, 2));
 
     auto range = rollAttr();
     range.type = AttributeType::Range;
@@ -218,6 +242,7 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
       break;
     }
     case WeaponType::Missile: {
+      attrs.push_back(range);
       auto rof = rollAttr();
       rof.type = AttributeType::ROF;
       attrs.push_back(rof);
@@ -313,18 +338,27 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
   }
   }
 
-  // Base values scaled from size tier
+  // Base values scaled from size tier (Standard: 10/30/80)
   float baseVol =
       (sizeTier == Tier::T1) ? 10.f : (sizeTier == Tier::T2 ? 30.f : 80.f);
-  float baseMass = baseVol * 2.f;
+  float baseMass = baseVol * 2.f;  // Standard: 20t/60t/160t
   float baseMaint = baseVol * 0.5f;
-  float basePower = baseVol * 1.5f;
+
+  // Differentiated Power Draw (REQ-14)
+  // Active systems (Engine, Shield, Weapon) draw 1.5x volume
+  // Passive systems (Cargo, Habitation, Battery, etc) draw 0.2x volume
+  float basePower = baseVol * 0.2f;
+  if (category == ModuleCategory::Engine ||
+      category == ModuleCategory::Shield ||
+      category == ModuleCategory::Weapon) {
+    basePower = baseVol * 1.5f; // Standard: 15/45/120 GW
+  }
 
   if (category == ModuleCategory::Reactor)
-    basePower = -basePower * 2.0f; // reactors generate power (negative draw)
+    basePower = -(baseVol * 10.0f); // Standard: 100/300/800 GW
 
   ModuleDef def =
-      generate(category, attrs, baseVol, baseMass, baseMaint, basePower);
+      generate(category, attrs, baseVol, baseMass, baseMaint, basePower, wType);
   if (category == ModuleCategory::Weapon) {
     def.weaponType = wType;
   }
@@ -337,7 +371,7 @@ AmmoDef ModuleGenerator::generateAmmo(WeaponType weaponType, Tier caliberTier) {
   ammo.caliber = caliberTier;
 
   auto rollSecondary = [caliberTier]() -> Tier {
-    int val = rand() % 100;
+    int val = Random::getInt(0, 99);
     if (val < 60)
       return caliberTier;
     if (val < 80)
@@ -349,13 +383,11 @@ AmmoDef ModuleGenerator::generateAmmo(WeaponType weaponType, Tier caliberTier) {
                                        : Tier::T3;
   };
 
-  ammo.warhead = rollSecondary();
-
+  // Secondary attributes follow documented standards for base types
+  ammo.warhead = caliberTier; 
   if (weaponType == WeaponType::Missile) {
-    ammo.range = rollSecondary();
-    if (caliberTier == Tier::T1 && ammo.range == Tier::T3)
-      ammo.range = Tier::T2;
-    ammo.guidance = rollSecondary();
+    ammo.range = caliberTier;
+    ammo.guidance = caliberTier;
   }
 
   std::string name = tierName(caliberTier) + " ";

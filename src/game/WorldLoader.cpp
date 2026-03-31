@@ -17,6 +17,7 @@
 #include "game/components/WorldConfig.h"
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include "game/utils/RandomUtils.h"
 #include <cstdlib>
 #include <memory>
 #include <opentelemetry/trace/provider.h>
@@ -41,15 +42,15 @@ static std::string generateName() {
       " Quartus", " Quintus", " Sextus", " Septimus", " Octavus",  " Nonus",
       " Decimus", " Anteres"};
 
-  return prefixes[rand() % prefixes.size()] +
-         suffixes[rand() % suffixes.size()];
+  return prefixes[Random::getInt(0, (int)prefixes.size() - 1)] +
+         suffixes[Random::getInt(0, (int)suffixes.size() - 1)];
 }
 
 static CelestialType getPlanetType(float mass) {
   if (mass > WorldConfig::GAS_GIANT_THRESHOLD)
     return CelestialType::GasGiant;
 
-  int roll = rand() % 100;
+  int roll = Random::getInt(0, 99);
   if (mass > WorldConfig::PLANET_THRESHOLD) {
     // Large planets: Rocky, Icy, Lava, Earthlike
     if (roll < 35)
@@ -98,8 +99,8 @@ void WorldLoader::loadStars(entt::registry &registry, int count) {
     sc.texture = texture;
     sc.sprite = std::make_shared<sf::Sprite>(*sc.texture);
     int scatter = static_cast<int>(WorldConfig::WORLD_HALF_SIZE * 2);
-    float scX = static_cast<float>(rand() % scatter - scatter / 2.0f);
-    float scY = static_cast<float>(rand() % scatter - scatter / 2.0f);
+    float scX = static_cast<float>(Random::getInt(0, scatter - 1) - scatter / 2.0f);
+    float scY = static_cast<float>(Random::getInt(0, scatter - 1) - scatter / 2.0f);
     sc.sprite->setPosition({scX, scY});
     registry.emplace<SpriteComponent>(star, sc);
   }
@@ -115,7 +116,7 @@ void WorldLoader::generateStarSystem(entt::registry &registry,
   registry.emplace<TransformComponent>(barycenter, sf::Vector2f(0.0f, 0.0f),
                                        0.0f);
 
-  bool isBinary = (rand() % 10 < 3);
+  bool isBinary = (Random::getInt(0, 9) < 3);
   int starCount = isBinary ? 2 : 1;
 
   for (int i = 0; i < starCount; ++i) {
@@ -167,14 +168,14 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
                                         float totalMass, float minSMA,
                                         float maxSMA, bool isMoonSystem) {
   if (isMoonSystem) {
-    int numMoons = 2 + (rand() % 3);
+    int numMoons = 2 + Random::getInt(0, 2);
     float binWidth = (maxSMA - minSMA) / numMoons;
     for (int i = 0; i < numMoons; ++i) {
       float binMin = minSMA + i * binWidth;
-      float binSMA = binMin + (rand() % 100) * 0.01f * binWidth;
-      float moonMass = (100.0f + rand() % 200);
+      float binSMA = binMin + Random::getInt(0, 99) * 0.01f * binWidth;
+      float moonMass = (100.0f + Random::getInt(0, 199));
       CelestialType type =
-          (rand() % 2 == 0) ? CelestialType::Rocky : CelestialType::Icy;
+          (Random::getInt(0, 1) == 0) ? CelestialType::Rocky : CelestialType::Icy;
       float radius = 8.0f + moonMass / 50.0f;
       auto moon = registry.create();
       registry.emplace<NameComponent>(moon, generateName());
@@ -184,7 +185,7 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
                            (1.0f * 50000.0f)) *
                      0.2f;
       registry.emplace<OrbitalComponent>(moon, parent, binSMA, binSMA, period,
-                                         (rand() % 628) * 0.01f, 0.0f);
+                                         Random::getInt(0, 627) * 0.01f, 0.0f);
 
       // Telemetry: celestial body generation
       auto bodySpan = Telemetry::instance().tracer()->StartSpan(
@@ -242,17 +243,17 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
 
   for (int i = 0; i < numBins; ++i) {
     float binMin = minSMA + i * binWidth;
-    float binSMA = binMin + (rand() % 100) * 0.01f * binWidth;
+    float binSMA = binMin + Random::getInt(0, 99) * 0.01f * binWidth;
     CelestialType type = binTypes[i];
     bool isDwarf = binIsDwarf[i];
 
     float radius;
     float mass;
     if (isDwarf || type == CelestialType::GasGiant) {
-      mass = isDwarf ? (500.0f + rand() % 300) : (8000.0f + rand() % 4000);
+      mass = isDwarf ? (500.0f + Random::getInt(0, 299)) : (8000.0f + Random::getInt(0, 3999));
       radius = isDwarf ? (12.0f + mass / 200.0f) : (50.0f + mass / 400.0f);
     } else {
-      mass = 2000.0f + rand() % 3000;
+      mass = 2000.0f + Random::getInt(0, 2999);
       radius = 25.0f + mass / 400.0f;
     }
 
@@ -265,7 +266,7 @@ void WorldLoader::generateOrbitalSystem(entt::registry &registry,
         sqrtf(powf(binSMA / WorldConfig::WORLD_SCALE, 3) / (1.0f * 50000.0f));
     period *= 0.2f;
     registry.emplace<OrbitalComponent>(planet, parent, binSMA, binSMA, period,
-                                       (rand() % 628) * 0.01f, 0.0f);
+                                       Random::getInt(0, 627) * 0.01f, 0.0f);
 
     // Telemetry: celestial body generation
     auto bodySpan = Telemetry::instance().tracer()->StartSpan(
@@ -341,7 +342,7 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   uint32_t playerFactionId =
       viableFactions.empty() ? fm.getRandomFactionId()
-                             : viableFactions[rand() % viableFactions.size()];
+                             : viableFactions[Random::getInt(0, (int)viableFactions.size() - 1)];
 
   sf::Vector2f spawnPos(900.0f, 900.0f);
   auto view = registry.view<PlanetEconomy, TransformComponent>();
@@ -356,7 +357,7 @@ entt::entity WorldLoader::spawnPlayer(entt::registry &registry,
 
   entt::entity targetBody = entt::null;
   if (!viablePlanets.empty()) {
-    targetBody = viablePlanets[rand() % viablePlanets.size()];
+    targetBody = viablePlanets[Random::getInt(0, (int)viablePlanets.size() - 1)];
   } else if (view.begin() != view.end()) {
     targetBody = view.front();
   }
@@ -398,16 +399,16 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     mainFact = 2;
 
   Faction f;
-  float mainAllegiance = 0.4f + (rand() % 20) * 0.01f;
+  float mainAllegiance = 0.4f + Random::getInt(0, 19) * 0.01f;
   f.allegiances[mainFact] = mainAllegiance;
-  f.allegiances[0] = 0.05f + (rand() % 10) * 0.01f;
+  f.allegiances[0] = 0.05f + Random::getInt(0, 9) * 0.01f;
 
   // Add 2-4 more secondary factions (ensuring 3-5 total factions per planet)
-  uint32_t extraCount = 2 + (rand() % 3);
+  uint32_t extraCount = 2 + Random::getInt(0, 2);
   for (uint32_t i = 0; i < extraCount; ++i) {
     uint32_t extraFid = FactionManager::instance().getRandomFactionId();
     if (f.allegiances.count(extraFid) == 0) {
-      f.allegiances[extraFid] = 0.1f + (rand() % 15) * 0.01f;
+      f.allegiances[extraFid] = 0.1f + Random::getInt(0, 14) * 0.01f;
     }
   }
 
@@ -425,7 +426,7 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
   eco.hullClassScarcity["Falcon"] = 1.0f;
   eco.hullClassScarcity["Eagle"] = 1.0f;
   eco.hullClassScarcity["Vulture"] = 1.0f;
-  float totalPop = (5.0f + (rand() % 21)) * populationScale;
+  float totalPop = (5.0f + Random::getInt(0, 20)) * populationScale;
   if (type == CelestialType::Earthlike)
     totalPop *= 3.0f;
 
@@ -456,12 +457,12 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     };
 
     // --- Vibrant Fleet Seeding (8-15 ships per outpost) ---
-    seedRole(Tier::T1, "General", 6 + (rand() % 6));
-    seedRole(Tier::T1, "Combat", 2 + (rand() % 3));
-    seedRole(Tier::T1, "Cargo", 2 + (rand() % 3));
+    seedRole(Tier::T1, "General", 6 + Random::getInt(0, 5));
+    seedRole(Tier::T1, "Combat", 2 + Random::getInt(0, 2));
+    seedRole(Tier::T1, "Cargo", 2 + Random::getInt(0, 2));
     if (fEco.populationCount > 10.0f) {
-      seedRole(Tier::T2, "General", 2 + (rand() % 3));
-      seedRole(Tier::T2, "Combat", 1 + (rand() % 2));
+      seedRole(Tier::T2, "General", 2 + Random::getInt(0, 2));
+      seedRole(Tier::T2, "Combat", 1 + Random::getInt(0, 1));
       seedRole(Tier::T2, "Cargo", 1);
     }
     if (fEco.populationCount > 40.0f) {
@@ -501,7 +502,7 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     // Each faction on each planet picks 8 random modules to specialize in (up
     // from 5)
     for (int i = 0; i < 8; ++i) {
-      ModuleCategory randCat = static_cast<ModuleCategory>(rand() % 9);
+      ModuleCategory randCat = static_cast<ModuleCategory>(Random::getInt(0, 8));
       ModuleDef newDef =
           ModuleGenerator::instance().generateRandomModule(randCat, Tier::T1);
       newDef.originFactionId = fid;

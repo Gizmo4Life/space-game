@@ -27,11 +27,23 @@ The Ship Generation system is responsible for creating diverse, role-optimized v
 3. **Generational Shifting**: If a ship line's K/D ratio falls below 0.5, `NPCShipManager` triggers `FactionManager::evolveShipLine`.
 4. **Edit-Distance Mutation**: `HullGenerator::mutateHull` creates a successor generation by applying small changes (slots, mass, volume) to the previous design.
 
-## 4. Telemetry & Observability
-- `game.generation.blueprint.generate`: Basic generation span. Attributes: `vessel.fitness`, `vessel.role`.
-- `game.factions.line.evolve`: Triggered on generational shifts.
-- `vessel.fitness`: Reported in applyBlueprint.
+## 4. Pattern Composition
+- [greedy-fitness-generation-retry](/docs/developer/pattern/greedy-fitness-generation-retry.md) (P) — Multi-candidate generation with fitness ranking.
+- [deterministic-attribute-tiering](/docs/developer/pattern/deterministic-attribute-tiering.md) (P) — Integer-based tier scaling over random quality rolls.
+- [evolutionary-strategy-drift](/docs/developer/pattern/evolutionary-strategy-drift.md) (P) — Stochastic DNA mutation based on performance metrics.
+- [blueprint-round-trip](/docs/developer/pattern/blueprint-round-trip.md) (P) — Symmetry between `applyBlueprint` and `blueprintFromEntity`.
+- [single-source-calculation](/docs/developer/pattern/single-source-calculation.md) (P) — Stats derived in `refreshStats` only.
 
+<<<<<<< HEAD
+=======
+## 5. Telemetry & Observability
+- `game.generation.blueprint.generate`: Basic generation span. Attributes: `vessel.faction`, `vessel.tier`, `vessel.role`.
+- `game.generation.blueprint.apply`: Application span. Attributes: `vessel.entity`.
+- `game.generation.stats.refresh`: Live stat recalculation.
+- `game.factions.line.evolve`: Triggered on generational shifts.
+- `vessel.fitness`: Reported in `game.generation.blueprint.apply`.
+
+>>>>>>> bec985f683f063b0d1ba155ae42f642cdbc0535e
 ## 6. Constraints
 - Ships must maintain at least 1 Engine, 1 Command, and 1 Hardpoint slot.
 - Power draw must be $\leq 0$ (net generation).

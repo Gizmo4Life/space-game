@@ -1,5 +1,7 @@
 #include "EconomyManager.h"
+#include "game/utils/RandomUtils.h"
 #include <algorithm>
+#include <box2d/box2d.h>
 #include <iostream>
 #include <map>
 #include <string>
@@ -347,7 +349,7 @@ void EconomyManager::processProduction(uint32_t factionId, FactionEconomy &fEco,
             // "corner the market"
             if (isExceptional && fData && fData->dna.commercialism > 0.8f &&
                 fEco.shopModules.size() > 3) {
-              if (rand() % 100 < 30)
+              if (Random::getInt(0, 99) < 30)
                 keepForFaction = false;
             }
 
@@ -433,7 +435,7 @@ void EconomyManager::tryExpandInfrastructure(uint32_t factionId,
                                              FactionEconomy &fEco,
                                              float deltaTime) {
   // Expansion check: Once every simulated time unit (rare)
-  if (rand() % 100 != 0)
+  if (Random::getInt(0, 99) != 0)
     return;
 
   ProductKey mgKey = {ProductType::Resource,
@@ -493,7 +495,7 @@ void EconomyManager::tryExpandInfrastructure(uint32_t factionId,
 
     // Weighted roll for expansion: needed items get a massive boost
     float chance = (alignment * 0.2f) + (needed ? 0.8f : 0.0f);
-    if ((static_cast<float>(rand() % 100) / 100.0f) < chance) {
+    if ((static_cast<float>(Random::getInt(0, 99)) / 100.0f) < chance) {
       // Telemetry: Instrument factory construction
       auto span = space::Telemetry::instance().tracer()->StartSpan(
           "game.economy.factory.build");
@@ -608,12 +610,12 @@ void EconomyManager::reEvaluateFactionDNA(uint32_t factionId,
                                           FactionEconomy &fEco,
                                           float deltaTime) {
   // Drift check: Rare event (every ~10,000 simulated ticks)
-  if (rand() % 10000 != 0)
+  if (Random::getInt(0, 9999) != 0)
     return;
 
   // Tiny mutation to one chromosome
-  int chromo = rand() % 5;
-  float mutation = ((rand() % 100) / 1000.0f) - 0.05f; // +/- 5%
+  int chromo = Random::getInt(0, 4);
+    float mutation = ((Random::getInt(0, 99)) / 1000.0f) - 0.05f; // +/- 5%
 
   switch (chromo) {
   case 0:
@@ -871,6 +873,9 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
       for (const auto &m : ship.modules) {
         if (m.name != "Empty")
           totalPrice += m.basePrice;
+      }
+      for (const auto &stack : ship.startingAmmo) {
+        totalPrice += stack.count * (stack.type.basePrice > 0 ? stack.type.basePrice : 10.0f);
       }
 
       float scarcity = eco.hullClassScarcity.count(ship.hull.className)
@@ -1281,9 +1286,9 @@ EconomyManager::reequipForDuration(entt::registry &registry,
   }
 
   // Calculate fleet-wide deficits
-  float foodDeficit = std::max(0.f, totalFoodCons * durationSec - totalFoodStock);
-  float fuelDeficit = std::max(0.f, totalFuelCons * durationSec - totalFuelStock);
-  float isoDeficit = std::max(0.f, totalIsoCons * durationSec - totalIsoStock);
+  float foodDeficit = std::max(0.f, totalFoodCons * (float)days - totalFoodStock);
+  float fuelDeficit = std::max(0.f, totalFuelCons * (float)days - totalFuelStock);
+  float isoDeficit = std::max(0.f, totalIsoCons * (float)days - totalIsoStock);
 
   struct Need {
     Resource res;
@@ -1313,6 +1318,7 @@ EconomyManager::reequipForDuration(entt::registry &registry,
 
     // Clamp by constraints
     float qty = need.deficit;
+    if (price <= 0.01f) { qty = 0; } // Ensure non-zero price for greedy math
     if (qty > stock) { qty = stock; limitedBySupply = true; }
     if (qty > totalCargoAvail) { qty = totalCargoAvail; limitedByCargo = true; }
     if (price > 0.f && qty * price > credits.amount) {
@@ -1321,32 +1327,13 @@ EconomyManager::reequipForDuration(entt::registry &registry,
     }
     qty = std::max(0.f, std::floor(qty));
 
-    // Distribute across fleet ships with available cargo
-    float remaining = qty;
-    for (auto ship : fleetShips) {
-      if (remaining <= 0.f) break;
-      auto *cargo = registry.try_get<CargoComponent>(ship);
-      if (!cargo) continue;
-      float avail = cargo->maxCapacity - cargo->currentWeight;
-      float toAdd = std::min(remaining, std::floor(avail));
-      if (toAdd > 0.f) {
-        // Deduct credits and market stock per unit (executeTrade handles this)
-        executeTrade(registry, planet, player, need.res, toAdd);
-        // Move from flagship cargo to this ship's cargo if not the flagship
-        if (ship != player && cargo) {
-          auto *pCargo = registry.try_get<CargoComponent>(player);
-          if (pCargo && pCargo->inventory[need.res] >= toAdd) {
-            pCargo->remove(need.res, toAdd);
-            cargo->add(need.res, toAdd);
-          }
-        }
-        remaining -= toAdd;
-      }
+    if (qty > 0.001f) {
+        // executeTrade handles charging, stock deduction, and fleet distribution
+        executeTrade(registry, planet, player, need.res, qty);
+        *need.bought = qty;
+        result.totalSpent += qty * price;
+        totalCargoAvail -= qty;
     }
-
-    *need.bought = qty - remaining;
-    result.totalSpent += (*need.bought) * price;
-    totalCargoAvail -= *need.bought;
   }
 
   // Build status message

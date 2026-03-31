@@ -91,7 +91,13 @@ struct InstalledAmmo {
   float totalCapacity() const {
     float total = 0.0f;
     for (const auto &rack : racks) {
-      total += rack.volumeOccupied;
+      if (rack.hasAttribute(AttributeType::Capacity)) {
+          Tier capTier = rack.getAttributeTier(AttributeType::Capacity);
+          float mult = (capTier == Tier::T1) ? 1.0f : (capTier == Tier::T2 ? 3.0f : 8.0f);
+          total += 100.0f * mult; // Standard capacity per rack tier
+      } else {
+          total += rack.volumeOccupied; // Fallback to volume if no attribute
+      }
     }
     return total;
   }

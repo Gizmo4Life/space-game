@@ -12,7 +12,7 @@ This guide explains how to interact with the commodity markets on planets and st
 ## Accessing the Market
 When landed at a planet or station, press **[4]** to open the **Market** tab.
 
-## Buying and Selling
+## Buying and Selling Commodities
 The market displays local prices, available stock, and your current cargo inventory.
 
 - **Select Resource**: Use **[W] / [S]** or **Up / Down** arrows to navigate through available resources.
@@ -26,7 +26,14 @@ Every ship has a maximum cargo capacity. Your **Fleet Cargo** usage represents t
 - **Aggregate Capacity**: The Market interface displays the aggregate values (e.g., `Fleet Cargo: 150 / 600`).
 - **Automatic Distribution**: When you purchase resources, they are automatically distributed across your fleet's available cargo holds, starting with your flagship and then overflowing to your escorts.
 
-Price and availability are determined by the local planetary market. For high-volume trading, ensure your fleet has sufficient combined cargo capacity.
+## The Shipyard & Trade-ins
+When purchasing a new ship, you can trade in your current flagship to offset the cost. The trade-in value is dynamically calculated based on a rigorous valuation breakdown:
+- **Hull Tier**: Base value of the chassis.
+- **Modules**: Current market value of all installed components.
+- **Cargo & Ammo**: The total value of resources and ammunition physically loaded onto the ship.
+
+## Ammunition Markets
+Instead of generic rearming fees, ammunition is handled as a distinct physical commodity in the outfitting market. Ammo transactions respect your ship's installed `Ammo Rack` capabilities. You cannot purchase ammunition beyond the total `Capacity` modifier of your physical racks.
 
 ## Credits
 Transactions use your ship's credits. The "Total Cost" field updates dynamically as you change the trade quantity, allowing you to plan your purchases effectively.

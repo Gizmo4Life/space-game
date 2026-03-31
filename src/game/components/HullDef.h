@@ -163,6 +163,12 @@ struct BlueprintStats {
   float totalVolume = 0.0f;
   float totalPowerDraw = 0.0f;
   float totalMass = 0.0f;
+  float totalThrust = 0.0f;
+  float totalShield = 0.0f;
+  float totalOutput = 0.0f;
+  float totalTurnRate = 0.0f;
+  float totalCargo = 0.0f;
+  float totalHab = 0.0f;
 };
 
 // ─── Ship Blueprint (Hull + Modules)
@@ -172,6 +178,7 @@ struct ShipBlueprint {
   std::vector<ModuleDef> modules;
   std::string role;
   float performanceScore = 1.0f; // For future genetic/learning sims
+  std::vector<AmmoStack> startingAmmo;
   uint32_t lineIndex = 0;
 
   BlueprintStats calculateStats() const {
@@ -182,11 +189,51 @@ struct ShipBlueprint {
       return m.name.empty() || m.name == "Empty";
     };
 
+    auto getMult = [](Tier t) {
+      if (t == Tier::T1) return 1.0f;
+      if (t == Tier::T2) return 3.0f;
+      if (t == Tier::T3) return 8.0f;
+      return 1.0f;
+    };
+
     for (const auto &m : modules) {
       if (isEmpty(m)) continue;
       s.totalVolume += m.volumeOccupied;
       s.totalPowerDraw += m.powerDraw;
       s.totalMass += m.mass;
+
+      // Functional attributes using deterministic tiered formulas
+      if (m.category == ModuleCategory::Engine && m.hasAttribute(AttributeType::Thrust)) {
+        Tier size = m.getAttributeTier(AttributeType::Size);
+        float baseThrust = (size == Tier::T1) ? 8000.0f : (size == Tier::T2 ? 24000.0f : 64000.0f);
+        s.totalThrust += baseThrust * getMult(m.getAttributeTier(AttributeType::Thrust));
+      }
+      if (m.category == ModuleCategory::Reactor && m.hasAttribute(AttributeType::Output)) {
+        Tier size = m.getAttributeTier(AttributeType::Size);
+        float baseOut = (size == Tier::T1) ? 100.0f : (size == Tier::T2 ? 300.0f : 800.0f);
+        s.totalOutput += baseOut * getMult(m.getAttributeTier(AttributeType::Output));
+      }
+      if (m.category == ModuleCategory::Shield) {
+        if (m.hasAttribute(AttributeType::Capacity))
+          s.totalShield += 80.0f * getMult(m.getAttributeTier(AttributeType::Capacity));
+      }
+      if (m.category == ModuleCategory::ReactionWheel && m.hasAttribute(AttributeType::TurnRate)) {
+        Tier size = m.getAttributeTier(AttributeType::Size);
+        float baseTorque = (size == Tier::T1) ? 2000.0f : (size == Tier::T2 ? 6000.0f : 16000.0f);
+        s.totalTurnRate += baseTorque * getMult(m.getAttributeTier(AttributeType::TurnRate));
+      }
+      if (m.category == ModuleCategory::Cargo && m.hasAttribute(AttributeType::Volume)) {
+        Tier size = m.getAttributeTier(AttributeType::Size);
+        float baseCargo = (size == Tier::T1) ? 50.0f : (size == Tier::T2 ? 150.0f : 400.0f);
+        Tier volTier = m.getAttributeTier(AttributeType::Volume);
+        float cargMult = (volTier == Tier::T1) ? 1.0f : (volTier == Tier::T2 ? 2.5f : 4.0f);
+        s.totalCargo += baseCargo * cargMult;
+      }
+      if (m.category == ModuleCategory::Habitation && m.hasAttribute(AttributeType::Capacity)) {
+        Tier size = m.getAttributeTier(AttributeType::Size);
+        float baseHab = (size == Tier::T1) ? 10.0f : (size == Tier::T2 ? 30.0f : 80.0f);
+        s.totalHab += baseHab * getMult(m.getAttributeTier(AttributeType::Capacity));
+      }
     }
     return s;
   }
@@ -234,6 +281,12 @@ struct ShipBlueprint {
         hasEngineModule = true;
     }
 
+    for (const auto &m : modules) {
+      if (isEmpty(m)) continue;
+      if (m.category == ModuleCategory::Command) hasCommandModule = true;
+      if (m.category == ModuleCategory::Engine) hasEngineModule = true;
+    }
+
     if (!hasCommandModule) {
       outError = "Ship requires an active Command module.";
       return false;
@@ -250,6 +303,19 @@ struct ShipBlueprint {
       outError = "Ship has insufficient power generation (net draw: " +
                  std::to_string(s.totalPowerDraw) + " GW).";
       return false;
+    }
+
+    // Ammo Rack enforcement for non-energy weapons
+    bool needsAmmo = false;
+    bool hasAmmoRack = false;
+    for (const auto& m : modules) {
+        if (isEmpty(m)) continue;
+        if (m.category == ModuleCategory::Weapon && m.weaponType != WeaponType::Energy) needsAmmo = true;
+        if (m.category == ModuleCategory::Ammo) hasAmmoRack = true;
+    }
+    if (needsAmmo && !hasAmmoRack) {
+        outError = "Ship with ballistic/missile weapons requires an Ammo Rack.";
+        return false;
     }
 
     return true;

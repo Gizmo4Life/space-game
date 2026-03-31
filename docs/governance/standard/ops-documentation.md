@@ -14,5 +14,8 @@ pillar: governance
 | [doc-ops-unified-runbook](/docs/developer/pattern/doc-ops-unified-runbook.md) | **P** | Primary System-wide entry point. |
 | [doc-ops-span-runbook](/docs/developer/pattern/doc-ops-span-runbook.md) | **P** | Atomic span mitigation layer. |
 | [doc-ops-restoration-step](/docs/developer/pattern/doc-ops-restoration-step.md) | **P** | Idempotent CLI/scripts for recovery. |
+| [ops-triage-path](/docs/developer/pattern/ops-triage-path.md) | **P** | Priority-based issue routing. |
+| [ops-escalation-path](/docs/developer/pattern/ops-escalation-path.md) | **P** | Defined tier-up guidelines. |
+| [ops-scoped-resource-discovery](/docs/developer/pattern/ops-scoped-resource-discovery.md) | **P** | Bounded context for investigative queries. |
 | [doc-ops-monolithic-runbook](/docs/developer/pattern/doc-ops-monolithic-runbook.md) | **D** | Use only for legacy discovery phases. |
 | [doc-ops-unverified-mitigation](/docs/developer/pattern/doc-ops-unverified-mitigation.md) | **U** | Mitigation without a verification query. |

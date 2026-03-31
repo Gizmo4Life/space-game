@@ -7,12 +7,15 @@
 → [Standard: Observability](/docs/governance/standard/observability-standard.md)
 
 ## Systems
-- `WeaponSystem` — Projectile spawning, cooldown management, distance-based collision and hull damage.
+- `WeaponSystem` — Manages procedural firing logic (Energy Beams, Ballistic Projectiles, Guided Missiles) and attribute scaling.
+- `CollisionSystem` (shared) — Handles physics-based kinetic damage and Area-of-Effect (AOE) explosion triggers.
 
 ## Coding Standards
-- **Ammo Access**: Ammo types must always be accessed through the `AmmoMagazine` volume logic — no direct map access that bypasses the weight accounting.
-- **Hit Detection**: Use the existing distance-based collision path — do not add Box2D contact listeners for projectiles without a design review.
-- **Spans**: Every weapon fire event should emit an OTel span. See [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md).
+- **Weapon Archetypes**: All new weapon logic MUST comply with the [Weapon Archetype Standard](/docs/governance/standard/weapon-archetype-standard.md).
+- **Hit Detection**: 
+    - **Energy**: Use Box2D Raycasting ($b2World\_CastRayClosest$) for instant hits.
+    - **Ballistic/Missile**: Use Box2D Collision Events ($b2ContactEvents$) for impact resolution. Damage is physics-calculated ($0.5mv^2$).
+- **Spans**: Every weapon fire event should emit an OTel span with calculated attributes (mass, acceleration, range).
 
 ## Build
 ```bash

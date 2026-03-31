@@ -18,6 +18,8 @@ This standard ensures that the build configuration accurately and deterministica
 | [cicd-hybrid-dependency-acquisition](/docs/developer/pattern/cicd-hybrid-dependency-acquisition.md) | **P** | **Preferred.** Ensures local dependencies are used when available, falling back to remote if enabled. |
 | **Test Target Persistence** | **P** | **Preferred.** Ensure `SpaceGameTests` is always present and links all test files, even during refactors. |
 | [cicd-fetchcontent-dependency](/docs/developer/pattern/cicd-fetchcontent-dependency.md) | **U** | **Unstable.** Pure network-dependent fetching is fragile in restricted or offline environments. |
+| [cmake-object-library-sharing](/docs/developer/pattern/cmake-object-library-sharing.md) | **P** | **Preferred.** OBJECT library shares compiled sources between game and test targets. |
+| [cmake-conditional-test-gate](/docs/developer/pattern/cmake-conditional-test-gate.md) | **P** | **Preferred.** Two-level guard (option + framework acquired) for graceful test degradation. |
 | **Globbing (File discovery)** | **D** | **Discouraged.** Leads to non-deterministic builds and unintended inclusion of temporary or local-only files. |
 | **Target Deletion** | **U** | **Unstable.** Temporarily removing `SpaceGameTests` during maintenance breaks CI visibility. Use conditional `BUILD_TESTING` instead. |
 

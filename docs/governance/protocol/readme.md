@@ -34,3 +34,4 @@ Standardized execution sequences and automation flows.
 - [Pattern Intake](pattern-intake.md): Geometry extraction.
 - [Standard Definition](standard-definition.md): PADU fitness judgment.
 - [Test Planning](test-planning.md): Verification engineering.
+- [Documentation Refinement](documentation-refinement.md): Iterative pattern extraction, standards refinement, and architecture update.
