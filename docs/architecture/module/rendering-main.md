@@ -42,6 +42,9 @@ The `space::ShipRenderer` utility serves as the single source of truth for all s
 - [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `RenderSystem::update`
 - [cpp-interface-segregation](/docs/developer/pattern/cpp-interface-segregation.md) (P) — UI panels and rendering pipelines only depend on `sf::RenderTarget`.
 - [cpp-external-api-facade](/docs/developer/pattern/cpp-external-api-facade.md) (P) — Isolates actual SFML window rendering lifecycle inside `MainRenderer`.
+- [render-mode-dispatch](/docs/developer/pattern/render-mode-dispatch.md) (P) — `RenderMode::Game` vs `RenderMode::Schematic` enum dispatch in `ShipRenderer`.
+- [rendering-schematic-visuals](/docs/developer/pattern/rendering-schematic-visuals.md) (A) — Blueprint outline rendering in schematic mode.
+- [fleet-entity-card](/docs/developer/pattern/fleet-entity-card.md) (P) — Compact stacked cards in `FleetOverlay` for fleet status.
 
 ## 5. Telemetry & Observability
 - `engine.rendering.update` — duration of 4-pass pipeline

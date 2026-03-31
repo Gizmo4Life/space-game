@@ -18,7 +18,6 @@
 #include "game/WorldLoader.h"
 #include "game/components/Economy.h"
 #include "game/components/InertialBody.h"
-#include "game/components/PlayerComponent.h"
 #include "game/components/TransformComponent.h"
 #include "game/components/WorldConfig.h"
 #include "rendering/LandingScreen.h"
@@ -206,7 +205,7 @@ int main() {
     PowerSystem::update(registry, dt);
     GravitySystem::update(registry);
     EconomyManager::instance().update(registry, dt);
-    WeaponSystem::update(registry, dt, physics.getWorldId());
+    WeaponSystem::update(registry, physics.getWorldId(), dt);
     NPCShipManager::instance().update(registry, dt);
     FactionManager::instance().update(registry, dt);
     physics.update(dt);

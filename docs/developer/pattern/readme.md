@@ -114,6 +114,10 @@ graph TD
 - [docker-shared-library-enforcement](docker-shared-library-enforcement.md): Enforcing shared library resolution in containers.
 - [docker-source-build](docker-source-build.md): Building dependencies from source for versioning control.
 - [docker-transitive-dependency-management](docker-transitive-dependency-management.md): Managing transitive runtime library dependencies in containers.
+- [docker-profile-gated-service](docker-profile-gated-service.md): Compose profiles for optional service activation.
+- [docker-runtime-layer-pruning](docker-runtime-layer-pruning.md): Selective binary/library copying in multi-stage builds.
+- [cmake-object-library-sharing](cmake-object-library-sharing.md): OBJECT library sharing compiled sources between targets.
+- [cmake-conditional-test-gate](cmake-conditional-test-gate.md): Two-level guard for graceful test framework degradation.
 
 ## 5. Operational & Incident Response
 *Nuance: High-density artifacts for system uptime, triage, and restoration.*
@@ -167,6 +171,8 @@ graph TD
 - [tiered-utility-allocation](tiered-utility-allocation.md): Slot and resource allocation by tier for ship balance.
 - [trade-tabbed-interface](trade-tabbed-interface.md): Tabbed panel UI for commodity and module trading.
 - [unified-slot-system](unified-slot-system.md): Positional role assignment in HullDef slot definitions.
+- [deterministic-attribute-tiering](deterministic-attribute-tiering.md): Discrete integer-based tier scaling over continuous random variables.
+- [resource-depletion-cascade](resource-depletion-cascade.md): Tiered consequence chain triggered by resource exhaustion.
 
 ## 7. UI/UX & Navigation
 *Nuance: Patterns for ensuring machine-readability and human scannability.*
@@ -182,6 +188,8 @@ graph TD
 - [rendering-scrollable-subpanel](rendering-scrollable-subpanel.md): Key-driven scrolling for detail panes.
 - [rendering-schematic-visuals](rendering-schematic-visuals.md): Blueprint outline rendering in schematic mode.
 - [ui-component-guard](ui-component-guard.md): Resilient `try_get` access for optional UI components.
+- [render-mode-dispatch](render-mode-dispatch.md): Enum-driven visual mode branching at the renderer level.
+- [fleet-entity-card](fleet-entity-card.md): Compact stacked HUD cards for entity sets.
 
 ## 8. Anti-Patterns (Discouraged)
 *Nuance: Forbidden or legacy shapes that trigger audit failures.*
@@ -192,19 +200,24 @@ graph TD
 - [doc-ops-unverified-mitigation](doc-ops-unverified-mitigation.md)
 - [readme-long-prose](readme-long-prose.md)
 - [ghost-logic](ghost-logic.md): Duplicate inline lookups or component aggregation spread across multiple files.
+- [signature-synchronization-lag](signature-synchronization-lag.md): Stale call sites after function signature changes.
+
+## 9. Agent Orchestration
+*Nuance: Shapes for AI-assisted workflow automation, compliance loops, and role delegation.*
+- [agent-protocol-delegation](agent-protocol-delegation.md): Thin workflow stubs delegating to canonical protocol documents.
+- [agent-iterative-compliance-loop](agent-iterative-compliance-loop.md): Gap-identify → fix → validate → re-evaluate cycle.
+- [agent-dual-role-orchestration](agent-dual-role-orchestration.md): Planner → executor handoff with escalation path.
 
 ### Index Map
 ```yaml
 index_map:
   Elicitation: [doc-context-elicitation, doc-elicitation-clarity, doc-elicitation-exclusivity, doc-elicitation-traceability, doc-elicitation-premise, doc-elicitation-questioning]
   Geometry: [doc-t1-landscape, doc-t2-capability, doc-t2-with-code, doc-t3-module, doc-t3-with-biz-logic, doc-pillar-ownership, doc-module-dependency, doc-dichotomy]
-  Logic: [logic-idempotency, logic-test-first, test-case-duality, padu-evaluation, trade-static-interface, cpp-header-hygiene, cpp-explicit-namespace-resolution, cpp-component-aggregation, cpp-visibility-promotion, cpp-sdk-type-completion]
-  CICD: [cicd-immutable-artifact, cicd-isolated-build, cicd-prioritized-testing, cicd-reproducible-build, cicd-secret-vaulting, cicd-test-layering, cicd-vulnerability-scan, cicd-shadow-build, cicd-fetchcontent-dependency, cicd-hybrid-dependency-acquisition, doc-gov-protocol, doc-gov-standard, doc-ext-contract, doc-ext-integration]
-  Ops: [doc-ops-alert, doc-ops-span-runbook, doc-ops-unified-runbook, doc-ops-restoration-step, ops-triage-path, ops-escalation-path, ops-scoped-resource-discovery]
   Logic: [logic-idempotency, logic-test-first, test-case-duality, padu-evaluation, definition-of-done, trade-static-interface, cpp-header-hygiene, cpp-explicit-namespace-resolution, cpp-component-aggregation, cpp-visibility-promotion, cpp-sdk-type-completion, cpp-centralized-typedefs, cpp-compiler-driven-refactoring, cpp-component-registration, cpp-external-api-facade, cpp-header-resilience, cpp-interface-segregation, cpp-standard-alignment, cpp-structural-integrity, cpp-type-safe-handles, encapsulated-state-mutation, entt-reference-safety, explicit-module-identity, full-dependency-initialization, proxy-identity-overlap, silent-logic-bypass, single-source-calculation, reactive-state-access, unified-unit-representation, component-driven-initialization]
-  CICD: [cicd-immutable-artifact, cicd-isolated-build, cicd-prioritized-testing, cicd-reproducible-build, cicd-secret-vaulting, cicd-test-layering, cicd-vulnerability-scan, cicd-shadow-build, cicd-fetchcontent-dependency, cicd-hybrid-dependency-acquisition, doc-gov-protocol, doc-gov-standard, doc-ext-contract, doc-ext-integration, docker-host-isolation, docker-kitware-cmake, docker-multi-stage-build, docker-service-healthcheck, docker-shared-library-enforcement, docker-source-build, docker-transitive-dependency-management]
+  CICD: [cicd-immutable-artifact, cicd-isolated-build, cicd-prioritized-testing, cicd-reproducible-build, cicd-secret-vaulting, cicd-test-layering, cicd-vulnerability-scan, cicd-shadow-build, cicd-fetchcontent-dependency, cicd-hybrid-dependency-acquisition, doc-gov-protocol, doc-gov-standard, doc-ext-contract, doc-ext-integration, docker-host-isolation, docker-kitware-cmake, docker-multi-stage-build, docker-service-healthcheck, docker-shared-library-enforcement, docker-source-build, docker-transitive-dependency-management, docker-profile-gated-service, docker-runtime-layer-pruning, cmake-object-library-sharing, cmake-conditional-test-gate]
   Ops: [doc-ops-alert, doc-ops-span-runbook, doc-ops-unified-runbook, doc-ops-restoration-step, doc-ops-diagnostic-dashboard, ops-triage-path, ops-escalation-path, ops-scoped-resource-discovery]
-  Engine: [cpp-ecs-component, cpp-ecs-system-static, cpp-singleton-manager, kinematics-newtonian-2d, rendering-spatial-bridge, rendering-offscreen-indicator, rendering-pause-overlay, rendering-dual-scale, world-procedural-generation, npc-ai-state-machine, npc-fleet-leader-boids, otel-span-instrumentation, economy-resource-chain, economy-dynamic-pricing, economy-competitive-market, economy-infrastructure-expansion, dna-weighted-infrastructure-expansion, faction-relationship-matrix, ship-modular-composition, procedural-hull-generation, faction-dna-genetic-profile, evolutionary-strategy-drift, mission-performance-feedback-loop, centralized-entity-lookup, housekeeping-encapsulation, blueprint-round-trip, boarding-protocol, attribute-differentiated-recipes, economy-faction-standards, economy-market-structure, economy-refit-fee, tiered-utility-allocation, trade-tabbed-interface, unified-slot-system]
-  UX: [doc-breadcrumb-navigation, doc-flat-hierarchy, doc-yaml-metadata, doc-structured-readme, signpost-readme, doc-walkthrough, ext-greenfield-context, ext-brownfield-context, ui-context-injection, rendering-scrollable-subpanel, rendering-schematic-visuals, ui-component-guard]
-  AntiPatterns: [doc-directory-nesting, doc-monolithic-wiki, doc-narrative-paragraphs, doc-ops-monolithic-runbook, doc-ops-unverified-mitigation, readme-long-prose, ghost-logic]
+  Engine: [cpp-ecs-component, cpp-ecs-system-static, cpp-singleton-manager, kinematics-newtonian-2d, rendering-spatial-bridge, rendering-offscreen-indicator, rendering-pause-overlay, rendering-dual-scale, world-procedural-generation, npc-ai-state-machine, npc-fleet-leader-boids, otel-span-instrumentation, economy-resource-chain, economy-dynamic-pricing, economy-competitive-market, economy-infrastructure-expansion, dna-weighted-infrastructure-expansion, faction-relationship-matrix, ship-modular-composition, procedural-hull-generation, faction-dna-genetic-profile, evolutionary-strategy-drift, mission-performance-feedback-loop, centralized-entity-lookup, housekeeping-encapsulation, blueprint-round-trip, boarding-protocol, attribute-differentiated-recipes, economy-faction-standards, economy-market-structure, economy-refit-fee, tiered-utility-allocation, trade-tabbed-interface, unified-slot-system, deterministic-attribute-tiering, resource-depletion-cascade]
+  UX: [doc-breadcrumb-navigation, doc-flat-hierarchy, doc-yaml-metadata, doc-structured-readme, signpost-readme, doc-walkthrough, ext-greenfield-context, ext-brownfield-context, ui-context-injection, rendering-scrollable-subpanel, rendering-schematic-visuals, ui-component-guard, render-mode-dispatch, fleet-entity-card]
+  AntiPatterns: [doc-directory-nesting, doc-monolithic-wiki, doc-narrative-paragraphs, doc-ops-monolithic-runbook, doc-ops-unverified-mitigation, readme-long-prose, ghost-logic, signature-synchronization-lag]
+  Agent: [agent-protocol-delegation, agent-iterative-compliance-loop, agent-dual-role-orchestration]
 ```

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <atomic>
 
 #include <opentelemetry/nostd/shared_ptr.h>
 #include <opentelemetry/trace/tracer.h>
@@ -24,11 +25,11 @@ public:
   /// Get the application tracer – use this to create spans.
   opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer> tracer();
 
-  bool isInitialized() const { return initialized_; }
+  bool isInitialized() const { return initialized_.load(); }
 
 private:
   Telemetry() = default;
-  bool initialized_ = false;
+  std::atomic<bool> initialized_{false};
 };
 
 } // namespace space

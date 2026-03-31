@@ -51,6 +51,12 @@ public:
   float getRelationship(uint32_t idA, uint32_t idB) const;
   void adjustRelationship(uint32_t idA, uint32_t idB, float delta);
 
+  // Safe access to factions map
+  std::map<uint32_t, FactionData> getFactionsSafe() const {
+      std::lock_guard<std::mutex> lock(factionsMutex_);
+      return factions;
+  }
+  
   const std::map<uint32_t, FactionData> &getAllFactions() const {
     return factions;
   }
@@ -59,6 +65,8 @@ private:
   FactionManager() = default;
   std::map<uint32_t, FactionData> factions;
   std::map<std::pair<uint32_t, uint32_t>, float> relationships;
+  mutable std::mutex factionsMutex_;
+  bool initialized_ = false;
 
   std::string generateFactionName();
 };

@@ -18,6 +18,8 @@ Establish the technical foundations for containerized development, build reprodu
 | [docker-shared-library-enforcement](/docs/developer/pattern/docker-shared-library-enforcement.md) | **P** | Prevents linkage mismatches (Shared/Static) in containers. |
 | [docker-transitive-dependency-management](/docs/developer/pattern/docker-transitive-dependency-management.md) | **A** | Strategy for OTel target leaks; source-install + pre-load. |
 | [docker-service-healthcheck](/docs/developer/pattern/docker-service-healthcheck.md) | **P** | Native client healthchecks over HTTP probes for stateful services. |
+| [docker-profile-gated-service](/docs/developer/pattern/docker-profile-gated-service.md) | **P** | Compose `profiles` for optional services (e.g., game build-only). |
+| [docker-runtime-layer-pruning](/docs/developer/pattern/docker-runtime-layer-pruning.md) | **P** | Selective `COPY --from=builder` of binaries + shared libs only. |
 | **Apt-Only Installation** | **D** | Discouraged for core deps due to Ubuntu LTS repository lag. |
 | **Unpinned Image Tags** | **D** | `:latest` creates non-reproducible environments. |
 | **Obsolete Compose Tags** | **U** | `version: "3.x"` is obsolete in modern Compose Specification. |

@@ -5,6 +5,9 @@
 #include "game/components/Faction.h"
 #include "game/components/FactionDNA.h"
 #include <SFML/Graphics/Color.hpp>
+#include "game/utils/RandomUtils.h"
+#include "game/utils/RandomUtils.h"
+#include "game/utils/RandomUtils.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -17,6 +20,11 @@
 namespace space {
 
 void FactionManager::init() {
+  std::lock_guard<std::mutex> lock(factionsMutex_);
+  if (initialized_)
+    return;
+
+  std::cerr << "[FactionManager] Initializing factions...\n";
   factions.clear();
   relationships.clear();
 
@@ -113,33 +121,33 @@ void FactionManager::init() {
     FactionData data;
     data.id = i + 2;
     data.name = generateFactionName();
-    data.color = sf::Color(rand() % 155 + 100, rand() % 155 + 100,
-                           rand() % 155 + 100, 255);
+    data.color = sf::Color(Random::getInt(100, 254), Random::getInt(100, 254),
+                           Random::getInt(100, 254), 255);
 
-    data.dna.aggression = (rand() % 100) * 0.01f;
-    data.dna.industrialism = (rand() % 100) * 0.01f;
-    data.dna.commercialism = (rand() % 100) * 0.01f;
-    data.dna.cooperation = (rand() % 100) * 0.01f;
-    data.dna.namingScheme = static_cast<NamingScheme>(rand() % 11);
+    data.dna.aggression = Random::getInt(0, 99) * 0.01f;
+    data.dna.industrialism = Random::getInt(0, 99) * 0.01f;
+    data.dna.commercialism = Random::getInt(0, 99) * 0.01f;
+    data.dna.cooperation = Random::getInt(0, 99) * 0.01f;
+    data.dna.namingScheme = static_cast<NamingScheme>(Random::getInt(0, 10));
 
-    data.dna.visual.layoutPattern = static_cast<LayoutPattern>(rand() % 4);
-    data.dna.visual.nacelleStyle = static_cast<NacelleStyle>(rand() % 4);
+    data.dna.visual.layoutPattern = static_cast<LayoutPattern>(Random::getInt(0, 3));
+    data.dna.visual.nacelleStyle = static_cast<NacelleStyle>(Random::getInt(0, 3));
     data.dna.visual.hullConnectivity =
-        static_cast<HullConnectivity>(rand() % 3);
+        static_cast<HullConnectivity>(Random::getInt(0, 2));
     // User preference: default to Polygon for better aesthetics, but allow
     // variety
     data.dna.visual.bodyStyle = VisualStyle::Polygon;
 
     for (Tier t : {Tier::T1, Tier::T2, Tier::T3}) {
       TierDNA &tdna = data.dna.tierDNA[t];
-      tdna.fleetScale = (rand() % 100) * 0.01f;
-      tdna.specialization = (rand() % 100) * 0.01f;
-      tdna.prefDurability = (rand() % 100) * 0.01f;
-      tdna.prefVolume = (rand() % 100) * 0.01f;
+      tdna.fleetScale = Random::getInt(0, 99) * 0.01f;
+      tdna.specialization = Random::getInt(0, 99) * 0.01f;
+      tdna.prefDurability = Random::getInt(0, 99) * 0.01f;
+      tdna.prefVolume = Random::getInt(0, 99) * 0.01f;
 
       for (Tier mt : {Tier::T1, Tier::T2, Tier::T3}) {
-        tdna.hardpointDensities[mt] = (rand() % 50) * 0.01f;
-        tdna.mountDensities[mt] = (rand() % 50) * 0.01f;
+        tdna.hardpointDensities[mt] = (Random::getInt(0, 49)) * 0.01f;
+        tdna.mountDensities[mt] = (Random::getInt(0, 49)) * 0.01f;
       }
     }
 
@@ -177,6 +185,7 @@ void FactionManager::init() {
       relationships[{idB, idA}] = startRel;
     }
   }
+  initialized_ = true;
 }
 
 void FactionManager::update(entt::registry &registry, float deltaTime) {
@@ -296,7 +305,7 @@ uint32_t FactionManager::getRandomFactionId() const {
   if (factions.empty())
     return 0;
   auto it = factions.begin();
-  std::advance(it, rand() % factions.size());
+  std::advance(it, Random::getInt(0, factions.size() - 1));
   return it->first;
 }
 
@@ -329,8 +338,8 @@ std::string FactionManager::generateFactionName() {
       "Directorate", "Cartel",  "Dominion",  "Order",    "Vanguard",
       "Consortium",  "Systems", "Dynamics",  "Works",    "Forge"};
 
-  return adjectives[rand() % adjectives.size()] + " " +
-         nouns[rand() % nouns.size()];
+  return adjectives[Random::getInt(0, adjectives.size() - 1)] + " " +
+         nouns[Random::getInt(0, nouns.size() - 1)];
 }
 
 std::string FactionManager::generateShipLineName(NamingScheme scheme,

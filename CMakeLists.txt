@@ -94,14 +94,9 @@ if (BUILD_TESTING)
             GIT_REPOSITORY https://github.com/catchorg/Catch2.git
             GIT_TAG v3.5.2
         )
-        # Suppress fatal error if fetch fails
-        FetchContent_GetProperties(Catch2)
-        if (NOT catch2_POPULATED)
-            message(STATUS "[Build] Attempting to acquire Catch2...")
-            FetchContent_Populate(Catch2)
-        endif()
-        if (EXISTS "${catch2_SOURCE_DIR}")
-            add_subdirectory("${catch2_SOURCE_DIR}" "${catch2_BINARY_DIR}" EXCLUDE_FROM_ALL)
+        message(STATUS "[Build] Attempting to acquire Catch2...")
+        FetchContent_MakeAvailable(Catch2)
+        if (TARGET Catch2::Catch2WithMain)
             set(Catch2_FOUND TRUE)
         else()
             message(WARNING "[Build] Catch2 could not be acquired. Tests will be disabled.")
@@ -122,6 +117,9 @@ if (BUILD_TESTING)
             tests/test_module_pricing.cpp
             tests/test_shipless_player.cpp
             tests/test_weapons.cpp
+            tests/test_weapon_attributes.cpp
+            tests/test_economy_valuation.cpp
+            tests/test_economy_full.cpp
             tests/test_collisions.cpp
             tests/test_npc_missions.cpp
             tests/test_ship_alignment.cpp
@@ -131,15 +129,21 @@ if (BUILD_TESTING)
             tests/test_ship_evolution.cpp
             tests/test_resource_management.cpp
             tests/test_blueprint_extraction.cpp
+            tests/test_module_scaling.cpp
+            tests/test_fleet_overlay.cpp
+            tests/test_fleet_robustness.cpp
             src/game/tests/EconomyVolumeTests.cpp
             src/game/tests/ShipViabilityTests.cpp
+            src/game/tests/CombatTests.cpp
         )
         target_include_directories(SpaceGameTests PRIVATE src)
         target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
 
         include(CTest)
         include(Catch)
-        catch_discover_tests(SpaceGameTests)
+        catch_discover_tests(SpaceGameTests
+           DISCOVERY_MODE PRE_TEST
+       )
     endif()
 endif()
 

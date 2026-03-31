@@ -150,6 +150,11 @@ public:
     wTrade /= totalW;
     wTransport /= totalW;
 
+    // Versatility Requirement: General ships MUST have all three proficiencies
+    if (cScore <= 0.0f || tScore <= 0.0f || pScore <= 0.0f) {
+      return 0.0f; 
+    }
+ 
     // Versatility Bonus: Reward the "General" ship for being proficient in ALL 3
     float versatilityBonus = 1.0f;
     if (cScore > 0.2f && tScore > 0.2f && pScore > 0.2f) {

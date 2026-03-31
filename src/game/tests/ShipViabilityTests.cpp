@@ -10,7 +10,8 @@ using namespace space;
 
 TEST_CASE("Ship Viability: 5-Day Resource Guarantee", "[viability]") {
     entt::registry registry;
-    b2WorldId worldId = b2_nullWorldId;
+    b2WorldDef worldDef = b2DefaultWorldDef();
+    b2WorldId worldId = b2CreateWorld(&worldDef);
     
     FactionManager::instance().init();
     uint32_t fId = 1; // Civilian
@@ -39,4 +40,6 @@ TEST_CASE("Ship Viability: 5-Day Resource Guarantee", "[viability]") {
             REQUIRE(statsAfter.fuelTTE <= 4.1f);
         }
     }
+    
+    b2DestroyWorld(worldId);
 }

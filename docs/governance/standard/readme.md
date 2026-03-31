@@ -30,6 +30,7 @@ graph TD
 - [cmake-registration-consistency](cmake-registration-consistency.md): CMake source listing and target registration.
 - [cpp-incomplete-type-resolution](cpp-incomplete-type-resolution.md): Resolving incomplete type errors in C++ headers.
 - [cpp-test-visibility](cpp-test-visibility.md): Ensuring test targets can access non-public symbols.
+- [cpp-code-quality](cpp-code-quality.md): Foundational C++ structural, syntactic, type-safety, and modularity choices.
 
 ## 2. Process Quality (Action)
 *Nuance: Standards governing runtime and CI/CD operations.*
@@ -40,6 +41,7 @@ graph TD
 - [build-resilience](build-resilience.md): Approved build strategies and fallback patterns.
 - [build-env-mac-restriction](build-env-mac-restriction.md): Network-isolated build fallback for macOS.
 - [docker-orchestration](docker-orchestration.md): Container orchestration and service coordination.
+- [agent-orchestration-standard](agent-orchestration-standard.md): PADU ratings for AI agent workflow patterns.
 
 ## 3. Semantic Clarity (Intent)
 *Nuance: Standards for capturing intent and nuance before implementation.*

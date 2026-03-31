@@ -1,8 +1,8 @@
 #include "game/NPCShipManager.h"
+#include "game/utils/RandomUtils.h"
 #include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
-#include "game/components/Economy.h"
 #include "game/components/InertialBody.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
@@ -40,7 +40,7 @@ void NPCShipManager::update(entt::registry &registry, float deltaTime) {
     auto factions = fm.getAllFactions();
     if (!factions.empty()) {
       auto it = factions.begin();
-      std::advance(it, rand() % factions.size());
+      std::advance(it, Random::getInt(0, (int)factions.size() - 1));
       uint32_t fId = it->first;
 
       // Adaptive spawn rate based on risk
@@ -49,7 +49,7 @@ void NPCShipManager::update(entt::registry &registry, float deltaTime) {
           std::max(1.0f, risk * 0.5f); // High risk = fewer missions
 
       MissionType type = MissionType::Patrol;
-      int r = rand() % 100;
+      int r = Random::getInt(0, 99);
       if (r < 40)
         type = MissionType::Trade;
       else if (r < 70)
@@ -88,14 +88,14 @@ void NPCShipManager::spawnMission(entt::registry &registry, MissionType type,
   if (planets.size() < 2)
     return;
 
-  m.origin = planets[rand() % planets.size()];
-  m.destination = planets[rand() % planets.size()];
+  m.origin = planets[Random::getInt(0, (int)planets.size() - 1)];
+  m.destination = planets[Random::getInt(0, (int)planets.size() - 1)];
   while (m.destination == m.origin)
-    m.destination = planets[rand() % planets.size()];
+    m.destination = planets[Random::getInt(0, (int)planets.size() - 1)];
 
   auto &oTrans = registry.get<TransformComponent>(m.origin);
   sf::Vector2f pos = oTrans.position +
-                     sf::Vector2f((rand() % 100) - 50.f, (rand() % 100) - 50.f);
+                     sf::Vector2f((Random::getInt(0, 99)) - 50.f, (Random::getInt(0, 99)) - 50.f);
 
   Tier primaryTier = Tier::T1;
   int count = 1;

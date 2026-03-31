@@ -12,6 +12,7 @@
 #include "game/components/ShipModule.h"
 #include "game/components/ShipFitness.h"
 #include "game/components/ShipStats.h"
+#include "game/components/InstalledModules.h"
 #include "rendering/UIUtils.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -268,8 +269,8 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
     // Create a pseudo-blueprint for display
     bp.hull = *hdef;
     bp.role = "Owned";
-    displayPrice =
-        ShipOutfitter::instance().calculateShipValue(registry, e) * 0.8f;
+    auto valResult = ShipOutfitter::instance().calculateDetailedShipValue(registry, e);
+    displayPrice = valResult.total * 0.8f;
     if (registry.all_of<Faction>(e))
       bidFactionId = registry.get<Faction>(e).getMajorityFaction();
   } else {
@@ -299,6 +300,26 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
 
   dtext(dx, dy, priceLabel + priceVal, 18, sf::Color(100, 255, 100));
   dy += 10.f;
+  dtext(dx, dy, "── Valuation Breakdown ──", 14, sf::Color(140, 200, 255));
+  dy += 20.f;
+  
+  if (mode_ == ShipyardMode::Sell && !fleetEntities_.empty()) {
+      entt::entity e = fleetEntities_[selectedBidIndex_];
+      auto val = ShipOutfitter::instance().calculateDetailedShipValue(registry, e);
+      dtext(dx, dy, "  Hull: $" + fmt(val.hullValue * 0.8f, 0), 12, sf::Color::White); dy += 16.f;
+      dtext(dx, dy, "  Modules: $" + fmt(val.moduleValue * 0.8f, 0), 12, sf::Color::White); dy += 16.f;
+      dtext(dx, dy, "  Cargo: $" + fmt(val.cargoValue * 0.8f, 0), 12, sf::Color::White); dy += 16.f;
+      dtext(dx, dy, "  Ammo: $" + fmt(val.ammoValue * 0.8f, 0), 12, sf::Color::White); dy += 16.f;
+  } else if (mode_ == ShipyardMode::Buy) {
+      // For buying, we show the base values (without trade-in discount)
+      dtext(dx, dy, "  Base Hull: $" + fmt(bp.hull.baseMass * 100.0f, 0), 12, sf::Color::White); dy += 16.f;
+      float mVal = 0;
+      for (const auto& m : bp.modules) if (m.name != "Empty") mVal += m.basePrice;
+      dtext(dx, dy, "  Modules: $" + fmt(mVal, 0), 12, sf::Color::White); dy += 16.f;
+      float aVal = 0;
+      for (const auto& s : bp.startingAmmo) aVal += s.count * (s.type.basePrice > 0 ? s.type.basePrice : 10.0f);
+      dtext(dx, dy, "  Included Ammo: $" + fmt(aVal, 0), 12, sf::Color::White); dy += 16.f;
+  }
 
   // Ship Preview
   sf::Vector2f previewPos = {dx + 350.f, rect.position.y + 120.f};
@@ -314,25 +335,37 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   float totalVol = bp.hull.internalVolume;
   float powerDraw = 0.f;
   float totalMass = 0.f;
+  float thrust = 0.f;
+  float shieldCap = 0.f;
+  float outputPower = 0.f;
 
   if (mode_ == ShipyardMode::Buy) {
     auto bstats = bp.calculateStats();
     usedVol = bstats.totalVolume;
     powerDraw = bstats.totalPowerDraw;
     totalMass = bstats.totalMass;
+    thrust = bstats.totalThrust;
+    shieldCap = bstats.totalShield;
+    outputPower = bstats.totalOutput;
   } else {
     entt::entity e = fleetEntities_[selectedBidIndex_];
     if (auto *s = registry.try_get<ShipStats>(e)) {
       usedVol = s->internalVolumeOccupied;
       powerDraw = s->restingPowerDraw;
       totalMass = s->wetMass;
+      if (registry.all_of<InstalledEngines>(e)) thrust = registry.get<InstalledEngines>(e).totalThrust;
+      if (registry.all_of<InstalledShields>(e)) shieldCap = registry.get<InstalledShields>(e).maxShield;
+      if (registry.all_of<InstalledPower>(e)) outputPower = registry.get<InstalledPower>(e).output;
     }
   }
 
   dtext(dx, dy, "Volume: " + fmt(usedVol, 1) + " / " + fmt(totalVol, 0), 14,
         (usedVol > totalVol) ? sf::Color::Red : sf::Color::Cyan);
   dtext(dx, dy, "Mass: " + fmt(totalMass, 1) + " t", 14, sf::Color::White);
-  dtext(dx, dy, "Power Draw: " + fmt(powerDraw, 1) + " GW", 14,
+  dtext(dx, dy, "Thrust: " + fmt(thrust, 0) + " N", 14, sf::Color(255, 200, 100));
+  dtext(dx, dy, "Shield: " + fmt(shieldCap, 0) + " Units", 14, sf::Color(150, 200, 255));
+  dtext(dx, dy, "Reactor: " + fmt(outputPower, 0) + " GW", 14, sf::Color(100, 255, 100));
+  dtext(dx, dy, "Power Draw (Net): " + fmt(powerDraw, 1) + " GW", 14,
         (powerDraw > 1.f) ? sf::Color::Yellow : sf::Color(100, 255, 100));
 
   // Fitness Score
@@ -404,6 +437,16 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   } else if (mode_ == ShipyardMode::Buy) {
     dtext(dx + 10.f, dy, "Ammo: Infinite (Energy Only)", 14,
           sf::Color(180, 180, 180));
+  }
+
+  dy += 15.f;
+  dtext(dx, dy, "── Ammunition Loadout ──", 16, sf::Color(140, 200, 255));
+  if (bp.startingAmmo.empty()) {
+      dtext(dx, dy, "• None", 14, sf::Color(180, 180, 180));
+  } else {
+      for (const auto &stack : bp.startingAmmo) {
+          dtext(dx, dy, "• " + stack.type.name + ": " + std::to_string(stack.count), 14, sf::Color::White);
+      }
   }
 
   dy += 15.f;

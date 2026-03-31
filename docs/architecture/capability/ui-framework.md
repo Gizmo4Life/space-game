@@ -17,7 +17,11 @@ Manage the life-cycle and rendering of overlay interfaces, menu systems, and in-
 4. **Simulation Bridge**: Screens (e.g., `LandingScreen`) query the ECS `registry` for state.
 
 ## 3. Data Flow & Integrity
-- **Pattern**: [rendering-pause-overlay](/docs/developer/pattern/rendering-pause-overlay.md)
+- **Pattern**: [rendering-pause-overlay](/docs/developer/pattern/rendering-pause-overlay.md) — Full-screen overlay lifecycle
+- **Pattern**: [ui-context-injection](/docs/developer/pattern/ui-context-injection.md) — State via context struct
+- **Pattern**: [rendering-scrollable-subpanel](/docs/developer/pattern/rendering-scrollable-subpanel.md) — Key-driven viewport scrolling
+- **Pattern**: [rendering-schematic-visuals](/docs/developer/pattern/rendering-schematic-visuals.md) — Blueprint outline rendering
+- **Pattern**: [ui-component-guard](/docs/developer/pattern/ui-component-guard.md) — Defensive `try_get` for optional components
 - **Constraint**: UI logic should not modify game state directly; use the appropriate manager APIs.
 
 ## 4. Resource Model

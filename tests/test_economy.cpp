@@ -6,6 +6,7 @@
 #include "game/components/InstalledModules.h"
 #include "game/components/ModuleGenerator.h"
 #include "game/components/ShipModule.h"
+#include "game/components/NPCComponent.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <entt/entt.hpp>
@@ -226,16 +227,39 @@ TEST_CASE("Economy Resource Trading", "[economy]") {
   registry.emplace<PlanetEconomy>(planet, eco);
 
   registry.emplace<CreditsComponent>(player, 1000.0f);
-  registry.emplace<CargoComponent>(player);
+  auto &playerCargo = registry.emplace<CargoComponent>(player);
+  playerCargo.maxCapacity = 10.0f; // Flagship has limited capacity
 
-  // Player buys 5 food
-  bool success = EconomyManager::instance().executeTrade(
-      registry, planet, player, Resource::Food, 5.0f);
+  SECTION("Single ship trading") {
+    // Player buys 5 food
+    bool success = EconomyManager::instance().executeTrade(
+        registry, planet, player, Resource::Food, 5.0f);
 
-  REQUIRE(success == true);
-  REQUIRE(registry.get<CreditsComponent>(player).amount == 950.0f);
-  REQUIRE(registry.get<CargoComponent>(player).inventory[Resource::Food] ==
-          5.0f);
+    REQUIRE(success == true);
+    REQUIRE(registry.get<CreditsComponent>(player).amount == 950.0f);
+    REQUIRE(registry.get<CargoComponent>(player).inventory[Resource::Food] ==
+            5.0f);
+  }
+
+  SECTION("Fleet-wide cargo distribution (Overflow)") {
+    // Create an allied NPC ship in the fleet
+    entt::entity escort = registry.create();
+    auto &npc = registry.emplace<NPCComponent>(escort);
+    npc.isPlayerFleet = true;
+    auto &escortCargo = registry.emplace<CargoComponent>(escort);
+    escortCargo.maxCapacity = 20.0f; // Escort has more capacity
+
+    // Player tries to buy 25 food (exceeds flagship capacity, but fits in combined fleet capacity)
+    bool success = EconomyManager::instance().executeTrade(
+        registry, planet, player, Resource::Food, 25.0f);
+
+    REQUIRE(success == true);
+    REQUIRE(registry.get<CreditsComponent>(player).amount == 750.0f); // 1000 - 250
+    // Flagship fills to max (10.0)
+    REQUIRE(registry.get<CargoComponent>(player).inventory[Resource::Food] == 10.0f);
+    // Escort takes the overflow (15.0)
+    REQUIRE(registry.get<CargoComponent>(escort).inventory[Resource::Food] == 15.0f);
+  }
 }
 
 TEST_CASE("Economy Ship Weapon & Ammo consistency", "[economy][outfitting]") {
