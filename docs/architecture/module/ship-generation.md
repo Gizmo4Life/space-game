@@ -32,7 +32,7 @@ The Ship Generation system is responsible for creating diverse, role-optimized v
 - `game.factions.line.evolve`: Triggered on generational shifts.
 - `vessel.fitness`: Reported in applyBlueprint.
 
-## 5. Constraints
+## 6. Constraints
 - Ships must maintain at least 1 Engine, 1 Command, and 1 Hardpoint slot.
 - Power draw must be $\leq 0$ (net generation).
 - Internal volume must not be exceeded.
