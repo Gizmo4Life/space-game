@@ -24,6 +24,7 @@ This standard defines the maturity and fitness ratings for core game logic and i
 | [unified-unit-representation](/docs/developer/pattern/unified-unit-representation.md) | **P** | Preferred. Consistent use of system units (e.g., Days for TTE) across code and tests. |
 | [proxy-identity-overlap](/docs/developer/pattern/proxy-identity-overlap.md) | **A** | Acceptable. Avoid shared faction/relationship IDs in tests unless testing that specific shared branch. |
 | [silent-logic-bypass](/docs/developer/pattern/silent-logic-bypass.md) | **U** | Unacceptable. Using default-initialized objects that are silently ignored by logic. |
+| [signature-synchronization-lag](/docs/developer/pattern/signature-synchronization-lag.md) | **U** | Unacceptable. Delay between component modification and caching signature updates out-of-band. |
 | [summary-field-clobbering](/docs/developer/pattern/component-driven-initialization.md) | **U** | Unacceptable. Directly setting summary fields that are subject to overwrite by synchronization logic. |
 | [direct-member-state-access](/docs/developer/pattern/encapsulated-state-mutation.md) | **D** | Discouraged. Directly modifying member Map/Vector without triggering side-effect logic (e.g., weight recalculation). |
 

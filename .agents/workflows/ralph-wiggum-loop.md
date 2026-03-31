@@ -21,10 +21,15 @@ This workflow is used by sub-agents to iteratively execute changes until the **[
 Repeat the following steps for each identified gap until DoD is 100% satisfied:
 
 1. **Address Gap:** Implement the missing logic, test, or documentation fragment.
-2. **Build:** Run `cmake --build build` to ensure zero compilation errors.
-3. **Test:** Run all tests related to the change. Ensure zero failures.
-4. **Lint:** Run linter checks on modified files. Fix all violations.
-5. **Verify DoD:** Re-evaluate the remaining gaps against the **Definition of Done**.
+2. **Build & Test:** Run the [RWL Build & Test Script](/scripts/governance/rwl-build-test.sh) to automate compilation and test execution:
+   ```bash
+   // turbo
+   ./scripts/governance/rwl-build-test.sh
+   ```
+   - Exit 0 = passed, Exit 1 = build failed, Exit 2 = tests failed.
+   - Alternatively, run phases independently: `--build-only` or `--test-only`.
+3. **Lint:** Run linter checks on modified files. Fix all violations.
+4. **Verify DoD:** Re-evaluate the remaining gaps against the **Definition of Done**.
 
 ## 4. Completion
 1. Perform a final **[Documentation Validation](/docs/governance/protocol/documentation-validation.md)**.

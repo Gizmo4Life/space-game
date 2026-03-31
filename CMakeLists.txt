@@ -131,15 +131,21 @@ if (BUILD_TESTING)
             tests/test_ship_evolution.cpp
             tests/test_resource_management.cpp
             tests/test_blueprint_extraction.cpp
+            tests/test_module_scaling.cpp
+            tests/test_fleet_overlay.cpp
+            tests/test_fleet_robustness.cpp
             src/game/tests/EconomyVolumeTests.cpp
             src/game/tests/ShipViabilityTests.cpp
+            src/game/tests/CombatTests.cpp
         )
         target_include_directories(SpaceGameTests PRIVATE src)
         target_link_libraries(SpaceGameTests PRIVATE SpaceGameCore Catch2::Catch2WithMain)
 
         include(CTest)
         include(Catch)
-        catch_discover_tests(SpaceGameTests)
+        catch_discover_tests(SpaceGameTests
+           DISCOVERY_MODE PRE_TEST
+       )
     endif()
 endif()
 

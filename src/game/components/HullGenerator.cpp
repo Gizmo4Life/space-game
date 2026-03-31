@@ -1,9 +1,11 @@
 #include "HullGenerator.h"
+#include "game/utils/RandomUtils.h"
 #include "HullDef.h"
 #include "game/FactionManager.h"
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <vector>
 
 namespace space {
 
@@ -36,7 +38,8 @@ HullDef HullGenerator::generateHull(const FactionDNA &dna, Tier tier,
   // Genetic scalability
   hull.baseMass = calculateMass(tdna, tier);
   hull.baseHitpoints = calculateHP(tdna, tier);
-  hull.internalVolume = calculateVolume(tdna, tier);
+  // Volume is now iteratively scaled based on actual slots
+  hull.internalVolume = 0.0f; 
 
   // Apply TierDNA multipliers
   hull.hpMultiplier = 1.0f + (tdna.prefDurability - 0.5f) * 0.5f;
@@ -44,19 +47,19 @@ HullDef HullGenerator::generateHull(const FactionDNA &dna, Tier tier,
 
   distributeSlots(hull, tdna);
 
-  // Post-slot volume floor: ensure hull can fit modules for all its slots
-  // Estimate ~15 m³ per T1 slot, ~35 m³ per T2 slot, ~65 m³ per T3 slot
-  // plus ~50 m³ for internals (reactor, shields, battery)
-  float estimatedModuleVolume = 0.0f;
+  // Iteratively scale volumetric capacity based exactly on slotted hardpoints (REQ for 50% baseline requirement)
+  float slottedVolume = 0.0f;
   for (const auto &slot : hull.slots) {
-    float slotTier = static_cast<float>(slot.size);
-    estimatedModuleVolume += 10.0f + slotTier * 15.0f;
+    slottedVolume += (slot.size == Tier::T1) ? 10.0f : ((slot.size == Tier::T2) ? 30.0f : 80.0f);
   }
-  estimatedModuleVolume +=
-      50.0f * static_cast<float>(tier); // internals headroom
-  if (hull.internalVolume < estimatedModuleVolume) {
-    hull.internalVolume = estimatedModuleVolume;
-  }
+  // Baseline 5 internals: Reactor, Battery, Shield, Cargo, Habitation
+  float internalsVolume = 5.0f * ((tier == Tier::T1) ? 10.0f : ((tier == Tier::T2) ? 30.0f : 80.0f));
+
+  // The required loadout scales to become precisely 50% of the hull volume (2.0 multiplier)
+  hull.internalVolume = (slottedVolume + internalsVolume) * 2.0f;
+  
+  // Apply minor faction DNA variance (±20%) so factions retain flavor around the 50% baseline
+  hull.internalVolume *= (0.8f + (tdna.prefVolume * 0.4f));
 
   return hull;
 }
@@ -68,28 +71,28 @@ HullDef HullGenerator::mutateHull(const HullDef &baseHull,
   TierDNA tdna = (tierIt != dna.tierDNA.end()) ? tierIt->second : TierDNA();
 
   // 1. Tweak base stats by ±5%
-  float factor = 0.95f + (static_cast<float>(rand() % 11) / 100.0f);
+  float factor = 0.95f + (static_cast<float>(Random::getInt(0, 10)) / 100.0f);
   hull.baseMass *= factor;
   hull.baseHitpoints *= factor;
   hull.internalVolume *= factor;
 
   // 2. Incremental Mutation of slots
-  int roll = rand() % 100;
+  int roll = Random::getInt(0, 99);
   if (roll < 20) {
     // Add a slot following existing layout pattern
     MountSlot newSlot;
     newSlot.id = static_cast<uint8_t>(hull.slots.size());
 
     // Role determined by Aggression DNA vs Volume DNA
-    if (rand() % 100 < static_cast<int>(dna.aggression * 100)) {
+    if (Random::getInt(0, 99) < static_cast<int>(dna.aggression * 100)) {
       newSlot.role = SlotRole::Hardpoint;
-    } else if (rand() % 100 < static_cast<int>(tdna.prefVolume * 100)) {
+    } else if (Random::getInt(0, 99) < static_cast<int>(tdna.prefVolume * 100)) {
       newSlot.role = SlotRole::Engine;
     } else {
       newSlot.role = SlotRole::Hardpoint;
     }
 
-    newSlot.size = (rand() % 100 < 80)
+    newSlot.size = (Random::getInt(0, 99) < 80)
                        ? hull.sizeTier
                        : static_cast<Tier>(
                              std::max(1, static_cast<int>(hull.sizeTier) - 1));
@@ -97,9 +100,9 @@ HullDef HullGenerator::mutateHull(const HullDef &baseHull,
 
     // Position: find a "crowded" spot and mirror it or offset it
     if (!hull.slots.empty()) {
-      const auto &ref = hull.slots[rand() % hull.slots.size()];
-      newSlot.localPos = ref.localPos + sf::Vector2f((rand() % 11) - 5.0f,
-                                                     (rand() % 11) - 5.0f);
+      const auto &ref = hull.slots[Random::getInt(0, static_cast<int>(hull.slots.size()) - 1)];
+      newSlot.localPos = ref.localPos + sf::Vector2f((Random::getInt(0, 10)) - 5.0f,
+                                                     (Random::getInt(0, 10)) - 5.0f);
 
       // Enforce Engine/Forward boundaries
       if (newSlot.role == SlotRole::Engine && newSlot.localPos.y < 2.0f)
@@ -110,7 +113,7 @@ HullDef HullGenerator::mutateHull(const HullDef &baseHull,
     hull.slots.push_back(newSlot);
   } else if (roll < 30 && hull.slots.size() > 4) {
     // Remove a random slot (avoid removing the only command/engine/hardpoint)
-    int idx = rand() % hull.slots.size();
+    int idx = Random::getInt(0, static_cast<int>(hull.slots.size()) - 1);
     auto role = hull.slots[idx].role;
     int roleCount = 0;
     for (const auto &s : hull.slots)
@@ -121,9 +124,56 @@ HullDef HullGenerator::mutateHull(const HullDef &baseHull,
     }
   }
 
-  // 3. Metadata update
-  hull.className += " MK" + std::to_string(rand() % 10 + 1);
-  hull.name = hull.className;
+  // --- FINAL VIABILITY CHECK ---
+  bool hasEngine = false;
+  bool hasCommand = false;
+  bool hasHardpoint = false;
+  for (const auto &s : hull.slots) {
+    if (s.role == SlotRole::Engine) hasEngine = true;
+    if (s.role == SlotRole::Command) hasCommand = true;
+    if (s.role == SlotRole::Hardpoint) hasHardpoint = true;
+  }
+
+  if (!hasCommand) {
+    MountSlot slot;
+    slot.id = static_cast<uint8_t>(hull.slots.size());
+    slot.size = hull.sizeTier;
+    slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Command;
+    // Position at front
+    slot.localPos = {0.0f, -5.0f};
+    hull.slots.push_back(slot);
+  }
+  if (!hasEngine) {
+    MountSlot slot;
+    slot.id = static_cast<uint8_t>(hull.slots.size());
+    slot.size = hull.sizeTier;
+    slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Engine;
+    // Position at back
+    slot.localPos = {0.0f, 5.0f};
+    hull.slots.push_back(slot);
+  }
+  if (!hasHardpoint) {
+    MountSlot slot;
+    slot.id = static_cast<uint8_t>(hull.slots.size());
+    slot.size = hull.sizeTier;
+    slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Hardpoint;
+    // Position near side
+    slot.localPos = {5.0f, 0.0f};
+    hull.slots.push_back(slot);
+  }
+
+  // Iteratively scale volumetric capacity based exactly on slotted hardpoints for mutations
+  float slottedVolume = 0.0f;
+  for (const auto &slot : hull.slots) {
+    slottedVolume += (slot.size == Tier::T1) ? 10.0f : ((slot.size == Tier::T2) ? 30.0f : 80.0f);
+  }
+  float internalsVolume = 5.0f * ((hull.sizeTier == Tier::T1) ? 10.0f : ((hull.sizeTier == Tier::T2) ? 30.0f : 80.0f));
+
+  hull.internalVolume = (slottedVolume + internalsVolume) * 2.0f;
+  hull.internalVolume *= (0.8f + (tdna.prefVolume * 0.4f));
 
   return hull;
 }
@@ -210,7 +260,7 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
     slot.id = nextId++;
     slot.size = dominantHPTier;
     // User preference: allow mix-and-match variety
-    slot.style = (rand() % 100 < 30) ? static_cast<VisualStyle>(rand() % 5)
+    slot.style = (Random::getInt(0, 99) < 30) ? static_cast<VisualStyle>(Random::getInt(0, 4))
                                      : hull.visual.bodyStyle;
     slot.role = SlotRole::Hardpoint;
 
@@ -250,7 +300,7 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
     slot.id = nextId++;
     slot.size = dominantEngTier;
     // User preference: allow mix-and-match variety
-    slot.style = (rand() % 100 < 30) ? static_cast<VisualStyle>(rand() % 5)
+    slot.style = (Random::getInt(0, 99) < 30) ? static_cast<VisualStyle>(Random::getInt(0, 4))
                                      : hull.visual.bodyStyle;
     slot.role = SlotRole::Engine;
 
@@ -266,6 +316,44 @@ void HullGenerator::distributeSlots(HullDef &hull, const TierDNA &tdna) {
       pos = {side * (bodyR + step + row * step * 0.5f), minOff + row * engStep};
     }
     slot.localPos = pos;
+    hull.slots.push_back(slot);
+  }
+
+  // --- FINAL VIABILITY CHECK ---
+  bool hasEngine = false;
+  bool hasCommand = false;
+  bool hasHardpoint = false;
+  for (const auto &s : hull.slots) {
+    if (s.role == SlotRole::Engine) hasEngine = true;
+    if (s.role == SlotRole::Command) hasCommand = true;
+    if (s.role == SlotRole::Hardpoint) hasHardpoint = true;
+  }
+
+  if (!hasCommand) {
+    MountSlot slot;
+    slot.id = nextId++;
+    slot.size = hull.sizeTier;
+    slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Command;
+    slot.localPos = {0.0f, -minOff};
+    hull.slots.push_back(slot);
+  }
+  if (!hasEngine) {
+    MountSlot slot;
+    slot.id = nextId++;
+    slot.size = hull.sizeTier;
+    slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Engine;
+    slot.localPos = {0.0f, minOff};
+    hull.slots.push_back(slot);
+  }
+  if (!hasHardpoint) {
+    MountSlot slot;
+    slot.id = nextId++;
+    slot.size = hull.sizeTier;
+    slot.style = hull.visual.bodyStyle;
+    slot.role = SlotRole::Hardpoint;
+    slot.localPos = {minOff, 0.0f};
     hull.slots.push_back(slot);
   }
 

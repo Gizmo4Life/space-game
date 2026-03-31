@@ -12,6 +12,7 @@
 #include "game/components/ShipModule.h"
 #include "game/components/ShipFitness.h"
 #include "game/components/ShipStats.h"
+#include "game/components/InstalledModules.h"
 #include "rendering/UIUtils.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
@@ -314,25 +315,37 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   float totalVol = bp.hull.internalVolume;
   float powerDraw = 0.f;
   float totalMass = 0.f;
+  float thrust = 0.f;
+  float shieldCap = 0.f;
+  float outputPower = 0.f;
 
   if (mode_ == ShipyardMode::Buy) {
     auto bstats = bp.calculateStats();
     usedVol = bstats.totalVolume;
     powerDraw = bstats.totalPowerDraw;
     totalMass = bstats.totalMass;
+    thrust = bstats.totalThrust;
+    shieldCap = bstats.totalShield;
+    outputPower = bstats.totalOutput;
   } else {
     entt::entity e = fleetEntities_[selectedBidIndex_];
     if (auto *s = registry.try_get<ShipStats>(e)) {
       usedVol = s->internalVolumeOccupied;
       powerDraw = s->restingPowerDraw;
       totalMass = s->wetMass;
+      if (registry.all_of<InstalledEngines>(e)) thrust = registry.get<InstalledEngines>(e).totalThrust;
+      if (registry.all_of<InstalledShields>(e)) shieldCap = registry.get<InstalledShields>(e).maxShield;
+      if (registry.all_of<InstalledPower>(e)) outputPower = registry.get<InstalledPower>(e).output;
     }
   }
 
   dtext(dx, dy, "Volume: " + fmt(usedVol, 1) + " / " + fmt(totalVol, 0), 14,
         (usedVol > totalVol) ? sf::Color::Red : sf::Color::Cyan);
   dtext(dx, dy, "Mass: " + fmt(totalMass, 1) + " t", 14, sf::Color::White);
-  dtext(dx, dy, "Power Draw: " + fmt(powerDraw, 1) + " GW", 14,
+  dtext(dx, dy, "Thrust: " + fmt(thrust, 0) + " N", 14, sf::Color(255, 200, 100));
+  dtext(dx, dy, "Shield: " + fmt(shieldCap, 0) + " Units", 14, sf::Color(150, 200, 255));
+  dtext(dx, dy, "Reactor: " + fmt(outputPower, 0) + " GW", 14, sf::Color(100, 255, 100));
+  dtext(dx, dy, "Power Draw (Net): " + fmt(powerDraw, 1) + " GW", 14,
         (powerDraw > 1.f) ? sf::Color::Yellow : sf::Color(100, 255, 100));
 
   // Fitness Score

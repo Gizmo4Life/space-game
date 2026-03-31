@@ -185,7 +185,7 @@ TEST_CASE("Shipless Player Buying Ship to Fleet", "[shipless][economy]") {
     PowerSystem::update(registry, 0.016f);
     GravitySystem::update(registry);
     EconomyManager::instance().update(registry, 0.016f);
-    WeaponSystem::update(registry, 0.016f, worldId);
+    WeaponSystem::update(registry, worldId, 0.016f);
     NPCShipManager::instance().update(registry, 0.016f);
     FactionManager::instance().update(registry, 0.016f);
     OrbitalSystem::update(registry, 0.016f);
@@ -259,7 +259,7 @@ TEST_CASE("Player with Ship Swaps Flagship", "[economy]") {
     PowerSystem::update(registry, 0.016f);
     GravitySystem::update(registry);
     EconomyManager::instance().update(registry, 0.016f);
-    WeaponSystem::update(registry, 0.016f, worldId);
+    WeaponSystem::update(registry, worldId, 0.016f);
     NPCShipManager::instance().update(registry, 0.016f);
     FactionManager::instance().update(registry, 0.016f);
     OrbitalSystem::update(registry, 0.016f);

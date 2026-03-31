@@ -4,6 +4,7 @@
 #include "game/components/ShipModule.h"
 #include <entt/entt.hpp>
 #include <map>
+#include <mutex>
 #include <vector>
 
 namespace space {
@@ -59,6 +60,7 @@ private:
 
   mutable std::map<std::tuple<uint32_t, Tier, std::string, uint32_t>, HullDef>
       proceduralHulls_;
+  mutable std::mutex proceduralHullsMutex_;
 
   struct DefaultOutfit {
     std::vector<ModuleId> engines;

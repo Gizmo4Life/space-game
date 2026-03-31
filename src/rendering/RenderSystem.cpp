@@ -146,16 +146,79 @@ void RenderSystem::update(entt::registry &registry, sf::RenderTarget &target,
     // B. Projectiles
     auto projView = registry.view<ProjectileComponent, InertialBody>();
     for (auto entity : projView) {
+      auto &proj = projView.get<ProjectileComponent>(entity);
       auto &inertial = projView.get<InertialBody>(entity);
       if (b2Body_IsValid(inertial.bodyId)) {
         b2Vec2 bPos = b2Body_GetPosition(inertial.bodyId);
-        sf::CircleShape bullet(2.0f);
-        bullet.setFillColor(sf::Color::Yellow);
-        bullet.setOrigin({1.0f, 1.0f});
+        // Base size 2.0f scaled by caliber visualScale
+        sf::CircleShape bullet(2.0f * proj.visualScale);
+        bullet.setFillColor(proj.isEmp ? sf::Color::Cyan : (proj.isExplosive ? sf::Color(255, 100, 0) : sf::Color::Yellow));
+        bullet.setOrigin({1.0f * proj.visualScale, 1.0f * proj.visualScale});
         bullet.setPosition({bPos.x * WorldConfig::SHIP_SCALE,
                             bPos.y * WorldConfig::SHIP_SCALE});
         target.draw(bullet);
       }
+    }
+
+    // C. Energy Beams
+    auto beamView = registry.view<BeamComponent>();
+    for (auto entity : beamView) {
+      auto &beam = beamView.get<BeamComponent>(entity);
+      float alpha = (beam.duration / beam.maxDuration) * 255.0f;
+      sf::Color beamColor = beam.color;
+      beamColor.a = static_cast<uint8_t>(alpha);
+
+      // Using 2 triangles (6 vertices) to form a quad for SFML compatibility
+      sf::VertexArray line(sf::PrimitiveType::Triangles, 6);
+      sf::Vector2f perp(-beam.direction.y, beam.direction.x);
+      float halfWidth = (beam.width * WorldConfig::SHIP_SCALE) / 2.0f;
+
+      sf::Vector2f p1 = (beam.origin + perp * halfWidth) * WorldConfig::SHIP_SCALE;
+      sf::Vector2f p2 = (beam.origin - perp * halfWidth) * WorldConfig::SHIP_SCALE;
+      sf::Vector2f p3 = (beam.origin + beam.direction * beam.length - perp * halfWidth) * WorldConfig::SHIP_SCALE;
+      sf::Vector2f p4 = (beam.origin + beam.direction * beam.length + perp * halfWidth) * WorldConfig::SHIP_SCALE;
+
+      line[0].position = p1; line[0].color = beamColor;
+      line[1].position = p2; line[1].color = beamColor;
+      line[2].position = p3; line[2].color = beamColor;
+      line[3].position = p1; line[3].color = beamColor;
+      line[4].position = p3; line[4].color = beamColor;
+      line[5].position = p4; line[5].color = beamColor;
+      target.draw(line);
+      
+      // Core white highlight
+      sf::Color white = sf::Color(255, 255, 255, static_cast<uint8_t>(alpha));
+      halfWidth *= 0.3f;
+      p1 = (beam.origin + perp * halfWidth) * WorldConfig::SHIP_SCALE;
+      p2 = (beam.origin - perp * halfWidth) * WorldConfig::SHIP_SCALE;
+      p3 = (beam.origin + beam.direction * beam.length - perp * halfWidth) * WorldConfig::SHIP_SCALE;
+      p4 = (beam.origin + beam.direction * beam.length + perp * halfWidth) * WorldConfig::SHIP_SCALE;
+
+      line[0].position = p1; line[0].color = white;
+      line[1].position = p2; line[1].color = white;
+      line[2].position = p3; line[2].color = white;
+      line[3].position = p1; line[3].color = white;
+      line[4].position = p3; line[4].color = white;
+      line[5].position = p4; line[5].color = white;
+      target.draw(line);
+    }
+
+    // D. Explosions
+    auto expView = registry.view<ExplosionComponent>();
+    for (auto entity : expView) {
+      auto &exp = expView.get<ExplosionComponent>(entity);
+      float progress = 1.0f - (exp.duration / exp.maxDuration);
+      float currentRadius = exp.radius * progress * WorldConfig::SHIP_SCALE;
+      
+      sf::CircleShape circle(currentRadius);
+      sf::Color col = exp.isEmp ? sf::Color(0, 200, 255) : sf::Color(255, 150, 50);
+      col.a = static_cast<uint8_t>((1.0f - progress) * 200.0f);
+      circle.setFillColor(col);
+      circle.setOutlineThickness(2.0f);
+      circle.setOutlineColor(sf::Color(col.r, col.g, col.b, 255));
+      circle.setOrigin({currentRadius, currentRadius});
+      circle.setPosition(exp.position * WorldConfig::SHIP_SCALE);
+      target.draw(circle);
     }
   }
 

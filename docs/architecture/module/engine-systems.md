@@ -24,6 +24,9 @@ Logic frameworks handling cross-entity complex operations.
 - [cpp-ecs-system-static](/docs/developer/pattern/cpp-ecs-system-static.md) (P) — `BoardingSystem::update`
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `BoardingComponent`
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
+- [resource-depletion-cascade](/docs/developer/pattern/resource-depletion-cascade.md) (P) — Food → starvation, Isotopes → power failure, Fuel → drift.
+- [rate-based-consumption-scaling](/docs/developer/pattern/rate-based-consumption-scaling.md) (P) — Per-tick resource draw based on population and power usage.
+- [boarding-protocol](/docs/developer/pattern/boarding-protocol.md) (P) — Ship-to-ship resource transfer and fleet joining.
 
 ## 5. Telemetry & Observability
 - `engine.resource.starvation` — counts deaths by starvation

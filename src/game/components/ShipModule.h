@@ -38,6 +38,13 @@ struct ModuleDef {
     return Tier::T1;
   }
 
+  float getAttributeQuality(AttributeType type) const {
+    for (const auto &attr : attributes)
+      if (attr.type == type)
+        return attr.qualityRoll;
+    return 1.0f;
+  }
+
   int countHighTierAttributes(Tier threshold = Tier::T3) const {
     int count = 0;
     for (const auto &attr : attributes) {

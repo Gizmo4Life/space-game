@@ -24,8 +24,8 @@ std::string fmt(float v, int dec) {
 
 sf::Vector2f rotateVector(sf::Vector2f vec, float degrees) {
   float rad = degrees * 3.14159f / 180.0f;
-  return {vec.x * cos(rad) - vec.y * sin(rad),
-          vec.x * sin(rad) + vec.y * cos(rad)};
+  return {static_cast<float>(vec.x * cos(rad) - vec.y * sin(rad)),
+          static_cast<float>(vec.x * sin(rad) + vec.y * cos(rad))};
 }
 
 std::string typeName(CelestialType t) {

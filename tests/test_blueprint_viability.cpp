@@ -1,7 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <string>
 #include <vector>
+#include <future>
 
+#include "engine/telemetry/Telemetry.h"
 #include "game/FactionManager.h"
 #include "game/ShipOutfitter.h"
 #include "game/components/GameTypes.h"
@@ -19,10 +21,13 @@ struct GameInit {
   GameInit() {
     static bool initialised = false;
     if (!initialised) {
+      Telemetry::instance().init("SpaceGameTests");
       FactionManager::instance().init();
-      // ShipOutfitter no longer requires explicit init()
       initialised = true;
     }
+  }
+  ~GameInit() {
+    Telemetry::instance().shutdown();
   }
 };
 
@@ -91,20 +96,34 @@ TEST_CASE("Generated blueprints pass full validation",
           "[blueprint][viability]") {
   auto &fm = FactionManager::instance();
 
+  struct Result {
+    uint32_t factionId;
+    Tier t;
+    std::string role;
+    ShipBlueprint bp;
+    std::string error;
+    bool valid;
+  };
+
+  std::vector<std::future<Result>> futures;
   for (auto &[factionId, factionData] : fm.getAllFactions()) {
     for (Tier t : ALL_TIERS) {
       for (const auto &role : ALL_ROLES) {
-        DYNAMIC_SECTION("Faction " << factionId << " T" << static_cast<int>(t)
-                                   << " " << role) {
-          ShipBlueprint bp =
-              ShipOutfitter::instance().generateBlueprint(factionId, t, role);
-
-          std::string error;
-          bool valid = bp.validate(error);
-          INFO("Blueprint: " << bp.hull.name << " error: " << error);
-          REQUIRE(valid);
-        }
+        futures.push_back(std::async(std::launch::deferred, [factionId, t, role]() {
+          ShipBlueprint bp = ShipOutfitter::instance().generateBlueprint(factionId, t, role);
+          std::string err;
+          bool val = bp.validate(err);
+          return Result{factionId, t, role, std::move(bp), err, val};
+        }));
       }
+    }
+  }
+
+  for (auto &f : futures) {
+    auto r = f.get();
+    DYNAMIC_SECTION("Faction " << r.factionId << " T" << static_cast<int>(r.t) << " " << r.role) {
+      INFO("Blueprint: " << r.bp.hull.name << " error: " << r.error);
+      REQUIRE(r.valid);
     }
   }
 }
@@ -112,24 +131,35 @@ TEST_CASE("Generated blueprints pass full validation",
 TEST_CASE("Blueprint power production exceeds draw", "[blueprint][power]") {
   auto &fm = FactionManager::instance();
 
+  struct Result {
+    uint32_t factionId;
+    Tier t;
+    std::string role;
+    float netPower;
+  };
+
+  std::vector<std::future<Result>> futures;
   for (auto &[factionId, factionData] : fm.getAllFactions()) {
     for (Tier t : ALL_TIERS) {
       for (const auto &role : ALL_ROLES) {
-        ShipBlueprint bp =
-            ShipOutfitter::instance().generateBlueprint(factionId, t, role);
-
-        float netPower = 0.0f;
-        for (const auto &m : bp.modules) {
-          if (!isEmpty(m))
-            netPower += m.powerDraw;
-        }
-
-        DYNAMIC_SECTION("Faction " << factionId << " T" << static_cast<int>(t)
-                                   << " " << role) {
-          INFO("Net power draw: " << netPower << " GW (negative = surplus)");
-          REQUIRE(netPower <= 0.0f);
-        }
+        futures.push_back(std::async(std::launch::deferred, [factionId, t, role]() {
+          ShipBlueprint bp = ShipOutfitter::instance().generateBlueprint(factionId, t, role);
+          float net = 0.0f;
+          for (const auto &m : bp.modules) {
+            if (!m.name.empty() && m.name != "Empty")
+              net += m.powerDraw;
+          }
+          return Result{factionId, t, role, net};
+        }));
       }
+    }
+  }
+
+  for (auto &f : futures) {
+    auto r = f.get();
+    DYNAMIC_SECTION("Faction " << r.factionId << " T" << static_cast<int>(r.t) << " " << r.role) {
+      INFO("Net power draw: " << r.netPower << " GW (negative = surplus)");
+      REQUIRE(r.netPower <= 0.0f);
     }
   }
 }
@@ -137,28 +167,40 @@ TEST_CASE("Blueprint power production exceeds draw", "[blueprint][power]") {
 TEST_CASE("Blueprint module volume fits within hull", "[blueprint][volume]") {
   auto &fm = FactionManager::instance();
 
+  struct Result {
+    uint32_t factionId;
+    Tier t;
+    std::string role;
+    float vol;
+    float cap;
+  };
+
+  std::vector<std::future<Result>> futures;
   for (auto &[factionId, factionData] : fm.getAllFactions()) {
     for (Tier t : ALL_TIERS) {
       for (const auto &role : ALL_ROLES) {
-        ShipBlueprint bp =
-            ShipOutfitter::instance().generateBlueprint(factionId, t, role);
-
-        float totalVolume = 0.0f;
-        for (const auto &m : bp.modules) {
-          if (!isEmpty(m))
-            totalVolume += m.volumeOccupied;
-        }
-
-        DYNAMIC_SECTION("Faction " << factionId << " T" << static_cast<int>(t)
-                                   << " " << role) {
-          INFO("Volume: " << totalVolume << " / " << bp.hull.internalVolume
-                          << " m³");
-          REQUIRE(totalVolume <= bp.hull.internalVolume);
-        }
+        futures.push_back(std::async(std::launch::deferred, [factionId, t, role]() {
+          ShipBlueprint bp = ShipOutfitter::instance().generateBlueprint(factionId, t, role);
+          float vol = 0;
+          for (const auto &m : bp.modules) {
+            if (!m.name.empty() && m.name != "Empty")
+              vol += m.volumeOccupied;
+          }
+          return Result{factionId, t, role, vol, bp.hull.internalVolume};
+        }));
       }
     }
   }
+
+  for (auto &f : futures) {
+    auto r = f.get();
+    DYNAMIC_SECTION("Faction " << r.factionId << " T" << static_cast<int>(r.t) << " " << r.role) {
+      INFO("Volume used: " << r.vol << " / " << r.cap);
+      REQUIRE(r.vol <= r.cap);
+    }
+  }
 }
+
 
 TEST_CASE("Blueprint has mandatory command and engine modules",
           "[blueprint][mandatory]") {
@@ -353,66 +395,99 @@ TEST_CASE("Role-specific mandatory modules are present", "[blueprint][role]") {
 
 TEST_CASE("Outfitted ships have correct ammo magazines and HUD stats", "[outfitting][ammo]") {
   auto &fm = FactionManager::instance();
-  entt::registry registry;
 
+  struct Result {
+    uint32_t factionId;
+    Tier t;
+    bool hasStats;
+    bool hasMag;
+    bool ammoInMag;
+    bool ammoStock;
+    bool isT1Energy;
+  };
+
+  std::vector<std::future<Result>> futures;
   for (auto &[factionId, factionData] : fm.getAllFactions()) {
     for (Tier t : ALL_TIERS) {
-      DYNAMIC_SECTION("Faction " << factionId << " T" << static_cast<int>(t)) {
-        entt::entity ship = registry.create();
-        ShipOutfitter::instance().applyBlueprint(registry, ship, factionId, t, "Combat");
+      futures.push_back(std::async(std::launch::deferred, [factionId, t]() {
+        entt::registry reg;
+        entt::entity ship = reg.create();
+        ShipOutfitter::instance().applyBlueprint(reg, ship, factionId, t, "Combat");
 
-        auto* wComp = registry.try_get<WeaponComponent>(ship);
-        if (wComp && wComp->tier != WeaponTier::T1_Energy) {
-          // Check Magazine
-          auto* mag = registry.try_get<AmmoMagazine>(ship);
-          REQUIRE(mag != nullptr);
-          
-          // Check Selected Ammo is in Magazine
-          REQUIRE(mag->storedAmmo.count(wComp->selectedAmmo) > 0);
-          REQUIRE(mag->storedAmmo.at(wComp->selectedAmmo) > 0);
-
-          // Check ShipStats
-          auto* stats = registry.try_get<ShipStats>(ship);
-          REQUIRE(stats != nullptr);
-          REQUIRE(stats->ammoStock > 0);
+        auto* wComp = reg.try_get<WeaponComponent>(ship);
+        bool isT1E = (wComp && wComp->tier == WeaponTier::T1_Energy);
+        
+        bool hasStats = false, hasMag = false, ammoInMag = false, ammoStock = false;
+        if (wComp && !isT1E) {
+          auto* mag = reg.try_get<AmmoMagazine>(ship);
+          hasMag = (mag != nullptr);
+          if (hasMag) {
+            ammoInMag = (mag->storedAmmo.count(wComp->selectedAmmo) > 0 && mag->storedAmmo.at(wComp->selectedAmmo) > 0);
+          }
+          auto* stats = reg.try_get<ShipStats>(ship);
+          hasStats = (stats != nullptr);
+          if (hasStats) ammoStock = (stats->ammoStock > 0);
         }
-        registry.destroy(ship);
+        return Result{factionId, t, hasStats, hasMag, ammoInMag, ammoStock, isT1E};
+      }));
+    }
+  }
+
+  for (auto &f : futures) {
+    auto r = f.get();
+    DYNAMIC_SECTION("Faction " << r.factionId << " T" << static_cast<int>(r.t)) {
+      if (!r.isT1Energy) {
+        REQUIRE(r.hasMag);
+        REQUIRE(r.ammoInMag);
+        REQUIRE(r.hasStats);
+        REQUIRE(r.ammoStock);
       }
     }
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Viability Enforcement (5-Day TTE)
-// ──────────────────────────────────────────────────────────────────────────
 TEST_CASE("Generated ships meet 5-day TTE viability standard", "[outfitting][viability]") {
   auto &fm = FactionManager::instance();
-  entt::registry registry;
 
+  struct Result {
+    uint32_t factionId;
+    Tier t;
+    std::string role;
+    float foodTTE;
+    float fuelTTE;
+    float isotopesTTE;
+    float ammoTTE;
+    bool hasStats;
+  };
+
+  std::vector<std::future<Result>> futures;
   for (auto &[factionId, factionData] : fm.getAllFactions()) {
     for (Tier t : ALL_TIERS) {
       for (const auto &role : ALL_ROLES) {
-        DYNAMIC_SECTION("Faction " << factionId << " T" << static_cast<int>(t) << " " << role) {
-          entt::entity ship = registry.create();
-          ShipOutfitter::instance().applyBlueprint(registry, ship, factionId, t, role);
-
-          auto* stats = registry.try_get<ShipStats>(ship);
-          REQUIRE(stats != nullptr);
-
-          // We check for ~4.9 instead of 5.0 to account for floating point jitter in draw rate calculations
-          INFO("Checking 5-day TTE for: " << stats->foodTTE << " " << stats->fuelTTE << " " << stats->isotopesTTE << " " << stats->ammoTTE);
-          
-          if (stats->foodTTE != -1.0f) CHECK(stats->foodTTE >= 4.9f);
-          if (stats->fuelTTE != -1.0f) CHECK(stats->fuelTTE >= 4.9f);
-          if (stats->isotopesTTE != -1.0f) CHECK(stats->isotopesTTE >= 4.9f);
-          
-          // Ammo TTE only checked if role is Combat and ship has kinetic weapons
-          if (role == "Combat" && stats->ammoTTE != -1.0f) {
-            CHECK(stats->ammoTTE >= 4.9f);
+        futures.push_back(std::async(std::launch::deferred, [factionId, t, role]() {
+          entt::registry reg;
+          entt::entity ship = reg.create();
+          ShipOutfitter::instance().applyBlueprint(reg, ship, factionId, t, role);
+          auto* stats = reg.try_get<ShipStats>(ship);
+          if (stats) {
+            return Result{factionId, t, role, stats->foodTTE, stats->fuelTTE, stats->isotopesTTE, stats->ammoTTE, true};
           }
+          return Result{factionId, t, role, 0, 0, 0, 0, false};
+        }));
+      }
+    }
+  }
 
-          registry.destroy(ship);
-        }
+  for (auto &f : futures) {
+    auto r = f.get();
+    DYNAMIC_SECTION("Faction " << r.factionId << " T" << static_cast<int>(r.t) << " " << r.role) {
+      REQUIRE(r.hasStats);
+      INFO("Checking 5-day TTE for: " << r.foodTTE << " " << r.fuelTTE << " " << r.isotopesTTE << " " << r.ammoTTE);
+      if (r.foodTTE != -1.0f) CHECK(r.foodTTE >= 4.9f);
+      if (r.fuelTTE != -1.0f) CHECK(r.fuelTTE >= 4.9f);
+      if (r.isotopesTTE != -1.0f) CHECK(r.isotopesTTE >= 4.9f);
+      if (r.role == "Combat" && r.ammoTTE != -1.0f) {
+        CHECK(r.ammoTTE >= 4.9f);
       }
     }
   }

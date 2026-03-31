@@ -116,7 +116,7 @@ TEST_CASE("WeaponSystem Combat Attribution", "[combat][collisions]") {
   registry.emplace<TransformComponent>(victim).position = {1, 1};
   registry.emplace<TransformComponent>(proj).position = {1.1f, 1.1f};
 
-  WeaponSystem::update(registry, 0.01f, worldId);
+  WeaponSystem::update(registry, worldId, 0.01f);
 
   // Victim should be destroyed and death recorded
   REQUIRE((!registry.valid(victim)));
