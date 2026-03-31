@@ -17,7 +17,11 @@ ModuleGenerator::generate(ModuleCategory category,
     catName = "Engine";
     break;
   case ModuleCategory::Weapon:
-    catName = "Weapon";
+    switch (weaponType) {
+    case WeaponType::Projectile: catName = "Autocannon"; break;
+    case WeaponType::Missile:    catName = "Missile Launcher"; break;
+    default:                     catName = "Energy Weapon"; break;
+    }
     break;
   case ModuleCategory::Shield:
     catName = "Shield";
@@ -238,6 +242,7 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
       break;
     }
     case WeaponType::Missile: {
+      attrs.push_back(range);
       auto rof = rollAttr();
       rof.type = AttributeType::ROF;
       attrs.push_back(rof);
@@ -353,7 +358,7 @@ ModuleDef ModuleGenerator::generateRandomModule(ModuleCategory category,
     basePower = -(baseVol * 10.0f); // Standard: 100/300/800 GW
 
   ModuleDef def =
-      generate(category, attrs, baseVol, baseMass, baseMaint, basePower);
+      generate(category, attrs, baseVol, baseMass, baseMaint, basePower, wType);
   if (category == ModuleCategory::Weapon) {
     def.weaponType = wType;
   }
@@ -378,13 +383,11 @@ AmmoDef ModuleGenerator::generateAmmo(WeaponType weaponType, Tier caliberTier) {
                                        : Tier::T3;
   };
 
-  ammo.warhead = rollSecondary();
-
+  // Secondary attributes follow documented standards for base types
+  ammo.warhead = caliberTier; 
   if (weaponType == WeaponType::Missile) {
-    ammo.range = rollSecondary();
-    if (caliberTier == Tier::T1 && ammo.range == Tier::T3)
-      ammo.range = Tier::T2;
-    ammo.guidance = rollSecondary();
+    ammo.range = caliberTier;
+    ammo.guidance = caliberTier;
   }
 
   std::string name = tierName(caliberTier) + " ";

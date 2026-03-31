@@ -874,6 +874,9 @@ EconomyManager::getHullBids(entt::registry &registry, entt::entity planet) {
         if (m.name != "Empty")
           totalPrice += m.basePrice;
       }
+      for (const auto &stack : ship.startingAmmo) {
+        totalPrice += stack.count * (stack.type.basePrice > 0 ? stack.type.basePrice : 10.0f);
+      }
 
       float scarcity = eco.hullClassScarcity.count(ship.hull.className)
                            ? eco.hullClassScarcity[ship.hull.className]

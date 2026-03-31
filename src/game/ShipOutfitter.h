@@ -39,13 +39,34 @@ public:
   ShipOutfitHash calculateOutfitHash(entt::registry &registry,
                                      entt::entity entity) const;
 
+  // Transaction API
   bool refitModule(entt::registry &registry, entt::entity entity,
                    entt::entity planet, ProductKey moduleKey, int slotIndex);
 
   bool sellModule(entt::registry &registry, entt::entity entity,
                   entt::entity planet, ModuleCategory category, int slotIndex);
 
-  float calculateShipValue(entt::registry &registry, entt::entity entity) const;
+  bool buyAmmo(entt::registry &registry, entt::entity entity,
+               entt::entity planet, int shopAmmoIndex, int count);
+  
+  bool sellAmmo(entt::registry &registry, entt::entity entity,
+                entt::entity planet, int inventoryIndex, int count);
+
+  // Valuation API
+  struct ValuationResult {
+    float total = 0.f;
+    float hullValue = 0.f;
+    float moduleValue = 0.f;
+    float cargoValue = 0.f;
+    float ammoValue = 0.f;
+  };
+
+  ValuationResult calculateDetailedShipValue(entt::registry &registry,
+                                              entt::entity entity) const;
+
+  float calculateShipValue(entt::registry &registry, entt::entity entity) const {
+    return calculateDetailedShipValue(registry, entity).total;
+  }
 
   // Persistent Storage Hooks
   void saveProceduralHulls() const;

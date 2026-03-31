@@ -178,6 +178,7 @@ struct ShipBlueprint {
   std::vector<ModuleDef> modules;
   std::string role;
   float performanceScore = 1.0f; // For future genetic/learning sims
+  std::vector<AmmoStack> startingAmmo;
   uint32_t lineIndex = 0;
 
   BlueprintStats calculateStats() const {
@@ -302,6 +303,19 @@ struct ShipBlueprint {
       outError = "Ship has insufficient power generation (net draw: " +
                  std::to_string(s.totalPowerDraw) + " GW).";
       return false;
+    }
+
+    // Ammo Rack enforcement for non-energy weapons
+    bool needsAmmo = false;
+    bool hasAmmoRack = false;
+    for (const auto& m : modules) {
+        if (isEmpty(m)) continue;
+        if (m.category == ModuleCategory::Weapon && m.weaponType != WeaponType::Energy) needsAmmo = true;
+        if (m.category == ModuleCategory::Ammo) hasAmmoRack = true;
+    }
+    if (needsAmmo && !hasAmmoRack) {
+        outError = "Ship with ballistic/missile weapons requires an Ammo Rack.";
+        return false;
     }
 
     return true;

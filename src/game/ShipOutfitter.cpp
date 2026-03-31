@@ -199,8 +199,7 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
                                         AttributeType::Efficiency, slot.size));
       } else if (slot.role == SlotRole::Hardpoint) {
         if (role == "Combat") {
-          bp.modules.push_back(makeModule(ModuleCategory::Weapon,
-                                          AttributeType::ROF, slot.size));
+          bp.modules.push_back(gen.generateRandomModule(ModuleCategory::Weapon, slot.size));
         } else if (role == "Cargo") {
           bp.modules.push_back(makeModule(ModuleCategory::Cargo, 
                                           AttributeType::Volume, slot.size));
@@ -209,8 +208,7 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
                                           AttributeType::Capacity, slot.size));
         } else {
           // General ships MUST have at least one weapon to pass DoD
-          bp.modules.push_back(makeModule(ModuleCategory::Weapon,
-                                          AttributeType::ROF, slot.size));
+          bp.modules.push_back(gen.generateRandomModule(ModuleCategory::Weapon, slot.size));
         }
       }
     }
@@ -218,7 +216,7 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
     // Add Essential Internals
     bp.modules.push_back(makeModule(ModuleCategory::Reactor, AttributeType::Output, sizeTier));
     
-    // Multi-Reactor Support: If initial draw (Engines + Basic Internals) already exceeds 1 reactor
+    // Multi-Reactor Support
     float initialVol = 0, initialPower = 0;
     recomputeTotals(bp, initialVol, initialPower);
     if (initialPower > 0.0f) {
@@ -227,6 +225,41 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
 
     bp.modules.push_back(makeModule(ModuleCategory::Battery, AttributeType::Capacity, sizeTier));
     bp.modules.push_back(makeModule(ModuleCategory::Shield, AttributeType::Capacity, sizeTier));
+ 
+    // Ammo Rack Provisioning (REQ-Ammo)
+    bool requiresAmmo = false;
+    for (const auto& m : bp.modules) {
+        if (m.category == ModuleCategory::Weapon && m.weaponType != WeaponType::Energy) {
+            requiresAmmo = true;
+            break;
+        }
+    }
+    if (requiresAmmo) {
+        bp.modules.push_back(makeModule(ModuleCategory::Ammo, AttributeType::Capacity, sizeTier));
+    }
+
+    // Populate starting ammo for the blueprint (UI visibility)
+    if (requiresAmmo) {
+        float ammoPref = tdna.prefAmmo;
+        for (const auto &m : bp.modules) {
+            if (m.category == ModuleCategory::Weapon && m.weaponType != WeaponType::Energy) {
+                Tier caliber = m.getAttributeTier(AttributeType::Caliber);
+                AmmoDef def = gen.generateAmmo(m.weaponType, caliber);
+                int count = std::max(1, static_cast<int>(20.0f + (ammoPref * 180.0f)));
+                if (m.weaponType == WeaponType::Missile) count = std::max(1, count / 4);
+                
+                bool found = false;
+                for (auto &stack : bp.startingAmmo) {
+                    if (stack.type.compatibleWeapon == m.weaponType && stack.type.caliber == caliber) {
+                        stack.count += count;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) bp.startingAmmo.push_back({def, count});
+            }
+        }
+    }
  
     // Greedy Role Filling for internal volume
     auto fillInternals = [&](ModuleCategory cat, AttributeType attr) {
@@ -466,7 +499,11 @@ ShipBlueprint ShipOutfitter::generateBlueprint(
             else if (cat == ModuleCategory::Habitation) attr = AttributeType::Capacity;
             else attr = AttributeType::Volume;
         }
-        child.bp.modules[mIdx] = makeModule(cat, attr, sizeTier);
+        if (cat == ModuleCategory::Weapon) {
+          child.bp.modules[mIdx] = gen.generateRandomModule(cat, sizeTier);
+        } else {
+          child.bp.modules[mIdx] = makeModule(cat, attr, sizeTier);
+        }
       }
 
       std::string err;
@@ -651,32 +688,60 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
   auto &mag = registry.get_or_emplace<AmmoMagazine>(entity);
   mag.storedAmmo.clear();
 
-  // Find the primary weapon to configure WeaponComponent
-  WeaponComponent* wComp = registry.try_get<WeaponComponent>(entity);
+  // Identify the primary weapon and initialize WeaponComponent early for ammo selection
   ModuleDef primaryWeapon;
+  if (!iw.modules.empty()) {
+      for (const auto &m : iw.modules) {
+          if (!isEmpty(m)) {
+              primaryWeapon = m;
+              break;
+          }
+      }
+  }
 
-  for (const auto &m : bp.modules) {
-    if (m.category == ModuleCategory::Weapon) {
-      if (primaryWeapon.name.empty()) primaryWeapon = m;
+  WeaponComponent* wComp = registry.try_get<WeaponComponent>(entity);
+  if (!primaryWeapon.name.empty() && !wComp) {
+      wComp = &registry.emplace<WeaponComponent>(entity);
+  }
 
-      if (m.weaponType != WeaponType::Energy) {
-        Tier caliber = m.getAttributeTier(AttributeType::Caliber);
+  // Populate starting inventory from blueprint if available, otherwise generate
+  if (!bp.startingAmmo.empty()) {
+    for (const auto &stack : bp.startingAmmo) {
+        ia.inventory.push_back(stack);
         
-        // Generate standard ammo for this weapon
+        // Populate combat magazine (AmmoType mapping)
+        AmmoType combatType;
+        combatType.isMissile = (stack.type.compatibleWeapon == WeaponType::Missile);
+        combatType.warhead = (stack.type.warhead == Tier::T1) ? WarheadType::Kinetic : 
+                             (stack.type.warhead == Tier::T2) ? WarheadType::Explosive : WarheadType::EMP;
+        combatType.guidance = (stack.type.guidance == Tier::T1) ? GuidanceType::Dumb :
+                              (stack.type.guidance == Tier::T2) ? GuidanceType::HeatSeeking : GuidanceType::Remote;
+        
+        mag.storedAmmo[combatType] += stack.count;
+
+        // Auto-select if compatible with primary weapon
+        if (wComp && !primaryWeapon.name.empty() && 
+            primaryWeapon.weaponType == stack.type.compatibleWeapon &&
+            primaryWeapon.getAttributeTier(AttributeType::Caliber) == stack.type.caliber) {
+            wComp->selectedAmmo = combatType;
+        }
+    }
+  } else {
+    for (const auto &m : bp.modules) {
+      if (m.category == ModuleCategory::Weapon && m.weaponType != WeaponType::Energy) {
+        Tier caliber = m.getAttributeTier(AttributeType::Caliber);
         AmmoDef ammoDef = ModuleGenerator::instance().generateAmmo(m.weaponType, caliber);
         
-        // Map to combat AmmoType
         AmmoType combatType;
         combatType.isMissile = (m.weaponType == WeaponType::Missile);
         combatType.warhead = (caliber == Tier::T1) ? WarheadType::Kinetic : 
                              (caliber == Tier::T2) ? WarheadType::Explosive : WarheadType::EMP;
-        combatType.guidance = (caliber == Tier::T3) ? GuidanceType::HeatSeeking : GuidanceType::Dumb;
+        combatType.guidance = (caliber == Tier::T1) ? GuidanceType::Dumb :
+                              (caliber == Tier::T2) ? GuidanceType::HeatSeeking : GuidanceType::Remote;
 
-        // Starting count based on DNA
-        int startCount = static_cast<int>(20.0f + (ammoPref * 180.0f));
-        if (combatType.isMissile) startCount /= 4; // Missiles are bulkier
+        int startCount = std::max(1, static_cast<int>(20.0f + (ammoPref * 180.0f)));
+        if (m.weaponType == WeaponType::Missile) startCount = std::max(1, startCount / 4);
 
-        // Stock outfitting inventory
         bool found = false;
         for (auto &stack : ia.inventory) {
           if (stack.type.compatibleWeapon == m.weaponType && stack.type.caliber == caliber) {
@@ -686,23 +751,44 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
           }
         }
         if (!found) ia.inventory.push_back({ammoDef, startCount});
-
-        // Stock combat magazine
         mag.storedAmmo[combatType] += startCount;
-
-        // Auto-select this ammo if it matches the primary weapon
-        if (wComp && m.name == primaryWeapon.name) {
-            wComp->selectedAmmo = combatType;
-        }
       }
-    } else if (m.category == ModuleCategory::Ammo) {
-        ia.racks.push_back(m);
     }
+  }
+  
+   // Set initial selected ammo from magazine if primaryWeapon needs it (robust selection)
+  if (wComp && !primaryWeapon.name.empty() && primaryWeapon.weaponType != WeaponType::Energy) {
+      bool foundInMag = false;
+      for (auto const& [type, count] : mag.storedAmmo) {
+          if (type.isMissile == (primaryWeapon.weaponType == WeaponType::Missile) && count > 0) {
+              wComp->selectedAmmo = type;
+              foundInMag = true;
+              break;
+          }
+      }
+
+      // Fallback: if mag empty or no match, use standard archetypal ammo for the caliber
+      if (!foundInMag) {
+          Tier caliber = primaryWeapon.getAttributeTier(AttributeType::Caliber);
+          AmmoType standard;
+          standard.isMissile = (primaryWeapon.weaponType == WeaponType::Missile);
+          standard.warhead = (caliber == Tier::T1) ? WarheadType::Kinetic : 
+                             (caliber == Tier::T2) ? WarheadType::Explosive : WarheadType::EMP;
+          standard.guidance = (caliber == Tier::T1) ? GuidanceType::Dumb :
+                              (caliber == Tier::T2) ? GuidanceType::HeatSeeking : GuidanceType::Remote;
+          wComp->selectedAmmo = standard;
+      }
+  }
+
+  // Collect physical ammo racks from modules
+  for (const auto &m : bp.modules) {
+      if (m.category == ModuleCategory::Ammo) {
+          ia.racks.push_back(m);
+      }
   }
 
   // Configure WeaponComponent from primary weapon stats
-  if (!primaryWeapon.name.empty()) {
-      if (!wComp) wComp = &registry.emplace<WeaponComponent>(entity);
+  if (!primaryWeapon.name.empty() && wComp) {
       
       if (primaryWeapon.weaponType == WeaponType::Energy) wComp->tier = WeaponTier::T1_Energy;
       else if (primaryWeapon.weaponType == WeaponType::Projectile) wComp->tier = WeaponTier::T2_Projectile;
@@ -725,7 +811,6 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
       wComp->baseDamage = iw.damage;
       wComp->fireCooldown = iw.cooldown;
       wComp->energyCost = iw.energyCost;
-      wComp->mode = WeaponMode::Active;
   }
 
   if (!ia.inventory.empty()) {
@@ -877,6 +962,8 @@ void ShipOutfitter::applyBlueprint(entt::registry &registry,
                       combatType.isMissile = (wType == WeaponType::Missile);
                       combatType.warhead = (caliber == Tier::T1) ? WarheadType::Kinetic : 
                                            (caliber == Tier::T2) ? WarheadType::Explosive : WarheadType::EMP;
+                      combatType.guidance = (caliber == Tier::T1) ? GuidanceType::Dumb :
+                                            (caliber == Tier::T2) ? GuidanceType::HeatSeeking : GuidanceType::Remote;
                       magLocal.storedAmmo[combatType] += static_cast<int>(diff);
                   } else {
                       iaLocal.inventory[0].count += static_cast<int>(diff);
@@ -1052,18 +1139,119 @@ bool ShipOutfitter::sellModule(entt::registry &registry, entt::entity entity,
   return true;
 }
 
-float ShipOutfitter::calculateShipValue(entt::registry &registry,
-                                        entt::entity entity) const {
-  float total = 0.0f;
-  if (registry.all_of<HullDef>(entity)) {
-    total += 10000.0f *
-             (static_cast<int>(registry.get<HullDef>(entity).sizeTier) + 1);
+bool ShipOutfitter::buyAmmo(entt::registry &registry, entt::entity entity,
+                            entt::entity planet, int shopAmmoIndex, int count) {
+  if (!registry.all_of<Landed>(entity) ||
+      registry.get<Landed>(entity).planet != planet)
+    return false;
+
+  auto &eco = registry.get<PlanetEconomy>(planet);
+  if (shopAmmoIndex < 0 || shopAmmoIndex >= (int)eco.shopAmmo.size())
+    return false;
+
+  const auto &ammoDef = eco.shopAmmo[shopAmmoIndex];
+  float unitPrice = eco.currentPrices.count(ProductKey{ProductType::Ammo, (uint32_t)ammoDef.compatibleWeapon, ammoDef.caliber}) 
+                   ? eco.currentPrices.at(ProductKey{ProductType::Ammo, (uint32_t)ammoDef.compatibleWeapon, ammoDef.caliber})
+                   : 10.0f;
+  float totalPrice = unitPrice * count;
+
+  entt::entity payer = findFlagship(registry);
+  if (!registry.valid(payer) || !registry.all_of<CreditsComponent>(payer))
+    return false;
+
+  auto &credits = registry.get<CreditsComponent>(payer);
+  if (credits.amount < totalPrice)
+    return false;
+
+  auto &ia = registry.get_or_emplace<InstalledAmmo>(entity);
+  // Enforce rack capacity limits
+  float totalCap = ia.totalCapacity();
+  float currentVol = ia.usedVolume();
+  float roundVol = ammoDef.volumePerRound;
+  if (currentVol + (roundVol * (float)count) > totalCap) {
+      return false; // Racks full
   }
+
+  // Find existing stack
+  bool found = false;
+  for (auto &stack : ia.inventory) {
+    if (stack.type.name == ammoDef.name) {
+      stack.count += count;
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    ia.inventory.push_back({ammoDef, count});
+  }
+
+  credits.amount -= totalPrice;
+  if (!eco.factionData.empty()) {
+    eco.factionData.begin()->second.credits += totalPrice;
+  }
+
+  refreshStats(registry, entity, registry.get<HullDef>(entity));
+  return true;
+}
+
+bool ShipOutfitter::sellAmmo(entt::registry &registry, entt::entity entity,
+                             entt::entity planet, int inventoryIndex, int count) {
+  if (!registry.all_of<Landed>(entity) ||
+      registry.get<Landed>(entity).planet != planet)
+    return false;
+
+  if (!registry.all_of<InstalledAmmo>(entity))
+    return false;
+
+  auto &ia = registry.get<InstalledAmmo>(entity);
+  if (inventoryIndex < 0 || inventoryIndex >= (int)ia.inventory.size())
+    return false;
+
+  auto &stack = ia.inventory[inventoryIndex];
+  if (stack.count < count)
+    return false;
+
+  auto &eco = registry.get<PlanetEconomy>(planet);
+  ProductKey pKey{ProductType::Ammo, (uint32_t)stack.type.compatibleWeapon, stack.type.caliber};
+  float unitPrice = eco.currentPrices.count(pKey) ? eco.currentPrices.at(pKey) : 10.0f;
+  float sellPrice = unitPrice * count * 0.8f; // 20% resale loss
+
+  entt::entity payer = findFlagship(registry);
+  if (registry.valid(payer) && registry.all_of<CreditsComponent>(payer)) {
+    registry.get<CreditsComponent>(payer).amount += sellPrice;
+  }
+
+  stack.count -= count;
+  if (stack.count <= 0) {
+    ia.inventory.erase(ia.inventory.begin() + inventoryIndex);
+  }
+
+  refreshStats(registry, entity, registry.get<HullDef>(entity));
+  return true;
+}
+
+ShipOutfitter::ValuationResult
+ShipOutfitter::calculateDetailedShipValue(entt::registry &registry,
+                                           entt::entity entity) const {
+  ShipOutfitter::ValuationResult res;
+  if (!registry.valid(entity) || !registry.all_of<HullDef>(entity))
+    return res;
+
+  // 1. Hull Value
+  res.hullValue = 10000.0f *
+                  (static_cast<int>(registry.get<HullDef>(entity).sizeTier) + 1);
+  res.total = res.hullValue;
+
   auto addVal = [&](const std::vector<ModuleDef> &modules) {
-    for (const auto &m : modules)
-      if (!m.name.empty() && m.name != "Empty")
-        total += m.basePrice;
+    for (const auto &m : modules) {
+      if (m.name != "Empty") {
+        float mPrice = m.basePrice > 0.0f ? m.basePrice : 500.0f;
+        res.moduleValue += mPrice;
+      }
+    }
   };
+
   if (registry.all_of<InstalledEngines>(entity))
     addVal(registry.get<InstalledEngines>(entity).modules);
   if (registry.all_of<InstalledWeapons>(entity))
@@ -1076,7 +1264,32 @@ float ShipOutfitter::calculateShipValue(entt::registry &registry,
     addVal(registry.get<InstalledPower>(entity).modules);
   if (registry.all_of<InstalledReactionWheels>(entity))
     addVal(registry.get<InstalledReactionWheels>(entity).modules);
-  return total;
+  if (registry.all_of<InstalledBatteries>(entity))
+    addVal(registry.get<InstalledBatteries>(entity).modules);
+  if (registry.all_of<InstalledFuel>(entity))
+    addVal(registry.get<InstalledFuel>(entity).modules);
+  if (registry.all_of<InstalledCommand>(entity))
+    addVal(registry.get<InstalledCommand>(entity).modules);
+  if (registry.all_of<InstalledHabitation>(entity))
+    addVal(registry.get<InstalledHabitation>(entity).modules);
+  
+  if (registry.all_of<InstalledAmmo>(entity)) {
+    auto &ia = registry.get<InstalledAmmo>(entity);
+    addVal(ia.racks);
+    for (const auto &stack : ia.inventory) {
+      res.ammoValue += stack.count * (stack.type.basePrice > 0 ? stack.type.basePrice : 10.0f);
+    }
+  }
+
+  // Add cargo resource value (REQ-13)
+  if (registry.all_of<CargoComponent>(entity)) {
+    for (auto const& [r, amount] : registry.get<CargoComponent>(entity).inventory) {
+      res.cargoValue += amount * 10.0f; // Standard base price for raw resources
+    }
+  }
+
+  res.total += res.moduleValue + res.cargoValue + res.ammoValue;
+  return res;
 }
 
 void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,

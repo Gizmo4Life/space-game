@@ -67,5 +67,5 @@ Ammunition choice is just as important as the weapon itself.
 | **Explosive** | Area damage | Clustered enemies or components. |
 | **EMP** | System disable | Disabling engines/weapons without destroying the ship. |
 
-> [!IMPORTANT]
-> A weapon's **Quality Roll (0.8 - 1.2)** provides slight variance even within the same tier, meaning two T2 autocannons may have slightly different effective muzzle velocities.
+> [!NOTE]
+> Module performance is fully deterministic — two weapons of the same tier and archetype always perform identically. Variety comes from the combination of different attribute tiers across your loadout.

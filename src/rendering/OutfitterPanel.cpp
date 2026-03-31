@@ -8,7 +8,6 @@
 #include "game/components/InstalledModules.h"
 #include "game/components/NPCComponent.h"
 #include "game/components/NameComponent.h"
-#include "game/components/PlayerComponent.h"
 #include "game/components/ShipModule.h"
 #include "game/components/ShipStats.h"
 #include "rendering/UIUtils.h"
@@ -146,6 +145,11 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
             ShipOutfitter::instance().refitModule(registry, targetShip_,
                                                   planetEntity_, pk, 0);
           }
+        } else if (outfitterTab_ == 1 &&
+                   registry.all_of<PlanetEconomy>(planetEntity_)) {
+          // Buy Ammo
+          ShipOutfitter::instance().buyAmmo(registry, targetShip_, planetEntity_,
+                                            selectedOutfitterIndex_, 20); // Buy in batches of 20
         }
       } else {
         // Sell from ship to market (REQ-13)
@@ -185,6 +189,10 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
             ShipOutfitter::instance().sellModule(registry, targetShip_,
                                                   planetEntity_, e.cat, e.idx);
           }
+        } else if (outfitterTab_ == 1 && registry.valid(targetShip_)) {
+          // Sell Ammo
+          ShipOutfitter::instance().sellAmmo(registry, targetShip_, planetEntity_,
+                                             selectedOutfitterIndex_, 20);
         }
       }
     }
@@ -289,14 +297,25 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
       collect(registry.get<InstalledCargo>(targetShip_).modules);
     if (registry.all_of<InstalledPower>(targetShip_))
       collect(registry.get<InstalledPower>(targetShip_).modules);
-  }
-
-  int installEnd =
-      std::min((int)allInstalled.size(), installedScrollOffset_ + maxVisible);
-  for (int i = installedScrollOffset_; i < installEnd; ++i) {
-    bool sel = (!outfitterMarketMode_ && i == selectedOutfitterIndex_);
-    dtext(lx, ly, (sel ? "> " : "  ") + allInstalled[i].name, 14,
-          sel ? sf::Color::Cyan : sf::Color::White);
+    
+    int installEnd =
+        std::min((int)allInstalled.size(), installedScrollOffset_ + maxVisible);
+    for (int i = installedScrollOffset_; i < installEnd; ++i) {
+      bool sel = (!outfitterMarketMode_ && i == selectedOutfitterIndex_);
+      dtext(lx, ly, (sel ? "> " : "  ") + allInstalled[i].name, 14,
+            sel ? sf::Color::Cyan : sf::Color::White);
+    }
+  } else if (outfitterTab_ == 1 && registry.valid(targetShip_)) {
+    if (registry.all_of<InstalledAmmo>(targetShip_)) {
+      auto &ia = registry.get<InstalledAmmo>(targetShip_);
+      int start = installedScrollOffset_;
+      int end = std::min((int)ia.inventory.size(), start + maxVisible);
+      for (int i = start; i < end; ++i) {
+        bool sel = (!outfitterMarketMode_ && i == selectedOutfitterIndex_);
+        dtext(lx, ly, (sel ? "> " : "  ") + ia.inventory[i].type.name + " (" + std::to_string(ia.inventory[i].count) + ")", 14,
+              sel ? sf::Color::Cyan : sf::Color::White);
+      }
+    }
   }
 
   // --- Middle Column: Market ---
@@ -304,19 +323,35 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   float my = listStartY;
   dtext(mx, my, "── Market ──", 15, sf::Color::Yellow);
 
-  std::vector<ModuleDef> shopModules;
-  if (registry.all_of<PlanetEconomy>(planetEntity_)) {
-    shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
-  }
+  if (outfitterTab_ == 0) {
+    std::vector<ModuleDef> shopModules;
+    if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+      shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
+    }
 
-  int marketEnd =
-      std::min((int)shopModules.size(), marketScrollOffset_ + maxVisible);
-  for (int i = marketScrollOffset_; i < marketEnd; ++i) {
-    bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
-    dtext(mx, my,
-          (sel ? "> " : "  ") + shopModules[i].name + " $" +
-              fmt(shopModules[i].basePrice, 0),
-          14, sel ? sf::Color::Cyan : sf::Color::White);
+    int marketEnd =
+        std::min((int)shopModules.size(), marketScrollOffset_ + maxVisible);
+    for (int i = marketScrollOffset_; i < marketEnd; ++i) {
+      bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
+      dtext(mx, my,
+            (sel ? "> " : "  ") + shopModules[i].name + " $" +
+                fmt(shopModules[i].basePrice, 0),
+            14, sel ? sf::Color::Cyan : sf::Color::White);
+    }
+  } else {
+    // Show shopAmmo
+    if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+      auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+      int start = marketScrollOffset_;
+      int end = std::min((int)eco.shopAmmo.size(), start + maxVisible);
+      for (int i = start; i < end; ++i) {
+        bool sel = (outfitterMarketMode_ && i == selectedOutfitterIndex_);
+        ProductKey pk{ProductType::Ammo, (uint32_t)eco.shopAmmo[i].compatibleWeapon, eco.shopAmmo[i].caliber};
+        float price = eco.currentPrices.count(pk) ? eco.currentPrices.at(pk) : 10.0f;
+        dtext(mx, my, (sel ? "> " : "  ") + eco.shopAmmo[i].name + " $" + fmt(price, 0), 14,
+              sel ? sf::Color::Cyan : sf::Color::White);
+      }
+    }
   }
 
   // --- Right Column: Detail Pane ---
@@ -326,14 +361,27 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
 
   ModuleDef selMod;
   bool hasSelection = false;
-  if (outfitterMarketMode_ &&
-      selectedOutfitterIndex_ < (int)shopModules.size()) {
-    selMod = shopModules[selectedOutfitterIndex_];
-    hasSelection = true;
-  } else if (!outfitterMarketMode_ &&
-              selectedOutfitterIndex_ < (int)allInstalled.size()) {
-    selMod = allInstalled[selectedOutfitterIndex_];
-    hasSelection = true;
+  
+  if (outfitterTab_ == 0) {
+    if (outfitterMarketMode_) {
+      if (registry.all_of<PlanetEconomy>(planetEntity_)) {
+        auto &shopModules = registry.get<PlanetEconomy>(planetEntity_).shopModules;
+        if (selectedOutfitterIndex_ < (int)shopModules.size()) {
+          selMod = shopModules[selectedOutfitterIndex_];
+          hasSelection = true;
+        }
+      }
+    } else {
+      if (selectedOutfitterIndex_ < (int)allInstalled.size()) {
+        selMod = allInstalled[selectedOutfitterIndex_];
+        hasSelection = true;
+      }
+    }
+  } else {
+    // Selection for Ammo tab
+    hasSelection = true; 
+    // We don't use selMod for ammo, we fetch aDef inside the detail block 
+    // based on selectedOutfitterIndex_
   }
 
   if (hasSelection) {
@@ -347,22 +395,58 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
       dy += sz + 6.f;
     };
 
-    dDetail(selMod.name, 18, sf::Color::Yellow);
-    dDetail("Category: " + moduleCategoryName(selMod.category), 12,
-            sf::Color(180, 180, 180));
-    dDetail("Vol: " + fmt(selMod.volumeOccupied, 1) +
-                "  Mass: " + fmt(selMod.mass, 1),
-            14, sf::Color::White);
-    dDetail("Power: " + fmt(selMod.powerDraw, 1) + " GW", 14,
-            selMod.powerDraw > 0 ? sf::Color::Yellow
-                                 : sf::Color(100, 255, 100));
-    dy += 10.f;
-    dDetail("── Attributes ──", 14, sf::Color(140, 200, 255));
-    for (const auto &attr : selMod.attributes) {
-      dDetail("• " + getAttributeName(attr.type) + " " +
-                   getTierStars(attr.tier),
-              12, sf::Color::White);
+    if (outfitterTab_ == 0) {
+      dDetail(selMod.name, 18, sf::Color::Yellow);
+      dDetail("Category: " + moduleCategoryName(selMod.category), 12,
+              sf::Color(180, 180, 180));
+      dDetail("Vol: " + fmt(selMod.volumeOccupied, 1) +
+                  "  Mass: " + fmt(selMod.mass, 1),
+              14, sf::Color::White);
+      dDetail("Power: " + fmt(selMod.powerDraw, 1) + " GW", 14,
+              selMod.powerDraw > 0 ? sf::Color::Yellow
+                                   : sf::Color(100, 255, 100));
+      dy += 10.f;
+      dDetail("── Attributes ──", 14, sf::Color(140, 200, 255));
+      for (const auto &attr : selMod.attributes) {
+        dDetail("• " + getAttributeName(attr.type) + " " +
+                     getTierStars(attr.tier),
+                12, sf::Color::White);
+      }
+    } else {
+      // Ammo details
+      AmmoDef aDef;
+      if (outfitterMarketMode_) {
+          auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+          if (selectedOutfitterIndex_ < (int)eco.shopAmmo.size()) aDef = eco.shopAmmo[selectedOutfitterIndex_];
+      } else {
+          auto &ia = registry.get<InstalledAmmo>(targetShip_);
+          if (selectedOutfitterIndex_ < (int)ia.inventory.size()) aDef = ia.inventory[selectedOutfitterIndex_].type;
+      }
+      
+      auto getTypeName = [](WeaponType wt) -> std::string {
+          if (wt == WeaponType::Projectile) return "Autocannon";
+          if (wt == WeaponType::Missile) return "Missile";
+          return "Energy";
+      };
+
+      dDetail(aDef.name, 18, sf::Color::Yellow);
+      dDetail("Weapon: " + getTypeName(aDef.compatibleWeapon), 12, sf::Color(180, 180, 180));
+      dDetail("Caliber: " + tierName(aDef.caliber), 12, sf::Color(180, 180, 180));
+      dDetail("Mass/Round: " + fmt(aDef.massPerRound, 2), 14, sf::Color::White);
+      dtext(dx, dy, "  Volume: " + fmt(aDef.volumePerRound, 3) + "m3", 12, sf::Color(200, 200, 200)); dy += 16.f;
     }
+  }
+
+  // Draw Ammo Capacity if tab is active
+  if (outfitterTab_ == 1) {
+      if (auto* ia = registry.try_get<InstalledAmmo>(targetShip_)) {
+          float cap = ia->totalCapacity();
+          float used = ia->usedVolume();
+          std::string capStr = "Ammo Storage: " + fmt(used, 1) + " / " + fmt(cap, 1) + " m3";
+          sf::Color capColor = (used >= cap * 0.9f) ? sf::Color::Red : sf::Color(150, 255, 150);
+          float capY = rect.position.y + 40.f;
+          dtext(rect.position.x + rect.size.x - 200.f, capY, capStr, 14, capColor);
+      }
   }
 
   // Visual Dividers (REQ-09)

@@ -269,8 +269,8 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
     // Create a pseudo-blueprint for display
     bp.hull = *hdef;
     bp.role = "Owned";
-    displayPrice =
-        ShipOutfitter::instance().calculateShipValue(registry, e) * 0.8f;
+    auto valResult = ShipOutfitter::instance().calculateDetailedShipValue(registry, e);
+    displayPrice = valResult.total * 0.8f;
     if (registry.all_of<Faction>(e))
       bidFactionId = registry.get<Faction>(e).getMajorityFaction();
   } else {
@@ -300,6 +300,26 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
 
   dtext(dx, dy, priceLabel + priceVal, 18, sf::Color(100, 255, 100));
   dy += 10.f;
+  dtext(dx, dy, "── Valuation Breakdown ──", 14, sf::Color(140, 200, 255));
+  dy += 20.f;
+  
+  if (mode_ == ShipyardMode::Sell && !fleetEntities_.empty()) {
+      entt::entity e = fleetEntities_[selectedBidIndex_];
+      auto val = ShipOutfitter::instance().calculateDetailedShipValue(registry, e);
+      dtext(dx, dy, "  Hull: $" + fmt(val.hullValue * 0.8f, 0), 12, sf::Color::White); dy += 16.f;
+      dtext(dx, dy, "  Modules: $" + fmt(val.moduleValue * 0.8f, 0), 12, sf::Color::White); dy += 16.f;
+      dtext(dx, dy, "  Cargo: $" + fmt(val.cargoValue * 0.8f, 0), 12, sf::Color::White); dy += 16.f;
+      dtext(dx, dy, "  Ammo: $" + fmt(val.ammoValue * 0.8f, 0), 12, sf::Color::White); dy += 16.f;
+  } else if (mode_ == ShipyardMode::Buy) {
+      // For buying, we show the base values (without trade-in discount)
+      dtext(dx, dy, "  Base Hull: $" + fmt(bp.hull.baseMass * 100.0f, 0), 12, sf::Color::White); dy += 16.f;
+      float mVal = 0;
+      for (const auto& m : bp.modules) if (m.name != "Empty") mVal += m.basePrice;
+      dtext(dx, dy, "  Modules: $" + fmt(mVal, 0), 12, sf::Color::White); dy += 16.f;
+      float aVal = 0;
+      for (const auto& s : bp.startingAmmo) aVal += s.count * (s.type.basePrice > 0 ? s.type.basePrice : 10.0f);
+      dtext(dx, dy, "  Included Ammo: $" + fmt(aVal, 0), 12, sf::Color::White); dy += 16.f;
+  }
 
   // Ship Preview
   sf::Vector2f previewPos = {dx + 350.f, rect.position.y + 120.f};
@@ -417,6 +437,16 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   } else if (mode_ == ShipyardMode::Buy) {
     dtext(dx + 10.f, dy, "Ammo: Infinite (Energy Only)", 14,
           sf::Color(180, 180, 180));
+  }
+
+  dy += 15.f;
+  dtext(dx, dy, "── Ammunition Loadout ──", 16, sf::Color(140, 200, 255));
+  if (bp.startingAmmo.empty()) {
+      dtext(dx, dy, "• None", 14, sf::Color(180, 180, 180));
+  } else {
+      for (const auto &stack : bp.startingAmmo) {
+          dtext(dx, dy, "• " + stack.type.name + ": " + std::to_string(stack.count), 14, sf::Color::White);
+      }
   }
 
   dy += 15.f;
