@@ -2,6 +2,7 @@
 id: ops-escalation-path
 type: pattern
 tags: [operational, escalation, ownership]
+category: ops
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > OPS Escalation Path
 

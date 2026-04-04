@@ -2,6 +2,7 @@
 id: doc-elicitation-premise
 type: pattern
 tags: [elicitation, premise, goal]
+category: elicitation
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Elicitation Premise
 

@@ -2,6 +2,7 @@
 id: doc-ops-alert
 type: pattern
 tags: [meta, operational, observability]
+category: ops
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ops Alert
 

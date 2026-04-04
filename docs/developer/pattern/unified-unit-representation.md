@@ -2,7 +2,9 @@
 id: unified-unit-representation
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Unified Unit Representation
 
 # Pattern: Unified Unit Representation
 

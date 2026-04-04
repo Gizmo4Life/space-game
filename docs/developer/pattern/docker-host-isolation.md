@@ -2,7 +2,9 @@
 id: docker-host-isolation
 type: pattern
 pillar: developer
+category: cicd
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Docker Host Isolation
 
 # Pattern: Docker Host Isolation
 

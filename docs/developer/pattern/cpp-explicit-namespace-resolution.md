@@ -2,6 +2,7 @@
 id: cpp-explicit-namespace-resolution
 type: pattern
 tags: [cpp, build, stability]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > C++ Explicit Namespace Resolution
 

@@ -2,6 +2,7 @@
 id: doc-gov-protocol
 type: pattern
 tags: [meta, governance, automation]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Gov Protocol
 

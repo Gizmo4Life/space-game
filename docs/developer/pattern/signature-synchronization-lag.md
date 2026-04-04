@@ -2,6 +2,7 @@
 id: signature-synchronization-lag
 type: anti-pattern
 pillar: developer
+category: anti-pattern
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Signature Synchronization Lag
 

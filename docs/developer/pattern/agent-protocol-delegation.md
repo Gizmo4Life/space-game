@@ -2,6 +2,7 @@
 id: agent-protocol-delegation
 type: pattern
 pillar: developer
+category: agent
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Agent Protocol Delegation
 

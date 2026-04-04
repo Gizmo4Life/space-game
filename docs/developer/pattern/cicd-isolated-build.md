@@ -2,6 +2,7 @@
 id: cicd-isolated-build
 type: pattern
 tags: [foundation, cicd]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Isolated Build
 

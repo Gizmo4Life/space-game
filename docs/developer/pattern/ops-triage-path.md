@@ -2,6 +2,7 @@
 id: ops-triage-path
 type: pattern
 tags: [operational, triage, incident]
+category: ops
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > OPS Triage Path
 

@@ -2,6 +2,7 @@
 id: cpp-type-safe-handles
 type: pattern
 tags: [safety, types, refactoring]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Type-Safe Handles
 

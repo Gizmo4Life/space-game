@@ -2,6 +2,7 @@
 id: doc-ops-diagnostic-dashboard
 type: pattern
 tags: [operational, observability, dashboard]
+category: ops
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ops Diagnostic Dashboard
 

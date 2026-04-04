@@ -2,6 +2,7 @@
 id: doc-elicitation-clarity
 type: pattern
 tags: [elicitation, requirements, clarity]
+category: elicitation
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Elicitation Clarity
 

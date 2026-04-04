@@ -190,6 +190,9 @@ graph TD
 - [ui-component-guard](ui-component-guard.md): Resilient `try_get` access for optional UI components.
 - [render-mode-dispatch](render-mode-dispatch.md): Enum-driven visual mode branching at the renderer level.
 - [fleet-entity-card](fleet-entity-card.md): Compact stacked HUD cards for entity sets.
+- [doc-category-tag](doc-category-tag.md): Every pattern file declares its domain category in YAML frontmatter.
+- [doc-sequential-numbering](doc-sequential-numbering.md): All `##` headings use strictly sequential numbering.
+- [doc-signpost-completeness](doc-signpost-completeness.md): Every subdirectory has a readme and is listed in its parent.
 
 ## 8. Anti-Patterns (Discouraged)
 *Nuance: Forbidden or legacy shapes that trigger audit failures.*
@@ -208,16 +211,37 @@ graph TD
 - [agent-iterative-compliance-loop](agent-iterative-compliance-loop.md): Gap-identify → fix → validate → re-evaluate cycle.
 - [agent-dual-role-orchestration](agent-dual-role-orchestration.md): Planner → executor handoff with escalation path.
 
-### Index Map
+### Category Index
 ```yaml
-index_map:
-  Elicitation: [doc-context-elicitation, doc-elicitation-clarity, doc-elicitation-exclusivity, doc-elicitation-traceability, doc-elicitation-premise, doc-elicitation-questioning]
-  Geometry: [doc-t1-landscape, doc-t2-capability, doc-t2-with-code, doc-t3-module, doc-t3-with-biz-logic, doc-pillar-ownership, doc-module-dependency, doc-dichotomy]
-  Logic: [logic-idempotency, logic-test-first, test-case-duality, padu-evaluation, definition-of-done, trade-static-interface, cpp-header-hygiene, cpp-explicit-namespace-resolution, cpp-component-aggregation, cpp-visibility-promotion, cpp-sdk-type-completion, cpp-centralized-typedefs, cpp-compiler-driven-refactoring, cpp-component-registration, cpp-external-api-facade, cpp-header-resilience, cpp-interface-segregation, cpp-standard-alignment, cpp-structural-integrity, cpp-type-safe-handles, encapsulated-state-mutation, entt-reference-safety, explicit-module-identity, full-dependency-initialization, proxy-identity-overlap, silent-logic-bypass, single-source-calculation, reactive-state-access, unified-unit-representation, component-driven-initialization]
-  CICD: [cicd-immutable-artifact, cicd-isolated-build, cicd-prioritized-testing, cicd-reproducible-build, cicd-secret-vaulting, cicd-test-layering, cicd-vulnerability-scan, cicd-shadow-build, cicd-fetchcontent-dependency, cicd-hybrid-dependency-acquisition, doc-gov-protocol, doc-gov-standard, doc-ext-contract, doc-ext-integration, docker-host-isolation, docker-kitware-cmake, docker-multi-stage-build, docker-service-healthcheck, docker-shared-library-enforcement, docker-source-build, docker-transitive-dependency-management, docker-profile-gated-service, docker-runtime-layer-pruning, cmake-object-library-sharing, cmake-conditional-test-gate]
-  Ops: [doc-ops-alert, doc-ops-span-runbook, doc-ops-unified-runbook, doc-ops-restoration-step, doc-ops-diagnostic-dashboard, ops-triage-path, ops-escalation-path, ops-scoped-resource-discovery]
-  Engine: [cpp-ecs-component, cpp-ecs-system-static, cpp-singleton-manager, kinematics-newtonian-2d, rendering-spatial-bridge, rendering-offscreen-indicator, rendering-pause-overlay, rendering-dual-scale, world-procedural-generation, npc-ai-state-machine, npc-fleet-leader-boids, otel-span-instrumentation, economy-resource-chain, economy-dynamic-pricing, economy-competitive-market, economy-infrastructure-expansion, dna-weighted-infrastructure-expansion, faction-relationship-matrix, ship-modular-composition, procedural-hull-generation, faction-dna-genetic-profile, evolutionary-strategy-drift, mission-performance-feedback-loop, centralized-entity-lookup, housekeeping-encapsulation, blueprint-round-trip, boarding-protocol, attribute-differentiated-recipes, economy-faction-standards, economy-market-structure, economy-refit-fee, tiered-utility-allocation, trade-tabbed-interface, unified-slot-system, deterministic-attribute-tiering, resource-depletion-cascade]
-  UX: [doc-breadcrumb-navigation, doc-flat-hierarchy, doc-yaml-metadata, doc-structured-readme, signpost-readme, doc-walkthrough, ext-greenfield-context, ext-brownfield-context, ui-context-injection, rendering-scrollable-subpanel, rendering-schematic-visuals, ui-component-guard, render-mode-dispatch, fleet-entity-card]
-  AntiPatterns: [doc-directory-nesting, doc-monolithic-wiki, doc-narrative-paragraphs, doc-ops-monolithic-runbook, doc-ops-unverified-mitigation, readme-long-prose, ghost-logic, signature-synchronization-lag]
-  Agent: [agent-protocol-delegation, agent-iterative-compliance-loop, agent-dual-role-orchestration]
+type: category_index
+description: Machine-readable categorization of all patterns. Each pattern belongs to exactly one category.
+categories:
+  Elicitation:
+    description: Shapes for transforming vague intent into testable constraints.
+    patterns: [doc-context-elicitation, doc-elicitation-clarity, doc-elicitation-exclusivity, doc-elicitation-traceability, doc-elicitation-premise, doc-elicitation-questioning]
+  Geometry:
+    description: Skeletal structure of the repository — how files map to the Knowledge Graph.
+    patterns: [doc-t1-landscape, doc-t2-capability, doc-t2-with-code, doc-t3-module, doc-t3-with-biz-logic, doc-pillar-ownership, doc-module-dependency, doc-dichotomy]
+  Logic:
+    description: Rules for code correctness, automated verification, and structural integrity.
+    patterns: [logic-idempotency, logic-test-first, test-case-duality, padu-evaluation, definition-of-done, trade-static-interface, cpp-header-hygiene, cpp-explicit-namespace-resolution, cpp-component-aggregation, cpp-visibility-promotion, cpp-sdk-type-completion, cpp-centralized-typedefs, cpp-compiler-driven-refactoring, cpp-component-registration, cpp-external-api-facade, cpp-header-resilience, cpp-interface-segregation, cpp-standard-alignment, cpp-structural-integrity, cpp-type-safe-handles, encapsulated-state-mutation, entt-reference-safety, explicit-module-identity, full-dependency-initialization, proxy-identity-overlap, silent-logic-bypass, single-source-calculation, reactive-state-access, unified-unit-representation, component-driven-initialization]
+  CICD:
+    description: Patterns governing the automated deployment, container, and build pipeline.
+    patterns: [cicd-immutable-artifact, cicd-isolated-build, cicd-prioritized-testing, cicd-reproducible-build, cicd-secret-vaulting, cicd-test-layering, cicd-vulnerability-scan, cicd-shadow-build, cicd-fetchcontent-dependency, cicd-hybrid-dependency-acquisition, doc-gov-protocol, doc-gov-standard, doc-ext-contract, doc-ext-integration, docker-host-isolation, docker-kitware-cmake, docker-multi-stage-build, docker-service-healthcheck, docker-shared-library-enforcement, docker-source-build, docker-transitive-dependency-management, docker-profile-gated-service, docker-runtime-layer-pruning, cmake-object-library-sharing, cmake-conditional-test-gate]
+  Ops:
+    description: Artifacts for system uptime, triage, incident response, and restoration.
+    patterns: [doc-ops-alert, doc-ops-span-runbook, doc-ops-unified-runbook, doc-ops-restoration-step, doc-ops-diagnostic-dashboard, ops-triage-path, ops-escalation-path, ops-scoped-resource-discovery]
+  Engine:
+    description: High-performance C++ game engine shapes — physics, ECS, economy, faction AI.
+    patterns: [cpp-ecs-component, cpp-ecs-system-static, cpp-singleton-manager, kinematics-newtonian-2d, rendering-spatial-bridge, rendering-offscreen-indicator, rendering-pause-overlay, rendering-dual-scale, world-procedural-generation, npc-ai-state-machine, npc-fleet-leader-boids, otel-span-instrumentation, economy-resource-chain, economy-dynamic-pricing, economy-competitive-market, economy-infrastructure-expansion, dna-weighted-infrastructure-expansion, faction-relationship-matrix, ship-modular-composition, procedural-hull-generation, faction-dna-genetic-profile, evolutionary-strategy-drift, mission-performance-feedback-loop, centralized-entity-lookup, housekeeping-encapsulation, blueprint-round-trip, boarding-protocol, attribute-differentiated-recipes, economy-faction-standards, economy-market-structure, economy-refit-fee, tiered-utility-allocation, trade-tabbed-interface, unified-slot-system, deterministic-attribute-tiering, resource-depletion-cascade]
+  UX:
+    description: Patterns for machine-readability, human scannability, and UI rendering.
+    patterns: [doc-breadcrumb-navigation, doc-flat-hierarchy, doc-yaml-metadata, doc-structured-readme, signpost-readme, doc-walkthrough, ext-greenfield-context, ext-brownfield-context, ui-context-injection, rendering-scrollable-subpanel, rendering-schematic-visuals, ui-component-guard, render-mode-dispatch, fleet-entity-card, doc-category-tag, doc-sequential-numbering, doc-signpost-completeness]
+  AntiPatterns:
+    description: Forbidden or legacy shapes that trigger audit failures.
+    patterns: [doc-directory-nesting, doc-monolithic-wiki, doc-narrative-paragraphs, doc-ops-monolithic-runbook, doc-ops-unverified-mitigation, readme-long-prose, ghost-logic, signature-synchronization-lag]
+  Agent:
+    description: Shapes for AI-assisted workflow automation, compliance loops, and role delegation.
+    patterns: [agent-protocol-delegation, agent-iterative-compliance-loop, agent-dual-role-orchestration]
 ```
+

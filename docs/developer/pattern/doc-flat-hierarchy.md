@@ -2,6 +2,7 @@
 id: doc-flat-hierarchy
 type: pattern
 tags: [documentation, organization]
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Flat Hierarchy
 

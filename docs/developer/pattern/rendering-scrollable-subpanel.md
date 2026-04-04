@@ -2,6 +2,7 @@
 id: rendering-scrollable-subpanel
 type: pattern
 pillar: developer
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Rendering Scrollable Subpanel
 

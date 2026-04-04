@@ -2,6 +2,7 @@
 id: doc-ext-contract
 type: pattern
 tags: [meta, external, api]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ext Contract
 

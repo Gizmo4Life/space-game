@@ -3,6 +3,7 @@ id: faction-relationship-matrix
 type: pattern
 polarity: prescriptive
 pillar: developer
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Faction Relationship Matrix
 

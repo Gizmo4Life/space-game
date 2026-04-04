@@ -2,7 +2,9 @@
 id: kinematics-newtonian-2d
 type: pattern
 tags: [physics, kinematics, math]
+category: engine
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Newtonian Kinematics (2D)
 # Pattern: Newtonian Kinematics (2D)
 
 ## 1. Geometry

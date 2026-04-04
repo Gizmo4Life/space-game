@@ -3,6 +3,7 @@ id: doc-ops-unified-runbook
 type: pattern
 type: universal_runbook
 tags: [meta, operational, triage]
+category: ops
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Universal System Runbook
 

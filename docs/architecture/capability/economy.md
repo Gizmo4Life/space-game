@@ -3,6 +3,7 @@ id: economy-capability
 type: capability
 pillar: architecture
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Capability](/docs/architecture/capability/readme.md) > Economy
 # Capability: Economy
 
 ## 1. Business Intent

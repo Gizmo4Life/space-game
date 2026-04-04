@@ -3,6 +3,7 @@ id: economy-faction-standards
 type: pattern
 polarity: prescriptive
 pillar: developer
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Economy Faction Standards
 

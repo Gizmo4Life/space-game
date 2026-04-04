@@ -2,6 +2,7 @@
 id: cicd-prioritized-testing
 type: pattern
 tags: [foundation, cicd]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Prioritized Testing
 

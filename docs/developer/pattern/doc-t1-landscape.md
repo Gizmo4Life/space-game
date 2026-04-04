@@ -2,6 +2,7 @@
 id: doc-t1-landscape
 type: pattern
 tags: [meta, architecture, system-boundary]
+category: geometry
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc T1 Landscape
 

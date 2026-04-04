@@ -3,6 +3,7 @@ id: cmake-registration-consistency-standard
 type: standard
 pillar: governance
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](/docs/governance/standard/readme.md) > Standard: CMake Registration Consistency
 
 # Standard: CMake Registration Consistency
 

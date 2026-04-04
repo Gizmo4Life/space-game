@@ -2,6 +2,7 @@
 id: agent-dual-role-orchestration
 type: pattern
 pillar: developer
+category: agent
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Agent Dual-Role Orchestration
 

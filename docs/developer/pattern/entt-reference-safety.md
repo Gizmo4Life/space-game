@@ -2,7 +2,9 @@
 id: entt-reference-safety
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: EnTT Reference Safety (Synchronization Hubs)
 
 # Pattern: EnTT Reference Safety (Synchronization Hubs)
 

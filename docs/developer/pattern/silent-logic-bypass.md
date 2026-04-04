@@ -2,7 +2,9 @@
 id: silent-logic-bypass
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Silent Logic Bypass (Anti-Pattern)
 
 # Pattern: Silent Logic Bypass (Anti-Pattern)
 

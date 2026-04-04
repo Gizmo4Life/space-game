@@ -1,3 +1,11 @@
+---
+id: trade-tabbed-interface
+type: pattern
+pillar: developer
+category: engine
+---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Tabbed Trade Interface
+
 # Pattern: Tabbed Trade Interface
 
 ## Context

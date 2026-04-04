@@ -2,7 +2,9 @@
 id: full-dependency-initialization
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Full Dependency Initialization (for Tests)
 
 # Pattern: Full Dependency Initialization (for Tests)
 

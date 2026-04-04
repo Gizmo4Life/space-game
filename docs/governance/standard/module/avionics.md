@@ -1,3 +1,10 @@
+---
+id: module-avionics
+type: standard
+pillar: governance
+---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](../readme.md) > [Module Performance](../module-performance-standard.md) > Avionics
+
 # Module Standard: Avionics (Reaction Wheels)
 
 Reaction wheels provide the rotational torque required to reorient the ship. Unlike engines, they consume only electrical power.

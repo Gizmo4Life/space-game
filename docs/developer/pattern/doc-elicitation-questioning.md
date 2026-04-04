@@ -2,6 +2,7 @@
 id: doc-elicitation-questioning
 type: pattern
 tags: [elicitation, socratic, discovery]
+category: elicitation
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Elicitation Questioning
 

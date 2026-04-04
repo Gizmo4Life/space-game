@@ -2,6 +2,7 @@
 id: cicd-secret-vaulting
 type: pattern
 tags: [foundation, cicd, security]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Secret Vaulting
 

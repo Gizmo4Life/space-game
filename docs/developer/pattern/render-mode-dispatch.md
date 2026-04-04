@@ -2,6 +2,7 @@
 id: render-mode-dispatch
 type: pattern
 pillar: developer
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Render Mode Dispatch
 

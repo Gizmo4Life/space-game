@@ -3,6 +3,7 @@ id: economy-competitive-market
 type: pattern
 polarity: prescriptive
 pillar: developer
+category: engine
 ---
 [Home](/) > [Docs](/docs/developer/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Economy Competitive Market
 

@@ -3,6 +3,7 @@ id: world-procedural-generation
 type: pattern
 polarity: prescriptive
 pillar: developer
+category: engine
 ---
 [Home](/) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Procedural Generation
 

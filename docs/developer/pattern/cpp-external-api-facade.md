@@ -2,6 +2,7 @@
 id: cpp-external-api-facade
 type: pattern
 tags: [architecture, isolation, refactoring]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > External API Facade
 

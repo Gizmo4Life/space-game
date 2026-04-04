@@ -1,3 +1,10 @@
+---
+id: weapon-archetype-standard
+type: standard
+pillar: governance
+---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](readme.md) > Weapon Archetypes
+
 # Standard: Weapon & Ammo Archetypes
 
 This standard defines how abstract **Attribute Tiers** (T1, T2, T3) are mapped to technical implementation values for the three primary weapon archetypes using deterministic scaling.

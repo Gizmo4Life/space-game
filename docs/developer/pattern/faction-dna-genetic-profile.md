@@ -2,6 +2,7 @@
 id: faction-dna-genetic-profile
 type: pattern
 tags: [architecture, faction, dna, procedural]
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](/docs/developer/pattern/readme.md) > Faction DNA Genetic Profile
 

@@ -2,7 +2,9 @@
 id: cpp-ecs-system-static
 type: pattern
 tags: [cpp, ecs, logic, stateless]
+category: engine
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: C++ ECS System (Static)
 # Pattern: C++ ECS System (Static)
 
 ## 1. Geometry

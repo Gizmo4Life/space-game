@@ -2,6 +2,7 @@
 id: doc-breadcrumb-navigation
 type: pattern
 tags: [documentation, navigation, RAG]
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Breadcrumb Navigation
 

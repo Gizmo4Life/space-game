@@ -2,7 +2,9 @@
 id: cicd-hybrid-dependency-acquisition
 type: pattern
 tags: [build, dependencies, cmake]
+category: cicd
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Hybrid Dependency Acquisition
 
 # Pattern: Hybrid Dependency Acquisition
 

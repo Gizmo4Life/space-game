@@ -1,3 +1,10 @@
+---
+id: external-modules-guide
+type: guide
+pillar: external
+---
+[Home](/) > [Docs](/docs/readme.md) > [External](/docs/external/readme.md) > Ship Modules
+
 # Ship Modules: A Pilot's Guide
 
 Modules are the building blocks of your spacecraft. From the reactors that power your life support to the engines that propel you through the void, understanding module performance is key to survival.

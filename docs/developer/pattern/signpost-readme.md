@@ -3,6 +3,7 @@ id: signpost-readme
 type: pattern
 tags: [meta, navigation, linkage]
 pillar: developer
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Signpost Readme
 

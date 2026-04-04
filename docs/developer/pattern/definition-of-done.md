@@ -2,7 +2,9 @@
 id: definition-of-done
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Definition of Done (DoD)
 
 # Pattern: Definition of Done (DoD)
 

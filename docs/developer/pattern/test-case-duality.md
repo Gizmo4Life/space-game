@@ -2,6 +2,7 @@
 id: test-case-duality
 type: pattern
 tags: [testing, quality]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Test Case Duality
 

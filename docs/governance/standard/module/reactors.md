@@ -1,3 +1,10 @@
+---
+id: module-reactors
+type: standard
+pillar: governance
+---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](../readme.md) > [Module Performance](../module-performance-standard.md) > Reactors
+
 # Module Standard: Power Generation (Reactors)
 
 Reactors provide the baseline energy required for all ship systems. They consume isotopes to generate GW-scale power.

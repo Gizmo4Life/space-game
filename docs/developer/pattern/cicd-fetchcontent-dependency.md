@@ -2,7 +2,9 @@
 id: cicd-fetchcontent-dependency
 type: pattern
 tags: [build, dependencies, cmake]
+category: cicd
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: FetchContent Dependency
 
 # Pattern: FetchContent Dependency
 

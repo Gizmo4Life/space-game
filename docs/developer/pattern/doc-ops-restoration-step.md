@@ -2,6 +2,7 @@
 id: doc-ops-restoration-step
 type: pattern
 tags: [meta, operational, restoration, task]
+category: ops
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Restoration Step
 

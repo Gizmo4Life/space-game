@@ -2,7 +2,9 @@
 id: cpp-ecs-component
 type: pattern
 tags: [cpp, ecs, memory, pod]
+category: engine
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: C++ ECS Component
 # Pattern: C++ ECS Component
 
 ## 1. Geometry

@@ -3,6 +3,7 @@ id: build-resilience-standard
 type: standard
 pillar: governance
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](/docs/governance/standard/readme.md) > Standard: Build Resilience Hub
 
 # Standard: Build Resilience Hub
 

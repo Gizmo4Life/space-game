@@ -2,6 +2,7 @@
 id: doc-dichotomy
 type: pattern
 tags: [documentation, meta]
+category: geometry
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Dichotomy
 

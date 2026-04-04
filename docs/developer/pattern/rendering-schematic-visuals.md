@@ -2,6 +2,7 @@
 id: rendering-schematic-visuals
 type: pattern
 pillar: developer
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Rendering Schematic Visuals
 

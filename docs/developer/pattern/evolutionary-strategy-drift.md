@@ -2,6 +2,7 @@
 id: evolutionary-strategy-drift
 type: pattern
 tags: [architecture, ai, faction, evolution]
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](/docs/developer/pattern/readme.md) > Evolutionary Strategy Drift
 

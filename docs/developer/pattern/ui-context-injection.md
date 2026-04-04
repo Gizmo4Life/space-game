@@ -3,7 +3,9 @@ id: ui-context-injection
 type: pattern
 polarity: prescriptive
 pillar: developer
+category: ux
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: UI Context Injection
 
 # Pattern: UI Context Injection
 

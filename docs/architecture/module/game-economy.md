@@ -48,15 +48,15 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - [logic-idempotency](/docs/developer/pattern/logic-idempotency.md) (P)
 - [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) (P) — `ShipOutfitter::blueprintFromEntity` centralizes all entity-to-blueprint extraction; `findFlagship` unifies player identification in refit/sell operations.
 
-### 2. Market Logistics
+### Market Logistics
 - **Fleet-Wide Aggregation**: Commodity trading (`executeTrade`) and vessel provisioning (`reequipForDuration`) aggregate cargo capacity and resource stock across the entire active fleet (all ships marked `isPlayerFleet`).
 - **Automatic Distribution**: Purchased resources are distributed to ships with available capacity, starting with the flagship.
 - **Atomic Transactions**: Trades fail if the aggregate fleet capacity or credits are insufficient.
 
-## 4. Telemetry & Observability
+## 5. Telemetry & Observability
 - `game.economy.transaction` — attributes: `transaction_type` (`commodity_buy` / `commodity_sell`), `resource_id`, `quantity`, `price_total`, `fleet_size`, `buying_faction`
 - `game.economy.reequip` — attributes: `reequip_days`, `reequip_fleet_size`, `reequip_total_spent`
 - **Status:** ✅ Fully instrumented with fleet-scale attributes.
 
-## 5. Economic Balance & Tuning
+## 6. Economic Balance & Tuning
 - **Isotope Availability**: To avoid bottlenecks in power and fuel production, Isotopes are balanced with a higher `baseOutputRate` (15.0f) and increased baseline seeding (4 factories) on `Icy` planets.

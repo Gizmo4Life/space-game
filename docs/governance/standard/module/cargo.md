@@ -1,3 +1,10 @@
+---
+id: module-cargo
+type: standard
+pillar: governance
+---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](../readme.md) > [Module Performance](../module-performance-standard.md) > Cargo
+
 # Module Standard: Logistics (Cargo)
 
 Cargo modules are the backbone of the interstellar economy, providing the internal volume ($V$) required to transport commodities, ores, and manufactured goods.

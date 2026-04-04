@@ -3,6 +3,7 @@ id: cpp-incomplete-type-resolution-standard
 type: standard
 pillar: governance
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](/docs/governance/standard/readme.md) > Standard: C++ Incomplete Type Resolution
 
 # Standard: C++ Incomplete Type Resolution
 

@@ -2,6 +2,7 @@
 id: cpp-header-resilience
 type: pattern
 tags: [foundation, build, stability]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Header Resilience
 

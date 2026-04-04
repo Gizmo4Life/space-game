@@ -2,6 +2,7 @@
 id: cpp-structural-integrity
 type: pattern
 tags: [foundation, build, structural-hygiene]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Structural Integrity
 

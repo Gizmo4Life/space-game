@@ -2,6 +2,7 @@
 id: ghost-logic
 type: pattern
 pillar: developer
+category: anti-pattern
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Ghost Logic
 

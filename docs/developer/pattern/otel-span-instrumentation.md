@@ -3,6 +3,7 @@ id: otel-span-instrumentation
 type: pattern
 polarity: prescriptive
 pillar: developer
+category: engine
 ---
 [Home](/) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > OTEL Span Instrumentation
 

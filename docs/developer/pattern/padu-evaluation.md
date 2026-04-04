@@ -3,6 +3,7 @@ id: padu-evaluation
 type: pattern
 tags: [meta, governance, fitness]
 pillar: developer
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > PADU Evaluation
 

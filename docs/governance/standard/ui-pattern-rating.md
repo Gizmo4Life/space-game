@@ -3,6 +3,7 @@ id: ui-pattern-rating
 type: standard
 pillar: governance
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](/docs/governance/standard/readme.md) > Standard: UI Pattern Rating (PADU)
 
 # Standard: UI Pattern Rating (PADU)
 

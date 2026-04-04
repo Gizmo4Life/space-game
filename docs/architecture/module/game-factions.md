@@ -23,7 +23,7 @@ Factions maintain local physical inventories on each planet they occupy via the 
 - **Parked Ships**: A persistent vector of `ShipBlueprint` objects (`parkedShips`) representing fully assembled vessels available for the market or fleet deployment.
 - **Ship Assembly**: Factions use local resources to "kit out" hulls from the scrapyard, moving them to the parked inventory once operational viability is met.
 
-## 3. Pattern Composition
+## 4. Pattern Composition
 - [cpp-ecs-component](/docs/developer/pattern/cpp-ecs-component.md) (P) — `Faction` component
 - [faction-dna-genetic-profile](/docs/developer/pattern/faction-dna-genetic-profile.md) (P) — Multi-axis strategic DNA (Aggressive, Industrial, Commercial, Cooperative)
 - [procedural-hull-generation](/docs/developer/pattern/procedural-hull-generation.md) (P) — Role-based HullDef construction (Combat, Cargo, General)
@@ -33,7 +33,7 @@ Factions maintain local physical inventories on each planet they occupy via the 
 - [cpp-singleton-manager](/docs/developer/pattern/cpp-singleton-manager.md) (P) — `FactionManager::instance()`
 - [otel-span-instrumentation](/docs/developer/pattern/otel-span-instrumentation.md) (P)
 
-## 4. Telemetry & Observability
+## 5. Telemetry & Observability
 - `game.factions.credit.accumulate` — attributes: `faction.total_credits`, `faction.count`
 - `game.faction.dna.drift` — attributes: `faction.id`, `faction.dna.axis`, `faction.performance.ratio`
 - **Status:** ✅ Fully instrumented via `opentelemetry-cpp`

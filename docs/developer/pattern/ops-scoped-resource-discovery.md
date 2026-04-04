@@ -2,7 +2,9 @@
 id: ops-scoped-resource-discovery
 type: pattern
 tags: [ops, research, search]
+category: ops
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Scoped Resource Discovery
 
 # Pattern: Scoped Resource Discovery
 

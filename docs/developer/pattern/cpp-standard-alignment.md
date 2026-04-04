@@ -2,6 +2,7 @@
 id: cpp-standard-alignment
 type: pattern
 tags: [cpp, build, standard]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > C++ Standard Alignment
 

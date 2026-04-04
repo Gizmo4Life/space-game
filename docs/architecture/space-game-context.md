@@ -3,6 +3,7 @@ id: space-game-context
 type: elicitation_manifest
 pillar: architecture
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > Context Elicitation
 # Context Elicitation: Top-Down Space Faring Game
 
 ## 1. Premise

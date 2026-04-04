@@ -3,6 +3,7 @@ id: economy-transaction-runbook
 type: span_runbook
 module: game-economy-module
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Operational](/docs/operational/readme.md) > [Span](/docs/operational/span/readme.md) > Economy Transaction
 
 # Span Runbook: game.economy.transaction
 

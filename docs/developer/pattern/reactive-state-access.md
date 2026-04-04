@@ -2,7 +2,9 @@
 id: reactive-state-access
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Reactive State Access
 
 # Pattern: Reactive State Access
 

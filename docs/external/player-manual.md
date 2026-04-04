@@ -3,7 +3,7 @@ id: player-manual
 type: guide
 pillar: external
 ---
-[Home](/) > [Docs](/docs/readme.md) > [External](/docs/external/readme.md) > [Integration](/docs/external/integration/readme.md) > Player Manual
+[Home](/) > [Docs](/docs/readme.md) > [External](/docs/external/readme.md) > Player Manual
 
 # Player Manual: Fleet Logistics & Resource Management
 

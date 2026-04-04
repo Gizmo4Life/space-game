@@ -2,6 +2,7 @@
 id: ext-brownfield-context
 type: pattern
 tags: [external, discovery, brownfield]
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > EXT Brownfield Context
 

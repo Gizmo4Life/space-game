@@ -1,3 +1,10 @@
+---
+id: module-batteries
+type: standard
+pillar: governance
+---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](../readme.md) > [Module Performance](../module-performance-standard.md) > Batteries
+
 # Module Standard: Energy Storage (Batteries)
 
 Batteries store surplus energy from reactors and provide buffer capacity for high-draw systems like Weapons and Shields.

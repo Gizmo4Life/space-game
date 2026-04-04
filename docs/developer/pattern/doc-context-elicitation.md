@@ -2,6 +2,7 @@
 id: doc-context-elicitation
 type: pattern
 tags: [meta, discovery, elicitation]
+category: elicitation
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Context Elicitation
 

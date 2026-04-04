@@ -1,3 +1,10 @@
+---
+id: module-engines
+type: standard
+pillar: governance
+---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](../readme.md) > [Module Performance](../module-performance-standard.md) > Engines
+
 # Module Standard: Propulsion (Engines)
 
 Engines translate electrical power into kinetic thrust. Performance follows a strict tiered scaling to ensure predictable ship acceleration profiles.

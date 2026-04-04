@@ -2,6 +2,7 @@
 id: cicd-immutable-artifact
 type: pattern
 tags: [foundation, cicd]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Immutable Artifact
 

@@ -3,7 +3,7 @@ id: agent-manifest
 type: manifest
 pillar: governance
 ---
-[Home](/) > [Governance] > Agent Manifest
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > Agent Manifest
 
 # Primary Entry Points
 Determine your context and execute the corresponding idempotent protocol.

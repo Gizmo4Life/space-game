@@ -2,6 +2,7 @@
 id: housekeeping-encapsulation
 type: pattern
 pillar: developer
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Housekeeping Encapsulation
 

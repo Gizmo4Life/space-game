@@ -2,6 +2,7 @@
 id: cpp-centralized-typedefs
 type: pattern
 tags: [cpp, types, architecture]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > C++ Centralized Typedefs
 

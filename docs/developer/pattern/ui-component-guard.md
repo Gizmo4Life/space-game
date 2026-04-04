@@ -2,6 +2,7 @@
 id: ui-component-guard
 type: pattern
 pillar: developer
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > UI Component Guard
 

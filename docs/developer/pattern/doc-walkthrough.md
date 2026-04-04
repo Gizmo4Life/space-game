@@ -2,6 +2,7 @@
 id: doc-walkthrough
 type: pattern
 tags: [governance, compliance, proof-of-work]
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Walkthrough
 

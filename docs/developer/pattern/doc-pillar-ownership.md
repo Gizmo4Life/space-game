@@ -2,6 +2,7 @@
 id: doc-pillar-ownership
 type: pattern
 tags: [architecture, governance]
+category: geometry
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Pillar Ownership
 

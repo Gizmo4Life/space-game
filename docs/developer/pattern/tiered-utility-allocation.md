@@ -2,6 +2,7 @@
 id: tiered-utility-allocation
 type: pattern
 tags: [architecture, ship, balance, slots]
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](/docs/developer/pattern/readme.md) > Tiered Utility Allocation
 

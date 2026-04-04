@@ -3,6 +3,7 @@ id: docker-multi-stage-build
 type: pattern
 tags: [docker, build, optimization]
 pillar: developer
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Docker Multi-Stage Build
 

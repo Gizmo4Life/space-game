@@ -2,6 +2,7 @@
 id: procedural-hull-generation
 type: pattern
 tags: [architecture, graphics, procedural, ship]
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](/docs/developer/pattern/readme.md) > Procedural Hull Generation
 

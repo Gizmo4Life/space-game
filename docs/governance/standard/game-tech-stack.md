@@ -3,6 +3,7 @@ id: game-tech-stack-standard
 type: standard
 pillar: governance
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](/docs/governance/standard/readme.md) > Standard: Game Tech Stack (C++)
 # Standard: Game Tech Stack (C++)
 
 Establish the technical foundations for the space-game proof-of-concept using C++.

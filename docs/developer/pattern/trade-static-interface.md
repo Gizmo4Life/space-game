@@ -2,6 +2,7 @@
 id: trade-static-interface
 type: pattern
 pillar: developer
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Static Trade Interface
 

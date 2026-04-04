@@ -11,6 +11,9 @@ Identify structural errors, missing artifacts, and technical drift between the r
 ## 2. Structural Audit
 - **Action:** Verify [doc-breadcrumb-navigation](/docs/developer/pattern/doc-breadcrumb-navigation.md) is present on line 6 of all `.md` files in `docs/`.
 - **Action:** Verify every file has a valid YAML frontmatter with `id` and `type`.
+- **Action:** Verify all pattern files in `docs/developer/pattern/` include a `category` field from the canonical vocabulary (see [doc-category-tag](/docs/developer/pattern/doc-category-tag.md)).
+- **Action:** Verify all `##` headings within each document follow [doc-sequential-numbering](/docs/developer/pattern/doc-sequential-numbering.md) — no duplicates, no gaps.
+- **Action:** Verify every subdirectory under `docs/` has a `readme.md` signpost and is listed in its parent readme (see [doc-signpost-completeness](/docs/developer/pattern/doc-signpost-completeness.md)).
 - **Action:** Verify all internal links (e.g., `file:///...`) are functional and point to existing files.
 - **Action:** Verify **Atomic Docs** compliance: If a document exceeds 100 lines of prose, evaluate if core concepts can be extracted into a [Pattern](/docs/developer/pattern/readme.md) or [Standard](/docs/governance/standard/readme.md).
 
@@ -29,3 +32,7 @@ Identify structural errors, missing artifacts, and technical drift between the r
 ## 5. Verification
 - **Verify:** No dead links remain in the Knowledge Graph.
 - **Verify:** The `docs/readme.md` root manifest correctly maps all child pillars.
+- **Verify:** `find docs -name '*.md' -exec sh -c 'head -1 "$1" | grep -qv "^---$" && echo "$1"' _ {} \;` returns zero results (frontmatter).
+- **Verify:** `grep -rL '\[Home\]' docs/ --include='*.md'` returns zero results (breadcrumbs).
+- **Verify:** No file in `docs/developer/pattern/` (excluding readme.md) is missing `category:` in frontmatter.
+- **Verify:** No two `##` headings in a single file share the same number.

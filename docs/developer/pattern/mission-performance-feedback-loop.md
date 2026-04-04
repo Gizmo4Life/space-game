@@ -2,6 +2,7 @@
 id: mission-performance-feedback-loop
 type: pattern
 tags: [architecture, ai, combat, telemetry]
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](/docs/developer/pattern/readme.md) > Mission Performance Feedback Loop
 

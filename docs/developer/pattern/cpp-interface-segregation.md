@@ -2,6 +2,7 @@
 id: cpp-interface-segregation
 type: pattern
 tags: [architecture, stability, refactoring]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Interface Segregation
 

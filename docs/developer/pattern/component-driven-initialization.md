@@ -2,7 +2,9 @@
 id: component-driven-initialization
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Component-Driven Initialization (for Tests)
 
 # Pattern: Component-Driven Initialization (for Tests)
 

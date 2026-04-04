@@ -2,6 +2,7 @@
 id: cpp-component-aggregation
 type: pattern
 tags: [cpp, ecs, logic]
+category: logic
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > C++ Component Aggregation
 

@@ -2,6 +2,7 @@
 id: cicd-test-layering
 type: pattern
 tags: [cicd, testing, quality]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > CICD Test Layering
 

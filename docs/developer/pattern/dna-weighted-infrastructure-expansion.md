@@ -2,6 +2,7 @@
 id: dna-weighted-infrastructure-expansion
 type: pattern
 tags: [architecture, economy, ai, expansion]
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](/docs/developer/pattern/readme.md) > DNA-Weighted Infrastructure Expansion
 

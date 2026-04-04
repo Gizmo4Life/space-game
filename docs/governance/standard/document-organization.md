@@ -13,6 +13,9 @@ pillar: governance
 | [doc-breadcrumb-navigation](/docs/developer/pattern/doc-breadcrumb-navigation.md) | **P** | Top of every documentation file. |
 | [doc-flat-hierarchy](/docs/developer/pattern/doc-flat-hierarchy.md) | **P** | Flat graph structure. |
 | [doc-yaml-metadata](/docs/developer/pattern/doc-yaml-metadata.md) | **P** | RAG metadata indexing core. |
+| [doc-category-tag](/docs/developer/pattern/doc-category-tag.md) | **P** | Every pattern file must declare its category in YAML frontmatter. |
+| [doc-sequential-numbering](/docs/developer/pattern/doc-sequential-numbering.md) | **P** | All `##` headings must use strictly sequential numbering. |
+| [doc-signpost-completeness](/docs/developer/pattern/doc-signpost-completeness.md) | **P** | Every subdirectory must have a readme and be listed in its parent. |
 | [doc-structured-readme](/docs/developer/pattern/doc-structured-readme.md) | **P** | Required for manifests with 10+ items. |
 | [signpost-readme](/docs/developer/pattern/signpost-readme.md) | **P** | Short redirect files in source folders mapping to docs. |
 | [doc-walkthrough](/docs/developer/pattern/doc-walkthrough.md) | **P** | End-to-end trace of a completed workflow. |

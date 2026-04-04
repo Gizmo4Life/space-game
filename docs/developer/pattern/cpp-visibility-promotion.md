@@ -2,7 +2,9 @@
 id: cpp-visibility-promotion
 type: pattern
 tags: [cpp, testing, architecture]
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Visibility Promotion
 
 # Pattern: Visibility Promotion
 

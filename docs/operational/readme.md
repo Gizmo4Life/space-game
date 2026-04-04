@@ -17,6 +17,7 @@ graph LR
 ```
 
 ## Sub-directories
+- [dashboard/](dashboard/): Consolidated diagnostic dashboards for system health monitoring.
 - [runbook/](runbook/): Incident response flows mapping symptoms to resolutions.
 - [span/](span/): Diagnostics for specific telemetry spans.
 - [task/](task/): Atomic, idempotent commands for system restoration.
@@ -27,6 +28,9 @@ graph LR
 type: directory_manifest
 pillar: operational
 index_map:
+  dashboard:
+    path: dashboard/
+    scope: Diagnostic dashboards for system health.
   runbook:
     path: runbook/
     scope: Incident response flows.

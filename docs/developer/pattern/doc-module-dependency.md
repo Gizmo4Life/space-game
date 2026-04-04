@@ -2,6 +2,7 @@
 id: doc-module-dependency
 type: pattern
 tags: [architecture, mapping]
+category: geometry
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Module Dependency
 

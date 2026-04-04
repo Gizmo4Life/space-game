@@ -2,6 +2,7 @@
 id: doc-ext-integration
 type: pattern
 tags: [meta, external, vendor]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ext Integration
 

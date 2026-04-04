@@ -2,7 +2,9 @@
 id: explicit-module-identity
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Explicit Module Identity
 
 # Pattern: Explicit Module Identity
 

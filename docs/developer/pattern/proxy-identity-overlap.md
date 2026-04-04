@@ -2,7 +2,9 @@
 id: proxy-identity-overlap
 type: pattern
 pillar: developer
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Proxy Identity Overlap (Avoided Guards)
 
 # Pattern: Proxy Identity Overlap (Avoided Guards)
 

@@ -2,6 +2,7 @@
 id: doc-elicitation-traceability
 type: pattern
 tags: [elicitation, testing, traceability]
+category: elicitation
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Elicitation Traceability
 

@@ -70,13 +70,13 @@ graph TD
 *Nuance: Dashboards and telemetry manifests for operational visibility.*
 - [fleet-diagnostics](fleet-diagnostics.md): Fleet status and logistics diagnostic dashboard.
 
-## 3. Governance Layer
+## 4. Governance Layer
 *Nuance: The "Brain" of the repository, defining the rules and protocols.*
 - [developer-patterns](developer-patterns.md): Atomic structural definitions.
 - [governance-standards](governance-standards.md): Compliance and fitness rules.
 - [governance-protocols](governance-protocols.md): Idempotent execution sequences.
 
-## 3. Operational Edge
+## 5. Operational Edge
 *Nuance: Automation and response logic for external boundaries and runtime.*
 - [agent-workflows](agent-workflows.md): Protocol automation.
 - [external-pillar](external-pillar.md): System boundaries and adoption.

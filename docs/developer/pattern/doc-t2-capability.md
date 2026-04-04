@@ -2,6 +2,7 @@
 id: doc-t2-capability
 type: pattern
 tags: [meta, architecture, orchestration]
+category: geometry
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc T2 Capability
 

@@ -2,6 +2,7 @@
 id: doc-ops-unverified-mitigation
 type: pattern
 tags: [anti-pattern, operational]
+category: anti-pattern
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Unverified Mitigation
 

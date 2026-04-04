@@ -2,7 +2,9 @@
 id: docker-kitware-cmake
 type: pattern
 pillar: developer
+category: cicd
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Kitware CMake Repository
 
 # Pattern: Kitware CMake Repository
 

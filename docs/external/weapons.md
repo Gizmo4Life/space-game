@@ -1,3 +1,10 @@
+---
+id: external-weapons-guide
+type: guide
+pillar: external
+---
+[Home](/) > [Docs](/docs/readme.md) > [External](/docs/external/readme.md) > Weapon Systems
+
 # Weapon Systems Guide
 
 Understanding the various weapon archetypes and how their attribute tiers (T1, T2, T3) influence combat effectiveness is key to mastering ship outfitting.

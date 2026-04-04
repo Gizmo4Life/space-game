@@ -2,6 +2,7 @@
 id: doc-t3-module
 type: pattern
 tags: [meta, architecture, implementation]
+category: geometry
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc T3 Module
 

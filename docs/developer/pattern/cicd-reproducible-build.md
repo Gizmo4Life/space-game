@@ -2,6 +2,7 @@
 id: cicd-reproducible-build
 type: pattern
 tags: [cicd, infrastructure, reproducibility]
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > CICD Reproducible Build
 

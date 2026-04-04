@@ -1,3 +1,11 @@
+---
+id: economy-market-structure
+type: pattern
+pillar: developer
+category: engine
+---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Economy Market Structure
+
 # Pattern: Economy Market Structure
 
 ## Context

@@ -1,3 +1,10 @@
+---
+id: test-environment
+type: guide
+pillar: developer
+---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > Test Environment
+
 # Test Environment & Linter Setup
 
 This document describes the environment configuration required for local development and linter synchronization.

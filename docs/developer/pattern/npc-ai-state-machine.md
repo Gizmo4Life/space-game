@@ -3,6 +3,7 @@ id: npc-ai-state-machine
 type: pattern
 polarity: prescriptive
 pillar: developer
+category: engine
 ---
 [Home](/) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > NPC AI State Machine
 

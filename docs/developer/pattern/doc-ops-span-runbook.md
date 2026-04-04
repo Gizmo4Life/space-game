@@ -2,6 +2,7 @@
 id: doc-ops-span-runbook
 type: pattern
 tags: [meta, operational, restoration]
+category: ops
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Ops Span Runbook
 

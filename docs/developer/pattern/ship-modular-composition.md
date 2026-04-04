@@ -2,6 +2,7 @@
 id: ship-modular-composition
 type: pattern
 tags: [cpp, architecture, composition, hull, module]
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](/docs/developer/pattern/readme.md) > Ship Modular Composition
 

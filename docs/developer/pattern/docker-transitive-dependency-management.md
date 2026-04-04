@@ -2,7 +2,9 @@
 id: docker-transitive-dependency-management
 type: pattern
 pillar: developer
+category: cicd
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Transitive Dependency Management
 
 # Pattern: Transitive Dependency Management
 

@@ -2,6 +2,7 @@
 id: doc-structured-readme
 type: pattern
 tags: [documentation, organization, manifest]
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Doc Structured README
 

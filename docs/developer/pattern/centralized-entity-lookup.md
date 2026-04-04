@@ -2,6 +2,7 @@
 id: centralized-entity-lookup
 type: pattern
 pillar: developer
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Centralized Entity Lookup
 

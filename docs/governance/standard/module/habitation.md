@@ -1,3 +1,10 @@
+---
+id: module-habitation
+type: standard
+pillar: governance
+---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](../readme.md) > [Module Performance](../module-performance-standard.md) > Habitation
+
 # Module Standard: Logistics (Habitation)
 
 Habitation modules provide the life support, radiation shielding, and quarters necessary for crew and passenger transport.

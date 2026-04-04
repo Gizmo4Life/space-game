@@ -2,6 +2,7 @@
 id: docker-runtime-layer-pruning
 type: pattern
 pillar: developer
+category: cicd
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Docker Runtime Layer Pruning
 

@@ -2,6 +2,7 @@
 id: doc-t2-with-code
 type: pattern
 tags: [anti-pattern, architecture]
+category: geometry
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > T2 with Code
 

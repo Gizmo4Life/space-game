@@ -2,7 +2,9 @@
 id: unified-slot-system
 type: pattern
 pillar: architecture
+category: engine
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Unified Slot System
 # Pattern: Unified Slot System
 
 Decouple ship module placement from specialized vectors by using a single positional list with functional roles.

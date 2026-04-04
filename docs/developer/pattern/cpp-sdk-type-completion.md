@@ -2,7 +2,9 @@
 id: cpp-sdk-type-completion
 type: pattern
 tags: [cpp, memory, sdk]
+category: logic
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: SDK Type Completion
 
 # Pattern: SDK Type Completion
 

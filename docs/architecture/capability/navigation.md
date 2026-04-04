@@ -3,6 +3,7 @@ id: navigation-capability
 type: capability
 pillar: architecture
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Capability](/docs/architecture/capability/readme.md) > Navigation
 # Capability: Navigation
 
 ## 1. Business Intent

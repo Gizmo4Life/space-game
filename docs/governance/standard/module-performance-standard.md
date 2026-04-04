@@ -1,3 +1,10 @@
+---
+id: module-performance-standard
+type: standard
+pillar: governance
+---
+[Home](/) > [Docs](/docs/readme.md) > [Governance](/docs/governance/readme.md) > [Standard](readme.md) > Module Performance
+
 # Standard: Module Performance Hub
 
 This document serves as the central hub for all ship module performance specifications. It defines universal scaling laws and provides links to category-specific technical standards.

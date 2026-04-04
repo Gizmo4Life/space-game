@@ -2,7 +2,9 @@
 id: boarding-protocol
 type: pattern
 pillar: architecture
+category: engine
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > Pattern: Boarding Protocol
 # Pattern: Boarding Protocol
 
 Manage stateful interactions for resource transfer and fleet acquisition between vessels.

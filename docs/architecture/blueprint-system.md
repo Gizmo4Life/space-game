@@ -1,3 +1,10 @@
+---
+id: blueprint-system
+type: guide
+pillar: architecture
+---
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > Blueprint System
+
 # Blueprint System
 
 The blueprint system defines the static configuration of a ship's hull and its installed modules.

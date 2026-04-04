@@ -2,6 +2,7 @@
 id: economy-refit-fee
 type: pattern
 tags: [economy, shipyard, credits]
+category: engine
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](/docs/developer/pattern/readme.md) > Economy Refit Fee
 

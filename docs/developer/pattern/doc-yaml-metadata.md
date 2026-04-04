@@ -2,6 +2,7 @@
 id: doc-yaml-metadata
 type: pattern
 tags: [documentation, RAG, metadata]
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > YAML Metadata
 

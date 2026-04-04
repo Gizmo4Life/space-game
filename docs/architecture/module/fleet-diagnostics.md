@@ -3,6 +3,7 @@ id: fleet-diagnostics-dashboard
 type: dashboard
 pillar: operational
 ---
+[Home](/) > [Docs](/docs/readme.md) > [Architecture](/docs/architecture/readme.md) > [Module](/docs/architecture/module/readme.md) > Fleet Diagnostics
 
 # Dashboard: Fleet Status & Logistics
 

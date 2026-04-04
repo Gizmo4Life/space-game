@@ -2,6 +2,7 @@
 id: doc-t3-with-biz-logic
 type: pattern
 tags: [anti-pattern, architecture]
+category: geometry
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > T3 with Business Logic
 

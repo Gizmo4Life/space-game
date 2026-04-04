@@ -19,6 +19,9 @@ graph LR
 ## Sub-directories
 - [use-cases.md](use-cases.md): Primary operational contexts for repository consumption.
 - [trading.md](trading.md): Guide for commodity trading and cargo volume management.
+- [modules.md](modules.md): Ship module tier system, attributes, and storage variants.
+- [weapons.md](weapons.md): Weapon archetypes, attribute scaling, and ammo variants.
+- [player-manual.md](player-manual.md): Core game mechanics, fleet logistics, and resource management guide.
 - [contract/](contract/): OpenAPI, GraphQL, and public interface definitions.
 - [integration/](integration/): SLAs and behavior for 3rd party vendors.
 
@@ -38,7 +41,7 @@ index_map:
     path: integration/
     scope: Vendor SLAs and behavioral specs.
   player_manual:
-    path: integration/player-manual.md
+    path: player-manual.md
     scope: Core game mechanics and fleet logistics guide for players.
 ```
 

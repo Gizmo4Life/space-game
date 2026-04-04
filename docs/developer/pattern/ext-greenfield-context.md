@@ -2,6 +2,7 @@
 id: ext-greenfield-context
 type: pattern
 tags: [external, bootstrap, greenfield]
+category: ux
 ---
 [Home](/) > [Docs](/docs/readme.md) > [Developer](/docs/developer/readme.md) > [Pattern](readme.md) > EXT Greenfield Context
 
