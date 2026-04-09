@@ -10,11 +10,7 @@ pillar: governance
 ## 1. Span Naming Convention
 *Nuance: To ensure global searchability and consistent dashboarding, all telemetry spans must follow the hierarchical dot-notation.*
 
-- **Pattern:** `<pillar>.<module>.<action>`
-- **Examples:**
-  - `engine.physics.step`
-  - `game.combat.weapon.fire`
-  - `ai.navigation.path.calculate`
+- **Preferred Pattern:** [otel-span-naming](/docs/developer/pattern/otel-span-naming.md)
 
 ## 2. Documentation Requirements
 Every **Implementation** [T3 Module](/docs/developer/pattern/doc-t3-module.md) (those mapping to physical `/src`) must include a "Telemetry & Observability" section listing:

@@ -42,8 +42,11 @@ run_build() {
 
     cd "$PROJECT_ROOT"
 
-    # Build the game target natively
-    cd build && make 2>&1 | tee "$BUILD_LOG"
+    local NPROC
+    NPROC=$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
+
+    # Build the game target natively with parallel jobs for efficiency
+    cd build && make -j"$NPROC" 2>&1 | tee "$BUILD_LOG"
     local status=${PIPESTATUS[0]}
     cd ..
 
@@ -84,10 +87,10 @@ run_tests() {
     total_tests=$(ctest --show-only | grep -E "Test\s+#" | wc -l | tr -d ' ')
     info "Discovered $total_tests total test cases."
     info "Running tests live (Output streaming to terminal and $TEST_LOG)..."
-    echo ""
-    
-    # Run with max available cores for speed, outputting failures directly
-    ctest --output-on-failure --schedule-random -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)" | tee "$TEST_LOG"
+    local NPROC
+    NPROC=$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
+    # Run with max available cores for speed, and fast-fail to provide immediate feedback
+    ctest --output-on-failure --stop-on-failure --schedule-random -j"$NPROC" | tee "$TEST_LOG"
     local status=${PIPESTATUS[0]}
     cd ..
 

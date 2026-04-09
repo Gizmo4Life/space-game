@@ -12,11 +12,11 @@ This standard governs the fitness of patterns used to orchestrate AI agent workf
 ## 1. Context: Workflow Structure & Delegation
 *Nuance: Agent workflows automate multi-step repository operations. Embedding protocol logic directly in workflow files creates drift between the workflow and its governing protocol, leading to inconsistent behavior across agents.*
 
-| Pattern | Rating | Contextual Nuance |
-| :--- | :--- | :--- |
-| [agent-protocol-delegation](/docs/developer/pattern/agent-protocol-delegation.md) | **P** | Preferred. Workflows are thin stubs that delegate to canonical protocol documents. |
-| [agent-iterative-compliance-loop](/docs/developer/pattern/agent-iterative-compliance-loop.md) | **P** | Preferred. Execution bounded by a finite compliance checklist with build-test validation gates. |
-| [agent-dual-role-orchestration](/docs/developer/pattern/agent-dual-role-orchestration.md) | **A** | Approved. Planner defines scope; executor iterates independently until done. |
+| Pattern | Rating | Contextual Nuance | Acceptable Context |
+| :--- | :--- | :--- | :--- |
+| [agent-protocol-delegation](/docs/developer/pattern/agent-protocol-delegation.md) | **P** | Preferred. Workflows are thin stubs that delegate to canonical protocol documents. | N/A |
+| [agent-iterative-compliance-loop](/docs/developer/pattern/agent-iterative-compliance-loop.md) | **P** | Preferred. Execution bounded by a finite compliance checklist with build-test validation gates. | N/A |
+| [agent-dual-role-orchestration](/docs/developer/pattern/agent-dual-role-orchestration.md) | **A** | Approved. Planner defines scope; executor iterates independently until done. | Acceptable when tasks require multi-stage planning and reflection that a single primary agent cannot accomplish elegantly. |
 | **inline-workflow-logic** | **D** | Deprecated. Embedding protocol steps directly in workflow files instead of delegating. |
 | **unbounded-execution** | **U** | Unacceptable. Agent execution without a finite checklist or definition of done. |
 
