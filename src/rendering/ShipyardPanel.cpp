@@ -468,8 +468,8 @@ void ShipyardPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   std::string instructions =
       (mode_ == ShipyardMode::Buy)
           ? "[B] Buy/Transfer to Fleet  [F] Buy/Transfer as Flagship  [Tab] Sell Mode  [W/S] Nav "
-            " [[]/[]] Scroll Details"
-          : "[X] SELL SHIP  [E] Transfer to Faction  [Tab] Buy Mode  [W/S] Nav  [[]/[]] Scroll Details";
+            " [[ / ]] Scroll Details"
+          : "[X] SELL SHIP  [E] Transfer to Faction  [Tab] Buy Mode  [W/S] Nav  [[ / ]] Scroll Details";
   sf::Text help(*font, instructions, 13);
   help.setFillColor(sf::Color(150, 150, 150));
   help.setPosition({rect.position.x + 20.f, helpY});

@@ -1549,15 +1549,39 @@ void ShipOutfitter::refreshStats(entt::registry &registry, entt::entity entity,
   stats.isotopesConsumption = (netPowerDeficit > 0.0f) ? std::max(0.01f, netPowerDeficit * 0.000001f) : 0.0f;
   stats.isotopesTTE = getTTE(stats.isotopesStock, stats.isotopesConsumption);
   
-  // Ammo TTE: estimate based on kinetic weapon presence
+  // Ammo TTE: estimate based on kinetic weapon presence and mission profile
   stats.ammoConsumption = 0.0f;
+  float burstDrawRate = 0.0f;
   if (auto* iwTotal = registry.try_get<InstalledWeapons>(entity)) {
     for (const auto& m : iwTotal->modules) {
       if (m.weaponType != WeaponType::Energy && !m.name.empty() && m.name != "Empty") {
-        stats.ammoConsumption += 0.1f; // 0.1 units per second per weapon (placeholder)
+        burstDrawRate += 0.1f; // 0.1 units per second per weapon
       }
     }
   }
+
+  // A standard shootout is 60 seconds of continuous fire across the 5 day baseline (12s per day)
+  float baseCombatSecondsPerDay = 12.0f; 
+
+  float aggression = 0.5f;
+  const auto* fData = FactionManager::instance().getFactionPtr(hull.originFactionId);
+  if (fData) aggression = fData->dna.aggression;
+
+  std::string role = "General";
+  if (auto* npc = registry.try_get<NPCComponent>(entity)) {
+      role = npc->role;
+  }
+  
+  float roleMult = 1.0f;
+  if (role == "Combat") roleMult = 5.0f;
+  else if (role == "General") roleMult = 2.0f;
+  
+  // Faction aggression strictly multiplies the expected combat intensity (1x to 3x)
+  float aggroMult = 1.0f + (aggression * 2.0f); 
+  
+  float expectedCombatSecondsPerDay = baseCombatSecondsPerDay * roleMult * aggroMult;
+  
+  stats.ammoConsumption = (burstDrawRate * expectedCombatSecondsPerDay) / GAME_SECONDS_PER_DAY;
   stats.ammoTTE = getTTE(stats.ammoStock, stats.ammoConsumption);
 
   if (registry.all_of<InstalledAmmo>(entity)) {

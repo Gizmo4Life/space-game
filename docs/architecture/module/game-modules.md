@@ -37,7 +37,7 @@ Vessels must support their population via Habitation modules:
     - **Power**: Only occupied habitation modules draw power.
     - **Food**: Consumption rate is per-person, influenced by module `Efficiency`.
 - **Minimum Crew**: A vessel's `minCrew` requirement is derived from its `Command` modules and overall hull size.
-- **Viability Standard**: All generated or refitted ships must maintain a **5-day TTE (Time to Exhaustion)** for Food and Isotopes at default operational levels.
+- **Viability Standard**: All generated or refitted ships must maintain a **5-day TTE (Time to Exhaustion)** for Food, Isotopes, and Ammo at default or profiled operational combat levels.
 
 ## 4. Economic Fitness & Role Enforcement
 Ship designs are evolved and validated based on their specialization. Functional enforcement is applied during outfitting to prevent role-critical module loss:

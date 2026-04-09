@@ -37,6 +37,6 @@ NPC ship spawning, faction-weighted vessel selection, AI state-machine execution
 
 ## 5. Ship Quality Standards
 - **Fitness Floor:** All generated ships must achieve a minimum fitness score of **50%** for their designated role. The `ShipOutfitter::generateBlueprint` function retries candidate generation (up to 128 attempts) until this threshold is met.
-- **5-Day Viability:** All spawned ships are provisioned with at least 5 game-days' worth of food, fuel, and isotopes via `ShipOutfitter::ensureViability`. TTE values are validated in `verify_dod.cpp`.
+- **5-Day Viability:** All spawned ships are provisioned with at least 5 game-days' worth of food, fuel, isotopes, and mission-appropriate ammunition via `ShipOutfitter::ensureViability`. TTE values are validated in `verify_dod.cpp`.
 - **Cargo Baseline:** All ships have a minimum cargo capacity of 200 units to accommodate the resource buffer.
 - **Fuel Consumption:** Fuel draw in `KinematicsSystem::applyThrust` is scaled by `deltaTime` for accurate simulation. At 100% throttle, a ship should exhaust its fuel in approximately 5 days.

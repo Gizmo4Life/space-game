@@ -228,13 +228,14 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
     return;
   }
 
-  dtext(x, y, "── Vessel Outfitter ──", 18, sf::Color(140, 200, 255));
+  std::string modeStr = (outfitterTab_ == 1) ? " [Ammunition]" : " [Modules]";
+  dtext(x, y, "── Vessel Outfitter" + modeStr + " ──", 18, sf::Color(140, 200, 255));
 
   // Top Pane: Ship Selection & Status
   if (registry.all_of<HullDef>(targetShip_)) {
     const auto &hdef = registry.get<HullDef>(targetShip_);
     dtext(x, y, hdef.name + " (" + hdef.className + ")", 20, sf::Color::Cyan);
-    dtext(x, y, "A/D to cycle Fleet vessels", 12, sf::Color(150, 150, 150));
+    dtext(x, y, "A/D to cycle Fleet  |  Z to toggle Ammo/Modules", 12, sf::Color(150, 150, 150));
 
     // Stats summary
     float usedVol = 0.f;
@@ -463,7 +464,7 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   // Footer
   float helpY = rect.position.y + rect.size.y - 35.f;
   sf::Text help(*font,
-                "[Tab] Swap Column  [W/S] Nav  [Enter/B] Buy/Sell  [[]/[]] "
+                "[Tab] Swap Column  [Z] Ammo Tab  [W/S] Nav  [Enter/B] Buy/Sell  [[/]] "
                 "Scroll Details",
                 13);
   help.setFillColor(sf::Color(150, 150, 150));
