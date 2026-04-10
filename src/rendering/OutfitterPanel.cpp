@@ -36,13 +36,10 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
       detailScrollY_ = 0.f;
     }
 
-    // Ship Switching
-    if (kp->code == sf::Keyboard::Key::Left ||
-        kp->code == sf::Keyboard::Key::A) {
-      // Find previous ship in fleet
+    // Ship Switching (Moved to brackets to free up Left/Right for quantity)
+    if (kp->code == sf::Keyboard::Key::LBracket) {
       std::vector<entt::entity> fleet;
       getFleetEntities(registry, playerEntity, fleet);
-
       auto it = std::find(fleet.begin(), fleet.end(), targetShip_);
       if (it != fleet.end() && it != fleet.begin()) {
         targetShip_ = *(--it);
@@ -53,11 +50,9 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
       detailScrollY_ = 0.f;
     }
 
-    if (kp->code == sf::Keyboard::Key::Right ||
-        kp->code == sf::Keyboard::Key::D) {
+    if (kp->code == sf::Keyboard::Key::RBracket) {
       std::vector<entt::entity> fleet;
       getFleetEntities(registry, playerEntity, fleet);
-
       auto it = std::find(fleet.begin(), fleet.end(), targetShip_);
       if (it != fleet.end() && std::next(it) != fleet.end()) {
         targetShip_ = *(++it);
@@ -66,6 +61,17 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
       }
       selectedOutfitterIndex_ = 0;
       detailScrollY_ = 0.f;
+    }
+
+    // Quantity Adjustment (Left/Right/A/D)
+    if (outfitterTab_ == 1) {
+        if (kp->code == sf::Keyboard::Key::Left || kp->code == sf::Keyboard::Key::A) {
+            if (selectedQuantity_ > 1) selectedQuantity_--;
+        }
+        if (kp->code == sf::Keyboard::Key::Right || kp->code == sf::Keyboard::Key::D) {
+            selectedQuantity_++;
+        }
+        if (selectedQuantity_ < 1) selectedQuantity_ = 1;
     }
 
     // List Navigation
@@ -123,13 +129,8 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
       }
     }
 
-    // Detail scrolling [ and ]
-    if (kp->code == sf::Keyboard::Key::LBracket) {
-      detailScrollY_ = std::max(0.f, detailScrollY_ - 40.f);
-    }
-    if (kp->code == sf::Keyboard::Key::RBracket) {
-      detailScrollY_ += 40.f;
-    }
+    // List scrolling (Removed [ and ] as they now switch ships)
+    // Scrolling will be handled by Up/Down navigation automatically in render
 
     // Buy / Sell / Refit
     if (kp->code == sf::Keyboard::Key::Enter ||
@@ -147,13 +148,17 @@ void OutfitterPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
           }
         } else if (outfitterTab_ == 1 &&
                    registry.all_of<PlanetEconomy>(planetEntity_)) {
-          // Buy Ammo
+          // Buy Ammo with quantity
           ShipOutfitter::instance().buyAmmo(registry, targetShip_, planetEntity_,
-                                            selectedOutfitterIndex_, 20); // Buy in batches of 20
+                                            selectedOutfitterIndex_, selectedQuantity_);
         }
       } else {
-        // Sell from ship to market (REQ-13)
-        if (outfitterTab_ == 0 && registry.valid(targetShip_)) {
+        // Sell from ship to market
+        if (outfitterTab_ == 1 && registry.valid(targetShip_)) {
+            // Sell Ammo with quantity (V key often used for selling)
+            ShipOutfitter::instance().sellAmmo(registry, targetShip_, planetEntity_,
+                                               selectedOutfitterIndex_, selectedQuantity_);
+        } else if (outfitterTab_ == 0 && registry.valid(targetShip_)) {
           struct Entry {
             ModuleCategory cat;
             int idx;
@@ -450,6 +455,27 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
       }
       dDetail("Mass/Round: " + fmt(aDef.massPerRound, 2), 14, sf::Color::White);
       dtext(dx, dy, "  Volume: " + fmt(aDef.volumePerRound, 3) + "m3", 12, sf::Color(200, 200, 200)); dy += 16.f;
+
+      dy += 10.f;
+      dDetail("── Transaction ──", 14, sf::Color(140, 200, 255));
+      
+      auto &eco = registry.get<PlanetEconomy>(planetEntity_);
+      ProductKey pk{ProductType::Ammo, (uint32_t)aDef.compatibleWeapon, aDef.caliber};
+      float price = eco.currentPrices.count(pk) ? eco.currentPrices.at(pk) : 10.f;
+      float stock = eco.marketStockpile.count(pk) ? eco.marketStockpile.at(pk) : 0.f;
+      
+      if (outfitterMarketMode_) {
+          dDetail("Unit Price: $" + fmt(price, 1), 14, sf::Color(100, 255, 100));
+          dDetail("Shop Supply: " + fmt(stock, 0), 14, stock > 0 ? sf::Color::White : sf::Color::Red);
+          dy += 5.f;
+          dDetail("Buy Qty: " + std::to_string(selectedQuantity_), 15, sf::Color::Yellow);
+          dDetail("Total Cost: $" + fmt(price * selectedQuantity_, 0), 16, sf::Color::Cyan);
+      } else {
+          dDetail("Resale Value: $" + fmt(price * 0.8f, 1), 14, sf::Color(100, 255, 100));
+          dy += 5.f;
+          dDetail("Sell Qty: " + std::to_string(selectedQuantity_), 15, sf::Color::Yellow);
+          dDetail("Total Refund: $" + fmt(price * 0.8f * selectedQuantity_, 0), 16, sf::Color::Cyan);
+      }
     }
   }
 
@@ -479,8 +505,7 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
   // Footer
   float helpY = rect.position.y + rect.size.y - 35.f;
   sf::Text help(*font,
-                "[Tab] Swap Column  [Z] Ammo Tab  [W/S] Nav  [Enter/B] Buy/Sell  [[/]] "
-                "Scroll Details",
+                "[Tab] Swap Col  [Z] Ammo Tab  [[]/[]] Swap Ship  [W/S] Nav  [A/D] Qty  [Enter/B] Buy  [V] Sell",
                 13);
   help.setFillColor(sf::Color(150, 150, 150));
   help.setPosition({x, helpY});

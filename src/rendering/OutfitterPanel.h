@@ -24,6 +24,7 @@ private:
   float detailScrollY_ = 0.f;
   bool outfitterMarketMode_ = false;
   int outfitterTab_ = 0; // 0 = Modules, 1 = Ammo
+  int selectedQuantity_ = 1;
 };
 
 } // namespace space

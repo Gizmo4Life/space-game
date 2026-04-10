@@ -537,7 +537,11 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
         fEco.factories[apk] = 1;
         // Seed 3 varieties of each ammo tier initially
         for (int i = 0; i < 3; ++i) {
-            fEco.shopAmmo.push_back(ModuleGenerator::instance().generateAmmo(wt, t));
+            auto ad = ModuleGenerator::instance().generateAmmo(wt, t);
+            fEco.shopAmmo.push_back(ad);
+            // Seed 500 units of each variety
+            ProductKey apk{ProductType::Ammo, static_cast<uint32_t>(ad.compatibleWeapon), ad.caliber};
+            fEco.stockpile[apk] += 500.0f;
         }
     };
     seedAmmoFactory(WeaponType::Projectile, Tier::T1);

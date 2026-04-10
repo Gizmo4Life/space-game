@@ -90,6 +90,8 @@ int main() {
       if (landingScreen.isOpen()) {
         UIContext ctx{registry, playerEntity};
         landingScreen.handleEvent(*event, ctx, physics.getWorldId());
+        // Refresh local playerEntity in case LandingScreen changed the flagship
+        playerEntity = findFlagship(registry);
         continue;
       }
 

@@ -27,6 +27,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
   - **Scrapyard Management**: Factions store salvaged and obsolete inventory in `scrapyardModules` and `scrapyardHulls`.
   - **Ship Assembly**: `tryAssembleShips` greedily combines `scrapyardHulls` and `shopModules` into `ShipBlueprint` objects, which are then added to `parkedShips` for sale. This system ensures that faction production of parts eventually results in available ships.
   - **Resource Trading**: `executeTrade` manages commodity buy/sell between player cargo and aggregate planetary stockpiles.
+  - **Ammunition Commodification**: Ammunition is treated as a tradeable commodity. Buying/selling ammo deducts or adds to the planetary `marketStockpile` using `ProductType::Ammo`.
 - **TradeManager**: Lightweight singleton for executing fine-grained cargo transactions within the UI.
 
 ## 4. Pattern Composition
@@ -59,6 +60,7 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 - **Status:** ✅ Fully instrumented with fleet-scale attributes.
 
 ## 6. Economic Balance & Tuning
+- **Starting Capital**: Players begin with 100,000,000 credits to facilitate high-tier ship testing and early-game fleet expansion.
 - **Isotope Availability**: To avoid bottlenecks in power and fuel production, Isotopes are balanced with a higher `baseOutputRate` (15.0f) and increased baseline seeding (4 factories) on `Icy` planets.
 - **Ammunition Infrastructure**: Every planetary faction pool is explicitly seeded with Projectile and Missile factories at game start to ensure continuous ammunition availability.
 - **Market Abundance**: Initial market variety is boosted by seeding 16 specialized modules per faction (up from 8), ensuring low-tier components are readily available to players. stock is also pre-seeded into `shopAmmo` and `shopModules` to eliminate "empty market" states upon arrival.

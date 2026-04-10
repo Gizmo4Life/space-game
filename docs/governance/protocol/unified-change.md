@@ -23,17 +23,20 @@ Before starting any significant change, ensure the baseline environment is healt
   - *Requirement:* Define the "Success State" for the change before any code is written.
 - **Action:** Audit the target code against [Architecture Standards](../standard/arch-documentation.md) and [Tech Stack Standards](../standard/game-tech-stack.md) to ensure the proposed change doesn't violate core constraints.
 
-## 2. Planning & Test Design
+## 2. Planning & Documentation (Intent)
 - **Action:** Create an **Implementation Plan** that meets all `docs/governance/standard/` and `docs/architecture/patterns/`.
+- **Action:** Update or create **T3 Module** documentation in `docs/architecture/module/` and developer patterns in `docs/developer/pattern/` to capture the *intent* of the change before implementation.
 - **Action:** Audit proposed changes against [Observability Standard](../standard/observability-standard.md). Identify required telemetry spans or probes.
-- **Action:** Define **Unit Tests** for critical logic paths (e.g., economy transactions, production rolls).
-- **Verify:** The plan must call out *all* necessary changes across the codebase to avoid refactor-looping.
-- **Verify:** The plan must follow acceptable durable patterns as defined in the [Build Resilience Standard](../standard/build-resilience.md).
-- **Verify:** User approval of the plan and test strategy before implementation.
+- **Verify:** The plan and documentation must call out *all* necessary changes across the codebase to avoid refactor-looping.
+- **Verify:** User approval of the plan and documentation before proceeding to tests.
 
-## 3. Execution & Documentation
-- **Action:** Implement the changes according to the approved plan.
-- **Action:** Update or create **T3 Module** documentation in `docs/architecture/module/` to reflect new functionality.
+## 3. Test Design & Verification (Contract)
+- **Action:** Define and execute **Unit Tests** for critical logic paths (e.g., economy transactions, production rolls) *before* solutioning.
+- **Action:** Implement "Failure Tests" that verify the current system lacks the new behavior or exhibits the bug being fixed.
+- **Verify:** Test cases must be approved as the "Contract of Success" for the implementation phase.
+
+## 4. Implementation (Solution)
+- **Action:** Implement the changes according to the approved plan and documentation.
 - **Action:** Update **End User Documentation** in `docs/external/` (e.g., `use-cases.md`, `integration/`) for any changes that affect external consumers or modify [T2 Capabilities](/docs/architecture/capability/readme.md).
 - **Action:** For UI/Frontend changes, implement **Visual Assets** (screenshots or recordings) for the `walkthrough.md`.
 - **Action:** Ensure every new directory or modified functional area has a [Signpost Readme](/docs/developer/pattern/signpost-readme.md).

@@ -43,3 +43,10 @@ Planetary economies follow a mandatory seeding protocol to ensure ammo availabil
 - **Baseline Seeding**: Every planetary faction starts with at least one Projectile and one Missile factory.
 - **Initial Stock**: Markets are pre-seeded with 3 varieties per caliber to eliminate cold-start issues for new players.
 - **DNA Influence**: Faction DNA (Aggression/Industrialism) scales the production rate and variety of high-tier ammunition.
+
+## 5. Commodified Ammunition
+Ammonition is treated as a tradeable commodity within the planetary market.
+- **Stockpile Tracking**: Available ammo supply is tracked in `marketStockpile` using `ProductType::Ammo`.
+- **Price Sensitivity**: Prices fluctuate based on the availability of inputs (Metals, Isotopes) and local demand.
+- **Batch Transactions**: UI panels MUST support quantity selection (`selectedQuantity_`) to allow players to buy/sell "reasonable units" in a single transaction.
+- **Finite Supply**: `buyAmmo` MUST deduct from the planetary stockpile and fail if supply is insufficient.

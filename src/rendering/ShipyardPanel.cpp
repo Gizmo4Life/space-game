@@ -79,8 +79,15 @@ void ShipyardPanel::handleEvent(const sf::Event &event, const UIContext &ctx,
       auto span =
           Telemetry::instance().tracer()->StartSpan("game.ui.ship.purchase");
       const auto &bid = currentBids_[selectedBidIndex_];
-
-      auto &credits = registry.get<CreditsComponent>(playerEntity);
+ 
+      // Defensively resolve player entity and credits
+      auto currentFlagship = registry.valid(playerEntity) ? playerEntity : findFlagship(registry);
+      if (!registry.valid(currentFlagship) || !registry.all_of<CreditsComponent>(currentFlagship)) {
+          span->SetAttribute("purchase.denied", "no_valid_flagship_credits");
+          span->End();
+          return;
+      }
+      auto &credits = registry.get<CreditsComponent>(currentFlagship);
       bool canAfford = credits.amount >= bid.price;
 
       if (canAfford) {

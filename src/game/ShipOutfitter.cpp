@@ -1150,9 +1150,14 @@ bool ShipOutfitter::buyAmmo(entt::registry &registry, entt::entity entity,
     return false;
 
   const auto &ammoDef = eco.shopAmmo[shopAmmoIndex];
-  float unitPrice = eco.currentPrices.count(ProductKey{ProductType::Ammo, (uint32_t)ammoDef.compatibleWeapon, ammoDef.caliber}) 
-                   ? eco.currentPrices.at(ProductKey{ProductType::Ammo, (uint32_t)ammoDef.compatibleWeapon, ammoDef.caliber})
-                   : 10.0f;
+  ProductKey pk{ProductType::Ammo, (uint32_t)ammoDef.compatibleWeapon, ammoDef.caliber};
+
+  // Check planetary stock
+  if (eco.marketStockpile.count(pk) && eco.marketStockpile[pk] < (float)count) {
+      return false; // Insufficient stock
+  }
+
+  float unitPrice = eco.currentPrices.count(pk) ? eco.currentPrices.at(pk) : 10.0f;
   float totalPrice = unitPrice * count;
 
   entt::entity payer = findFlagship(registry);
@@ -1187,6 +1192,10 @@ bool ShipOutfitter::buyAmmo(entt::registry &registry, entt::entity entity,
   }
 
   credits.amount -= totalPrice;
+  if (eco.marketStockpile.count(pk)) {
+      eco.marketStockpile[pk] -= (float)count;
+  }
+
   if (!eco.factionData.empty()) {
     eco.factionData.begin()->second.credits += totalPrice;
   }
@@ -1225,6 +1234,11 @@ bool ShipOutfitter::sellAmmo(entt::registry &registry, entt::entity entity,
   stack.count -= count;
   if (stack.count <= 0) {
     ia.inventory.erase(ia.inventory.begin() + inventoryIndex);
+  }
+
+  // Add back to planetary stock
+  if (eco.marketStockpile.count(pKey)) {
+      eco.marketStockpile[pKey] += (float)count;
   }
 
   refreshStats(registry, entity, registry.get<HullDef>(entity));

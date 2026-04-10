@@ -1,6 +1,13 @@
 #include "game/components/InstalledModules.h"
 #include "game/components/ModuleGenerator.h"
 #include "game/components/ShipModule.h"
+#include "game/components/Economy.h"
+#include "game/components/NameComponent.h"
+#include "game/components/PlayerComponent.h"
+#include "game/components/Landed.h"
+#include "game/components/CargoComponent.h"
+#include "game/ShipOutfitter.h"
+#include <entt/entt.hpp>
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
@@ -93,5 +100,67 @@ TEST_CASE("Ammo System - Installed Ammo Component", "[ammo]") {
     ia.inventory.push_back(stack1);
 
     REQUIRE(ia.usedVolume() == Catch::Approx(10.0f));
+  }
+}
+TEST_CASE("Ammo System - Commodified Transactions", "[ammo]") {
+  entt::registry registry;
+  auto planet = registry.create();
+  auto &eco = registry.emplace<PlanetEconomy>(planet);
+  
+  auto ship = registry.create();
+  registry.emplace<Landed>(ship, planet);
+  registry.emplace<HullDef>(ship).className = "Test Ship";
+  auto &ia = registry.emplace<InstalledAmmo>(ship);
+  auto &credits = registry.emplace<CreditsComponent>(ship, 1000.0f);
+  registry.emplace<PlayerComponent>(ship).isFlagship = true;
+
+  // Add a rack to the ship
+  ModuleDef rack;
+  rack.category = ModuleCategory::Ammo;
+  rack.volumeOccupied = 100.0f;
+  ia.racks.push_back(rack);
+
+  // Setup shop ammo
+  AmmoDef ad = ModuleGenerator::instance().generateAmmo(WeaponType::Projectile, Tier::T1);
+  ad.volumePerRound = 0.1f;
+  eco.shopAmmo.push_back(ad);
+  
+  ProductKey pk{ProductType::Ammo, (uint32_t)ad.compatibleWeapon, ad.caliber};
+  eco.marketStockpile[pk] = 500.0f;
+  eco.currentPrices[pk] = 2.0f;
+
+  SECTION("Successful multi-round purchase") {
+    bool ok = ShipOutfitter::instance().buyAmmo(registry, ship, planet, 0, 50);
+    REQUIRE(ok);
+    
+    REQUIRE(ia.inventory.size() == 1);
+    REQUIRE(ia.inventory[0].count == 50);
+    REQUIRE(credits.amount == 900.0f); // 1000 - (2 * 50)
+    REQUIRE(eco.marketStockpile[pk] == 450.0f);
+  }
+
+  SECTION("Insufficient planetary stock") {
+    bool ok = ShipOutfitter::instance().buyAmmo(registry, ship, planet, 0, 1000);
+    REQUIRE(!ok);
+    REQUIRE(ia.inventory.empty());
+    REQUIRE(credits.amount == 1000.0f);
+  }
+
+  SECTION("Insufficient rack capacity") {
+    bool ok = ShipOutfitter::instance().buyAmmo(registry, ship, planet, 0, 2000); // 2000 * 0.1 = 200 > 100
+    REQUIRE(!ok);
+  }
+
+  SECTION("Selling ammo back to market") {
+    ShipOutfitter::instance().buyAmmo(registry, ship, planet, 0, 100);
+    REQUIRE(ia.inventory[0].count == 100);
+    float startCredits = credits.amount;
+    float startStock = eco.marketStockpile[pk];
+
+    bool ok = ShipOutfitter::instance().sellAmmo(registry, ship, planet, 0, 40);
+    REQUIRE(ok);
+    REQUIRE(ia.inventory[0].count == 60);
+    REQUIRE(credits.amount > startCredits);
+    REQUIRE(eco.marketStockpile[pk] == startStock + 40.0f);
   }
 }

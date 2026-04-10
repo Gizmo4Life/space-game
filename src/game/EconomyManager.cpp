@@ -986,6 +986,9 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
       registry.destroy(player);
     }
 
+    // Transfer 'Landed' state to the new flagship
+    registry.emplace<Landed>(newFlagship, planet);
+
     // Update all existing wingmen to follow the new flagship
     auto fleetView = registry.view<NPCComponent>();
     for (auto e : fleetView) {
@@ -1005,6 +1008,8 @@ bool EconomyManager::buyShip(entt::registry &registry, entt::entity planet,
         bid.blueprint.hull.sizeTier, true, player, bid.blueprint.role,
         bid.blueprint.lineIndex);
     ShipOutfitter::instance().applyBlueprint(registry, escort, bid.blueprint);
+    // Ensure newly bought fleet ships are also 'Landed'
+    registry.emplace<Landed>(escort, planet);
   }
 
   fEco.parkedShips.erase(it);

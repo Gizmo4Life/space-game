@@ -72,6 +72,10 @@ void LandingScreen::handleEvent(const sf::Event &event, const UIContext &ctx,
 
   if (panels_.count(currentTab_)) {
     panels_[currentTab_]->handleEvent(event, ctx, worldId);
+    // Refresh local flagship reference in case handleEvent changed it (e.g. ship sale/purchase)
+    playerEntity_ = findFlagship(ctx.registry);
+    // Re-sync panels if needed (some panels might care about playerEntity_ updates)
+    // Note: panels are pointers, so we just update the member that might be used for reconstruction.
   }
 }
 

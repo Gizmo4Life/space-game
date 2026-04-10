@@ -26,9 +26,11 @@ This standard governs where and how repetitive lookup and setup logic is defined
 | Pattern | Rating | Contextual Nuance | Acceptable Context |
 | :--- | :--- | :--- | :--- |
 | [centralized-entity-lookup](/docs/developer/pattern/centralized-entity-lookup.md) | **P** | Preferred. Use a shared utility (e.g., `UIUtils::findFlagship`, `ShipOutfitter::blueprintFromEntity`) as the single authority. | N/A |
+| [ui-flagship-sync](/docs/developer/pattern/ui-flagship-sync.md) | **P** | Preferred. Verify and re-resolve the flagship in UI event handlers after any transaction. | N/A |
 | [blueprint-round-trip](/docs/developer/pattern/blueprint-round-trip.md) | **P** | Preferred. Any system that both applies and extracts blueprints must provide a round-trip symmetry test. | N/A |
 | [per-class-entity-view](#) | **D** | Deprecated. Each class implementing its own `registry.view<PlayerComponent>()` loop for a globally unique entity. | N/A |
 | [cached-entity-handle](#) | **U** | Unacceptable. Storing an entity handle as a raw member variable across frames without validity checks. | N/A |
+| [stale-ui-reference](#) | **U** | Unacceptable. Accessing components on a context-provided entity handle (e.g., `ctx.player`) without `registry.valid()` check, especially after a transaction. | N/A |
 
 ## 3. Context: Fleet-Wide Resource Management
 

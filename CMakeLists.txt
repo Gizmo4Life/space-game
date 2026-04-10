@@ -132,6 +132,7 @@ if (BUILD_TESTING)
             tests/test_module_scaling.cpp
             tests/test_fleet_overlay.cpp
             tests/test_fleet_robustness.cpp
+            tests/test_startup.cpp
             src/game/tests/EconomyVolumeTests.cpp
             src/game/tests/ShipViabilityTests.cpp
             src/game/tests/CombatTests.cpp
