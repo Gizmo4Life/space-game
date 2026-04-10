@@ -384,17 +384,28 @@ AmmoDef ModuleGenerator::generateAmmo(WeaponType weaponType, Tier caliberTier) {
   };
 
   // Secondary attributes follow documented standards for base types
-  ammo.warhead = caliberTier; 
+  ammo.warhead = rollSecondary();
   if (weaponType == WeaponType::Missile) {
-    ammo.range = caliberTier;
-    ammo.guidance = caliberTier;
+    ammo.range = rollSecondary();
+    ammo.guidance = rollSecondary();
   }
+
+  auto getWarheadName = [](Tier t) -> std::string {
+    if (t == Tier::T1) return "Kinetic";
+    if (t == Tier::T2) return "Explosive";
+    return "EMP";
+  };
+  auto getGuidanceName = [](Tier t) -> std::string {
+    if (t == Tier::T1) return "Dumbfire";
+    if (t == Tier::T2) return "Heat-Seeking";
+    return "Fly-by-wire";
+  };
 
   std::string name = tierName(caliberTier) + " ";
   if (weaponType == WeaponType::Projectile) {
-    name += "Shells";
+    name += getWarheadName(ammo.warhead) + " Shells";
   } else {
-    name += "Missiles";
+    name += getWarheadName(ammo.warhead) + " " + getGuidanceName(ammo.guidance) + " Missiles";
   }
   ammo.name = name;
 

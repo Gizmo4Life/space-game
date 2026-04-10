@@ -23,6 +23,7 @@ Modules are classified into categories that determine their slot placement and f
 - **Reactor/Battery**: Power generation and storage.
 - **Command**: Mandatory module for ship operation. Influences `minCrew` requirements.
 - **Utility**: Generic support modules.
+- **Ammunition**: Physical storage and management of projectiles and missiles. See [Pattern: Ammunition Management](/docs/developer/pattern/ammunition-management.md).
 
 ## 2. Attribute System
 Modules use `AttributeType` and `Tier` (T1-T3) to define performance:

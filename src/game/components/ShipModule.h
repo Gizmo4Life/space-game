@@ -77,7 +77,18 @@ struct AmmoDef {
       return caliber < other.caliber;
     if (warhead != other.warhead)
       return warhead < other.warhead;
+    if (range != other.range)
+      return range < other.range;
     return guidance < other.guidance;
+  }
+
+  bool operator==(const AmmoDef &other) const {
+    return compatibleWeapon == other.compatibleWeapon &&
+           caliber == other.caliber &&
+           warhead == other.warhead &&
+           range == other.range &&
+           guidance == other.guidance &&
+           name == other.name;
   }
 };
 

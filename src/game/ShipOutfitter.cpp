@@ -1175,7 +1175,7 @@ bool ShipOutfitter::buyAmmo(entt::registry &registry, entt::entity entity,
   // Find existing stack
   bool found = false;
   for (auto &stack : ia.inventory) {
-    if (stack.type.name == ammoDef.name) {
+    if (stack.type == ammoDef) {
       stack.count += count;
       found = true;
       break;

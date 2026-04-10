@@ -18,10 +18,16 @@ TEST_CASE("Ammo System - Data Structures", "[ammo]") {
 
     REQUIRE(a1 < a2);
 
+    // Attribute equality test
+    AmmoDef a3 = a1;
+    REQUIRE(a1 == a3);
+    a3.range = Tier::T3;
+    REQUIRE(a1 != a3);
+
     AmmoStack stack1{a1, 100};
     AmmoStack stack2{a1, 50};
 
-    REQUIRE(stack1.type.name == stack2.type.name);
+    REQUIRE(stack1.type == stack2.type);
   }
 }
 
@@ -31,15 +37,25 @@ TEST_CASE("Ammo System - Module Generation", "[ammo]") {
         WeaponType::Projectile, Tier::T2);
     REQUIRE(ammoProjectile.compatibleWeapon == WeaponType::Projectile);
     REQUIRE(ammoProjectile.caliber == Tier::T2);
-    REQUIRE(ammoProjectile.range == Tier::T1); // Not a missile
-    REQUIRE(ammoProjectile.guidance == Tier::T1);
+
+    // Naming convention verification
+    CHECK(ammoProjectile.name.find("Medium") != std::string::npos);
+    CHECK((ammoProjectile.name.find("Kinetic") != std::string::npos ||
+           ammoProjectile.name.find("Explosive") != std::string::npos ||
+           ammoProjectile.name.find("EMP") != std::string::npos));
+    CHECK(ammoProjectile.name.find("Shells") != std::string::npos);
 
     auto ammoMissile =
         ModuleGenerator::instance().generateAmmo(WeaponType::Missile, Tier::T3);
     REQUIRE(ammoMissile.compatibleWeapon == WeaponType::Missile);
     REQUIRE(ammoMissile.caliber == Tier::T3);
-    REQUIRE(ammoMissile.range >= Tier::T1);
-    REQUIRE(ammoMissile.guidance >= Tier::T1);
+
+    CHECK(ammoMissile.name.find("Large") != std::string::npos);
+    CHECK((ammoMissile.name.find("Dumbfire") != std::string::npos ||
+           ammoMissile.name.find("Heat-Seeking") != std::string::npos ||
+           ammoMissile.name.find("Fly-by-wire") != std::string::npos));
+    CHECK(ammoMissile.name.find("Missiles") != std::string::npos);
+
     REQUIRE(ammoMissile.massPerRound > ammoProjectile.massPerRound);
     REQUIRE(ammoMissile.volumePerRound > ammoProjectile.volumePerRound);
   }

@@ -64,15 +64,23 @@ Most attributes use a Tier Multiplier:
 
 ---
 
-## Technical Appendix: Ammo Variants
+## Technical Appendix: Ammo System
 
-Ammunition choice is just as important as the weapon itself.
+Ammunition is rated by caliber (Small, Medium, Large) and specialized by its warhead and guidance modules.
 
+### Warhead Variants
 | Warhead Type | Effect | Ideal Use |
 | :--- | :--- | :--- |
-| **Solid** | Kinetic impact | Hull penetration. |
-| **Explosive** | Area damage | Clustered enemies or components. |
-| **EMP** | System disable | Disabling engines/weapons without destroying the ship. |
+| **Kinetic** | Solid impact | Direct hull penetration and armor stripping. |
+| **Explosive** | Blast radius | Dealing damage to multiple internal components. |
+| **EMP** | Electronic pulse | Scrambling system power without structural destruction. |
+
+### Missile Guidance (Self-Propelled Only)
+| Guidance Tier | Behavior | Description |
+| :--- | :--- | :--- |
+| **Dumbfire** (T1) | Linear | No tracking; follows initial firing vector. |
+| **Heat-Seeking** (T2) | Target Lock | Actively pivots toward target center of mass. |
+| **Fly-by-wire** (T3) | Predictive | Advanced intercept math for high-speed dogfighting. |
 
 > [!NOTE]
-> Module performance is fully deterministic — two weapons of the same tier and archetype always perform identically. Variety comes from the combination of different attribute tiers across your loadout.
+> All ammunition is now procedurally labeled by its attributes (e.g., "Medium Explosive Shells") to ensure full visibility at the Outfitter.

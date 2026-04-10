@@ -499,10 +499,11 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
     };
 
     // Ensure variety in module production across the galaxy
-    // Each faction on each planet picks 8 random modules to specialize in (up
-    // from 5)
-    for (int i = 0; i < 8; ++i) {
-      ModuleCategory randCat = static_cast<ModuleCategory>(Random::getInt(0, 8));
+    // Each faction on each planet picks 16 random modules to specialize in (up from 8)
+    for (int i = 0; i < 16; ++i) {
+      ModuleCategory randCat = static_cast<ModuleCategory>(Random::getInt(0, 10)); // Include all categories
+      if (randCat == ModuleCategory::Ammo) randCat = ModuleCategory::Weapon; // Ammo rack -> Weapon variety
+      
       ModuleDef newDef =
           ModuleGenerator::instance().generateRandomModule(randCat, Tier::T1);
       newDef.originFactionId = fid;
@@ -528,6 +529,26 @@ void WorldLoader::seedEconomy(entt::registry &registry, entt::entity body,
         fEco.factories[advancedPk] += 1;
         fEco.shopModules.push_back(advancedDef);
       }
+    }
+
+    // --- Seed Ammunition Factories & Stock ---
+    auto seedAmmoFactory = [&](WeaponType wt, Tier t) {
+        ProductKey apk{ProductType::Ammo, static_cast<uint32_t>(wt), t};
+        fEco.factories[apk] = 1;
+        // Seed 3 varieties of each ammo tier initially
+        for (int i = 0; i < 3; ++i) {
+            fEco.shopAmmo.push_back(ModuleGenerator::instance().generateAmmo(wt, t));
+        }
+    };
+    seedAmmoFactory(WeaponType::Projectile, Tier::T1);
+    seedAmmoFactory(WeaponType::Missile, Tier::T1);
+    if (fEco.populationCount > 20.0f) {
+        seedAmmoFactory(WeaponType::Projectile, Tier::T2);
+        seedAmmoFactory(WeaponType::Missile, Tier::T2);
+    }
+    if (fEco.populationCount > 50.0f) {
+        seedAmmoFactory(WeaponType::Projectile, Tier::T3);
+        seedAmmoFactory(WeaponType::Missile, Tier::T3);
     }
 
     // --- Stockpile Boost (Logistics Jumpstart) ---

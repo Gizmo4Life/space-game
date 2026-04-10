@@ -429,10 +429,25 @@ void OutfitterPanel::render(sf::RenderTarget &target, const UIContext &ctx,
           if (wt == WeaponType::Missile) return "Missile";
           return "Energy";
       };
+      auto getWarheadName = [](Tier t) -> std::string {
+          if (t == Tier::T1) return "Kinetic";
+          if (t == Tier::T2) return "Explosive";
+          return "EMP";
+      };
+      auto getGuidanceName = [](Tier t) -> std::string {
+          if (t == Tier::T1) return "Dumbfire";
+          if (t == Tier::T2) return "Heat-Seeking";
+          return "Fly-by-wire";
+      };
 
       dDetail(aDef.name, 18, sf::Color::Yellow);
       dDetail("Weapon: " + getTypeName(aDef.compatibleWeapon), 12, sf::Color(180, 180, 180));
       dDetail("Caliber: " + tierName(aDef.caliber), 12, sf::Color(180, 180, 180));
+      dDetail("Warhead: " + getWarheadName(aDef.warhead), 14, sf::Color::Cyan);
+      if (aDef.compatibleWeapon == WeaponType::Missile) {
+          dDetail("Guidance: " + getGuidanceName(aDef.guidance), 14, sf::Color::Cyan);
+          dDetail("Propellant Tier: " + tierName(aDef.range), 14, sf::Color::Cyan);
+      }
       dDetail("Mass/Round: " + fmt(aDef.massPerRound, 2), 14, sf::Color::White);
       dtext(dx, dy, "  Volume: " + fmt(aDef.volumePerRound, 3) + "m3", 12, sf::Color(200, 200, 200)); dy += 16.f;
     }

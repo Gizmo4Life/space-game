@@ -60,3 +60,5 @@ Planetary production/consumption simulation, dynamic pricing, trade transactions
 
 ## 6. Economic Balance & Tuning
 - **Isotope Availability**: To avoid bottlenecks in power and fuel production, Isotopes are balanced with a higher `baseOutputRate` (15.0f) and increased baseline seeding (4 factories) on `Icy` planets.
+- **Ammunition Infrastructure**: Every planetary faction pool is explicitly seeded with Projectile and Missile factories at game start to ensure continuous ammunition availability.
+- **Market Abundance**: Initial market variety is boosted by seeding 16 specialized modules per faction (up from 8), ensuring low-tier components are readily available to players. stock is also pre-seeded into `shopAmmo` and `shopModules` to eliminate "empty market" states upon arrival.
